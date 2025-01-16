@@ -18,7 +18,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git checkout main
-          git pull origin main
+          git checkout master
+          git pull origin master
           git merge --no-ff ${{ github.event.pull_request.head.ref }} -m "Merged by ${{ github.event.pull_request.user.login }}"
-          git push origin main
+          git push origin master
