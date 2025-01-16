@@ -7,7 +7,7 @@ export default function AppRoutes(): JSX.Element {
     <Router>
       <Routes>
         <Route path="/" element={<App />} />
-        <Route path="/pictures" element={<>Pictures</>} />
+        <Route path="/pictures" element={<>Picturess</>} />
         <Route path="/pictures/:id" element={<PicturePage />} />
       </Routes>
     </Router>
