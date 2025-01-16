@@ -16,6 +16,7 @@ export default function App(): JSX.Element {
         Build an Electron app with <span className="react">React</span>
         &nbsp;and <span className="ts">TypeScript</span>
       </div>
+      <h1>{t('title')}</h1>
       <p className="tip">
         Please try pressing <code>F12</code> to open the devTool
       </p>
