@@ -403,3 +403,17 @@ dist
 out
 .DS_Store
 *.log*
+
+# Local dev SQLite database used by scripts/migrate.ts
+/.data/
+
+# --- PiCollection: private local data, never publish this to GitHub ---
+# Packaged app data lives outside the repo (Electron userData), but guard
+# against any local SQLite DB or env file ever ending up inside it.
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.db
+.env
+.env.*
+!.env.example

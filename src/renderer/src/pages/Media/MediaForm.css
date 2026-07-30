@@ -1,0 +1,16 @@
+.media-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.media-form-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 640px;
+}
+
+.media-form-actions {
+  display: flex;
+  gap: var(--space-2);
+}

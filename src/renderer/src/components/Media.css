@@ -1,0 +1,68 @@
+.media-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .media-detail {
+    grid-template-columns: 1fr;
+  }
+}
+
+.media-detail-media {
+  background: var(--color-background-mute);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-height: 78vh;
+  cursor: zoom-in;
+}
+
+.media-detail-media img,
+.media-detail-media video {
+  width: 100%;
+  max-height: 78vh;
+  object-fit: contain;
+  display: block;
+}
+
+.media-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.media-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.media-detail-header h1 {
+  font-size: 1.3rem;
+  min-width: 0;
+  /* Long unbroken filenames must wrap instead of overflowing the info panel. */
+  overflow-wrap: anywhere;
+}
+
+.media-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.media-detail-artist {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.media-detail-section h2 {
+  margin-bottom: var(--space-2);
+}

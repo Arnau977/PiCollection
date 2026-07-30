@@ -39,5 +39,10 @@ appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: Arnau977
+  repo: PiCollection
+  # A prerelease version (e.g. 1.2.0-beta.1) is published as a GitHub
+  # prerelease and gets its own beta.yml manifest automatically; a plain
+  # version (1.2.0) publishes as a normal release with latest.yml. Both are
+  # read from the same repo, so no separate feed URL is needed per channel.

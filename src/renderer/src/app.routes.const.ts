@@ -1,4 +1,8 @@
 export const PATH = {
   HOME: '/',
-  PICTURES: 'pictures'
+  GALLERY: '/gallery',
+  MEDIA: '/media/:id',
+  ADD_MEDIA: '/media/add',
+  SETTINGS: '/settings',
+  MANAGE: '/manage'
 }

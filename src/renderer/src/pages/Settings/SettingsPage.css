@@ -1,0 +1,42 @@
+.settings-page {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.settings-page section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.settings-page section > .field {
+  max-width: 260px;
+}
+
+.settings-page section > .btn {
+  align-self: flex-start;
+}
+
+.settings-version {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.update-channel-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.update-channel-hint {
+  display: block;
+  margin-left: 1.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.update-status {
+  font-size: 0.88rem;
+}

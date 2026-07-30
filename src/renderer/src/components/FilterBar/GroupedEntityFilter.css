@@ -1,0 +1,57 @@
+.grouped-entity-filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 240px;
+  min-width: 220px;
+}
+
+.grouped-entity-filter-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.grouped-entity-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.grouped-entity-filter-or {
+  align-self: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-faint);
+  letter-spacing: 0.04em;
+  padding: 2px 0;
+}
+
+.grouped-entity-filter-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.grouped-entity-filter-row > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.grouped-entity-filter-add {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.grouped-entity-filter-add:hover {
+  color: var(--accent);
+}

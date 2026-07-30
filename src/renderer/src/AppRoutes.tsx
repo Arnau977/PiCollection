@@ -1,15 +1,24 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import App from './App'
-import PicturePage from './pages/Picture/PicturePage'
+import { HashRouter as Router, Route, Routes } from 'react-router-dom'
+import HomePage from './pages/Home/HomePage'
+import GalleryPage from './pages/Gallery/GalleryPage'
+import { PATH } from './app.routes.const'
+import MediaPage from './pages/Media/MediaPage'
+import AddMediaPage from './pages/Media/AddMediaPage'
+import SettingsPage from './pages/Settings/SettingsPage'
+import ManagePage from './pages/Manage/ManagePage'
+import { AppHeader } from './components/AppHeader'
 
 export default function AppRoutes(): JSX.Element {
   return (
     <Router>
+      <AppHeader />
       <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/pictures" element={<>Pictures</>} />
-        <Route path="/pictures/:id" element={<PicturePage />} />
-        <Route path="/easter-egg" element={<>Mis huevos ji ji ji ja</>} />
+        <Route path={PATH.HOME} element={<HomePage />} />
+        <Route path={PATH.GALLERY} element={<GalleryPage />} />
+        <Route path={PATH.MEDIA} element={<MediaPage />} />
+        <Route path={PATH.ADD_MEDIA} element={<AddMediaPage />} />
+        <Route path={PATH.SETTINGS} element={<SettingsPage />} />
+        <Route path={PATH.MANAGE} element={<ManagePage />} />
       </Routes>
     </Router>
   )

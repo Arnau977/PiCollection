@@ -1,0 +1,94 @@
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 480px) {
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: var(--space-3);
+  }
+}
+
+.media-card {
+  display: block;
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--color-text);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
+.media-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+
+.media-card .thumb-wrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--color-background-mute);
+  overflow: hidden;
+}
+
+.media-card .thumb-wrap img,
+.media-card .thumb-wrap video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.media-card .thumb-wrap.nsfw-blur img,
+.media-card .thumb-wrap.nsfw-blur video {
+  filter: blur(18px);
+  transform: scale(1.1);
+}
+
+.nsfw-blur-overlay {
+  position: absolute;
+  inset: 0;
+  /* Below the type badge (.media-thumb-play / .media-thumb-gif-badge, z-index 2)
+     so a censored video/gif still signals its type at a glance. */
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-2);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.media-card .media-card-name {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gallery-empty {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  color: var(--color-text-muted);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.gallery-empty p:first-child {
+  font-size: 1rem;
+  color: var(--color-text);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}

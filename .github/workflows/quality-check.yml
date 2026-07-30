@@ -11,18 +11,27 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Run typecheck
+      - name: Lint
+        # Not `npm run lint`: that script passes --fix, which would silently
+        # rewrite files instead of failing the check on lint issues.
+        run: npx eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts
+
+      - name: Typecheck
         run: npm run typecheck
+
+      - name: Test
+        run: npm test
 
       - name: Build the project
         run: npm run build

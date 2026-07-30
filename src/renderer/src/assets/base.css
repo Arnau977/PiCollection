@@ -3,32 +3,69 @@
   --ev-c-white-soft: #f8f8f8;
   --ev-c-white-mute: #f2f2f2;
 
-  --ev-c-black: #1b1b1f;
-  --ev-c-black-soft: #222222;
-  --ev-c-black-mute: #282828;
+  --ev-c-black: #17181d;
+  --ev-c-black-soft: #1c1d23;
+  --ev-c-black-mute: #24262e;
 
   --ev-c-gray-1: #515c67;
   --ev-c-gray-2: #414853;
   --ev-c-gray-3: #32363f;
 
-  --ev-c-text-1: rgba(255, 255, 245, 0.86);
-  --ev-c-text-2: rgba(235, 235, 245, 0.6);
-  --ev-c-text-3: rgba(235, 235, 245, 0.38);
-
-  --ev-button-alt-border: transparent;
-  --ev-button-alt-text: var(--ev-c-text-1);
-  --ev-button-alt-bg: var(--ev-c-gray-3);
-  --ev-button-alt-hover-border: transparent;
-  --ev-button-alt-hover-text: var(--ev-c-text-1);
-  --ev-button-alt-hover-bg: var(--ev-c-gray-2);
+  --ev-c-text-1: rgba(255, 255, 245, 0.92);
+  --ev-c-text-2: rgba(235, 235, 245, 0.64);
+  --ev-c-text-3: rgba(235, 235, 245, 0.4);
 }
 
 :root {
+  /* Base surfaces */
   --color-background: var(--ev-c-black);
   --color-background-soft: var(--ev-c-black-soft);
   --color-background-mute: var(--ev-c-black-mute);
-
+  --color-surface: #1e1f26;
+  --color-surface-hover: #262832;
   --color-text: var(--ev-c-text-1);
+  --color-text-muted: var(--ev-c-text-2);
+  --color-text-faint: var(--ev-c-text-3);
+  --border-color: rgba(255, 255, 255, 0.1);
+
+  /* Accent */
+  --accent: #7c6cf0;
+  --accent-hover: #8f81f5;
+  --accent-text: #ffffff;
+  --accent-soft: rgba(124, 108, 240, 0.16);
+
+  /* Semantic aliases used by react-aria-components based CSS */
+  --text-color: var(--color-text);
+  --highlight-background: var(--accent);
+  --highlight-foreground: var(--accent-text);
+  --field-background: #14151a;
+  --field-text-color: var(--color-text);
+  --focus-ring-color: var(--accent);
+
+  /* Status colors */
+  --color-success: #4ade80;
+  --color-success-soft: rgba(74, 222, 128, 0.15);
+  --color-danger: #f87171;
+  --color-danger-soft: rgba(248, 113, 113, 0.15);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
 *,
@@ -41,6 +78,11 @@
 
 ul {
   list-style: none;
+  padding: 0;
+}
+
+a {
+  color: inherit;
 }
 
 body {
@@ -64,4 +106,28 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+p {
+  color: var(--color-text);
 }

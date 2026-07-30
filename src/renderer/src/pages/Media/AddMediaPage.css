@@ -1,0 +1,7 @@
+.add-media-page {
+  max-width: 640px;
+}
+
+.add-media-page .media-form {
+  margin-top: var(--space-5);
+}

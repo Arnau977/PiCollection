@@ -1,0 +1,178 @@
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { initTestDbSingleton } from '../database/testHelpers'
+import { mediaService } from './media.service'
+import { tagService } from './tag.service'
+import { characterService } from './character.service'
+import { artistService } from './artist.service'
+import { seriesService } from './series.service'
+import type { MediaInput } from '@shared/models'
+
+let cleanup: () => Promise<void>
+
+beforeEach(async () => {
+  const testDb = await initTestDbSingleton()
+  cleanup = testDb.cleanup
+})
+
+afterEach(async () => {
+  await cleanup()
+})
+
+function baseInput(overrides: Partial<MediaInput> = {}): MediaInput {
+  return {
+    name: 'My media',
+    type: 'image',
+    route: '/some/path.png',
+    sfw: true,
+    isAiGenerated: false,
+    ...overrides
+  }
+}
+
+describe('mediaService.addMedia', () => {
+  it('creates media and hydrates it with the associated tags, characters and artist', async () => {
+    const artist = await artistService.createArtist({ name: 'Some Artist' })
+    const tag = await tagService.createTag({ name: 'landscape' })
+    const character = await characterService.createCharacter({ name: 'Hero' })
+
+    const created = await mediaService.addMedia(
+      baseInput({ artistId: artist.id, tagIds: [tag.id], characterIds: [character.id] })
+    )
+
+    expect(created.name).toBe('My media')
+    expect(created.sfw).toBe(true)
+    expect(created.isAiGenerated).toBe(false)
+    expect(created.artist?.id).toBe(artist.id)
+    expect(created.tags?.map((t) => t.id)).toEqual([tag.id])
+    expect(created.characters?.map((c) => c.id)).toEqual([character.id])
+    expect(typeof created.createdAt).toBe('number')
+  })
+
+  it('creates media linked to one or more series', async () => {
+    const seriesA = await seriesService.createSeries({ name: 'Series A' })
+    const seriesB = await seriesService.createSeries({ name: 'Series B' })
+
+    const created = await mediaService.addMedia(baseInput({ seriesIds: [seriesA.id, seriesB.id] }))
+
+    expect(created.series?.map((s) => s.id).sort()).toEqual([seriesA.id, seriesB.id].sort())
+  })
+
+  it('creates media flagged as AI-generated', async () => {
+    const created = await mediaService.addMedia(baseInput({ isAiGenerated: true }))
+    expect(created.isAiGenerated).toBe(true)
+  })
+
+  it('rejects media referencing a tag id that does not exist', async () => {
+    await expect(mediaService.addMedia(baseInput({ tagIds: ['nonexistent-id'] }))).rejects.toThrow()
+  })
+
+  it('rejects media referencing a character id that does not exist', async () => {
+    await expect(
+      mediaService.addMedia(baseInput({ characterIds: ['nonexistent-id'] }))
+    ).rejects.toThrow()
+  })
+
+  it('rejects media referencing an artist id that does not exist', async () => {
+    await expect(mediaService.addMedia(baseInput({ artistId: 'nonexistent-id' }))).rejects.toThrow()
+  })
+
+  it('rejects media referencing a series id that does not exist', async () => {
+    await expect(
+      mediaService.addMedia(baseInput({ seriesIds: ['nonexistent-id'] }))
+    ).rejects.toThrow()
+  })
+
+  it('does not create a media row when relation validation fails (transaction not started)', async () => {
+    await expect(mediaService.addMedia(baseInput({ tagIds: ['nonexistent-id'] }))).rejects.toThrow()
+    const all = await mediaService.getAllMedia()
+    expect(all).toHaveLength(0)
+  })
+})
+
+describe('mediaService.getMediaById / updateMedia / deleteMedia', () => {
+  it('returns null for an id that does not exist', async () => {
+    const result = await mediaService.getMediaById('nonexistent-id')
+    expect(result).toBeNull()
+  })
+
+  it('updates a media row and replaces its tags/characters/series', async () => {
+    const tagA = await tagService.createTag({ name: 'a' })
+    const tagB = await tagService.createTag({ name: 'b' })
+    const seriesA = await seriesService.createSeries({ name: 'Series A' })
+    const seriesB = await seriesService.createSeries({ name: 'Series B' })
+    const created = await mediaService.addMedia(
+      baseInput({ tagIds: [tagA.id], seriesIds: [seriesA.id] })
+    )
+
+    const updated = await mediaService.updateMedia(
+      created.id,
+      baseInput({
+        name: 'Renamed',
+        tagIds: [tagB.id],
+        seriesIds: [seriesB.id],
+        isAiGenerated: true
+      })
+    )
+
+    expect(updated.name).toBe('Renamed')
+    expect(updated.tags?.map((t) => t.id)).toEqual([tagB.id])
+    expect(updated.series?.map((s) => s.id)).toEqual([seriesB.id])
+    expect(updated.isAiGenerated).toBe(true)
+  })
+
+  it('deletes a media row', async () => {
+    const created = await mediaService.addMedia(baseInput())
+    await mediaService.deleteMedia(created.id)
+    const result = await mediaService.getMediaById(created.id)
+    expect(result).toBeNull()
+  })
+})
+
+describe('mediaService.getMediaFiltered', () => {
+  it('applies the AND/OR tag filter through the service layer', async () => {
+    const tagA = await tagService.createTag({ name: 'a' })
+    const tagB = await tagService.createTag({ name: 'b' })
+    await mediaService.addMedia(baseInput({ name: 'onlyA', tagIds: [tagA.id] }))
+    await mediaService.addMedia(baseInput({ name: 'both', tagIds: [tagA.id, tagB.id] }))
+
+    const or = await mediaService.getMediaFiltered({
+      tagGroups: [[tagA.id], [tagB.id]]
+    })
+    const and = await mediaService.getMediaFiltered({
+      tagGroups: [[tagA.id, tagB.id]]
+    })
+
+    expect(or.items.map((m) => m.name).sort()).toEqual(['both', 'onlyA'])
+    expect(and.items.map((m) => m.name)).toEqual(['both'])
+  })
+
+  it('applies the AND/OR series filter through the service layer', async () => {
+    const seriesA = await seriesService.createSeries({ name: 'a' })
+    const seriesB = await seriesService.createSeries({ name: 'b' })
+    await mediaService.addMedia(baseInput({ name: 'onlyA', seriesIds: [seriesA.id] }))
+    await mediaService.addMedia(baseInput({ name: 'both', seriesIds: [seriesA.id, seriesB.id] }))
+
+    const or = await mediaService.getMediaFiltered({
+      seriesIds: [seriesA.id, seriesB.id],
+      seriesOperator: 'OR'
+    })
+    const and = await mediaService.getMediaFiltered({
+      seriesIds: [seriesA.id, seriesB.id],
+      seriesOperator: 'AND'
+    })
+
+    expect(or.items.map((m) => m.name).sort()).toEqual(['both', 'onlyA'])
+    expect(and.items.map((m) => m.name)).toEqual(['both'])
+  })
+
+  it('reports the total count of matching media independently of limit/offset', async () => {
+    for (let i = 0; i < 5; i += 1) {
+      await mediaService.addMedia(baseInput({ name: `media-${i}` }))
+    }
+
+    const page = await mediaService.getMediaFiltered({ limit: 2, offset: 0 })
+
+    expect(page.items).toHaveLength(2)
+    expect(page.total).toBe(5)
+  })
+})

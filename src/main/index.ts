@@ -1,13 +1,28 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { app, BrowserWindow, dialog } from 'electron'
 import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { initDb } from './database/connection'
+import { resolveElectronDbPath } from './database/electronDbPath'
+import { runMigrations } from './database/migrations/migrator'
+import { registerMediaProtocolHandler, registerMediaProtocolScheme } from './media-protocol'
+import { registerIpcHandlers } from './ipc/registerIpcHandlers'
+import { createWindowStateKeeper } from './window/windowState'
+import { checkForUpdates, initAutoUpdater } from './updater/autoUpdater'
 
-function createWindow(): void {
-  // Create the browser window.
+registerMediaProtocolScheme()
+
+/** Give the window a moment to finish loading before an update check starts competing for bandwidth. */
+const STARTUP_UPDATE_CHECK_DELAY_MS = 5000
+
+function createWindow(): BrowserWindow {
+  const windowState = createWindowStateKeeper()
+
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    x: windowState.state.x,
+    y: windowState.state.y,
+    width: windowState.state.width,
+    height: windowState.state.height,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -17,13 +32,14 @@ function createWindow(): void {
     }
   })
 
+  windowState.register(mainWindow)
+
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
+  mainWindow.webContents.setWindowOpenHandler(() => {
+    return { action: 'allow' }
   })
 
   // HMR for renderer base on electron-vite cli.
@@ -36,17 +52,25 @@ function createWindow(): void {
 
   mainWindow.webContents.on('did-finish-load', () => {
     // Create the browser window.
-    let name = require('../../package.json').name
-    let version = require('../../package.json').version
-    let windowtitle = name + ' ' + version
+    // let name = require('../../package.json').name
+    const version = require('../../package.json').version
+    const windowtitle = 'PiCollection' + ' - ' + version
     mainWindow.setTitle(windowtitle)
   })
+
+  return mainWindow
+}
+
+const setupDatabase = async (): Promise<void> => {
+  const db = initDb(resolveElectronDbPath(), { verboseLogging: !app.isPackaged })
+  await runMigrations(db)
+  console.info('Database ready')
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -57,10 +81,29 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  try {
+    await setupDatabase()
+  } catch (err) {
+    console.error('Failed to initialize database', err)
+    dialog.showErrorBox(
+      'Database error',
+      'PiCollection could not initialize its local database and cannot continue.\n\n' +
+        (err instanceof Error ? err.message : String(err))
+    )
+    app.quit()
+    return
+  }
 
-  createWindow()
+  registerMediaProtocolHandler()
+  registerIpcHandlers()
+  const mainWindow = createWindow()
+
+  initAutoUpdater(mainWindow)
+  // A quiet startup check - the renderer surfaces the result and lets the
+  // user decide whether to download, it never installs anything on its own.
+  setTimeout(() => {
+    checkForUpdates().catch((err) => console.info('Startup update check skipped:', err.message))
+  }, STARTUP_UPDATE_CHECK_DELAY_MS)
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

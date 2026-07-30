@@ -1,0 +1,324 @@
+import type { Expression, ExpressionBuilder, Kysely, SelectQueryBuilder, SqlBool } from 'kysely'
+import type { DB, MediaTable } from '../schema'
+import type { MediaFilters, Sorting } from '@shared/models'
+import { parseSearchQuery, type QueryNode } from '@shared/query/searchQuery'
+
+const SORT_COLUMNS: Record<string, keyof MediaTable> = {
+  name: 'name',
+  createdAt: 'created_at',
+  sfw: 'sfw'
+}
+
+const DEFAULT_LIMIT = 200
+
+/**
+ * Builds an `id IN (...)` subquery for a single AND-group: media matching every
+ * id in `ids` (via COUNT DISTINCT) when there is more than one, or a plain `IN`
+ * when there's just one - both expressed against the given junction table.
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inferred Kysely SelectQueryBuilder generic is impractical to spell out
+function buildAndGroupSubquery(
+  db: Kysely<DB>,
+  table: 'media_tag' | 'media_character',
+  column: 'tag_id' | 'character_id',
+  ids: string[]
+) {
+  let sub = db.selectFrom(table).select('media_id').where(column, 'in', ids)
+  if (ids.length > 1) {
+    sub = sub.groupBy('media_id').having((e) => e.fn.count(column).distinct(), '=', ids.length)
+  }
+  return sub
+}
+
+/** Combines a filter's OR-of-AND-groups into a single WHERE clause: media matching at least one group. */
+function applyGroupedFilter<O>(
+  qb: SelectQueryBuilder<DB, 'media', O>,
+  db: Kysely<DB>,
+  table: 'media_tag' | 'media_character',
+  column: 'tag_id' | 'character_id',
+  groups: string[][] | undefined
+): SelectQueryBuilder<DB, 'media', O> {
+  const nonEmptyGroups = (groups ?? []).filter((group) => group.length > 0)
+  if (!nonEmptyGroups.length) return qb
+
+  return qb.where((eb) =>
+    eb.or(
+      nonEmptyGroups.map((group) =>
+        eb('media.id', 'in', buildAndGroupSubquery(db, table, column, group))
+      )
+    )
+  )
+}
+
+/**
+ * A search term matches media whose own name, artist, or any linked tag,
+ * character or series contains the text.
+ */
+function compileTerm(eb: ExpressionBuilder<DB, 'media'>, term: string): Expression<SqlBool> {
+  const pattern = `%${term}%`
+
+  return eb.or([
+    eb(
+      'media.id',
+      'in',
+      eb
+        .selectFrom('media_tag')
+        .innerJoin('tag', 'tag.id', 'media_tag.tag_id')
+        .select('media_tag.media_id')
+        .where('tag.name', 'like', pattern)
+    ),
+    eb(
+      'media.id',
+      'in',
+      eb
+        .selectFrom('media_character')
+        .innerJoin('character', 'character.id', 'media_character.character_id')
+        .select('media_character.media_id')
+        .where('character.name', 'like', pattern)
+    ),
+    eb(
+      'media.id',
+      'in',
+      eb
+        .selectFrom('media_series')
+        .innerJoin('series', 'series.id', 'media_series.series_id')
+        .select('media_series.media_id')
+        .where('series.name', 'like', pattern)
+    ),
+    // The NULL guard matters: without it `artist_id IN (...)` yields NULL for
+    // artist-less media, and negating NULL would silently drop those rows from
+    // every `-term` search.
+    eb.and([
+      eb('media.artist_id', 'is not', null),
+      eb(
+        'media.artist_id',
+        'in',
+        eb.selectFrom('artist').select('artist.id').where('artist.name', 'like', pattern)
+      )
+    ]),
+    eb('media.name', 'like', pattern)
+  ])
+}
+
+function compileQueryNode(
+  eb: ExpressionBuilder<DB, 'media'>,
+  node: QueryNode
+): Expression<SqlBool> {
+  switch (node.type) {
+    case 'term':
+      return compileTerm(eb, node.value)
+    case 'not':
+      return eb.not(compileQueryNode(eb, node.child))
+    case 'and':
+      return eb.and(node.children.map((child) => compileQueryNode(eb, child)))
+    case 'or':
+      return eb.or(node.children.map((child) => compileQueryNode(eb, child)))
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inferred Kysely SelectQueryBuilder generic is impractical to spell out
+function applyMediaFilters(db: Kysely<DB>, filters: MediaFilters) {
+  let qb = db.selectFrom('media')
+
+  const queryAst = filters.query?.trim() ? parseSearchQuery(filters.query) : null
+  if (queryAst) {
+    qb = qb.where((eb) => compileQueryNode(eb, queryAst))
+  }
+
+  if (filters.artistId) {
+    qb = qb.where('media.artist_id', '=', filters.artistId)
+  }
+  if (filters.sfw !== undefined) {
+    qb = qb.where('media.sfw', '=', filters.sfw ? 1 : 0)
+  }
+  if (filters.type) {
+    qb = qb.where('media.type', '=', filters.type)
+  }
+
+  qb = applyGroupedFilter(qb, db, 'media_tag', 'tag_id', filters.tagGroups)
+  qb = applyGroupedFilter(qb, db, 'media_character', 'character_id', filters.characterGroups)
+
+  if (filters.seriesIds?.length) {
+    const seriesIds = filters.seriesIds
+    qb = qb.where('media.id', 'in', (eb) => {
+      let sub = eb.selectFrom('media_series').select('media_id').where('series_id', 'in', seriesIds)
+      if (filters.seriesOperator === 'AND') {
+        sub = sub
+          .groupBy('media_id')
+          .having((e) => e.fn.count('series_id').distinct(), '=', seriesIds.length)
+      }
+      return sub
+    })
+  }
+
+  return qb
+}
+
+export function findMediaRows(
+  db: Kysely<DB>,
+  filters: MediaFilters,
+  sorting?: Sorting
+): Promise<MediaTable[]> {
+  const sortColumn = SORT_COLUMNS[sorting?.prop ?? 'createdAt'] ?? 'created_at'
+
+  return applyMediaFilters(db, filters)
+    .selectAll('media')
+    .orderBy(sortColumn, sorting?.desc ? 'desc' : 'asc')
+    .limit(filters.limit ?? DEFAULT_LIMIT)
+    .offset(filters.offset ?? 0)
+    .execute()
+}
+
+export async function countMediaRows(db: Kysely<DB>, filters: MediaFilters): Promise<number> {
+  const result = await applyMediaFilters(db, filters)
+    .select((eb) => eb.fn.countAll<number>().as('count'))
+    .executeTakeFirstOrThrow()
+  return Number(result.count)
+}
+
+export function findMediaRowById(db: Kysely<DB>, id: string): Promise<MediaTable | undefined> {
+  return db.selectFrom('media').selectAll().where('id', '=', id).executeTakeFirst()
+}
+
+export function insertMediaRow(db: Kysely<DB>, media: MediaTable): Promise<MediaTable> {
+  return db.insertInto('media').values(media).returningAll().executeTakeFirstOrThrow()
+}
+
+export function updateMediaRow(
+  db: Kysely<DB>,
+  id: string,
+  changes: Partial<Omit<MediaTable, 'id'>>
+): Promise<MediaTable> {
+  return db
+    .updateTable('media')
+    .set(changes)
+    .where('id', '=', id)
+    .returningAll()
+    .executeTakeFirstOrThrow()
+}
+
+export async function deleteMediaRow(db: Kysely<DB>, id: string): Promise<void> {
+  await db.deleteFrom('media').where('id', '=', id).execute()
+}
+
+export async function setMediaTags(
+  db: Kysely<DB>,
+  mediaId: string,
+  tagIds: string[]
+): Promise<void> {
+  await db.deleteFrom('media_tag').where('media_id', '=', mediaId).execute()
+  if (tagIds.length) {
+    await db
+      .insertInto('media_tag')
+      .values(tagIds.map((tagId) => ({ media_id: mediaId, tag_id: tagId })))
+      .execute()
+  }
+}
+
+export async function setMediaCharacters(
+  db: Kysely<DB>,
+  mediaId: string,
+  characterIds: string[]
+): Promise<void> {
+  await db.deleteFrom('media_character').where('media_id', '=', mediaId).execute()
+  if (characterIds.length) {
+    await db
+      .insertInto('media_character')
+      .values(characterIds.map((characterId) => ({ media_id: mediaId, character_id: characterId })))
+      .execute()
+  }
+}
+
+export async function setMediaSeries(
+  db: Kysely<DB>,
+  mediaId: string,
+  seriesIds: string[]
+): Promise<void> {
+  await db.deleteFrom('media_series').where('media_id', '=', mediaId).execute()
+  if (seriesIds.length) {
+    await db
+      .insertInto('media_series')
+      .values(seriesIds.map((seriesId) => ({ media_id: mediaId, series_id: seriesId })))
+      .execute()
+  }
+}
+
+export async function findTagsForMediaIds(
+  db: Kysely<DB>,
+  mediaIds: string[]
+): Promise<Map<string, { id: string; name: string }[]>> {
+  const map = new Map<string, { id: string; name: string }[]>()
+  if (!mediaIds.length) return map
+
+  const rows = await db
+    .selectFrom('media_tag')
+    .innerJoin('tag', 'tag.id', 'media_tag.tag_id')
+    .select(['media_tag.media_id as mediaId', 'tag.id as id', 'tag.name as name'])
+    .where('media_tag.media_id', 'in', mediaIds)
+    .execute()
+
+  for (const row of rows) {
+    const list = map.get(row.mediaId) ?? []
+    list.push({ id: row.id, name: row.name })
+    map.set(row.mediaId, list)
+  }
+  return map
+}
+
+export async function findCharactersForMediaIds(
+  db: Kysely<DB>,
+  mediaIds: string[]
+): Promise<Map<string, { id: string; name: string; aliases_json: string }[]>> {
+  const map = new Map<string, { id: string; name: string; aliases_json: string }[]>()
+  if (!mediaIds.length) return map
+
+  const rows = await db
+    .selectFrom('media_character')
+    .innerJoin('character', 'character.id', 'media_character.character_id')
+    .select([
+      'media_character.media_id as mediaId',
+      'character.id as id',
+      'character.name as name',
+      'character.aliases_json as aliases_json'
+    ])
+    .where('media_character.media_id', 'in', mediaIds)
+    .execute()
+
+  for (const row of rows) {
+    const list = map.get(row.mediaId) ?? []
+    list.push({
+      id: row.id,
+      name: row.name,
+      aliases_json: row.aliases_json
+    })
+    map.set(row.mediaId, list)
+  }
+  return map
+}
+
+export async function findSeriesForMediaIds(
+  db: Kysely<DB>,
+  mediaIds: string[]
+): Promise<Map<string, { id: string; name: string; aliases_json: string }[]>> {
+  const map = new Map<string, { id: string; name: string; aliases_json: string }[]>()
+  if (!mediaIds.length) return map
+
+  const rows = await db
+    .selectFrom('media_series')
+    .innerJoin('series', 'series.id', 'media_series.series_id')
+    .select([
+      'media_series.media_id as mediaId',
+      'series.id as id',
+      'series.name as name',
+      'series.aliases_json as aliases_json'
+    ])
+    .where('media_series.media_id', 'in', mediaIds)
+    .execute()
+
+  for (const row of rows) {
+    const list = map.get(row.mediaId) ?? []
+    list.push({ id: row.id, name: row.name, aliases_json: row.aliases_json })
+    map.set(row.mediaId, list)
+  }
+  return map
+}

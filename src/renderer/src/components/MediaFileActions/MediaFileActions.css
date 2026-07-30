@@ -1,0 +1,16 @@
+.media-file-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Inside the page action bar the file actions sit at the far right. */
+.media-page-actions .media-file-actions {
+  margin-left: auto;
+}
+
+/* On the dark lightbox backdrop the icon buttons need a surface to sit on. */
+.lightbox-actions .media-file-actions .icon-btn {
+  background: var(--color-surface);
+  border-color: var(--border-color);
+}
