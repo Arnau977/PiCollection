@@ -58,7 +58,9 @@
     "missingFilesNewRootValue": "Carpeta nueva: {{path}}",
     "missingFilesRelink": "Re-enlazar",
     "missingFilesRelinkConfirm": "Esto actualiza la ruta guardada de todos los archivos dentro de la carpeta antigua a la nueva, no solo de los que faltan actualmente. ¿Continuar?",
-    "missingFilesRelinked": "Se re-enlazaron {{updated}} archivos. Siguen faltando {{stillMissing}}."
+    "missingFilesRelinked": "Se re-enlazaron {{updated}} archivos. Siguen faltando {{stillMissing}}.",
+    "missingFilesPickFile": "Elegir archivo nuevo...",
+    "missingFilesMoreHidden": "+{{count}} más sin mostrar - usa el re-enlace por carpeta de arriba para lotes grandes."
   },
   "home": {
     "title": "Inicio",
