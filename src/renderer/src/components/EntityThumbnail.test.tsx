@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, waitFor } from '@testing-library/react'
 import { EntityThumbnail } from './EntityThumbnail'
 
@@ -100,5 +100,77 @@ describe('EntityThumbnail', () => {
       expect(container.querySelector('.entity-thumb-placeholder')).toBeInTheDocument()
     )
     expect(getFiltered).toHaveBeenCalledWith({ artistId: 'a1', sfw: true })
+  })
+
+  describe('hover-zoom origin', () => {
+    const originalInnerWidth = window.innerWidth
+    const originalInnerHeight = window.innerHeight
+
+    beforeEach(() => {
+      Object.defineProperty(window, 'innerWidth', { value: 1000, configurable: true })
+      Object.defineProperty(window, 'innerHeight', { value: 800, configurable: true })
+    })
+
+    afterEach(() => {
+      Object.defineProperty(window, 'innerWidth', {
+        value: originalInnerWidth,
+        configurable: true
+      })
+      Object.defineProperty(window, 'innerHeight', {
+        value: originalInnerHeight,
+        configurable: true
+      })
+      vi.restoreAllMocks()
+    })
+
+    function mockRect(rect: Partial<DOMRect>): void {
+      vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
+        x: rect.left ?? 0,
+        y: rect.top ?? 0,
+        width: 40,
+        height: 40,
+        top: 0,
+        left: 0,
+        right: 40,
+        bottom: 40,
+        toJSON: () => ({}),
+        ...rect
+      } as DOMRect)
+    }
+
+    it('grows from the top-left corner when there is room on every side', async () => {
+      mockRect({ top: 300, left: 300, right: 340, bottom: 340 })
+      const getFiltered = vi.fn().mockResolvedValue({
+        success: true,
+        data: { items: [{ id: 'm1', route: '/pics/a.png', type: 'image' }], total: 1 }
+      })
+      setApi(getFiltered)
+
+      const { container } = render(<EntityThumbnail kind="tag" id="t1" />)
+      await waitFor(() => expect(container.querySelector('img')).toBeInTheDocument())
+
+      fireEvent.mouseEnter(container.querySelector('.entity-thumb') as HTMLElement)
+
+      expect(container.querySelector('img')).toHaveStyle({ transformOrigin: 'left top' })
+    })
+
+    it('flips to the bottom-right corner when the row is near the edge of the screen', async () => {
+      // 40px box near the bottom-right of a 1000x800 viewport - scaling 4.32x
+      // from top-left would need ~133px of room on the right/below, which
+      // isn't available here.
+      mockRect({ top: 780, left: 980, right: 1000, bottom: 800 })
+      const getFiltered = vi.fn().mockResolvedValue({
+        success: true,
+        data: { items: [{ id: 'm1', route: '/pics/a.png', type: 'image' }], total: 1 }
+      })
+      setApi(getFiltered)
+
+      const { container } = render(<EntityThumbnail kind="tag" id="t1" />)
+      await waitFor(() => expect(container.querySelector('img')).toBeInTheDocument())
+
+      fireEvent.mouseEnter(container.querySelector('.entity-thumb') as HTMLElement)
+
+      expect(container.querySelector('img')).toHaveStyle({ transformOrigin: 'right bottom' })
+    })
   })
 })

@@ -90,45 +90,47 @@ export function TagsManager(): JSX.Element {
           aria-label={t('manage.searchLabel')}
         />
 
-        {loading ? (
-          <p className="loading-state">{t('gallery.loading')}</p>
-        ) : tags.length === 0 ? (
-          <p className="manage-empty">{t('manage.empty')}</p>
-        ) : visibleTags.length === 0 ? (
-          <p className="manage-empty">{t('manage.noResults')}</p>
-        ) : (
-          <ul className="manage-list">
-            {visibleTags.map((tag) => (
-              <li
-                key={tag.id}
-                className={
-                  editing?.id === tag.id
-                    ? 'manage-list-item manage-list-item-editing'
-                    : 'manage-list-item'
-                }
-              >
-                <EntityThumbnail kind="tag" id={tag.id} />
-                <span className="manage-item-name">{tag.name}</span>
-                <button
-                  type="button"
-                  className="icon-btn"
-                  aria-label={`${t('manage.edit')} ${tag.name}`}
-                  onClick={() => startEdit(tag)}
+        <div className="manage-list-scroll">
+          {loading ? (
+            <p className="loading-state">{t('gallery.loading')}</p>
+          ) : tags.length === 0 ? (
+            <p className="manage-empty">{t('manage.empty')}</p>
+          ) : visibleTags.length === 0 ? (
+            <p className="manage-empty">{t('manage.noResults')}</p>
+          ) : (
+            <ul className="manage-list">
+              {visibleTags.map((tag) => (
+                <li
+                  key={tag.id}
+                  className={
+                    editing?.id === tag.id
+                      ? 'manage-list-item manage-list-item-editing'
+                      : 'manage-list-item'
+                  }
                 >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="icon-btn"
-                  aria-label={`${t('manage.delete')} ${tag.name}`}
-                  onClick={() => handleDelete(tag.id, tag.name)}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+                  <EntityThumbnail kind="tag" id={tag.id} />
+                  <span className="manage-item-name">{tag.name}</span>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    aria-label={`${t('manage.edit')} ${tag.name}`}
+                    onClick={() => startEdit(tag)}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    aria-label={`${t('manage.delete')} ${tag.name}`}
+                    onClick={() => handleDelete(tag.id, tag.name)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   )

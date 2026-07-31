@@ -1,32 +1,44 @@
+/* Bounded to the viewport with its own inner scroll region (same pattern as
+   .gallery-page), rather than letting the whole page scroll. A previous
+   version relied on `position: sticky` for the search bar/form panel against
+   whole-page scroll, which looked broken: list items don't have a shared
+   opaque backdrop with the sticky elements, so they visibly showed through
+   underneath as they scrolled past. Scoping the scroll to just the list
+   (see .manage-list-scroll below) means the form panel and search bar are
+   simply never scrolled past at all. */
 .manage-page {
+  height: 100vh;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-  /* `.page` caps every page at 1180px, which is right for a single-column
-     gallery grid or form but leaves most of a wide/ultrawide screen empty
-     for this side-by-side form+list layout - give it more room to use. */
-  max-width: 1900px;
+  overflow: hidden;
+  padding-bottom: 0;
 }
 
 .manage-tabs {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  border-bottom: 1px solid var(--border-color);
+  gap: 0.2rem;
+  padding: 0.3rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  width: fit-content;
+  max-width: 100%;
 }
 
 .manage-tab {
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 1.1rem;
   border: none;
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-text-muted);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
   transition:
-    color 150ms ease,
-    border-color 150ms ease;
+    color var(--transition-base),
+    background-color var(--transition-base);
 }
 
 .manage-tab:hover {
@@ -34,14 +46,29 @@
 }
 
 .manage-tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
+  color: var(--accent-text);
+  background: var(--accent-gradient);
+  box-shadow: var(--accent-glow-sm);
 }
 
 .manage-content {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* The tab-switcher wrapper (plain `hidden` toggle in ManagePage.tsx) needs to
+   participate in the height-constrained flex chain too, so `:not([hidden])`
+   is used rather than an unconditional rule - anything unconditional here
+   would win over the browser's default `[hidden] { display: none }` (author
+   styles always beat the UA stylesheet) and show every tab at once. */
+.manage-tab-panel:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .manage-panel {
@@ -58,7 +85,8 @@
   display: grid;
   grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
   gap: var(--space-5);
-  align-items: start;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
@@ -75,8 +103,15 @@
   border-radius: var(--radius-md);
   background: var(--color-surface);
   border: 1px solid var(--border-color);
-  position: sticky;
-  top: var(--space-4);
+  /* Opts out of the grid row's stretch so it keeps its own natural height
+     instead of matching .manage-list-panel's, but still caps at the row's
+     height with its own scrollbar as a fallback (e.g. an artist being edited
+     with many social links) - .manage-page clips overflow at the page level,
+     so anything taller than that would otherwise be silently cut off with no
+     way to reach it. */
+  align-self: start;
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .manage-form-panel h2 {
@@ -88,6 +123,14 @@
   flex-direction: column;
   gap: var(--space-3);
   min-width: 0;
+  min-height: 0;
+}
+
+.manage-list-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--space-4);
 }
 
 .manage-search {

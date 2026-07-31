@@ -156,52 +156,54 @@ export function CharactersManager(): JSX.Element {
           aria-label={t('manage.searchLabel')}
         />
 
-        {loading ? (
-          <p className="loading-state">{t('gallery.loading')}</p>
-        ) : characters.length === 0 ? (
-          <p className="manage-empty">{t('manage.empty')}</p>
-        ) : visibleCharacters.length === 0 ? (
-          <p className="manage-empty">{t('manage.noResults')}</p>
-        ) : (
-          <ul className="manage-list">
-            {visibleCharacters.map((character) => (
-              <li
-                key={character.id}
-                className={
-                  editing?.id === character.id
-                    ? 'manage-list-item manage-list-item-editing'
-                    : 'manage-list-item'
-                }
-              >
-                <EntityThumbnail kind="character" id={character.id} />
-                <div className="manage-item-info">
-                  <span className="manage-item-name">{character.name}</span>
-                  {character.series.length > 0 && (
-                    <span className="manage-item-meta">
-                      {character.series.map((s) => s.name).join(', ')}
-                    </span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className="icon-btn"
-                  aria-label={`${t('manage.edit')} ${character.name}`}
-                  onClick={() => startEdit(character)}
+        <div className="manage-list-scroll">
+          {loading ? (
+            <p className="loading-state">{t('gallery.loading')}</p>
+          ) : characters.length === 0 ? (
+            <p className="manage-empty">{t('manage.empty')}</p>
+          ) : visibleCharacters.length === 0 ? (
+            <p className="manage-empty">{t('manage.noResults')}</p>
+          ) : (
+            <ul className="manage-list">
+              {visibleCharacters.map((character) => (
+                <li
+                  key={character.id}
+                  className={
+                    editing?.id === character.id
+                      ? 'manage-list-item manage-list-item-editing'
+                      : 'manage-list-item'
+                  }
                 >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="icon-btn"
-                  aria-label={`${t('manage.delete')} ${character.name}`}
-                  onClick={() => handleDelete(character.id, character.name)}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+                  <EntityThumbnail kind="character" id={character.id} />
+                  <div className="manage-item-info">
+                    <span className="manage-item-name">{character.name}</span>
+                    {character.series.length > 0 && (
+                      <span className="manage-item-meta">
+                        {character.series.map((s) => s.name).join(', ')}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    aria-label={`${t('manage.edit')} ${character.name}`}
+                    onClick={() => startEdit(character)}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    aria-label={`${t('manage.delete')} ${character.name}`}
+                    onClick={() => handleDelete(character.id, character.name)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   )

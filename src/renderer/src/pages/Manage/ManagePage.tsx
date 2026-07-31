@@ -14,7 +14,7 @@ export default function ManagePage(): JSX.Element {
 
   return (
     <div className="page manage-page">
-      <h1>{t('manage.title')}</h1>
+      <h1 className="gradient-title">{t('manage.title')}</h1>
       <div className="manage-tabs" role="tablist">
         <button
           type="button"
@@ -55,16 +55,16 @@ export default function ManagePage(): JSX.Element {
       </div>
 
       <div className="card manage-content">
-        <div hidden={tab !== 'artists'}>
+        <div className="manage-tab-panel" hidden={tab !== 'artists'}>
           <ArtistsManager />
         </div>
-        <div hidden={tab !== 'tags'}>
+        <div className="manage-tab-panel" hidden={tab !== 'tags'}>
           <TagsManager />
         </div>
-        <div hidden={tab !== 'characters'}>
+        <div className="manage-tab-panel" hidden={tab !== 'characters'}>
           <CharactersManager />
         </div>
-        <div hidden={tab !== 'series'}>
+        <div className="manage-tab-panel" hidden={tab !== 'series'}>
           <SeriesManager />
         </div>
       </div>

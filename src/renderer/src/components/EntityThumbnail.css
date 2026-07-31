@@ -25,6 +25,12 @@
 
 .entity-thumb:hover img,
 .entity-thumb:hover video {
+  /* `transform-origin` is set inline (see EntityThumbnail.tsx) rather than
+     fixed here: which corner to grow from depends on how close the row is
+     to the edge of the screen, which a static rule can't know - a thumbnail
+     scaled from a fixed corner looks fine until its row is near the top,
+     bottom, left or right, where it would grow straight off-screen and get
+     clipped or cover neighboring UI instead of the row's own content. */
   transform: scale(4.32);
   z-index: 5;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
