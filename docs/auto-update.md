@@ -46,14 +46,29 @@ package's semver **at build time** - no separate config per channel:
    - Stable: `npm version 1.2.0`
    - Beta: `npm version 1.2.0-beta.1`
 2. Push the tag: `git push --follow-tags`
-3. `.github/workflows/release.yml` builds Windows/macOS/Linux installers in
-   parallel and publishes them to a GitHub Release matching the tag,
-   authenticated with the workflow's default `GITHUB_TOKEN`
-   (`permissions: contents: write`) - no extra secret to configure.
+3. `.github/workflows/release.yml` first creates a draft release for the tag
+   with a title (`PiCollection vX.Y.Z`) and auto-generated notes
+   (`gh release create --generate-notes`, listing commits since the last
+   tag), then builds Windows/macOS/Linux installers in parallel and uploads
+   them to that same release - all authenticated with the workflow's default
+   `GITHUB_TOKEN` (`permissions: contents: write`), no extra secret to
+   configure. The release is left as a draft so the notes can be reviewed/
+   edited before publishing.
+4. One Linux artifact only: AppImage (runs on any distro with no install
+   step, and is the one format electron-updater can actually auto-update -
+   see `electron-builder.yml`'s `linux.target`).
 
-macOS builds are unsigned (`notarize: false` in `electron-builder.yml`), so
-until code signing is set up, macOS users need to right-click → Open the
-first time (Gatekeeper) to bypass the "unidentified developer" warning.
+Neither platform's build is code-signed yet, so both trigger an OS warning
+on first run:
+- **macOS** (`notarize: false` in `electron-builder.yml`): right-click → Open
+  once to bypass the "unidentified developer" Gatekeeper warning.
+- **Windows**: unsigned executables from a new publisher get flagged by
+  SmartScreen (sometimes reported directly as a "virus") until the binary
+  earns enough reputation - there's no config fix for this, only a code
+  signing certificate resolves it for good. Click "More info" → "Run anyway"
+  to install regardless. [SignPath.io](https://signpath.io) offers free
+  signing for approved open-source projects if this is worth setting up
+  later.
 
 ## Testing locally
 

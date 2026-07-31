@@ -13,7 +13,36 @@ permissions:
   contents: write
 
 jobs:
+  # Runs once, before the OS build matrix, so all three builds upload their
+  # assets into a single release that already has a proper title and
+  # changelog - left as electron-builder's default (an empty "Release vX.Y.Z"
+  # body), the matrix would still produce one release, just with no useful
+  # description of what changed.
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine prerelease flag from the tag
+        id: prerelease
+        run: |
+          if [[ "${{ github.ref_name }}" == *-* ]]; then
+            echo "value=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create draft release with auto-generated notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --repo "${{ github.repository }}" \
+            --title "PiCollection ${{ github.ref_name }}" \
+            --generate-notes \
+            --draft \
+            --prerelease=${{ steps.prerelease.outputs.value }}
+
   release:
+    needs: create-release
     strategy:
       fail-fast: false
       matrix:

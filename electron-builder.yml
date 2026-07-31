@@ -29,10 +29,12 @@ mac:
 dmg:
   artifactName: ${name}-${version}.${ext}
 linux:
+  # AppImage only: runs on any distro with no install/package-manager step,
+  # and (unlike snap/deb) electron-updater can actually auto-update it - see
+  # docs/auto-update.md. snap/deb dropped to cut release noise down to one
+  # artifact per major OS (Windows/macOS/Linux).
   target:
     - AppImage
-    - snap
-    - deb
   maintainer: electronjs.org
   category: Utility
 appImage:
