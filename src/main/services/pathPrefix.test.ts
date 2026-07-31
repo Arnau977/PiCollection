@@ -31,4 +31,16 @@ describe('findCommonPathPrefix', () => {
       findCommonPathPrefix(['/home/user/pics/a.png', '/home/user/pics/b.png'])
     ).toBe('/home/user/pics/')
   })
+
+  it('handles paths with different segment counts (longer first, shorter second)', () => {
+    expect(
+      findCommonPathPrefix(['C:\\Pics\\sub\\a.png', 'C:\\Pics\\sub'])
+    ).toBe('C:\\Pics\\')
+  })
+
+  it('handles paths with different segment counts (shorter first, longer second)', () => {
+    expect(
+      findCommonPathPrefix(['C:\\Pics\\sub', 'C:\\Pics\\sub\\a.png'])
+    ).toBe('C:\\Pics\\')
+  })
 })

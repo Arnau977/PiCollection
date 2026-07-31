@@ -14,7 +14,8 @@ export function findCommonPathPrefix(paths: string[]): string | null {
   const first = segmentLists[0]
 
   let commonLength = 0
-  for (let i = 0; i < first.length - 1; i += 1) {
+  const minLength = Math.min(...segmentLists.map((s) => s.length)) - 1
+  for (let i = 0; i < minLength; i += 1) {
     if (segmentLists.every((segments) => segments[i] === first[i])) {
       commonLength = i + 1
     } else {
