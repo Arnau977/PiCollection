@@ -38,16 +38,39 @@ vi.mock('../../hooks/useEntityLists', () => ({
   useSeries: () => ({ data: seriesData, loading: false, error: null, refetch: refetchSeries })
 }))
 
-function setApi(overrides: Record<string, unknown> = {}): void {
-  Object.defineProperty(window, 'api', {
-    value: {
-      media: { create: vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } }) },
-      artist: { create: vi.fn() },
-      tag: { create: vi.fn() },
-      character: { create: vi.fn() },
-      series: { create: vi.fn() },
-      ...overrides
+/** Merged per-namespace (not a flat spread) so e.g. `setApi({ sauceNao: { lookup } })`
+ * still keeps the default `sauceNao.getApiKey` instead of clobbering it. */
+function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
+  const defaults: Record<string, Record<string, unknown>> = {
+    media: {
+      create: vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } }),
+      checkDuplicate: vi
+        .fn()
+        .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } })
     },
+    artist: {
+      create: vi.fn(),
+      addSocialLink: vi.fn().mockResolvedValue({ success: true, data: {} })
+    },
+    tag: { create: vi.fn() },
+    character: {
+      create: vi.fn(),
+      update: vi.fn().mockResolvedValue({ success: true, data: {} })
+    },
+    series: { create: vi.fn() },
+    sauceNao: {
+      lookup: vi.fn(),
+      getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+    }
+  }
+
+  const merged: Record<string, unknown> = {}
+  for (const key of Object.keys(defaults)) {
+    merged[key] = { ...defaults[key], ...overrides[key] }
+  }
+
+  Object.defineProperty(window, 'api', {
+    value: merged,
     writable: true,
     configurable: true
   })
@@ -236,5 +259,397 @@ describe('AddMediaPage', () => {
 
     expect(screen.queryByText('Create "landscape"')).not.toBeInTheDocument()
     expect(await screen.findByRole('option', { name: 'landscape' })).toBeInTheDocument()
+  })
+})
+
+describe('AddMediaPage duplicate detection', () => {
+  it('blocks submitting a file that already exists in the library', async () => {
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    const checkDuplicate = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        exactMatch: { id: 'existing', name: 'Existing pic' },
+        similar: []
+      }
+    })
+    setApi({ media: { create: mediaCreate, checkDuplicate } })
+    const user = userEvent.setup()
+    const { container } = renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('sunset.png'))
+
+    expect(
+      await screen.findByText('This file is already in the library as "Existing pic".')
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled()
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+    expect(mediaCreate).not.toHaveBeenCalled()
+  })
+
+  it('shows a non-blocking warning for a visually similar existing file', async () => {
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    const checkDuplicate = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        exactMatch: null,
+        similar: [{ media: { id: 'similar1', name: 'Similar pic' }, distance: 4 }]
+      }
+    })
+    setApi({ media: { create: mediaCreate, checkDuplicate } })
+    const user = userEvent.setup()
+    const { container } = renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('sunset.png'))
+
+    expect(await screen.findByText('Similar pic (4/64 difference)')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add' })).not.toBeDisabled()
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+    expect(mediaCreate).toHaveBeenCalled()
+  })
+})
+
+describe('AddMediaPage SauceNAO suggestions', () => {
+  it('disables the Suggest tags button until a file is chosen', async () => {
+    renderPage()
+    expect(await screen.findByRole('button', { name: 'Suggest tags' })).toBeDisabled()
+  })
+
+  it('calls the SauceNAO lookup with the selected file path when clicked', async () => {
+    const lookup = vi.fn().mockResolvedValue({
+      success: true,
+      data: { match: null, remaining: { short: 5, long: 90 } }
+    })
+    setApi({ sauceNao: { lookup } })
+    const user = userEvent.setup()
+    renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('sunset.png'))
+    await user.click(screen.getByRole('button', { name: 'Suggest tags' }))
+
+    await vi.waitFor(() => expect(lookup).toHaveBeenCalledWith('sunset.png'))
+  })
+
+  it('pre-selects a suggested character that already exists in the library', async () => {
+    charactersData = [{ id: 'c1', name: 'Alice', series: [] }]
+    const lookup = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        match: {
+          similarity: 90,
+          indexName: 'Danbooru',
+          sourceUrl: 'https://danbooru.donmai.us/posts/1',
+          artist: null,
+          characters: [{ name: 'Alice' }],
+          series: [],
+          seriesHints: [],
+          tags: []
+        },
+        remaining: { short: 5, long: 90 }
+      }
+    })
+    setApi({ sauceNao: { lookup } })
+    const user = userEvent.setup()
+    renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('pic.png'))
+    await user.click(screen.getByRole('button', { name: 'Suggest tags' }))
+
+    expect(await screen.findByText('Alice')).toBeInTheDocument()
+  })
+
+  it('creates and adds a suggested character that is not yet in the library', async () => {
+    const lookup = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        match: {
+          similarity: 90,
+          indexName: 'Danbooru',
+          sourceUrl: 'https://danbooru.donmai.us/posts/1',
+          artist: null,
+          characters: [{ name: 'New Character' }],
+          series: [],
+          seriesHints: [],
+          tags: []
+        },
+        remaining: { short: 5, long: 90 }
+      }
+    })
+    const characterCreate = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { id: 'c9', name: 'New Character' } })
+    setApi({ sauceNao: { lookup }, character: { create: characterCreate } })
+    const user = userEvent.setup()
+    renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('pic.png'))
+    await user.click(screen.getByRole('button', { name: 'Suggest tags' }))
+
+    const addChip = await screen.findByRole('button', { name: /New Character/ })
+    await user.click(addChip)
+
+    expect(characterCreate).toHaveBeenCalledWith({ name: 'New Character', seriesIds: [] })
+    expect(refetchCharacters).toHaveBeenCalled()
+  })
+
+  it('capitalizes a suggested character name and auto-links the sole suggested series', async () => {
+    const lookup = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        match: {
+          similarity: 90,
+          indexName: 'Danbooru',
+          sourceUrl: 'https://danbooru.donmai.us/posts/1',
+          artist: null,
+          characters: [{ name: 'new character' }],
+          series: [{ name: 'new series' }],
+          seriesHints: [],
+          tags: []
+        },
+        remaining: { short: 5, long: 90 }
+      }
+    })
+    const characterCreate = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { id: 'c9', name: 'New character' } })
+    const seriesCreate = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { id: 's9', name: 'New series' } })
+    setApi({
+      sauceNao: { lookup },
+      character: { create: characterCreate },
+      series: { create: seriesCreate }
+    })
+    const user = userEvent.setup()
+    renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('pic.png'))
+    await user.click(screen.getByRole('button', { name: 'Suggest tags' }))
+
+    const addChip = await screen.findByRole('button', { name: 'New character' })
+    await user.click(addChip)
+
+    await vi.waitFor(() => expect(seriesCreate).toHaveBeenCalledWith({ name: 'New series' }))
+    expect(characterCreate).toHaveBeenCalledWith({ name: 'New character', seriesIds: ['s9'] })
+  })
+
+  it('does not guess a series link when more than one series is suggested', async () => {
+    const lookup = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        match: {
+          similarity: 90,
+          indexName: 'Danbooru',
+          sourceUrl: 'https://danbooru.donmai.us/posts/1',
+          artist: null,
+          characters: [{ name: 'new character' }],
+          series: [{ name: 'series one' }, { name: 'series two' }],
+          seriesHints: [],
+          tags: []
+        },
+        remaining: { short: 5, long: 90 }
+      }
+    })
+    const characterCreate = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { id: 'c9', name: 'New character' } })
+    const seriesCreate = vi.fn()
+    setApi({
+      sauceNao: { lookup },
+      character: { create: characterCreate },
+      series: { create: seriesCreate }
+    })
+    const user = userEvent.setup()
+    renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('pic.png'))
+    await user.click(screen.getByRole('button', { name: 'Suggest tags' }))
+
+    const addChip = await screen.findByRole('button', { name: 'New character' })
+    await user.click(addChip)
+
+    await vi.waitFor(() => expect(characterCreate).toHaveBeenCalled())
+    expect(characterCreate).toHaveBeenCalledWith({ name: 'New character', seriesIds: [] })
+    expect(seriesCreate).not.toHaveBeenCalled()
+  })
+
+  it('shows an alert when the SauceNAO lookup fails', async () => {
+    const lookup = vi.fn().mockResolvedValue({
+      success: false,
+      error: { code: 'INTERNAL', message: 'Could not reach SauceNAO.' }
+    })
+    setApi({ sauceNao: { lookup } })
+    const user = userEvent.setup()
+    renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('pic.png'))
+    await user.click(screen.getByRole('button', { name: 'Suggest tags' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not reach SauceNAO.')
+  })
+
+  it('does not overwrite an already-selected artist with a suggestion', async () => {
+    artistsData = [
+      { id: 'a1', name: 'Chosen Artist' },
+      { id: 'a2', name: 'Suggested Artist' }
+    ]
+    const lookup = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        match: {
+          similarity: 90,
+          indexName: 'Danbooru',
+          sourceUrl: undefined,
+          artist: { name: 'Suggested Artist' },
+          characters: [],
+          series: [],
+          seriesHints: [],
+          tags: []
+        },
+        remaining: { short: 5, long: 90 }
+      }
+    })
+    setApi({ sauceNao: { lookup } })
+    const user = userEvent.setup()
+    renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('pic.png'))
+
+    const [artistInput] = screen.getAllByRole('combobox')
+    await user.type(artistInput, 'Chosen Artist')
+    await user.click(await screen.findByRole('option', { name: 'Chosen Artist' }))
+
+    await user.click(screen.getByRole('button', { name: 'Suggest tags' }))
+    await vi.waitFor(() => expect(lookup).toHaveBeenCalled())
+
+    expect(artistInput).toHaveValue('Chosen Artist')
+  })
+})
+
+describe('AddMediaPage sole-series character linking', () => {
+  it('links every selected character to the sole selected series on save, regardless of suggestions', async () => {
+    seriesData = [{ id: 's1', name: 'Wonderland' }]
+    charactersData = [
+      { id: 'c1', name: 'Alice', series: [] },
+      { id: 'c2', name: 'Bob', series: [] },
+      { id: 'c3', name: 'Carol', series: [] }
+    ]
+    const characterUpdate = vi.fn().mockResolvedValue({ success: true, data: {} })
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({
+      media: { create: mediaCreate },
+      character: { create: vi.fn(), update: characterUpdate }
+    })
+    const user = userEvent.setup()
+    const { container } = renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('pic.png'))
+
+    const [, , charactersInput, seriesInput] = screen.getAllByRole('combobox')
+
+    for (const name of ['Alice', 'Bob', 'Carol']) {
+      await user.type(charactersInput, name)
+      await user.click(await screen.findByRole('option', { name }))
+    }
+    await user.type(seriesInput, 'Wonderland')
+    await user.click(await screen.findByRole('option', { name: 'Wonderland' }))
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+
+    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalled())
+    expect(characterUpdate).toHaveBeenCalledTimes(3)
+    expect(characterUpdate).toHaveBeenCalledWith('c1', {
+      name: 'Alice',
+      seriesIds: ['s1'],
+      aliases: undefined
+    })
+    expect(characterUpdate).toHaveBeenCalledWith('c2', {
+      name: 'Bob',
+      seriesIds: ['s1'],
+      aliases: undefined
+    })
+    expect(characterUpdate).toHaveBeenCalledWith('c3', {
+      name: 'Carol',
+      seriesIds: ['s1'],
+      aliases: undefined
+    })
+    await vi.waitFor(() => expect(refetchCharacters).toHaveBeenCalled())
+  })
+
+  it('does not link characters when more than one series is selected', async () => {
+    seriesData = [
+      { id: 's1', name: 'Wonderland' },
+      { id: 's2', name: 'Looking Glass' }
+    ]
+    charactersData = [{ id: 'c1', name: 'Alice', series: [] }]
+    const characterUpdate = vi.fn()
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({
+      media: { create: mediaCreate },
+      character: { create: vi.fn(), update: characterUpdate }
+    })
+    const user = userEvent.setup()
+    const { container } = renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('pic.png'))
+
+    const [, , charactersInput, seriesInput] = screen.getAllByRole('combobox')
+    await user.type(charactersInput, 'Alice')
+    await user.click(await screen.findByRole('option', { name: 'Alice' }))
+
+    for (const name of ['Wonderland', 'Looking Glass']) {
+      await user.type(seriesInput, name)
+      await user.click(await screen.findByRole('option', { name }))
+    }
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+
+    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalled())
+    expect(characterUpdate).not.toHaveBeenCalled()
+  })
+
+  it('does not re-link a character that already has the sole series', async () => {
+    seriesData = [{ id: 's1', name: 'Wonderland' }]
+    charactersData = [{ id: 'c1', name: 'Alice', series: [{ id: 's1', name: 'Wonderland' }] }]
+    const characterUpdate = vi.fn()
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({
+      media: { create: mediaCreate },
+      character: { create: vi.fn(), update: characterUpdate }
+    })
+    const user = userEvent.setup()
+    const { container } = renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('pic.png'))
+
+    const [, , charactersInput] = screen.getAllByRole('combobox')
+    await user.type(charactersInput, 'Alice')
+    await user.click(await screen.findByRole('option', { name: 'Alice' }))
+    // Alice has exactly one series already, so picking her auto-adds
+    // Wonderland via the existing implied-series behavior.
+    expect(await screen.findByText('Wonderland')).toBeInTheDocument()
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+
+    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalled())
+    expect(characterUpdate).not.toHaveBeenCalled()
   })
 })

@@ -64,7 +64,8 @@ beforeEach(() => {
       tag: { create: vi.fn() },
       character: { create: vi.fn() },
       series: { create: vi.fn() },
-      system: { showInFolder: vi.fn() }
+      system: { showInFolder: vi.fn() },
+      sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) }
     },
     writable: true,
     configurable: true
@@ -205,7 +206,8 @@ describe('MediaPage editing', () => {
         media: { update },
         artist: { create: vi.fn() },
         tag: { create: vi.fn() },
-        character: { create: vi.fn() }
+        character: { create: vi.fn() },
+        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) }
       },
       writable: true,
       configurable: true
