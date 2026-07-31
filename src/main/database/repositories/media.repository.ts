@@ -274,6 +274,21 @@ export async function setMediaSeries(
   }
 }
 
+export function listMediaRoutes(db: Kysely<DB>): Promise<{ id: string; route: string }[]> {
+  return db.selectFrom('media').select(['id', 'route']).execute()
+}
+
+export async function updateMediaRoutes(
+  db: Kysely<DB>,
+  updates: { id: string; route: string }[]
+): Promise<void> {
+  await db.transaction().execute(async (trx) => {
+    for (const update of updates) {
+      await trx.updateTable('media').set({ route: update.route }).where('id', '=', update.id).execute()
+    }
+  })
+}
+
 export async function findTagsForMediaIds(
   db: Kysely<DB>,
   mediaIds: string[]
