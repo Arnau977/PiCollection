@@ -11,6 +11,10 @@ beforeEach(() => {
   Object.defineProperty(window, 'api', {
     value: {
       system: { getAppVersion: vi.fn().mockResolvedValue({ success: true, data: '1.0.0' }) },
+      sauceNao: {
+        getApiKey: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+        setApiKey: vi.fn().mockResolvedValue({ success: true, data: undefined })
+      },
       updater: {
         getChannel: vi.fn().mockResolvedValue({ success: true, data: 'stable' }),
         setChannel: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -108,5 +112,55 @@ describe('SettingsPage', () => {
     await user.click(screen.getByLabelText(/^Beta/))
 
     expect(window.api.updater.setChannel).toHaveBeenCalledWith('beta')
+  })
+
+  it('loads a previously-saved SauceNAO API key into the field', async () => {
+    Object.defineProperty(window, 'api', {
+      value: {
+        ...window.api,
+        sauceNao: {
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'saved-key' }),
+          setApiKey: vi.fn().mockResolvedValue({ success: true, data: undefined })
+        }
+      },
+      writable: true,
+      configurable: true
+    })
+    render(<SettingsPage />)
+
+    await waitFor(() => expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('saved-key'))
+  })
+
+  it('saves the SauceNAO API key when Save is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SettingsPage />)
+
+    await user.type(screen.getByLabelText('SauceNAO API key'), 'my-new-key')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(window.api.sauceNao.setApiKey).toHaveBeenCalledWith('my-new-key')
+    expect(await screen.findByText('Saved.')).toBeInTheDocument()
+  })
+
+  it('clears the SauceNAO API key when Clear is clicked', async () => {
+    Object.defineProperty(window, 'api', {
+      value: {
+        ...window.api,
+        sauceNao: {
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'saved-key' }),
+          setApiKey: vi.fn().mockResolvedValue({ success: true, data: undefined })
+        }
+      },
+      writable: true,
+      configurable: true
+    })
+    const user = userEvent.setup()
+    render(<SettingsPage />)
+
+    await waitFor(() => expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('saved-key'))
+    await user.click(screen.getByRole('button', { name: 'Clear' }))
+
+    expect(window.api.sauceNao.setApiKey).toHaveBeenCalledWith(undefined)
+    expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('')
   })
 })
