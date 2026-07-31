@@ -2,7 +2,13 @@ import { promises as fs } from 'fs'
 import { getDb } from '../database/connection'
 import * as mediaRepo from '../database/repositories/media.repository'
 import { findCommonPathPrefix, withTrailingSeparator } from './pathPrefix'
-import type { MediaModel, MissingFileItem, MissingFilesCheck, RelinkOneResult, RelinkResult } from '@shared/models'
+import type {
+  MediaModel,
+  MissingFileItem,
+  MissingFilesCheck,
+  RelinkOneResult,
+  RelinkResult
+} from '@shared/models'
 
 // Windows and macOS treat paths case-insensitively; Linux does not. The
 // comparison has to follow the host filesystem, but the stored casing is

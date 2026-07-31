@@ -219,6 +219,64 @@ describe('MissingFilesSection', () => {
     expect(screen.getByText('Dog photo')).toBeInTheDocument()
   })
 
+  it('preserves the in-progress bulk relink form when a single item is relinked', async () => {
+    setApi({
+      checkMissingFiles: vi
+        .fn()
+        .mockResolvedValueOnce({
+          success: true,
+          data: {
+            totalCount: 2,
+            missingCount: 2,
+            suggestedOldRoot: 'D:\\Old\\',
+            missingItems: [
+              { id: 'a', name: 'Cat photo', route: 'C:\\Old\\cat.png', type: 'image' },
+              { id: 'b', name: 'Dog photo', route: 'C:\\Old\\dog.png', type: 'image' }
+            ]
+          }
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          data: {
+            totalCount: 2,
+            missingCount: 1,
+            // Deliberately different from what's typed in the form, and from
+            // the first suggestion, so a wipe-and-reset would be detectable.
+            suggestedOldRoot: 'F:\\SomethingElse\\',
+            missingItems: [{ id: 'b', name: 'Dog photo', route: 'C:\\Old\\dog.png', type: 'image' }]
+          }
+        }),
+      pickFolder: vi
+        .fn()
+        .mockResolvedValue({ success: true, data: { cancelled: false, path: 'E:\\New\\' } }),
+      pickFile: vi
+        .fn()
+        .mockResolvedValue({ success: true, data: { cancelled: false, path: 'C:\\New\\cat.png' } }),
+      relinkOne: vi.fn().mockResolvedValue({ success: true, data: { updated: true } })
+    })
+    const user = userEvent.setup()
+    render(<MissingFilesSection />)
+
+    await user.click(screen.getByRole('button', { name: 'Check for missing files' }))
+
+    // Arm the bulk relink form: type a custom old root and pick a new folder.
+    const oldRootInput = await screen.findByDisplayValue('D:\\Old\\')
+    await user.clear(oldRootInput)
+    await user.type(oldRootInput, 'Custom\\Old\\')
+    await user.click(screen.getByRole('button', { name: 'Choose new folder...' }))
+    expect(await screen.findByText('New folder: E:\\New\\')).toBeInTheDocument()
+
+    // Now relink a single renamed file from the list below.
+    const catRow = screen.getByText('Cat photo').closest('li')!
+    await user.click(within(catRow).getByRole('button', { name: 'Choose new file...' }))
+
+    expect(await screen.findByText('1 of 2 files are missing.')).toBeInTheDocument()
+    // The bulk form's typed old root and picked new folder must survive the
+    // per-item relink refresh, not be wiped back to the fresh suggestion.
+    expect(screen.getByDisplayValue('Custom\\Old\\')).toBeInTheDocument()
+    expect(screen.getByText('New folder: E:\\New\\')).toBeInTheDocument()
+  })
+
   it('does nothing when the file picker is cancelled', async () => {
     setApi({
       checkMissingFiles: vi.fn().mockResolvedValue({

@@ -24,7 +24,7 @@ export function MissingFilesSection(): JSX.Element {
   const [state, setState] = useState<CheckState>({ kind: 'idle' })
   const [relinkingIds, setRelinkingIds] = useState<Set<string>>(new Set())
 
-  async function refresh(message?: string): Promise<void> {
+  async function refresh(message?: string, preserveForm = false): Promise<void> {
     const result = await window.api.maintenance.checkMissingFiles()
     if (!result.success) {
       setState({ kind: 'error', message: result.error.message })
@@ -34,13 +34,14 @@ export function MissingFilesSection(): JSX.Element {
       setState({ kind: 'clean', totalCount: result.data.totalCount })
       return
     }
+    const keepForm = preserveForm && state.kind === 'missing'
     setState({
       kind: 'missing',
       totalCount: result.data.totalCount,
       missingCount: result.data.missingCount,
       items: result.data.missingItems,
-      oldRoot: result.data.suggestedOldRoot ?? '',
-      newRoot: '',
+      oldRoot: keepForm ? state.oldRoot : (result.data.suggestedOldRoot ?? ''),
+      newRoot: keepForm ? state.newRoot : '',
       lastRelinkMessage: message
     })
   }
@@ -90,7 +91,7 @@ export function MissingFilesSection(): JSX.Element {
       setState({ kind: 'error', message: result.error.message })
       return
     }
-    await refresh()
+    await refresh(undefined, true)
   }
 
   return (
@@ -128,9 +129,7 @@ export function MissingFilesSection(): JSX.Element {
               total: state.totalCount
             })}
           </p>
-          {state.lastRelinkMessage && (
-            <p className="settings-version">{state.lastRelinkMessage}</p>
-          )}
+          {state.lastRelinkMessage && <p className="settings-version">{state.lastRelinkMessage}</p>}
           <label className="field">
             <span>{t('settings.missingFilesOldRoot')}</span>
             <input
