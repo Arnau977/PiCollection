@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Palette, Tags, Users, BookOpen } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import type { EntityCount, StatsSummary } from '@shared/models'
 import Gallery from '../../components/Gallery'
@@ -14,15 +15,22 @@ const EMPTY_STATS: StatsSummary = { topArtists: [], topTags: [], topCharacters: 
 interface StatsPanelProps {
   title: string
   items: EntityCount[]
+  icon: React.ReactNode
+  accent: 'violet' | 'blue' | 'green' | 'amber'
 }
 
-function StatsPanel({ title, items }: StatsPanelProps): JSX.Element {
+function StatsPanel({ title, items, icon, accent }: StatsPanelProps): JSX.Element {
   const { t } = useTranslation()
   const max = Math.max(1, ...items.map((item) => item.count))
 
   return (
-    <div className="card stats-panel">
-      <h3>{title}</h3>
+    <div className={`card stats-panel stats-panel-${accent}`}>
+      <h3>
+        <span className="stats-panel-icon" aria-hidden="true">
+          {icon}
+        </span>
+        {title}
+      </h3>
       {items.length === 0 ? (
         <p className="stats-empty">{t('home.noData')}</p>
       ) : (
@@ -72,7 +80,7 @@ export default function HomePage(): JSX.Element {
 
   return (
     <div className="page home-page">
-      <h1>{t('home.title')}</h1>
+      <h1 className="gradient-title">{t('home.title')}</h1>
 
       <section className="home-section">
         <div className="home-section-header">
@@ -98,10 +106,30 @@ export default function HomePage(): JSX.Element {
           <p className="loading-state">{t('gallery.loading')}</p>
         ) : (
           <div className="home-stats-grid">
-            <StatsPanel title={t('home.topArtists')} items={stats.topArtists} />
-            <StatsPanel title={t('home.topTags')} items={stats.topTags} />
-            <StatsPanel title={t('home.topCharacters')} items={stats.topCharacters} />
-            <StatsPanel title={t('home.topSeries')} items={stats.topSeries} />
+            <StatsPanel
+              title={t('home.topArtists')}
+              items={stats.topArtists}
+              icon={<Palette size={16} />}
+              accent="violet"
+            />
+            <StatsPanel
+              title={t('home.topTags')}
+              items={stats.topTags}
+              icon={<Tags size={16} />}
+              accent="blue"
+            />
+            <StatsPanel
+              title={t('home.topCharacters')}
+              items={stats.topCharacters}
+              icon={<Users size={16} />}
+              accent="green"
+            />
+            <StatsPanel
+              title={t('home.topSeries')}
+              items={stats.topSeries}
+              icon={<BookOpen size={16} />}
+              accent="amber"
+            />
           </div>
         )}
       </section>
