@@ -284,7 +284,11 @@ export async function updateMediaRoutes(
 ): Promise<void> {
   await db.transaction().execute(async (trx) => {
     for (const update of updates) {
-      await trx.updateTable('media').set({ route: update.route }).where('id', '=', update.id).execute()
+      await trx
+        .updateTable('media')
+        .set({ route: update.route })
+        .where('id', '=', update.id)
+        .execute()
     }
   })
 }
