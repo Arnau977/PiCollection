@@ -38,7 +38,15 @@
     "sauceNaoApiKeyHint": "Necesaria para que las sugerencias de tags funcionen - SauceNAO ya no permite acceso anónimo a su API. Regístrate gratis en saucenao.com y pega aquí tu clave.",
     "sauceNaoApiKeySave": "Guardar",
     "sauceNaoApiKeyClear": "Borrar",
-    "sauceNaoApiKeySaved": "Guardado."
+    "sauceNaoApiKeySaved": "Guardado.",
+    "backupTitle": "Copia de seguridad",
+    "backupHint": "Exporta todo (biblioteca, tags, ajustes, preferencias) en un solo archivo, o restaura desde una exportación anterior. Importar reemplaza todos los datos actuales.",
+    "backupExport": "Exportar...",
+    "backupImport": "Importar...",
+    "backupExported": "Copia de seguridad exportada.",
+    "backupImportConfirm": "Esto reemplaza toda tu biblioteca y ajustes con la copia importada. ¿Continuar?",
+    "backupImportedNeedsRestart": "Copia importada. Reinicia la app para terminar.",
+    "backupRestartNow": "Reiniciar ahora"
   },
   "home": {
     "title": "Inicio",
