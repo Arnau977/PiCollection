@@ -22,6 +22,18 @@ beforeEach(() => {
         downloadUpdate: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         quitAndInstall: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         onEvent: vi.fn().mockReturnValue(() => {})
+      },
+      backup: {
+        export: vi.fn().mockResolvedValue({ success: true, data: { cancelled: true } }),
+        import: vi.fn().mockResolvedValue({ success: true, data: { cancelled: true } })
+      },
+      maintenance: {
+        checkMissingFiles: vi.fn().mockResolvedValue({
+          success: true,
+          data: { totalCount: 0, missingCount: 0, suggestedOldRoot: null }
+        }),
+        pickFolder: vi.fn(),
+        relinkMissingFiles: vi.fn()
       }
     },
     writable: true,
@@ -162,5 +174,11 @@ describe('SettingsPage', () => {
 
     expect(window.api.sauceNao.setApiKey).toHaveBeenCalledWith(undefined)
     expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('')
+  })
+
+  it('renders the backup and missing-files sections', () => {
+    render(<SettingsPage />)
+    expect(screen.getByRole('heading', { name: 'Backup & Restore' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Missing files' })).toBeInTheDocument()
   })
 })

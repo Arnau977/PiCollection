@@ -36,6 +36,11 @@ sends a thumbnail to saucenao.com only when you press it.
   allows anonymous API access at all, so the suggestions button doesn't
   appear at all until a key is configured. This is the only feature that
   sends anything off your machine, and only on that explicit button press.
+- **Backup & Restore** — export the whole library (database, tags, settings,
+  gallery preferences) to a single `.zip` from Settings, and restore it as a
+  full replace on any install. A separate "Missing files" tool detects media
+  whose files moved and bulk-relinks them to a new folder in one step,
+  without ever needing to re-copy the files themselves.
 - **Duplicate detection** — adding media checks the new file's path and
   content against what's already in the library: an exact match (same file,
   even from a different path) blocks the add, and a visually similar file
