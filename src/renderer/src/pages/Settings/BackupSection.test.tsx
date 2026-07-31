@@ -39,7 +39,9 @@ describe('BackupSection', () => {
   })
 
   it('does not show a success message when export is cancelled', async () => {
-    setApi({ backup: { export: vi.fn().mockResolvedValue({ success: true, data: { cancelled: true } }) } })
+    setApi({
+      backup: { export: vi.fn().mockResolvedValue({ success: true, data: { cancelled: true } }) }
+    })
     const user = userEvent.setup()
     render(<BackupSection />)
 
