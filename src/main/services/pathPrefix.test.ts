@@ -11,15 +11,15 @@ describe('findCommonPathPrefix', () => {
   })
 
   it('finds the shared folder for paths in the same directory', () => {
-    expect(
-      findCommonPathPrefix(['C:\\Pics\\sub\\a.png', 'C:\\Pics\\sub\\b.png'])
-    ).toBe('C:\\Pics\\sub\\')
+    expect(findCommonPathPrefix(['C:\\Pics\\sub\\a.png', 'C:\\Pics\\sub\\b.png'])).toBe(
+      'C:\\Pics\\sub\\'
+    )
   })
 
   it('stops at the last shared directory when paths diverge into sibling folders', () => {
-    expect(
-      findCommonPathPrefix(['C:\\Pics\\sub1\\a.png', 'C:\\Pics\\sub2\\b.png'])
-    ).toBe('C:\\Pics\\')
+    expect(findCommonPathPrefix(['C:\\Pics\\sub1\\a.png', 'C:\\Pics\\sub2\\b.png'])).toBe(
+      'C:\\Pics\\'
+    )
   })
 
   it('returns null when paths share no directory at all', () => {
@@ -27,20 +27,16 @@ describe('findCommonPathPrefix', () => {
   })
 
   it('works with forward-slash paths', () => {
-    expect(
-      findCommonPathPrefix(['/home/user/pics/a.png', '/home/user/pics/b.png'])
-    ).toBe('/home/user/pics/')
+    expect(findCommonPathPrefix(['/home/user/pics/a.png', '/home/user/pics/b.png'])).toBe(
+      '/home/user/pics/'
+    )
   })
 
   it('handles paths with different segment counts (longer first, shorter second)', () => {
-    expect(
-      findCommonPathPrefix(['C:\\Pics\\sub\\a.png', 'C:\\Pics\\sub'])
-    ).toBe('C:\\Pics\\')
+    expect(findCommonPathPrefix(['C:\\Pics\\sub\\a.png', 'C:\\Pics\\sub'])).toBe('C:\\Pics\\')
   })
 
   it('handles paths with different segment counts (shorter first, longer second)', () => {
-    expect(
-      findCommonPathPrefix(['C:\\Pics\\sub', 'C:\\Pics\\sub\\a.png'])
-    ).toBe('C:\\Pics\\')
+    expect(findCommonPathPrefix(['C:\\Pics\\sub', 'C:\\Pics\\sub\\a.png'])).toBe('C:\\Pics\\')
   })
 })
