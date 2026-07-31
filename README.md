@@ -3,7 +3,9 @@
 A local-first desktop gallery for images, GIFs and videos, built with Electron,
 React and TypeScript. Media stays on disk exactly where it already is —
 PiCollection only indexes it in a local SQLite database, so you can tag,
-browse and filter a personal collection without uploading anything anywhere.
+browse and filter a personal collection without uploading anything anywhere,
+with one explicit, opt-in exception: the "Suggest tags" button (see below)
+sends a thumbnail to saucenao.com only when you press it.
 
 ## Features
 
@@ -22,6 +24,22 @@ browse and filter a personal collection without uploading anything anywhere.
   launches.
 - **Auto-update** — checks GitHub Releases for new versions, with an opt-in
   beta channel; see [`docs/auto-update.md`](docs/auto-update.md).
+- **Tag suggestions** — on the add/edit media form, "Suggest tags" sends a
+  thumbnail to [SauceNAO](https://saucenao.com) to find the source artwork
+  and pre-fill its known artist/characters/series/tags. Works on images,
+  GIFs and videos (via the same poster-frame/first-frame thumbnail already
+  used elsewhere). Suggestions that match an existing character/series by
+  name or alias are applied silently instead of being offered again. When
+  the match includes a known artist social profile (Pixiv, Twitter/X), it's
+  linked automatically if you create that artist from the suggestion.
+  Requires a free SauceNAO API key set in Settings — SauceNAO no longer
+  allows anonymous API access at all, so the suggestions button doesn't
+  appear at all until a key is configured. This is the only feature that
+  sends anything off your machine, and only on that explicit button press.
+- **Duplicate detection** — adding media checks the new file's path and
+  content against what's already in the library: an exact match (same file,
+  even from a different path) blocks the add, and a visually similar file
+  (e.g. a recompressed or resized copy) shows a non-blocking warning.
 
 ## Tech stack
 

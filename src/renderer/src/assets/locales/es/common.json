@@ -6,7 +6,7 @@
     "home": "Inicio",
     "gallery": "Galería",
     "settings": "Ajustes",
-    "manage": "Biblioteca"
+    "manage": "Metadatos"
   },
   "settings": {
     "title": "Ajustes",
@@ -33,7 +33,12 @@
     "downloadingUpdate": "Descargando actualización... {{percent}}%",
     "updateReady": "La versión {{version}} está lista para instalarse.",
     "restartAndInstall": "Reiniciar e instalar",
-    "updateCheckFailed": "Fallo al buscar actualizaciones: {{message}}"
+    "updateCheckFailed": "Fallo al buscar actualizaciones: {{message}}",
+    "sauceNaoApiKey": "Clave de API de SauceNAO",
+    "sauceNaoApiKeyHint": "Necesaria para que las sugerencias de tags funcionen - SauceNAO ya no permite acceso anónimo a su API. Regístrate gratis en saucenao.com y pega aquí tu clave.",
+    "sauceNaoApiKeySave": "Guardar",
+    "sauceNaoApiKeyClear": "Borrar",
+    "sauceNaoApiKeySaved": "Guardado."
   },
   "home": {
     "title": "Inicio",
@@ -60,6 +65,15 @@
       "previous": "Anterior",
       "next": "Siguiente",
       "page": "Página {{page}} de {{total}}"
+    },
+    "density": {
+      "label": "Tamaño de cuadrícula",
+      "compact": "Compacto",
+      "comfortable": "Cómodo",
+      "large": "Grande"
+    },
+    "pageSize": {
+      "label": "Por página"
     }
   },
   "filters": {
@@ -118,7 +132,10 @@
     "sfw": "SFW",
     "aiGenerated": "Generado mediante IA",
     "submit": "Añadir",
-    "successTitle": "Media añadido correctamente"
+    "successTitle": "Media añadido correctamente",
+    "duplicateExact": "Este archivo ya está en la biblioteca como \"{{name}}\".",
+    "duplicateSimilar": "Se parece a media que ya está en la biblioteca:",
+    "duplicateSimilarMatch": "{{distance}}/64 de diferencia"
   },
   "autocomplete": {
     "noResults": "Sin resultados",
@@ -134,7 +151,7 @@
     "seriesPrefix": "Series"
   },
   "manage": {
-    "title": "Biblioteca",
+    "title": "Metadatos",
     "artists": "Artistas",
     "tags": "Tags",
     "characters": "Personajes",
@@ -160,5 +177,24 @@
     "searchPlaceholder": "Buscar por nombre...",
     "searchLabel": "Buscar",
     "noResults": "No hay coincidencias para tu búsqueda."
+  },
+  "sauceNao": {
+    "button": "Sugerir tags",
+    "searching": "Buscando...",
+    "privacyHint": "Envía una miniatura de este archivo a saucenao.com para buscar una coincidencia. No se sube nada más, y solo al pulsar este botón.",
+    "videoHint": "Funciona mejor con arte original; puede que no reconozca clips de un anime o episodio.",
+    "similarity": "{{value}}% de coincidencia",
+    "viewSource": "Ver fuente",
+    "applied": "Se añadieron {{count}} sugerencias",
+    "noMatch": "No se encontró ninguna coincidencia fiable.",
+    "dismiss": "Descartar",
+    "quota": "{{count}} búsquedas restantes hoy",
+    "add": "Añadir",
+    "missingArtist": "Artista nuevo",
+    "missingTags": "Tags nuevos",
+    "missingCharacters": "Personajes nuevos",
+    "missingSeries": "Series nuevas",
+    "noApiKeyHint": "Las sugerencias de tags necesitan una API key gratuita de SauceNAO.",
+    "noApiKeyHintLink": "Añádela en Ajustes"
   }
 }

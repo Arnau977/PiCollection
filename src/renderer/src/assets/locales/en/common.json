@@ -6,7 +6,7 @@
     "home": "Home",
     "gallery": "Gallery",
     "settings": "Settings",
-    "manage": "Library"
+    "manage": "Metadata"
   },
   "settings": {
     "title": "Settings",
@@ -33,7 +33,12 @@
     "downloadingUpdate": "Downloading update... {{percent}}%",
     "updateReady": "Version {{version}} is ready to install.",
     "restartAndInstall": "Restart and install",
-    "updateCheckFailed": "Update check failed: {{message}}"
+    "updateCheckFailed": "Update check failed: {{message}}",
+    "sauceNaoApiKey": "SauceNAO API key",
+    "sauceNaoApiKeyHint": "Required for tag suggestions to work - SauceNAO no longer allows anonymous API access. Register a free account at saucenao.com and paste your key here.",
+    "sauceNaoApiKeySave": "Save",
+    "sauceNaoApiKeyClear": "Clear",
+    "sauceNaoApiKeySaved": "Saved."
   },
   "home": {
     "title": "Home",
@@ -60,6 +65,15 @@
       "previous": "Previous",
       "next": "Next",
       "page": "Page {{page}} of {{total}}"
+    },
+    "density": {
+      "label": "Grid size",
+      "compact": "Compact",
+      "comfortable": "Comfortable",
+      "large": "Large"
+    },
+    "pageSize": {
+      "label": "Per page"
     }
   },
   "filters": {
@@ -118,7 +132,10 @@
     "sfw": "SFW",
     "aiGenerated": "AI-generated",
     "submit": "Add",
-    "successTitle": "Media added successfully"
+    "successTitle": "Media added successfully",
+    "duplicateExact": "This file is already in the library as \"{{name}}\".",
+    "duplicateSimilar": "This looks similar to media already in the library:",
+    "duplicateSimilarMatch": "{{distance}}/64 difference"
   },
   "autocomplete": {
     "noResults": "No results",
@@ -134,7 +151,7 @@
     "seriesPrefix": "Series"
   },
   "manage": {
-    "title": "Library",
+    "title": "Metadata",
     "artists": "Artists",
     "tags": "Tags",
     "characters": "Characters",
@@ -160,5 +177,24 @@
     "searchPlaceholder": "Search by name...",
     "searchLabel": "Search",
     "noResults": "No matches for your search."
+  },
+  "sauceNao": {
+    "button": "Suggest tags",
+    "searching": "Searching...",
+    "privacyHint": "Sends a thumbnail of this file to saucenao.com to look for a match. Nothing else is uploaded, and only when you press this button.",
+    "videoHint": "Works best on original artwork; may not recognize clips from a show or episode.",
+    "similarity": "{{value}}% match",
+    "viewSource": "View source",
+    "applied": "Added {{count}} suggestions",
+    "noMatch": "No confident match found.",
+    "dismiss": "Dismiss",
+    "quota": "{{count}} searches left today",
+    "add": "Add",
+    "missingArtist": "New artist",
+    "missingTags": "New tags",
+    "missingCharacters": "New characters",
+    "missingSeries": "New series",
+    "noApiKeyHint": "Tag suggestions need a free SauceNAO API key.",
+    "noApiKeyHintLink": "Add one in Settings"
   }
 }

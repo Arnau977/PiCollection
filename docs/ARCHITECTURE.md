@@ -187,7 +187,7 @@ add a `Location` entity, taggable on media the same way.
     `src/renderer/src/hooks/useEntityLists.ts`), and a `LocationsManager.tsx`
     component (copy `TagsManager.tsx`) added as a new tab in
     `src/renderer/src/pages/Manage/ManagePage.tsx` (it renders
-    Artists/Tags/Characters/Series as tabs of one "Library" page, not separate
+    Artists/Tags/Characters/Series as tabs of one "Metadata" page, not separate
     routes — add `'locations'` to the `ManageTab` union, a tab button, and a
     `<div hidden={tab !== 'locations'}>` panel next to the existing ones). Add
     a `MultiSelectAutocomplete` field to `MediaForm.tsx` and the gallery
@@ -217,3 +217,4 @@ add a `Location` entity, taggable on media the same way.
 | Gallery search parser | `src/shared/query/searchQuery.ts` |
 | Pages/components | `src/renderer/src/pages/`, `src/renderer/src/components/` |
 | Auto-update | `src/main/updater/` (see [`docs/auto-update.md`](auto-update.md)) |
+| SauceNAO tag suggestions | `src/main/services/sauceNao.*.ts` — the only module making outbound network calls for user content, and only on an explicit button press (see `src/renderer/src/pages/Media/MediaForm.tsx`) |
