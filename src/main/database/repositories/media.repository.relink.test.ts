@@ -65,4 +65,16 @@ describe('updateMediaRoutes', () => {
     expect(byId.get(b.id)).toBe('D:\\New\\b.png')
     expect(byId.get(untouched.id)).toBe('C:\\Keep\\c.png')
   })
+
+  it('handles empty update array without error', async () => {
+    const a = await insertMedia('C:\\Old\\a.png')
+    const b = await insertMedia('C:\\Old\\b.png')
+
+    await mediaRepo.updateMediaRoutes(db, [])
+
+    const routes = await mediaRepo.listMediaRoutes(db)
+    const byId = new Map(routes.map((row) => [row.id, row.route]))
+    expect(byId.get(a.id)).toBe('C:\\Old\\a.png')
+    expect(byId.get(b.id)).toBe('C:\\Old\\b.png')
+  })
 })
