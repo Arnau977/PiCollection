@@ -22,8 +22,8 @@ export const DEFAULT_WINDOW_STATE: SavedWindowState = {
   isMaximized: false
 }
 
-const MIN_WIDTH = 640
-const MIN_HEIGHT = 480
+export const MIN_WIDTH = 640
+export const MIN_HEIGHT = 480
 
 /**
  * A window counts as visible when a reasonable slice of its title bar area

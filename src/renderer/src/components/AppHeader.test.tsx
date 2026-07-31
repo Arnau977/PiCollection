@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { AppHeader } from './AppHeader'
 
 describe('AppHeader', () => {
-  it('links to the home, gallery, library and settings routes', () => {
+  it('links to the home, gallery, metadata and settings routes', () => {
     render(
       <MemoryRouter>
         <AppHeader />
@@ -15,7 +15,7 @@ describe('AppHeader', () => {
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Gallery' })).toHaveAttribute('href', '/gallery')
     expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings')
-    expect(screen.getByRole('link', { name: 'Library' })).toHaveAttribute('href', '/manage')
+    expect(screen.getByRole('link', { name: 'Metadata' })).toHaveAttribute('href', '/manage')
   })
 
   it('links the brand logo to home', () => {

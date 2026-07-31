@@ -8,6 +8,7 @@ import { runMigrations } from './database/migrations/migrator'
 import { registerMediaProtocolHandler, registerMediaProtocolScheme } from './media-protocol'
 import { registerIpcHandlers } from './ipc/registerIpcHandlers'
 import { createWindowStateKeeper } from './window/windowState'
+import { MIN_WIDTH, MIN_HEIGHT } from './window/windowBounds'
 import { checkForUpdates, initAutoUpdater } from './updater/autoUpdater'
 
 registerMediaProtocolScheme()
@@ -23,6 +24,8 @@ function createWindow(): BrowserWindow {
     y: windowState.state.y,
     width: windowState.state.width,
     height: windowState.state.height,
+    minWidth: MIN_WIDTH,
+    minHeight: MIN_HEIGHT,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),

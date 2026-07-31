@@ -22,17 +22,23 @@
   --color-background-soft: var(--ev-c-black-soft);
   --color-background-mute: var(--ev-c-black-mute);
   --color-surface: #1e1f26;
+  --color-surface-2: #23242c;
   --color-surface-hover: #262832;
   --color-text: var(--ev-c-text-1);
   --color-text-muted: var(--ev-c-text-2);
   --color-text-faint: var(--ev-c-text-3);
   --border-color: rgba(255, 255, 255, 0.1);
+  --border-color-strong: rgba(255, 255, 255, 0.18);
 
-  /* Accent */
+  /* Accent - violet paired with a cooler blue for gradients/glows */
   --accent: #7c6cf0;
   --accent-hover: #8f81f5;
   --accent-text: #ffffff;
   --accent-soft: rgba(124, 108, 240, 0.16);
+  --accent-2: #4fb6ff;
+  --accent-gradient: linear-gradient(135deg, #8f7bf7 0%, #7c6cf0 45%, #4fb6ff 100%);
+  --accent-glow: 0 8px 28px rgba(124, 108, 240, 0.35);
+  --accent-glow-sm: 0 2px 10px rgba(124, 108, 240, 0.3);
 
   /* Semantic aliases used by react-aria-components based CSS */
   --text-color: var(--color-text);
@@ -47,11 +53,14 @@
   --color-success-soft: rgba(74, 222, 128, 0.15);
   --color-danger: #f87171;
   --color-danger-soft: rgba(248, 113, 113, 0.15);
+  --color-info: #4fb6ff;
+  --color-info-soft: rgba(79, 182, 255, 0.15);
 
   /* Radii */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
+  --radius-xl: 22px;
   --radius-pill: 999px;
 
   /* Spacing scale */
@@ -61,11 +70,24 @@
   --space-4: 16px;
   --space-5: 24px;
   --space-6: 32px;
+  --space-7: 48px;
 
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+
+  /* App shell */
+  --sidebar-w: 236px;
+  --sidebar-w-collapsed: 76px;
+
+  /* Fluid page container */
+  --page-max-w: 1600px;
+  --page-pad-x: clamp(1.1rem, 2.6vw, 3rem);
+  --page-pad-y: clamp(1.25rem, 2.4vw, 2.5rem);
+
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
 }
 
 *,
@@ -114,10 +136,27 @@ h3 {
   line-height: 1.25;
   font-weight: 700;
   color: var(--color-text);
+  letter-spacing: -0.01em;
 }
 
 h1 {
-  font-size: 1.6rem;
+  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.1rem);
+  font-weight: 800;
+}
+
+/* Shared page-title treatment (Home/Gallery/Metadata/Settings): every page's
+   h1 should look and sit identically so switching pages doesn't feel like
+   the heading is jumping around. */
+.gradient-title {
+  /* Without this, the h1 (a stretched flex child) keeps the full container
+     width, so the gradient background paints across that whole span and only
+     a near-solid sliver shows behind short titles like "Home" or "Settings". */
+  width: max-content;
+  max-width: 100%;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 h2 {
@@ -130,4 +169,30 @@ h2 {
 
 p {
   color: var(--color-text);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-hover);
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-surface-2);
+  background-clip: padding-box;
 }

@@ -1,62 +1,128 @@
-.app-header {
+.app-sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3) var(--space-5);
-  padding: var(--space-3) var(--space-5);
-  background: rgba(20, 21, 26, 0.75);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border-color);
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-3);
+  background: rgba(20, 21, 26, 0.6);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border-color);
+  height: 100vh;
   position: sticky;
   top: 0;
-  z-index: 10;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-@media (max-width: 640px) {
-  .app-header {
-    gap: var(--space-2) var(--space-3);
-    padding: var(--space-3) var(--space-3);
-  }
-
-  .app-header .app-brand {
-    margin-right: 0;
-    flex: 1 1 auto;
-  }
-}
-
-.app-header .app-brand {
-  font-weight: 700;
-  font-size: 1.05rem;
-  letter-spacing: 0.01em;
-  color: var(--color-text);
-  margin-right: auto;
-  text-decoration: none;
-}
-
-.app-header nav {
+.app-brand {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2);
+  text-decoration: none;
+  color: var(--color-text);
 }
 
-.app-header nav a {
+.app-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: var(--radius-md);
+  background: var(--accent-gradient);
+  box-shadow: var(--accent-glow-sm);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.1rem;
+  font-style: normal;
+}
+
+.app-brand-text {
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.app-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.app-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.65rem var(--space-3);
+  border-radius: var(--radius-md);
   color: var(--color-text-muted);
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.88rem;
-  padding: 0.4rem 0.9rem;
-  border-radius: var(--radius-pill);
+  font-size: 0.92rem;
+  white-space: nowrap;
   transition:
-    background-color 150ms ease,
-    color 150ms ease;
+    background-color var(--transition-base),
+    color var(--transition-base);
 }
 
-.app-header nav a:hover {
+.app-sidebar-link svg {
+  flex-shrink: 0;
+}
+
+.app-sidebar-link:hover {
   color: var(--color-text);
   background: var(--color-surface-hover);
 }
 
-.app-header nav a.active {
+.app-sidebar-link.active {
   color: var(--accent-text);
-  background: var(--accent);
+  background: var(--accent-gradient);
+  box-shadow: var(--accent-glow-sm);
+}
+
+/* Icon-only rail once the window gets too narrow for labels to have room
+   alongside the gallery/content area. Text stays in the DOM (just visually
+   hidden) so accessible names and the title tooltip are unaffected. */
+@media (max-width: 860px) {
+  .app-sidebar {
+    width: var(--sidebar-w-collapsed);
+    align-items: center;
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+  }
+
+  .app-brand {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .app-brand-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .app-sidebar-link {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    width: 2.75rem;
+  }
+
+  .app-sidebar-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 }

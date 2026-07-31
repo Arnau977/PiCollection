@@ -11,15 +11,19 @@ import { AppHeader } from './components/AppHeader'
 export default function AppRoutes(): JSX.Element {
   return (
     <Router>
-      <AppHeader />
-      <Routes>
-        <Route path={PATH.HOME} element={<HomePage />} />
-        <Route path={PATH.GALLERY} element={<GalleryPage />} />
-        <Route path={PATH.MEDIA} element={<MediaPage />} />
-        <Route path={PATH.ADD_MEDIA} element={<AddMediaPage />} />
-        <Route path={PATH.SETTINGS} element={<SettingsPage />} />
-        <Route path={PATH.MANAGE} element={<ManagePage />} />
-      </Routes>
+      <div className="app-shell">
+        <AppHeader />
+        <div className="app-content">
+          <Routes>
+            <Route path={PATH.HOME} element={<HomePage />} />
+            <Route path={PATH.GALLERY} element={<GalleryPage />} />
+            <Route path={PATH.MEDIA} element={<MediaPage />} />
+            <Route path={PATH.ADD_MEDIA} element={<AddMediaPage />} />
+            <Route path={PATH.SETTINGS} element={<SettingsPage />} />
+            <Route path={PATH.MANAGE} element={<ManagePage />} />
+          </Routes>
+        </div>
+      </div>
     </Router>
   )
 }
