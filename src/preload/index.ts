@@ -14,6 +14,7 @@ import type {
   MediaModel,
   MissingFilesCheck,
   PickFolderResult,
+  RelinkOneResult,
   RelinkResult,
   SauceNaoLookup,
   SeriesInput,
@@ -108,8 +109,12 @@ export const api = {
       ipcRenderer.invoke(IPC.maintenance.checkMissingFiles),
     pickFolder: (): Promise<IpcResult<PickFolderResult>> =>
       ipcRenderer.invoke(IPC.maintenance.pickFolder),
+    pickFile: (): Promise<IpcResult<PickFolderResult>> =>
+      ipcRenderer.invoke(IPC.maintenance.pickFile),
     relinkMissingFiles: (oldRoot: string, newRoot: string): Promise<IpcResult<RelinkResult>> =>
-      ipcRenderer.invoke(IPC.maintenance.relinkMissingFiles, { oldRoot, newRoot })
+      ipcRenderer.invoke(IPC.maintenance.relinkMissingFiles, { oldRoot, newRoot }),
+    relinkOne: (mediaId: string, newRoute: string): Promise<IpcResult<RelinkOneResult>> =>
+      ipcRenderer.invoke(IPC.maintenance.relinkOne, { mediaId, newRoute })
   },
   sauceNao: {
     lookup: (route: string): Promise<IpcResult<SauceNaoLookup>> =>
