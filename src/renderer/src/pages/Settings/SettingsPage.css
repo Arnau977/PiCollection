@@ -86,3 +86,46 @@
 .settings-relink-path {
   overflow-wrap: anywhere;
 }
+
+.settings-relink-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 480px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.settings-relink-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.settings-relink-item-thumb {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.settings-relink-item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.settings-relink-item-name {
+  font-weight: 600;
+}
+
+.settings-relink-item-route {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}

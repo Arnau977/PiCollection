@@ -278,6 +278,13 @@ export function listMediaRoutes(db: Kysely<DB>): Promise<{ id: string; route: st
   return db.selectFrom('media').select(['id', 'route']).execute()
 }
 
+/** Adds `name`/`type` to `listMediaRoutes` - used to list *which* files are missing, not just count them. */
+export function listMediaRoutesWithMeta(
+  db: Kysely<DB>
+): Promise<{ id: string; route: string; name: string; type: string }[]> {
+  return db.selectFrom('media').select(['id', 'route', 'name', 'type']).execute()
+}
+
 export async function updateMediaRoutes(
   db: Kysely<DB>,
   updates: { id: string; route: string }[]

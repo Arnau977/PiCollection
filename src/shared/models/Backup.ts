@@ -7,10 +7,18 @@ export interface BackupImportResult {
   gallerySettings?: unknown
 }
 
+export interface MissingFileItem {
+  id: string
+  name: string
+  route: string
+  type: 'image' | 'video' | 'gif'
+}
+
 export interface MissingFilesCheck {
   totalCount: number
   missingCount: number
   suggestedOldRoot: string | null
+  missingItems: MissingFileItem[]
 }
 
 export interface PickFolderResult {
@@ -21,4 +29,8 @@ export interface PickFolderResult {
 export interface RelinkResult {
   updatedCount: number
   stillMissingCount: number
+}
+
+export interface RelinkOneResult {
+  updated: boolean
 }

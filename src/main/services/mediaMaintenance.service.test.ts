@@ -54,10 +54,15 @@ describe('mediaMaintenanceService.checkMissingFiles', () => {
 
     const result = await mediaMaintenanceService.checkMissingFiles()
 
-    expect(result).toEqual({ totalCount: 1, missingCount: 0, suggestedOldRoot: null })
+    expect(result).toEqual({
+      totalCount: 1,
+      missingCount: 0,
+      suggestedOldRoot: null,
+      missingItems: []
+    })
   })
 
-  it('counts missing files and suggests their common root', async () => {
+  it('counts missing files, suggests their common root, and lists each one', async () => {
     const missingRoute = join(sourceDir, 'moved', 'a.png')
     await mediaService.addMedia(baseInput(missingRoute))
     const presentFile = join(sourceDir, 'b.png')
@@ -69,6 +74,20 @@ describe('mediaMaintenanceService.checkMissingFiles', () => {
     expect(result.totalCount).toBe(2)
     expect(result.missingCount).toBe(1)
     expect(result.suggestedOldRoot).toContain('moved')
+    expect(result.missingItems).toEqual([
+      { id: expect.any(String), name: 'pic', route: missingRoute, type: 'image' }
+    ])
+  })
+
+  it('caps the listed items at 50 while missingCount reflects the true total', async () => {
+    for (let i = 0; i < 55; i += 1) {
+      await mediaService.addMedia(baseInput(join(sourceDir, 'gone', `${i}.png`)))
+    }
+
+    const result = await mediaMaintenanceService.checkMissingFiles()
+
+    expect(result.missingCount).toBe(55)
+    expect(result.missingItems).toHaveLength(50)
   })
 })
 
@@ -153,5 +172,19 @@ describe('mediaMaintenanceService.relinkMissingFiles', () => {
 
     expect(result.updatedCount).toBe(1)
     expect(result.stillMissingCount).toBe(1)
+  })
+})
+
+describe('mediaMaintenanceService.relinkOne', () => {
+  it('sets the exact route for the given media id', async () => {
+    const missingRoute = join(sourceDir, 'old', 'a.png')
+    const created = await mediaService.addMedia(baseInput(missingRoute))
+
+    const newRoute = join(sourceDir, 'new', 'renamed.png')
+    const result = await mediaMaintenanceService.relinkOne(created.id, newRoute)
+
+    expect(result).toEqual({ updated: true })
+    const check = await mediaMaintenanceService.checkMissingFiles()
+    expect(check.missingItems.find((item) => item.id === created.id)?.route).toBe(newRoute)
   })
 })

@@ -48,6 +48,16 @@ describe('listMediaRoutes', () => {
   })
 })
 
+describe('listMediaRoutesWithMeta', () => {
+  it('returns id, route, name and type for every media row', async () => {
+    const a = await insertMedia('C:\\Old\\a.png')
+
+    const rows = await mediaRepo.listMediaRoutesWithMeta(db)
+
+    expect(rows).toEqual([{ id: a.id, route: 'C:\\Old\\a.png', name: 'pic', type: 'image' }])
+  })
+})
+
 describe('updateMediaRoutes', () => {
   it('applies every route update in one transaction', async () => {
     const a = await insertMedia('C:\\Old\\a.png')

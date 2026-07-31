@@ -58,7 +58,9 @@
     "missingFilesNewRootValue": "New folder: {{path}}",
     "missingFilesRelink": "Relink",
     "missingFilesRelinkConfirm": "This updates the saved path for every file under the old folder to the new one, not just the ones currently reported missing. Continue?",
-    "missingFilesRelinked": "Relinked {{updated}} files. {{stillMissing}} still missing."
+    "missingFilesRelinked": "Relinked {{updated}} files. {{stillMissing}} still missing.",
+    "missingFilesPickFile": "Choose new file...",
+    "missingFilesMoreHidden": "+{{count}} more not shown - use the folder relink above for large batches."
   },
   "home": {
     "title": "Home",
