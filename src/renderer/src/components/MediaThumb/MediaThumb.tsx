@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ImageOff, Play } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl, toThumbUrl } from '@shared/utils/mediaUrl'
 import { captureVideoFrame } from './captureVideoFrame'
@@ -16,6 +17,7 @@ interface MediaThumbProps {
  * full-size file on hover, where videos start playing and GIFs start animating.
  */
 export function MediaThumb({ type, route, alt }: MediaThumbProps): JSX.Element {
+  const { t } = useTranslation()
   const [hovered, setHovered] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -86,8 +88,13 @@ export function MediaThumb({ type, route, alt }: MediaThumbProps): JSX.Element {
       )}
 
       {failed && !capturedFrameUrl && (
-        <span className="media-thumb-fallback" aria-hidden="true">
-          <ImageOff size={20} />
+        <span
+          className="media-thumb-fallback"
+          role="img"
+          aria-label={t('mediaThumb.missingFile')}
+          title={t('mediaThumb.missingFile')}
+        >
+          <ImageOff size={20} aria-hidden="true" />
         </span>
       )}
 

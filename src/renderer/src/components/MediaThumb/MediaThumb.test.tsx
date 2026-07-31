@@ -57,6 +57,17 @@ describe('MediaThumb previews', () => {
     expect(container.querySelector('.media-thumb-fallback')).toBeInTheDocument()
     expect(container.querySelector('.media-thumb-loading')).not.toBeInTheDocument()
   })
+
+  it('labels the fallback icon as a missing file', () => {
+    const { container } = render(<MediaThumb type="image" route="/pics/a.png" alt="A picture" />)
+
+    fireEvent.error(screen.getByAltText('A picture'))
+
+    expect(container.querySelector('.media-thumb-fallback')).toHaveAttribute(
+      'title',
+      'File not found'
+    )
+  })
 })
 
 describe('MediaThumb videos', () => {

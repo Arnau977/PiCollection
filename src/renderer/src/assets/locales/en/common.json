@@ -197,6 +197,9 @@
     "searchLabel": "Search",
     "noResults": "No matches for your search."
   },
+  "mediaThumb": {
+    "missingFile": "File not found"
+  },
   "sauceNao": {
     "button": "Suggest tags",
     "searching": "Searching...",

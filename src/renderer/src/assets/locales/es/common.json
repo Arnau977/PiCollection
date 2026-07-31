@@ -197,6 +197,9 @@
     "searchLabel": "Buscar",
     "noResults": "No hay coincidencias para tu búsqueda."
   },
+  "mediaThumb": {
+    "missingFile": "Archivo no encontrado"
+  },
   "sauceNao": {
     "button": "Sugerir tags",
     "searching": "Buscando...",
