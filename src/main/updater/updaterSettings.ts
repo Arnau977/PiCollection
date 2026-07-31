@@ -10,14 +10,14 @@ interface SavedUpdaterSettings {
   channel: UpdateChannel
 }
 
-function settingsFilePath(): string {
+export function updaterSettingsFilePath(): string {
   return join(app.getPath('userData'), SETTINGS_FILE)
 }
 
 export function readUpdateChannel(): UpdateChannel {
   try {
     const raw = JSON.parse(
-      readFileSync(settingsFilePath(), 'utf-8')
+      readFileSync(updaterSettingsFilePath(), 'utf-8')
     ) as Partial<SavedUpdaterSettings>
     return raw.channel === 'beta' ? 'beta' : DEFAULT_CHANNEL
   } catch {
@@ -28,7 +28,7 @@ export function readUpdateChannel(): UpdateChannel {
 
 export function writeUpdateChannel(channel: UpdateChannel): void {
   try {
-    writeFileSync(settingsFilePath(), JSON.stringify({ channel }), 'utf-8')
+    writeFileSync(updaterSettingsFilePath(), JSON.stringify({ channel }), 'utf-8')
   } catch (err) {
     console.warn('Could not persist updater settings', err)
   }

@@ -8,14 +8,14 @@ interface SavedSauceNaoSettings {
   apiKey?: string
 }
 
-function settingsFilePath(): string {
+export function sauceNaoSettingsFilePath(): string {
   return join(app.getPath('userData'), SETTINGS_FILE)
 }
 
 export function readSauceNaoApiKey(): string | undefined {
   try {
     const raw = JSON.parse(
-      readFileSync(settingsFilePath(), 'utf-8')
+      readFileSync(sauceNaoSettingsFilePath(), 'utf-8')
     ) as Partial<SavedSauceNaoSettings>
     return typeof raw.apiKey === 'string' && raw.apiKey.trim() ? raw.apiKey.trim() : undefined
   } catch {
@@ -27,7 +27,11 @@ export function readSauceNaoApiKey(): string | undefined {
 export function writeSauceNaoApiKey(apiKey: string | undefined): void {
   try {
     const trimmed = apiKey?.trim()
-    writeFileSync(settingsFilePath(), JSON.stringify({ apiKey: trimmed || undefined }), 'utf-8')
+    writeFileSync(
+      sauceNaoSettingsFilePath(),
+      JSON.stringify({ apiKey: trimmed || undefined }),
+      'utf-8'
+    )
   } catch (err) {
     console.warn('Could not persist SauceNAO settings', err)
   }
