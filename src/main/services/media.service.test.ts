@@ -132,8 +132,12 @@ describe('mediaService.getMediaFiltered', () => {
   it('applies the AND/OR tag filter through the service layer', async () => {
     const tagA = await tagService.createTag({ name: 'a' })
     const tagB = await tagService.createTag({ name: 'b' })
-    await mediaService.addMedia(baseInput({ name: 'onlyA', tagIds: [tagA.id] }))
-    await mediaService.addMedia(baseInput({ name: 'both', tagIds: [tagA.id, tagB.id] }))
+    await mediaService.addMedia(
+      baseInput({ name: 'onlyA', route: '/some/path-a.png', tagIds: [tagA.id] })
+    )
+    await mediaService.addMedia(
+      baseInput({ name: 'both', route: '/some/path-b.png', tagIds: [tagA.id, tagB.id] })
+    )
 
     const or = await mediaService.getMediaFiltered({
       tagGroups: [[tagA.id], [tagB.id]]
@@ -149,8 +153,12 @@ describe('mediaService.getMediaFiltered', () => {
   it('applies the AND/OR series filter through the service layer', async () => {
     const seriesA = await seriesService.createSeries({ name: 'a' })
     const seriesB = await seriesService.createSeries({ name: 'b' })
-    await mediaService.addMedia(baseInput({ name: 'onlyA', seriesIds: [seriesA.id] }))
-    await mediaService.addMedia(baseInput({ name: 'both', seriesIds: [seriesA.id, seriesB.id] }))
+    await mediaService.addMedia(
+      baseInput({ name: 'onlyA', route: '/some/path-a.png', seriesIds: [seriesA.id] })
+    )
+    await mediaService.addMedia(
+      baseInput({ name: 'both', route: '/some/path-b.png', seriesIds: [seriesA.id, seriesB.id] })
+    )
 
     const or = await mediaService.getMediaFiltered({
       seriesIds: [seriesA.id, seriesB.id],
@@ -167,7 +175,7 @@ describe('mediaService.getMediaFiltered', () => {
 
   it('reports the total count of matching media independently of limit/offset', async () => {
     for (let i = 0; i < 5; i += 1) {
-      await mediaService.addMedia(baseInput({ name: `media-${i}` }))
+      await mediaService.addMedia(baseInput({ name: `media-${i}`, route: `/some/path-${i}.png` }))
     }
 
     const page = await mediaService.getMediaFiltered({ limit: 2, offset: 0 })

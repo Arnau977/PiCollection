@@ -32,7 +32,9 @@ function insertMedia(name: string, artistId: string | null = null): Promise<{ id
     route: `/${name}.png`,
     alias: null,
     artist_id: artistId,
-    created_at: Date.now()
+    created_at: Date.now(),
+    hash: null,
+    phash: null
   })
 }
 
@@ -215,7 +217,9 @@ describe('media.repository free-text query', () => {
       route: '/v.mp4',
       alias: null,
       artist_id: null,
-      created_at: Date.now()
+      created_at: Date.now(),
+      hash: null,
+      phash: null
     })
     await mediaRepo.setMediaTags(db, video.id, [tag.id])
 

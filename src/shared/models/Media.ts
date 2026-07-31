@@ -39,6 +39,19 @@ export interface MediaFilteredResult {
   total: number
 }
 
+export interface MediaDuplicateMatch {
+  media: MediaModel
+  /** Perceptual-hash Hamming distance out of 64 bits - lower is more similar. */
+  distance: number
+}
+
+export interface MediaDuplicateCheck {
+  /** Same file, by path or exact content hash - the add should be blocked. */
+  exactMatch: MediaModel | null
+  /** Visually similar existing media (recompressed/resized copies) - informational only. */
+  similar: MediaDuplicateMatch[]
+}
+
 export interface MediaInput {
   name: string
   type: 'image' | 'video' | 'gif'

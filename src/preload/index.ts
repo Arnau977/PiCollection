@@ -5,6 +5,7 @@ import type {
   ArtistModel,
   CharacterInput,
   CharacterModel,
+  MediaDuplicateCheck,
   MediaFilteredResult,
   MediaFilters,
   MediaInput,
@@ -38,7 +39,9 @@ export const api = {
       ipcRenderer.invoke(IPC.media.update, { id, input }),
     delete: (id: string): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.media.delete, id),
     cacheThumbnail: (route: string, png: Uint8Array): Promise<IpcResult<void>> =>
-      ipcRenderer.invoke(IPC.media.cacheThumbnail, { route, png })
+      ipcRenderer.invoke(IPC.media.cacheThumbnail, { route, png }),
+    checkDuplicate: (route: string): Promise<IpcResult<MediaDuplicateCheck>> =>
+      ipcRenderer.invoke(IPC.media.checkDuplicate, { route })
   },
   artist: {
     getAll: (): Promise<IpcResult<ArtistModel[]>> => ipcRenderer.invoke(IPC.artist.getAll),

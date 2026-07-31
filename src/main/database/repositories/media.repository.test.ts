@@ -31,7 +31,9 @@ function insertMedia(name: string): ReturnType<typeof mediaRepo.insertMediaRow> 
     route: `/${name}.png`,
     alias: null,
     artist_id: null,
-    created_at: Date.now()
+    created_at: Date.now(),
+    hash: null,
+    phash: null
   })
 }
 
@@ -236,7 +238,9 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
       route: '/a.png',
       alias: null,
       artist_id: null,
-      created_at: Date.now()
+      created_at: Date.now(),
+      hash: null,
+      phash: null
     })
     await mediaRepo.insertMediaRow(db, {
       id: randomUUID(),
@@ -247,7 +251,9 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
       route: '/b.mp4',
       alias: null,
       artist_id: null,
-      created_at: Date.now()
+      created_at: Date.now(),
+      hash: null,
+      phash: null
     })
 
     const byName = await mediaRepo.findMediaRows(db, { query: 'sunset' })

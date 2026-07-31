@@ -37,7 +37,9 @@ describe('foreign key delete behavior', () => {
       route: '/pic.png',
       alias: null,
       artist_id: artist.id,
-      created_at: Date.now()
+      created_at: Date.now(),
+      hash: null,
+      phash: null
     })
 
     await artistRepo.deleteArtist(db, artist.id)
@@ -58,7 +60,9 @@ describe('foreign key delete behavior', () => {
       route: '/pic.png',
       alias: null,
       artist_id: null,
-      created_at: Date.now()
+      created_at: Date.now(),
+      hash: null,
+      phash: null
     })
     await mediaRepo.setMediaTags(db, media.id, [tag.id])
 
@@ -86,7 +90,9 @@ describe('foreign key delete behavior', () => {
       route: '/pic.png',
       alias: null,
       artist_id: null,
-      created_at: Date.now()
+      created_at: Date.now(),
+      hash: null,
+      phash: null
     })
     await mediaRepo.setMediaCharacters(db, media.id, [character.id])
 
@@ -115,7 +121,9 @@ describe('foreign key delete behavior', () => {
       route: '/pic.png',
       alias: null,
       artist_id: null,
-      created_at: Date.now()
+      created_at: Date.now(),
+      hash: null,
+      phash: null
     })
     await mediaRepo.setMediaTags(db, media.id, [tag.id])
     await mediaRepo.setMediaCharacters(db, media.id, [character.id])

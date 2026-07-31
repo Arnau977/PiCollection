@@ -9,7 +9,8 @@ import {
   IdSchema,
   MediaGetFilteredSchema,
   MediaInputSchema,
-  MediaUpdateSchema
+  MediaUpdateSchema,
+  RouteSchema
 } from '@shared/ipc/contracts'
 
 export function registerMediaHandlers(): void {
@@ -44,5 +45,9 @@ export function registerMediaHandlers(): void {
     ipcHandler(CacheThumbnailSchema, ({ route, png }) =>
       cacheThumbnailFromBuffer(route, THUMBNAIL_MAX_SIZE, Buffer.from(png))
     )
+  )
+  ipcMain.handle(
+    IPC.media.checkDuplicate,
+    ipcHandler(RouteSchema, ({ route }) => mediaService.checkDuplicate(route))
   )
 }

@@ -47,6 +47,10 @@ export interface MediaTable {
   alias: string | null
   artist_id: string | null
   created_at: number
+  /** SHA-256 of the file's content, null when never computed or the file was unreadable. */
+  hash: string | null
+  /** 64-bit perceptual hash (hex), null under the same conditions as `hash`. */
+  phash: string | null
 }
 
 export interface MediaTagTable {

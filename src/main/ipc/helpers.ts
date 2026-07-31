@@ -1,10 +1,14 @@
 import type { IpcMainInvokeEvent } from 'electron'
 import type { z } from 'zod'
 import type { IpcResult } from '@shared/ipc/contracts'
+import { AppError } from '../errors'
 
 const UNIQUE_CONSTRAINT_RE = /UNIQUE constraint failed: (\w+)\.(\w+)/
 
 function toFriendlyError(err: unknown): { code: string; message: string } {
+  if (err instanceof AppError) {
+    return { code: err.code, message: err.message }
+  }
   const message = err instanceof Error ? err.message : String(err)
   const uniqueMatch = message.match(UNIQUE_CONSTRAINT_RE)
   if (uniqueMatch) {

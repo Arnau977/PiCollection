@@ -180,6 +180,37 @@ export function findMediaRowById(db: Kysely<DB>, id: string): Promise<MediaTable
   return db.selectFrom('media').selectAll().where('id', '=', id).executeTakeFirst()
 }
 
+export function findMediaRowByRoute(
+  db: Kysely<DB>,
+  route: string
+): Promise<MediaTable | undefined> {
+  return db.selectFrom('media').selectAll().where('route', '=', route).executeTakeFirst()
+}
+
+export function findMediaRowByHash(db: Kysely<DB>, hash: string): Promise<MediaTable | undefined> {
+  return db.selectFrom('media').selectAll().where('hash', '=', hash).executeTakeFirst()
+}
+
+/** Only `id`/`phash` - the near-duplicate scan in checkDuplicate() doesn't need the rest of each row. */
+export function listAllMediaHashes(
+  db: Kysely<DB>
+): Promise<{ id: string; phash: string | null }[]> {
+  return db.selectFrom('media').select(['id', 'phash']).where('phash', 'is not', null).execute()
+}
+
+export function listMediaRowsMissingHash(db: Kysely<DB>, limit: number): Promise<MediaTable[]> {
+  return db.selectFrom('media').selectAll().where('hash', 'is', null).limit(limit).execute()
+}
+
+export async function setMediaHash(
+  db: Kysely<DB>,
+  id: string,
+  hash: string | null,
+  phash: string | null
+): Promise<void> {
+  await db.updateTable('media').set({ hash, phash }).where('id', '=', id).execute()
+}
+
 export function insertMediaRow(db: Kysely<DB>, media: MediaTable): Promise<MediaTable> {
   return db.insertInto('media').values(media).returningAll().executeTakeFirstOrThrow()
 }

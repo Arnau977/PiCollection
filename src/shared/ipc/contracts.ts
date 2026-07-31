@@ -37,6 +37,8 @@ export const MediaInputSchema = z.object({
 
 export const IdSchema = z.string().min(1)
 
+export const RouteSchema = z.object({ route: z.string().min(1) })
+
 export const CacheThumbnailSchema = z.object({
   route: z.string().min(1),
   // Structured-clone-transferred from the renderer, so it survives the IPC
@@ -102,7 +104,8 @@ export const IPC = {
     create: 'db:media:create',
     update: 'db:media:update',
     delete: 'db:media:delete',
-    cacheThumbnail: 'db:media:cache-thumbnail'
+    cacheThumbnail: 'db:media:cache-thumbnail',
+    checkDuplicate: 'db:media:check-duplicate'
   },
   artist: {
     getAll: 'db:artist:get-all',

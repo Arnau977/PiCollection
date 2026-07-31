@@ -47,6 +47,7 @@ describe('statsService.getSummary', () => {
     await mediaService.addMedia(
       baseInput({
         name: 'a',
+        route: '/some/path-a.png',
         artistId: popularArtist.id,
         tagIds: [popularTag.id],
         characterIds: [popularCharacter.id],
@@ -56,6 +57,7 @@ describe('statsService.getSummary', () => {
     await mediaService.addMedia(
       baseInput({
         name: 'b',
+        route: '/some/path-b.png',
         artistId: popularArtist.id,
         tagIds: [popularTag.id],
         characterIds: [popularCharacter.id],
@@ -63,7 +65,12 @@ describe('statsService.getSummary', () => {
       })
     )
     await mediaService.addMedia(
-      baseInput({ name: 'c', artistId: quietArtist.id, tagIds: [quietTag.id] })
+      baseInput({
+        name: 'c',
+        route: '/some/path-c.png',
+        artistId: quietArtist.id,
+        tagIds: [quietTag.id]
+      })
     )
 
     const summary = await statsService.getSummary()

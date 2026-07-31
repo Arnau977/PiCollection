@@ -5,6 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { initDb } from './database/connection'
 import { resolveElectronDbPath } from './database/electronDbPath'
 import { runMigrations } from './database/migrations/migrator'
+import { backfillMediaHashes } from './services/mediaHashBackfill'
 import { registerMediaProtocolHandler, registerMediaProtocolScheme } from './media-protocol'
 import { registerIpcHandlers } from './ipc/registerIpcHandlers'
 import { createWindowStateKeeper } from './window/windowState'
@@ -104,6 +105,10 @@ app.whenReady().then(async () => {
   registerMediaProtocolHandler()
   registerIpcHandlers()
   const mainWindow = createWindow()
+
+  // Fire-and-forget: fills in hash/phash for media added before duplicate
+  // detection existed, without delaying the window from showing.
+  backfillMediaHashes().catch((err) => console.error('Media hash backfill failed', err))
 
   initAutoUpdater(mainWindow)
   // A quiet startup check - the renderer surfaces the result and lets the
