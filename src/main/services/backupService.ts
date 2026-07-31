@@ -1,5 +1,6 @@
 import AdmZip from 'adm-zip'
 import { existsSync, promises as fs } from 'fs'
+import { closeDb } from '../database/connection'
 import { resolveElectronDbPath } from '../database/electronDbPath'
 import { sauceNaoSettingsFilePath } from './sauceNaoSettings'
 import { updaterSettingsFilePath } from '../updater/updaterSettings'
@@ -32,8 +33,9 @@ export async function createBackupZip(destPath: string, gallerySettings: unknown
 
 /**
  * Replaces this install's database and settings files with the zip's
- * contents. The caller is responsible for restarting the app afterward -
- * the live DB connection must not keep using the file this just overwrote.
+ * contents. The live DB connection is closed first, so nothing is holding a
+ * handle on the file being overwritten. The caller is responsible for
+ * restarting the app afterward - no connection is reopened here.
  */
 export async function restoreBackupZip(
   sourcePath: string
@@ -44,6 +46,12 @@ export async function restoreBackupZip(
   if (!dbEntry) {
     throw new Error("That file doesn't look like a PiCollection backup.")
   }
+
+  // Closed only once the zip is known to be a real backup: bailing out above
+  // leaves the running app with a working connection, while everything below
+  // this line is destructive and must not run against an open handle.
+  await closeDb()
+
   await fs.writeFile(resolveElectronDbPath(), zip.readFile(dbEntry) as Buffer)
 
   const sauceNaoEntry = zip.getEntry(SAUCE_NAO_ENTRY)
@@ -56,10 +64,19 @@ export async function restoreBackupZip(
     await fs.writeFile(updaterSettingsFilePath(), zip.readFile(updaterEntry) as Buffer)
   }
 
+  // Everything above this point is destructive and has already succeeded, so a
+  // corrupt gallery blob must not throw the whole call away - the caller would
+  // report failure and skip the restart prompt the overwrite now requires.
+  // An unreadable blob is treated exactly like an absent one.
   const galleryEntry = zip.getEntry(GALLERY_SETTINGS_ENTRY)
-  const gallerySettings = galleryEntry
-    ? (JSON.parse(zip.readFile(galleryEntry)!.toString('utf-8')) as unknown)
-    : null
+  let gallerySettings: unknown | null = null
+  if (galleryEntry) {
+    try {
+      gallerySettings = JSON.parse(zip.readFile(galleryEntry)!.toString('utf-8')) as unknown
+    } catch {
+      gallerySettings = null
+    }
+  }
 
   return { gallerySettings }
 }

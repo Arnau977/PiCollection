@@ -101,6 +101,25 @@ describe('restoreBackupZip', () => {
     expect(result.gallerySettings).toBeNull()
   })
 
+  // The DB is overwritten before the gallery blob is read, so a parse failure
+  // must not abort the call after the destructive part already happened - the
+  // caller would report failure and never prompt for the required restart.
+  it('still restores when the gallery settings entry is corrupt', async () => {
+    await fs.writeFile(resolveElectronDbPath(), 'original sqlite bytes')
+    const zip = new AdmZip()
+    zip.addLocalFile(resolveElectronDbPath(), '', 'picollection.sqlite')
+    zip.addFile('gallery-settings.json', Buffer.from('not json at all {{{'))
+    zip.writeZip(zipPath)
+
+    userDataDir = join(workDir, 'destination-userdata')
+    await fs.mkdir(userDataDir, { recursive: true })
+
+    const result = await restoreBackupZip(zipPath)
+
+    expect(result.gallerySettings).toBeNull()
+    expect(await fs.readFile(resolveElectronDbPath(), 'utf-8')).toBe('original sqlite bytes')
+  })
+
   it('rejects a zip with no database entry', async () => {
     const zip = new AdmZip()
     zip.addFile('gallery-settings.json', Buffer.from('{}'))
