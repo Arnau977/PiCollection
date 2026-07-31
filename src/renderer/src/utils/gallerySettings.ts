@@ -2,6 +2,8 @@ import type { MediaFilters, MediaSortableProp } from '@shared/models'
 
 const STORAGE_KEY = 'picollection:gallery-defaults'
 
+export type GalleryDensity = 'compact' | 'comfortable' | 'large'
+
 export interface GalleryDefaults {
   sfw?: boolean
   type?: MediaFilters['type']
@@ -9,6 +11,8 @@ export interface GalleryDefaults {
   sortDesc: boolean
   blurNsfw: boolean
   hideNames: boolean
+  pageSize: number
+  density: GalleryDensity
 }
 
 export const FALLBACK_GALLERY_DEFAULTS: GalleryDefaults = {
@@ -17,7 +21,9 @@ export const FALLBACK_GALLERY_DEFAULTS: GalleryDefaults = {
   sortProp: 'createdAt',
   sortDesc: true,
   blurNsfw: true,
-  hideNames: false
+  hideNames: false,
+  pageSize: 60,
+  density: 'comfortable'
 }
 
 export function loadGalleryDefaults(): GalleryDefaults {

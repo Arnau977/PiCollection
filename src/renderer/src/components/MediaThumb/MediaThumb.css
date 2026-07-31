@@ -31,7 +31,8 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-pill);
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
   color: #fff;
   pointer-events: none;
 }

@@ -6,17 +6,17 @@ import { PATH } from '@renderer/app.routes.const'
 import type { MediaFilters } from '@shared/models'
 import Gallery from '../../components/Gallery'
 import { FilterBar } from '../../components/FilterBar/FilterBar'
+import { GalleryToolbar } from '../../components/GalleryToolbar/GalleryToolbar'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { useGallerySession } from '../../hooks/useGallerySession'
 import { hasActiveFilters } from '../../utils/hasActiveFilters'
+import type { GalleryDensity } from '../../utils/gallerySettings'
 import './GalleryPage.css'
-
-const PAGE_SIZE = 60
 
 const GalleryPage: React.FC = () => {
   const { t } = useTranslation()
-  const { defaults } = useGalleryDefaults()
+  const { defaults, setDefaults } = useGalleryDefaults()
   // Filters survive navigating away and back; only "Clear filters" or closing
   // the app resets them.
   const { filters, sorting, page, setFilters, setSorting, setPage } = useGallerySession(() => ({
@@ -26,21 +26,28 @@ const GalleryPage: React.FC = () => {
   }))
   const navigate = useNavigate()
 
+  const pageSize = defaults.pageSize
   const effectiveFilters = useMemo(
-    () => ({ ...filters, limit: PAGE_SIZE, offset: page * PAGE_SIZE }),
-    [filters, page]
+    () => ({ ...filters, limit: pageSize, offset: page * pageSize }),
+    [filters, page, pageSize]
   )
   const { data: media, total, loading, error } = useMediaQuery(effectiveFilters, sorting)
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const filtersActive = hasActiveFilters(filters)
 
+  function handlePageSizeChange(nextPageSize: number): void {
+    setDefaults({ ...defaults, pageSize: nextPageSize })
+    setPage(0)
+  }
+
+  function handleDensityChange(density: GalleryDensity): void {
+    setDefaults({ ...defaults, density })
+  }
+
   return (
-    <div className="page">
-      <div className="gallery-page-header">
-        <h1>{t('gallery.title')}</h1>
-        <span className="gallery-count">{t('gallery.mediaCount', { count: total })}</span>
-      </div>
+    <div className="page gallery-page">
+      <h1 className="gradient-title">{t('gallery.title')}</h1>
 
       <FilterBar
         filters={filters}
@@ -65,37 +72,34 @@ const GalleryPage: React.FC = () => {
         </button>
       </div>
 
-      {error && (
-        <p className="gallery-page-error" role="alert">
-          {error}
-        </p>
-      )}
-      {loading ? (
-        <p className="loading-state">{t('gallery.loading')}</p>
-      ) : (
-        <Gallery media={media} blurNsfw={defaults.blurNsfw} hideNames={defaults.hideNames} />
-      )}
-      {!loading && total > 0 && (
-        <div className="pagination">
-          <button
-            type="button"
-            className="btn"
-            disabled={page === 0}
-            onClick={() => setPage(page - 1)}
-          >
-            {t('gallery.pagination.previous')}
-          </button>
-          <span>{t('gallery.pagination.page', { page: page + 1, total: totalPages })}</span>
-          <button
-            type="button"
-            className="btn"
-            disabled={page + 1 >= totalPages}
-            onClick={() => setPage(page + 1)}
-          >
-            {t('gallery.pagination.next')}
-          </button>
-        </div>
-      )}
+      <GalleryToolbar
+        total={total}
+        density={defaults.density}
+        onDensityChange={handleDensityChange}
+        pageSize={pageSize}
+        onPageSizeChange={handlePageSizeChange}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
+
+      <div className="gallery-scroll-region">
+        {error && (
+          <p className="gallery-page-error" role="alert">
+            {error}
+          </p>
+        )}
+        {loading ? (
+          <p className="loading-state">{t('gallery.loading')}</p>
+        ) : (
+          <Gallery
+            media={media}
+            blurNsfw={defaults.blurNsfw}
+            hideNames={defaults.hideNames}
+            density={defaults.density}
+          />
+        )}
+      </div>
     </div>
   )
 }

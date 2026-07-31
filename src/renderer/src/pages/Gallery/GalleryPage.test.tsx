@@ -260,3 +260,52 @@ describe('GalleryPage session persistence', () => {
     expect(screen.queryByText('Filters are hiding some media')).not.toBeInTheDocument()
   })
 })
+
+describe('GalleryPage toolbar', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(60), total: 130 } }))
+  })
+
+  it('requests a new page size and resets to page 1 when the page-size select changes', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(screen.getByText('Page 1 of 3')).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await waitFor(() => expect(screen.getByText('Page 2 of 3')).toBeInTheDocument())
+
+    await user.selectOptions(screen.getByLabelText('Per page'), '120')
+
+    await waitFor(() => expect(screen.getByText('Page 1 of 2')).toBeInTheDocument())
+    const getFiltered = (
+      window as unknown as { api: { media: { getFiltered: ReturnType<typeof vi.fn> } } }
+    ).api.media.getFiltered
+    expect(getFiltered).toHaveBeenLastCalledWith(
+      expect.objectContaining({ limit: 120, offset: 0 }),
+      expect.anything()
+    )
+  })
+
+  it('changes the grid density and persists the choice', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(screen.getByText('Page 1 of 3')).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: 'Large' }))
+
+    const grid = container.querySelector('.gallery-grid') as HTMLElement
+    expect(grid.style.getPropertyValue('--gallery-thumb-min')).toBe('240px')
+    expect(
+      JSON.parse(window.localStorage.getItem('picollection:gallery-defaults') ?? '{}').density
+    ).toBe('large')
+  })
+})

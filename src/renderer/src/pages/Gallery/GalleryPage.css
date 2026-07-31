@@ -1,15 +1,19 @@
-.gallery-page-header {
+.gallery-page {
+  height: 100vh;
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin-bottom: var(--space-5);
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow: hidden;
+  /* `.page` sets padding on all sides; the scroll region below owns its own
+     bottom spacing so the last grid row isn't flush against the window edge. */
+  padding-bottom: 0;
 }
 
-.gallery-page-header .gallery-count {
-  color: var(--color-text-muted);
-  font-size: 0.88rem;
+.gallery-page .filter-bar {
+  /* `.filter-bar` sets its own margin-bottom for pages that aren't flex
+     columns; here the parent's `gap` already provides that spacing, so
+     without this the two would stack and leave a visibly larger gap. */
+  margin-bottom: 0;
 }
 
 .gallery-active-filters {
@@ -18,7 +22,6 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
-  margin-bottom: var(--space-4);
   border-radius: var(--radius-md);
   background: var(--accent-soft);
   color: var(--accent);
@@ -29,7 +32,6 @@
 .gallery-page-actions {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: var(--space-4);
 }
 
 .gallery-page-error {
@@ -37,16 +39,12 @@
   margin-bottom: var(--space-4);
 }
 
-.pagination {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-top: var(--space-6);
-}
-
-.pagination span {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
+.gallery-scroll-region {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--space-6);
+  /* Room for the first row's hover lift (.media-card:hover translateY(-4px))
+     and glow, which would otherwise crowd the toolbar right above it. */
+  padding-top: var(--space-2);
 }

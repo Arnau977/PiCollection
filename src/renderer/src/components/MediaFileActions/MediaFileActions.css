@@ -9,8 +9,13 @@
   margin-left: auto;
 }
 
-/* On the dark lightbox backdrop the icon buttons need a surface to sit on. */
+/* The lightbox toolbar itself already provides a surface (frosted pill), so
+   its icon buttons stay transparent until hovered rather than doubling up. */
 .lightbox-actions .media-file-actions .icon-btn {
-  background: var(--color-surface);
-  border-color: var(--border-color);
+  color: var(--color-text-muted);
+}
+
+.lightbox-actions .media-file-actions .icon-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
 }

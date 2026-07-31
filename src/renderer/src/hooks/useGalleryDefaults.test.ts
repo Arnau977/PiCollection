@@ -24,7 +24,9 @@ describe('useGalleryDefaults', () => {
         sortProp: 'name',
         sortDesc: false,
         blurNsfw: false,
-        hideNames: true
+        hideNames: true,
+        pageSize: 120,
+        density: 'large'
       })
     })
 
@@ -36,7 +38,9 @@ describe('useGalleryDefaults', () => {
       sortProp: 'name',
       sortDesc: false,
       blurNsfw: false,
-      hideNames: true
+      hideNames: true,
+      pageSize: 120,
+      density: 'large'
     })
   })
 })

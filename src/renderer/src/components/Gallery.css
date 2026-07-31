@@ -1,33 +1,33 @@
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: var(--space-4);
-}
-
-@media (max-width: 480px) {
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: var(--space-3);
-  }
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--gallery-thumb-min, clamp(120px, 14vw, 190px)), 1fr)
+  );
+  gap: clamp(0.65rem, 1.4vw, var(--space-4));
 }
 
 .media-card {
   display: block;
   background: var(--color-surface);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   text-decoration: none;
   color: var(--color-text);
   transition:
-    transform 150ms ease,
-    box-shadow 150ms ease,
-    border-color 150ms ease;
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    border-color var(--transition-base);
 }
 
 .media-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+  /* A dedicated, more contained glow rather than the shared --accent-glow
+     (0 8px 28px) - that one's tuned for buttons and reads as a long shadow
+     trailing well below a card that's only lifting 4px, especially on the
+     grid's first row, where it and the lift both crowd the toolbar above. */
+  box-shadow: 0 4px 14px rgba(124, 108, 240, 0.3);
   border-color: var(--accent);
 }
 
@@ -44,6 +44,12 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 300ms ease;
+}
+
+.media-card:hover .thumb-wrap img,
+.media-card:hover .thumb-wrap video {
+  transform: scale(1.06);
 }
 
 .media-card .thumb-wrap.nsfw-blur img,

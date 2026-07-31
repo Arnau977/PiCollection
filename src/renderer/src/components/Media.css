@@ -21,6 +21,14 @@
   justify-content: center;
   max-height: 78vh;
   cursor: zoom-in;
+  transition:
+    box-shadow var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.media-detail-media:hover {
+  border-color: var(--border-color-strong);
+  box-shadow: var(--shadow-lg);
 }
 
 .media-detail-media img,

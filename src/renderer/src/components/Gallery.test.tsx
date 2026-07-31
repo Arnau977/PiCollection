@@ -154,4 +154,37 @@ describe('Gallery', () => {
 
     expect(screen.getByText(longName)).toHaveAttribute('title', longName)
   })
+
+  it('defaults the grid thumbnail size to the comfortable density', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Gallery media={[makeMedia({ id: '1' })]} />
+      </MemoryRouter>
+    )
+
+    const grid = container.querySelector('.gallery-grid') as HTMLElement
+    expect(grid.style.getPropertyValue('--gallery-thumb-min')).toBe('160px')
+  })
+
+  it('sets a smaller grid thumbnail size for the compact density', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Gallery media={[makeMedia({ id: '1' })]} density="compact" />
+      </MemoryRouter>
+    )
+
+    const grid = container.querySelector('.gallery-grid') as HTMLElement
+    expect(grid.style.getPropertyValue('--gallery-thumb-min')).toBe('96px')
+  })
+
+  it('sets a larger grid thumbnail size for the large density', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Gallery media={[makeMedia({ id: '1' })]} density="large" />
+      </MemoryRouter>
+    )
+
+    const grid = container.querySelector('.gallery-grid') as HTMLElement
+    expect(grid.style.getPropertyValue('--gallery-thumb-min')).toBe('240px')
+  })
 })
