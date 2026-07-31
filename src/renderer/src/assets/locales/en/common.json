@@ -46,7 +46,18 @@
     "backupExported": "Backup exported.",
     "backupImportConfirm": "This replaces your entire library and settings with the imported backup. Continue?",
     "backupImportedNeedsRestart": "Backup imported. Restart the app to finish.",
-    "backupRestartNow": "Restart now"
+    "backupRestartNow": "Restart now",
+    "missingFilesTitle": "Missing files",
+    "missingFilesHint": "Check whether every media file can still be found at its saved path, and relink them in bulk if you moved or renamed a folder.",
+    "missingFilesCheck": "Check for missing files",
+    "missingFilesChecking": "Checking...",
+    "missingFilesClean": "All {{count}} media files found.",
+    "missingFilesFound": "{{missing}} of {{total}} files are missing.",
+    "missingFilesOldRoot": "Old folder",
+    "missingFilesChooseNewRoot": "Choose new folder...",
+    "missingFilesNewRootChosen": "New folder: {{path}}",
+    "missingFilesRelink": "Relink",
+    "missingFilesRelinked": "Relinked {{updated}} files. {{stillMissing}} still missing."
   },
   "home": {
     "title": "Home",

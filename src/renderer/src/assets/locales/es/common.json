@@ -46,7 +46,18 @@
     "backupExported": "Copia de seguridad exportada.",
     "backupImportConfirm": "Esto reemplaza toda tu biblioteca y ajustes con la copia importada. ¿Continuar?",
     "backupImportedNeedsRestart": "Copia importada. Reinicia la app para terminar.",
-    "backupRestartNow": "Reiniciar ahora"
+    "backupRestartNow": "Reiniciar ahora",
+    "missingFilesTitle": "Archivos faltantes",
+    "missingFilesHint": "Comprueba si cada archivo de media todavía se encuentra en su ruta guardada, y re-enlázalos en bloque si moviste o renombraste una carpeta.",
+    "missingFilesCheck": "Comprobar archivos faltantes",
+    "missingFilesChecking": "Comprobando...",
+    "missingFilesClean": "Se encontraron los {{count}} archivos de media.",
+    "missingFilesFound": "Faltan {{missing}} de {{total}} archivos.",
+    "missingFilesOldRoot": "Carpeta antigua",
+    "missingFilesChooseNewRoot": "Elegir carpeta nueva...",
+    "missingFilesNewRootChosen": "Carpeta nueva: {{path}}",
+    "missingFilesRelink": "Re-enlazar",
+    "missingFilesRelinked": "Se re-enlazaron {{updated}} archivos. Siguen faltando {{stillMissing}}."
   },
   "home": {
     "title": "Inicio",
