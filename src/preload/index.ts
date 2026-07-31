@@ -9,6 +9,7 @@ import type {
   MediaFilters,
   MediaInput,
   MediaModel,
+  SauceNaoLookup,
   SeriesInput,
   SeriesModel,
   SocialLinkInput,
@@ -87,6 +88,14 @@ export const api = {
     copyImageToClipboard: (route: string): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.system.copyImageToClipboard, route),
     getAppVersion: (): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.system.getAppVersion)
+  },
+  sauceNao: {
+    lookup: (route: string): Promise<IpcResult<SauceNaoLookup>> =>
+      ipcRenderer.invoke(IPC.sauceNao.lookup, route),
+    getApiKey: (): Promise<IpcResult<string | undefined>> =>
+      ipcRenderer.invoke(IPC.sauceNao.getApiKey),
+    setApiKey: (apiKey: string | undefined): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.sauceNao.setApiKey, apiKey)
   },
   updater: {
     checkForUpdates: (): Promise<IpcResult<void>> =>

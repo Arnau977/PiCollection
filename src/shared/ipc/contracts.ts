@@ -138,6 +138,11 @@ export const IPC = {
     copyImageToClipboard: 'system:copy-image-to-clipboard',
     getAppVersion: 'system:get-app-version'
   },
+  sauceNao: {
+    lookup: 'sauce-nao:lookup',
+    getApiKey: 'sauce-nao:get-api-key',
+    setApiKey: 'sauce-nao:set-api-key'
+  },
   updater: {
     checkForUpdates: 'updater:check-for-updates',
     downloadUpdate: 'updater:download-update',

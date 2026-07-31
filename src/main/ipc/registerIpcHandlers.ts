@@ -6,6 +6,7 @@ import { registerSeriesHandlers } from './series.handlers'
 import { registerStatsHandlers } from './stats.handlers'
 import { registerSystemHandlers } from './system.handlers'
 import { registerUpdaterHandlers } from './updater.handlers'
+import { registerSauceNaoHandlers } from './sauceNao.handlers'
 
 export function registerIpcHandlers(): void {
   registerMediaHandlers()
@@ -16,4 +17,5 @@ export function registerIpcHandlers(): void {
   registerStatsHandlers()
   registerSystemHandlers()
   registerUpdaterHandlers()
+  registerSauceNaoHandlers()
 }

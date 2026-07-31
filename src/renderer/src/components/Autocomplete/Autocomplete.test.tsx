@@ -84,4 +84,68 @@ describe('Autocomplete', () => {
     expect(onSelect).toHaveBeenCalledWith(OPTIONS[1])
     expect(input).toHaveValue('')
   })
+
+  it('shows the selected option label when selectedKey changes from outside the dropdown', () => {
+    const { rerender } = render(
+      <Autocomplete
+        name="test"
+        label="Test field"
+        options={OPTIONS}
+        getOptionLabel={(o) => o.name}
+        getOptionValue={(o) => o.id}
+        onSelect={vi.fn()}
+        selectedKey={null}
+      />
+    )
+
+    expect(screen.getByRole('combobox')).toHaveValue('')
+
+    // Simulates a parent setting the id directly (e.g. after creating a new
+    // option asynchronously elsewhere) rather than the user picking it here.
+    rerender(
+      <Autocomplete
+        name="test"
+        label="Test field"
+        options={OPTIONS}
+        getOptionLabel={(o) => o.name}
+        getOptionValue={(o) => o.id}
+        onSelect={vi.fn()}
+        selectedKey="2"
+      />
+    )
+
+    expect(screen.getByRole('combobox')).toHaveValue('Portrait')
+  })
+
+  it('picks up the label once the matching option arrives after selectedKey is already set', () => {
+    const { rerender } = render(
+      <Autocomplete
+        name="test"
+        label="Test field"
+        options={[]}
+        getOptionLabel={(o: (typeof OPTIONS)[number]) => o.name}
+        getOptionValue={(o: (typeof OPTIONS)[number]) => o.id}
+        onSelect={vi.fn()}
+        selectedKey="2"
+      />
+    )
+
+    expect(screen.getByRole('combobox')).toHaveValue('')
+
+    // The option only shows up once a refetch resolves, after selectedKey
+    // was already set - the display must still catch up.
+    rerender(
+      <Autocomplete
+        name="test"
+        label="Test field"
+        options={OPTIONS}
+        getOptionLabel={(o) => o.name}
+        getOptionValue={(o) => o.id}
+        onSelect={vi.fn()}
+        selectedKey="2"
+      />
+    )
+
+    expect(screen.getByRole('combobox')).toHaveValue('Portrait')
+  })
 })

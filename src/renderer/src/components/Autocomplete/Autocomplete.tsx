@@ -1,5 +1,5 @@
 import { ChevronDown, Plus } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Button,
@@ -52,6 +52,19 @@ export function Autocomplete<T>({
 }: AutocompleteProps<T>): JSX.Element {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
+
+  // Keeps the displayed text in sync when `selectedKey` changes from outside
+  // a direct pick in this dropdown - e.g. a newly-created option is linked
+  // in in a parent's async handler, or a suggestion elsewhere sets the id
+  // straight into state. Without this, the input stays blank until the user
+  // opens and closes the popover, since `query` is otherwise only ever set
+  // by `handleSelectionChange` below.
+  useEffect(() => {
+    if (!selectedKey) return
+    const option = options.find((item) => getOptionValue(item) === selectedKey)
+    if (option) setQuery(getOptionLabel(option))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKey, options])
 
   const filteredOptions = useMemo(() => {
     const matches = filterByQuery(options, query, getOptionLabel)

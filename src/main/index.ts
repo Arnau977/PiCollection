@@ -1,5 +1,5 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { app, BrowserWindow, dialog } from 'electron'
+import { app, BrowserWindow, dialog, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 import { initDb } from './database/connection'
@@ -41,8 +41,12 @@ function createWindow(): BrowserWindow {
     mainWindow.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler(() => {
-    return { action: 'allow' }
+  // External links (social links, "View source" on a suggested match, etc.)
+  // open in the user's default OS browser instead of a new Electron window -
+  // there's no in-app use for a second window today.
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url)
+    return { action: 'deny' }
   })
 
   // HMR for renderer base on electron-vite cli.
