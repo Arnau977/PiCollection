@@ -1,7 +1,18 @@
 import { promises as fs } from 'fs'
 import { getDb } from '../database/connection'
 import * as mediaRepo from '../database/repositories/media.repository'
-import { findCommonPathPrefix } from './pathPrefix'
+import { findCommonPathPrefix, withTrailingSeparator } from './pathPrefix'
+import type { MissingFilesCheck, RelinkResult } from '@shared/models'
+
+// Windows and macOS treat paths case-insensitively; Linux does not. The
+// comparison has to follow the host filesystem, but the stored casing is
+// preserved when the new route is built.
+const CASE_INSENSITIVE_PATHS = process.platform !== 'linux'
+
+function matchesRoot(route: string, root: string): boolean {
+  if (CASE_INSENSITIVE_PATHS) return route.toLowerCase().startsWith(root.toLowerCase())
+  return route.startsWith(root)
+}
 
 async function fileExists(path: string): Promise<boolean> {
   try {
@@ -18,11 +29,7 @@ async function countMissing(rows: { route: string }[]): Promise<number> {
 }
 
 export const mediaMaintenanceService = {
-  async checkMissingFiles(): Promise<{
-    totalCount: number
-    missingCount: number
-    suggestedOldRoot: string | null
-  }> {
+  async checkMissingFiles(): Promise<MissingFilesCheck> {
     const db = getDb()
     const rows = await mediaRepo.listMediaRoutes(db)
     const existsFlags = await Promise.all(rows.map((row) => fileExists(row.route)))
@@ -35,15 +42,21 @@ export const mediaMaintenanceService = {
     }
   },
 
-  async relinkMissingFiles(
-    oldRoot: string,
-    newRoot: string
-  ): Promise<{ updatedCount: number; stillMissingCount: number }> {
+  async relinkMissingFiles(oldRoot: string, newRoot: string): Promise<RelinkResult> {
     const db = getDb()
+    // Both roots are normalized to end in a separator: the suggested old root
+    // already does, the picked new root never does, and the old root is
+    // user-editable so it can arrive either way.
+    const normalizedOldRoot = withTrailingSeparator(oldRoot)
+    const normalizedNewRoot = withTrailingSeparator(newRoot)
+
     const rows = await mediaRepo.listMediaRoutes(db)
     const updates = rows
-      .filter((row) => row.route.startsWith(oldRoot))
-      .map((row) => ({ id: row.id, route: newRoot + row.route.slice(oldRoot.length) }))
+      .filter((row) => matchesRoot(row.route, normalizedOldRoot))
+      .map((row) => ({
+        id: row.id,
+        route: normalizedNewRoot + row.route.slice(normalizedOldRoot.length)
+      }))
 
     await mediaRepo.updateMediaRoutes(db, updates)
 

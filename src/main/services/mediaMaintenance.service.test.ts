@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { promises as fs } from 'fs'
-import { join } from 'path'
+import { join, sep } from 'path'
 import { tmpdir } from 'os'
 
 // mediaService.addMedia hashes the candidate file, which for a real
@@ -88,6 +88,61 @@ describe('mediaMaintenanceService.relinkMissingFiles', () => {
     expect(result.updatedCount).toBe(1)
     expect(result.stillMissingCount).toBe(0)
   })
+
+  // The production shape: `suggestedOldRoot` comes from findCommonPathPrefix,
+  // which always ends in a separator, while `newRoot` comes from the directory
+  // picker, which never does. Naive concatenation produced `E:\Newa.png`.
+  it('joins correctly when the old root ends in a separator and the new root does not', async () => {
+    const oldRoot = join(sourceDir, 'old') + sep
+    const missingRoute = join(sourceDir, 'old', 'a.png')
+    await mediaService.addMedia(baseInput(missingRoute))
+
+    const newRoot = join(sourceDir, 'new') // no trailing separator
+    await fs.mkdir(newRoot, { recursive: true })
+    await fs.writeFile(join(newRoot, 'a.png'), 'hello')
+
+    const result = await mediaMaintenanceService.relinkMissingFiles(oldRoot, newRoot)
+
+    expect(result.updatedCount).toBe(1)
+    expect(result.stillMissingCount).toBe(0)
+  })
+
+  // The old-root field is user-editable, so it can arrive without a trailing
+  // separator - which must not turn the prefix match into a partial-name match.
+  it('does not match a sibling folder that merely shares the old root prefix text', async () => {
+    const siblingFile = join(sourceDir, 'Artwork', 'a.png')
+    await fs.mkdir(join(sourceDir, 'Artwork'), { recursive: true })
+    await fs.writeFile(siblingFile, 'hello')
+    await mediaService.addMedia(baseInput(siblingFile))
+
+    const result = await mediaMaintenanceService.relinkMissingFiles(
+      join(sourceDir, 'Art'),
+      join(sourceDir, 'New')
+    )
+
+    expect(result.updatedCount).toBe(0)
+    expect(result.stillMissingCount).toBe(0)
+  })
+
+  it.skipIf(process.platform === 'linux')(
+    'matches the old root case-insensitively but keeps the original casing of the remainder',
+    async () => {
+      const missingRoute = join(sourceDir, 'Old', 'MixedCase.png')
+      await mediaService.addMedia(baseInput(missingRoute))
+
+      const newRoot = join(sourceDir, 'new')
+      await fs.mkdir(newRoot, { recursive: true })
+      await fs.writeFile(join(newRoot, 'MixedCase.png'), 'hello')
+
+      const result = await mediaMaintenanceService.relinkMissingFiles(
+        join(sourceDir, 'old') + sep,
+        newRoot
+      )
+
+      expect(result.updatedCount).toBe(1)
+      expect(result.stillMissingCount).toBe(0)
+    }
+  )
 
   it('leaves files genuinely gone (not just moved) reported as still missing', async () => {
     const oldRoot = join(sourceDir, 'old')

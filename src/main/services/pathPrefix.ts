@@ -1,3 +1,19 @@
+import { sep } from 'path'
+
+/**
+ * Guarantees `dir` ends in a path separator, so it can be safely used both as
+ * a prefix test (a bare `D:\Art` would otherwise also match `D:\Artwork\...`)
+ * and as a concatenation base (`newRoot + remainder` would otherwise produce
+ * `E:\Newa.png`). Reuses whichever separator style the string already uses so
+ * a hand-typed POSIX path doesn't get a stray backslash on Windows.
+ */
+export function withTrailingSeparator(dir: string): string {
+  if (/[/\\]$/.test(dir)) return dir
+  if (dir.includes('\\')) return dir + '\\'
+  if (dir.includes('/')) return dir + '/'
+  return dir + sep
+}
+
 /**
  * The longest directory prefix shared by every path, used to suggest the
  * "old root" when relinking media whose files moved - e.g. given several
