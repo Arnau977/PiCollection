@@ -27,4 +27,12 @@ export function registerSystemHandlers(): void {
     IPC.system.getAppVersion,
     ipcHandler(z.void(), async () => app.getVersion())
   )
+
+  ipcMain.handle(
+    IPC.system.restartApp,
+    ipcHandler(z.void(), async () => {
+      app.relaunch()
+      app.exit()
+    })
+  )
 }

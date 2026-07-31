@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type {
   ArtistInput,
   ArtistModel,
+  BackupExportResult,
+  BackupImportResult,
   CharacterInput,
   CharacterModel,
   MediaDuplicateCheck,
@@ -10,6 +12,9 @@ import type {
   MediaFilters,
   MediaInput,
   MediaModel,
+  MissingFilesCheck,
+  PickFolderResult,
+  RelinkResult,
   SauceNaoLookup,
   SeriesInput,
   SeriesModel,
@@ -90,7 +95,21 @@ export const api = {
       ipcRenderer.invoke(IPC.system.showInFolder, route),
     copyImageToClipboard: (route: string): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.system.copyImageToClipboard, route),
-    getAppVersion: (): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.system.getAppVersion)
+    getAppVersion: (): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.system.getAppVersion),
+    restartApp: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.system.restartApp)
+  },
+  backup: {
+    export: (gallerySettings: unknown): Promise<IpcResult<BackupExportResult>> =>
+      ipcRenderer.invoke(IPC.backup.export, { gallerySettings }),
+    import: (): Promise<IpcResult<BackupImportResult>> => ipcRenderer.invoke(IPC.backup.import)
+  },
+  maintenance: {
+    checkMissingFiles: (): Promise<IpcResult<MissingFilesCheck>> =>
+      ipcRenderer.invoke(IPC.maintenance.checkMissingFiles),
+    pickFolder: (): Promise<IpcResult<PickFolderResult>> =>
+      ipcRenderer.invoke(IPC.maintenance.pickFolder),
+    relinkMissingFiles: (oldRoot: string, newRoot: string): Promise<IpcResult<RelinkResult>> =>
+      ipcRenderer.invoke(IPC.maintenance.relinkMissingFiles, { oldRoot, newRoot })
   },
   sauceNao: {
     lookup: (route: string): Promise<IpcResult<SauceNaoLookup>> =>

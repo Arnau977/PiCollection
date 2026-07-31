@@ -7,6 +7,8 @@ import { registerStatsHandlers } from './stats.handlers'
 import { registerSystemHandlers } from './system.handlers'
 import { registerUpdaterHandlers } from './updater.handlers'
 import { registerSauceNaoHandlers } from './sauceNao.handlers'
+import { registerBackupHandlers } from './backup.handlers'
+import { registerMediaMaintenanceHandlers } from './mediaMaintenance.handlers'
 
 export function registerIpcHandlers(): void {
   registerMediaHandlers()
@@ -18,4 +20,6 @@ export function registerIpcHandlers(): void {
   registerSystemHandlers()
   registerUpdaterHandlers()
   registerSauceNaoHandlers()
+  registerBackupHandlers()
+  registerMediaMaintenanceHandlers()
 }

@@ -90,6 +90,12 @@ export const MediaGetFilteredSchema = z.object({
   sorting: SortingSchema.optional()
 })
 
+export const BackupExportSchema = z.object({ gallerySettings: z.unknown() })
+export const RelinkMissingFilesSchema = z.object({
+  oldRoot: z.string().min(1),
+  newRoot: z.string().min(1)
+})
+
 export const MediaUpdateSchema = UpdateByIdSchema(MediaInputSchema)
 export const ArtistUpdateSchema = UpdateByIdSchema(ArtistInputSchema)
 export const CharacterUpdateSchema = UpdateByIdSchema(CharacterInputSchema)
@@ -139,7 +145,17 @@ export const IPC = {
   system: {
     showInFolder: 'system:show-in-folder',
     copyImageToClipboard: 'system:copy-image-to-clipboard',
-    getAppVersion: 'system:get-app-version'
+    getAppVersion: 'system:get-app-version',
+    restartApp: 'system:restart-app'
+  },
+  backup: {
+    export: 'backup:export',
+    import: 'backup:import'
+  },
+  maintenance: {
+    checkMissingFiles: 'maintenance:check-missing-files',
+    pickFolder: 'maintenance:pick-folder',
+    relinkMissingFiles: 'maintenance:relink-missing-files'
   },
   sauceNao: {
     lookup: 'sauce-nao:lookup',
