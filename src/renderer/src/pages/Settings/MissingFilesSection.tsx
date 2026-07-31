@@ -43,6 +43,8 @@ export function MissingFilesSection(): JSX.Element {
 
   async function handleRelink(): Promise<void> {
     if (state.kind !== 'missing' || !state.oldRoot || !state.newRoot) return
+    if (!window.confirm(t('settings.missingFilesRelinkConfirm'))) return
+
     const result = await window.api.maintenance.relinkMissingFiles(state.oldRoot, state.newRoot)
     if (!result.success) {
       setState({ kind: 'error', message: result.error.message })
@@ -63,20 +65,32 @@ export function MissingFilesSection(): JSX.Element {
       </h2>
       <p className="settings-version">{t('settings.missingFilesHint')}</p>
 
-      <button type="button" className="btn" onClick={handleCheck} disabled={state.kind === 'checking'}>
-        {state.kind === 'checking' ? t('settings.missingFilesChecking') : t('settings.missingFilesCheck')}
+      <button
+        type="button"
+        className="btn"
+        onClick={handleCheck}
+        disabled={state.kind === 'checking'}
+      >
+        {state.kind === 'checking'
+          ? t('settings.missingFilesChecking')
+          : t('settings.missingFilesCheck')}
       </button>
 
       {state.kind === 'clean' && (
-        <p className="settings-version">{t('settings.missingFilesClean', { count: state.totalCount })}</p>
+        <p className="settings-version">
+          {t('settings.missingFilesClean', { count: state.totalCount })}
+        </p>
       )}
 
       {state.kind === 'error' && <p role="alert">{state.message}</p>}
 
       {state.kind === 'missing' && (
-        <div className="settings-field-actions">
+        <div className="settings-relink-form">
           <p role="alert">
-            {t('settings.missingFilesFound', { missing: state.missingCount, total: state.totalCount })}
+            {t('settings.missingFilesFound', {
+              missing: state.missingCount,
+              total: state.totalCount
+            })}
           </p>
           <label className="field">
             <span>{t('settings.missingFilesOldRoot')}</span>
@@ -86,19 +100,24 @@ export function MissingFilesSection(): JSX.Element {
               onChange={(e) => setState({ ...state, oldRoot: e.target.value })}
             />
           </label>
-          <button type="button" className="btn" onClick={handlePickNewRoot}>
-            {state.newRoot
-              ? t('settings.missingFilesNewRootChosen', { path: state.newRoot })
-              : t('settings.missingFilesChooseNewRoot')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleRelink}
-            disabled={!state.oldRoot || !state.newRoot}
-          >
-            {t('settings.missingFilesRelink')}
-          </button>
+          <div className="settings-field-actions">
+            <button type="button" className="btn" onClick={handlePickNewRoot}>
+              {t('settings.missingFilesChooseNewRoot')}
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleRelink}
+              disabled={!state.oldRoot || !state.newRoot}
+            >
+              {t('settings.missingFilesRelink')}
+            </button>
+          </div>
+          {state.newRoot && (
+            <p className="settings-version settings-relink-path">
+              {t('settings.missingFilesNewRootValue', { path: state.newRoot })}
+            </p>
+          )}
         </div>
       )}
 

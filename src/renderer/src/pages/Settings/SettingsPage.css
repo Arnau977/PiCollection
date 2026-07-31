@@ -63,3 +63,26 @@
   align-items: center;
   gap: var(--space-2);
 }
+
+/*
+ * The relink form stacks a message, a labelled input and a button row, so it
+ * needs a column - `.settings-field-actions` is a non-wrapping single row and
+ * only wraps the buttons inside it here.
+ */
+.settings-relink-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+/* The section-level `> .field` cap can't reach a nested field. */
+.settings-relink-form .field {
+  width: 100%;
+  max-width: 360px;
+}
+
+/* Filesystem paths are long and have no spaces to break on. */
+.settings-relink-path {
+  overflow-wrap: anywhere;
+}

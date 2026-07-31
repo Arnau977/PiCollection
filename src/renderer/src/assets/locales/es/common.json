@@ -55,8 +55,9 @@
     "missingFilesFound": "Faltan {{missing}} de {{total}} archivos.",
     "missingFilesOldRoot": "Carpeta antigua",
     "missingFilesChooseNewRoot": "Elegir carpeta nueva...",
-    "missingFilesNewRootChosen": "Carpeta nueva: {{path}}",
+    "missingFilesNewRootValue": "Carpeta nueva: {{path}}",
     "missingFilesRelink": "Re-enlazar",
+    "missingFilesRelinkConfirm": "Esto actualiza la ruta guardada de todos los archivos dentro de la carpeta antigua a la nueva, no solo de los que faltan actualmente. ¿Continuar?",
     "missingFilesRelinked": "Se re-enlazaron {{updated}} archivos. Siguen faltando {{stillMissing}}."
   },
   "home": {

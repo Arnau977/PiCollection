@@ -55,8 +55,9 @@
     "missingFilesFound": "{{missing}} of {{total}} files are missing.",
     "missingFilesOldRoot": "Old folder",
     "missingFilesChooseNewRoot": "Choose new folder...",
-    "missingFilesNewRootChosen": "New folder: {{path}}",
+    "missingFilesNewRootValue": "New folder: {{path}}",
     "missingFilesRelink": "Relink",
+    "missingFilesRelinkConfirm": "This updates the saved path for every file under the old folder to the new one, not just the ones currently reported missing. Continue?",
     "missingFilesRelinked": "Relinked {{updated}} files. {{stillMissing}} still missing."
   },
   "home": {
