@@ -96,6 +96,11 @@ export const RelinkMissingFilesSchema = z.object({
   newRoot: z.string().min(1)
 })
 
+export const RelinkOneFileSchema = z.object({
+  mediaId: z.string().min(1),
+  newRoute: z.string().min(1)
+})
+
 export const MediaUpdateSchema = UpdateByIdSchema(MediaInputSchema)
 export const ArtistUpdateSchema = UpdateByIdSchema(ArtistInputSchema)
 export const CharacterUpdateSchema = UpdateByIdSchema(CharacterInputSchema)
@@ -155,7 +160,9 @@ export const IPC = {
   maintenance: {
     checkMissingFiles: 'maintenance:check-missing-files',
     pickFolder: 'maintenance:pick-folder',
-    relinkMissingFiles: 'maintenance:relink-missing-files'
+    pickFile: 'maintenance:pick-file',
+    relinkMissingFiles: 'maintenance:relink-missing-files',
+    relinkOne: 'maintenance:relink-one'
   },
   sauceNao: {
     lookup: 'sauce-nao:lookup',
