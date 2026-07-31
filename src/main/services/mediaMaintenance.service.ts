@@ -2,12 +2,17 @@ import { promises as fs } from 'fs'
 import { getDb } from '../database/connection'
 import * as mediaRepo from '../database/repositories/media.repository'
 import { findCommonPathPrefix, withTrailingSeparator } from './pathPrefix'
-import type { MissingFilesCheck, RelinkResult } from '@shared/models'
+import type { MediaModel, MissingFileItem, MissingFilesCheck, RelinkOneResult, RelinkResult } from '@shared/models'
 
 // Windows and macOS treat paths case-insensitively; Linux does not. The
 // comparison has to follow the host filesystem, but the stored casing is
 // preserved when the new route is built.
 const CASE_INSENSITIVE_PATHS = process.platform !== 'linux'
+
+// Keeps the missing-files list from rendering hundreds of rows when a whole
+// drive is unplugged - the bulk folder relink is the right tool for that
+// scale, this list is for the rare one-off rename.
+const MAX_MISSING_ITEMS = 50
 
 function matchesRoot(route: string, root: string): boolean {
   if (CASE_INSENSITIVE_PATHS) return route.toLowerCase().startsWith(root.toLowerCase())
@@ -31,14 +36,22 @@ async function countMissing(rows: { route: string }[]): Promise<number> {
 export const mediaMaintenanceService = {
   async checkMissingFiles(): Promise<MissingFilesCheck> {
     const db = getDb()
-    const rows = await mediaRepo.listMediaRoutes(db)
+    const rows = await mediaRepo.listMediaRoutesWithMeta(db)
     const existsFlags = await Promise.all(rows.map((row) => fileExists(row.route)))
-    const missingRoutes = rows.filter((_, index) => !existsFlags[index]).map((row) => row.route)
+    const missingRows = rows.filter((_, index) => !existsFlags[index])
+
+    const missingItems: MissingFileItem[] = missingRows.slice(0, MAX_MISSING_ITEMS).map((row) => ({
+      id: row.id,
+      name: row.name,
+      route: row.route,
+      type: row.type as MediaModel['type']
+    }))
 
     return {
       totalCount: rows.length,
-      missingCount: missingRoutes.length,
-      suggestedOldRoot: findCommonPathPrefix(missingRoutes)
+      missingCount: missingRows.length,
+      suggestedOldRoot: findCommonPathPrefix(missingRows.map((row) => row.route)),
+      missingItems
     }
   },
 
@@ -62,5 +75,11 @@ export const mediaMaintenanceService = {
 
     const afterRows = await mediaRepo.listMediaRoutes(db)
     return { updatedCount: updates.length, stillMissingCount: await countMissing(afterRows) }
+  },
+
+  async relinkOne(mediaId: string, newRoute: string): Promise<RelinkOneResult> {
+    const db = getDb()
+    await mediaRepo.updateMediaRoutes(db, [{ id: mediaId, route: newRoute }])
+    return { updated: true }
   }
 }
