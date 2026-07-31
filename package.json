@@ -18,7 +18,7 @@
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
-    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "rebuild": "electron-builder install-app-deps",
     "migrate:create": "node scripts/create-migration.mjs",
     "migrate:up": "tsx scripts/migrate.ts up",
     "migrate:down": "tsx scripts/migrate.ts down",
