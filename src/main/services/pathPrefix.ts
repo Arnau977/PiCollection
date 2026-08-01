@@ -44,3 +44,23 @@ export function findCommonPathPrefix(paths: string[]): string | null {
   const separator = paths[0].includes('\\') ? '\\' : '/'
   return first.slice(0, commonLength).join(separator) + separator
 }
+
+/**
+ * Windows and macOS treat filesystem paths case-insensitively; Linux does
+ * not. Every prefix/subtree check in this app follows the host filesystem's
+ * rule, decided in exactly this one place.
+ */
+export const CASE_INSENSITIVE_PATHS = process.platform !== 'linux'
+
+/**
+ * Whether `path` lives inside `root` (or is a file directly under it).
+ * Used both to relativize a route when it's saved and to decide whether a
+ * relinked file still belongs to the same root.
+ */
+export function isPathUnderRoot(path: string, root: string): boolean {
+  const normalizedRoot = withTrailingSeparator(root)
+  if (CASE_INSENSITIVE_PATHS) {
+    return path.toLowerCase().startsWith(normalizedRoot.toLowerCase())
+  }
+  return path.startsWith(normalizedRoot)
+}

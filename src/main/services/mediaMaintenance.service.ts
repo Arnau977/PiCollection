@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs'
 import { getDb } from '../database/connection'
 import * as mediaRepo from '../database/repositories/media.repository'
-import { findCommonPathPrefix, withTrailingSeparator } from './pathPrefix'
+import { findCommonPathPrefix, isPathUnderRoot, withTrailingSeparator } from './pathPrefix'
 import type {
   MediaModel,
   MissingFileItem,
@@ -10,20 +10,10 @@ import type {
   RelinkResult
 } from '@shared/models'
 
-// Windows and macOS treat paths case-insensitively; Linux does not. The
-// comparison has to follow the host filesystem, but the stored casing is
-// preserved when the new route is built.
-const CASE_INSENSITIVE_PATHS = process.platform !== 'linux'
-
 // Keeps the missing-files list from rendering hundreds of rows when a whole
 // drive is unplugged - the bulk folder relink is the right tool for that
 // scale, this list is for the rare one-off rename.
 const MAX_MISSING_ITEMS = 50
-
-function matchesRoot(route: string, root: string): boolean {
-  if (CASE_INSENSITIVE_PATHS) return route.toLowerCase().startsWith(root.toLowerCase())
-  return route.startsWith(root)
-}
 
 async function fileExists(path: string): Promise<boolean> {
   try {
@@ -71,7 +61,7 @@ export const mediaMaintenanceService = {
 
     const rows = await mediaRepo.listMediaRoutes(db)
     const updates = rows
-      .filter((row) => matchesRoot(row.route, normalizedOldRoot))
+      .filter((row) => isPathUnderRoot(row.route, normalizedOldRoot))
       .map((row) => ({
         id: row.id,
         route: normalizedNewRoot + row.route.slice(normalizedOldRoot.length)
