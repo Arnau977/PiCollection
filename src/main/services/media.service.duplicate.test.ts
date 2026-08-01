@@ -9,8 +9,10 @@ import { tmpdir } from 'os'
 // a real Electron process, so it's stubbed the same way thumbnails.test.ts
 // does. Every hash computation here still uses the real SHA-256 path (plain
 // Node crypto/fs), only the perceptual side is faked out.
+let userDataDir = ''
+
 vi.mock('electron', () => ({
-  app: { getPath: () => '' },
+  app: { getPath: () => userDataDir },
   nativeImage: {
     createThumbnailFromPath: () => Promise.reject(new Error('unavailable in tests')),
     createFromPath: () => ({ isEmpty: () => true }),
@@ -21,11 +23,13 @@ vi.mock('electron', () => ({
 
 const { initTestDbSingleton } = await import('../database/testHelpers')
 const { mediaService } = await import('./media.service')
+const { writeSourceFolder } = await import('./sourceFolder')
 
 let cleanup: () => Promise<void>
 let sourceDir = ''
 
 beforeEach(async () => {
+  userDataDir = await fs.mkdtemp(join(tmpdir(), 'media-dup-userdata-'))
   sourceDir = await fs.mkdtemp(join(tmpdir(), 'media-dup-src-'))
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
@@ -34,6 +38,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await cleanup()
   await fs.rm(sourceDir, { recursive: true, force: true })
+  await fs.rm(userDataDir, { recursive: true, force: true })
 })
 
 function baseInput(
@@ -112,5 +117,42 @@ describe('mediaService.addMedia duplicate rejection', () => {
     const duplicate = await mediaService.checkDuplicate(file)
 
     expect(duplicate.exactMatch?.id).toBe(created.id)
+  })
+})
+
+describe('mediaService source folder awareness', () => {
+  it('stores a relative route for a file under the configured source folder, absolute otherwise', async () => {
+    writeSourceFolder(sourceDir)
+    await fs.mkdir(join(sourceDir, 'sub'), { recursive: true })
+    const file = join(sourceDir, 'sub', 'a.png')
+    await fs.writeFile(file, 'hello')
+
+    const created = await mediaService.addMedia(baseInput(file))
+
+    expect(created.route).toBe(join('sub', 'a.png'))
+
+    const outsideDir = await fs.mkdtemp(join(tmpdir(), 'media-dup-outside-'))
+    try {
+      const outsideFile = join(outsideDir, 'b.png')
+      await fs.writeFile(outsideFile, 'world')
+
+      const createdOutside = await mediaService.addMedia(baseInput(outsideFile))
+
+      expect(createdOutside.route).toBe(outsideFile)
+    } finally {
+      await fs.rm(outsideDir, { recursive: true, force: true })
+    }
+  })
+
+  it('finds a relative-stored row as an exact duplicate when checked with the equivalent absolute path', async () => {
+    writeSourceFolder(sourceDir)
+    const file = join(sourceDir, 'a.png')
+    await fs.writeFile(file, 'hello world')
+    const created = await mediaService.addMedia(baseInput(file))
+    expect(created.route).toBe('a.png')
+
+    const result = await mediaService.checkDuplicate(file)
+
+    expect(result.exactMatch?.id).toBe(created.id)
   })
 })
