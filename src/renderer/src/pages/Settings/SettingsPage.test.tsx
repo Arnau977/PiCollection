@@ -34,6 +34,11 @@ beforeEach(() => {
         }),
         pickFolder: vi.fn(),
         relinkMissingFiles: vi.fn()
+      },
+      sourceFolder: {
+        get: vi.fn().mockResolvedValue({ success: true, data: null }),
+        scanMigration: vi.fn(),
+        applyMigration: vi.fn()
       }
     },
     writable: true,
@@ -176,9 +181,10 @@ describe('SettingsPage', () => {
     expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('')
   })
 
-  it('renders the backup and missing-files sections', () => {
+  it('renders the backup, missing-files and source-folder sections', () => {
     render(<SettingsPage />)
     expect(screen.getByRole('heading', { name: 'Backup & Restore' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Missing files' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Source folder' })).toBeInTheDocument()
   })
 })
