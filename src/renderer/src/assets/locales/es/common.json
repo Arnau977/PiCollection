@@ -60,7 +60,21 @@
     "missingFilesRelinkConfirm": "Esto actualiza la ruta guardada de todos los archivos dentro de la carpeta antigua a la nueva, no solo de los que faltan actualmente. ¿Continuar?",
     "missingFilesRelinked": "Se re-enlazaron {{updated}} archivos. Siguen faltando {{stillMissing}}.",
     "missingFilesPickFile": "Elegir archivo nuevo...",
-    "missingFilesMoreHidden": "+{{count}} más sin mostrar - usa el re-enlace por carpeta de arriba para lotes grandes."
+    "missingFilesMoreHidden": "+{{count}} más sin mostrar - usa el re-enlace por carpeta de arriba para lotes grandes.",
+    "sourceFolderTitle": "Carpeta origen",
+    "sourceFolderHint": "Elige opcionalmente una carpeta bajo la que viva tu media. Los archivos dentro de ella se guardan con una ruta relativa a ella, así que mover toda la carpeta (nuevo disco, reorganización) solo necesita un cambio aquí en vez de romper cada archivo.",
+    "sourceFolderNone": "No hay carpeta origen configurada - las rutas se guardan tal cual (absolutas).",
+    "sourceFolderCurrentValue": "Actual: {{path}}",
+    "sourceFolderChoose": "Elegir carpeta...",
+    "sourceFolderClear": "Quitar carpeta origen",
+    "sourceFolderScanning": "Analizando...",
+    "sourceFolderPlanSummary": "{{relocated}} archivos se guardarán relativos a esta carpeta. {{warned}} archivos quedan fuera y usarán una ruta absoluta.",
+    "sourceFolderPlanMoreHidden": "+{{count}} más sin mostrar.",
+    "sourceFolderApplyConfirm": "Esto cambia cómo se guarda la ruta de cada archivo afectado. ¿Continuar?",
+    "sourceFolderApply": "Aplicar",
+    "sourceFolderCancel": "Cancelar",
+    "sourceFolderApplying": "Aplicando...",
+    "sourceFolderApplied": "Listo. {{relocated}} archivos ahora relativos, {{warned}} siguen absolutos."
   },
   "home": {
     "title": "Inicio",
