@@ -55,6 +55,7 @@ describe('media protocol source folder resolution', () => {
     const response = await protocolHandler!(mediaRequestFor(file))
 
     expect(response.status).toBe(200)
+    await response.arrayBuffer()
   })
 
   it('404s an absolute route pointing at a file that does not exist', async () => {
@@ -70,6 +71,7 @@ describe('media protocol source folder resolution', () => {
     const response = await protocolHandler!(mediaRequestFor('a.png'))
 
     expect(response.status).toBe(200)
+    await response.arrayBuffer()
   })
 
   it('resolves a relative route in a subfolder against the configured source folder', async () => {
@@ -80,6 +82,7 @@ describe('media protocol source folder resolution', () => {
     const response = await protocolHandler!(mediaRequestFor(join('sub', 'a.png')))
 
     expect(response.status).toBe(200)
+    await response.arrayBuffer()
   })
 
   it('404s a relative route when no source folder is configured (nothing to resolve against)', async () => {
@@ -97,5 +100,6 @@ describe('media protocol source folder resolution', () => {
     )
 
     expect(response.status).toBe(200)
+    await response.arrayBuffer()
   })
 })
