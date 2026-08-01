@@ -69,6 +69,18 @@ export const sourceFolderMigrationService = {
     await mediaRepo.updateMediaRoutes(db, updates)
     writeSourceFolder(newPath)
 
+    // writeSourceFolder() swallows filesystem errors internally, so a failed
+    // write is otherwise indistinguishable from a successful one. Re-read
+    // and compare against what we intended to persist - if it didn't take,
+    // the DB rows above have already been migrated against newPath while the
+    // setting still points at the old folder, so the caller must be told
+    // this is a half-applied migration rather than a success.
+    const persisted = readSourceFolder()
+    const expected = newPath?.trim() || null
+    if (persisted !== expected) {
+      throw new Error('Failed to persist the new source folder setting after migrating routes.')
+    }
+
     return { relocatedCount, warnedCount }
   }
 }

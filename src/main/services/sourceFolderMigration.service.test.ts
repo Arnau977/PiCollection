@@ -173,4 +173,32 @@ describe('sourceFolderMigrationService.apply', () => {
     const rows = await mediaRepo.listMediaRoutes(getDb())
     expect(rows.find((r) => r.id === id)?.route).toBe('a.png')
   })
+
+  it('throws instead of reporting success when persisting the new source folder setting fails', async () => {
+    const newRoot = join(tmpdir(), 'sfm-apply-write-fail')
+    const id = await insertRow(join(newRoot, 'a.png'))
+
+    // writeSourceFolder() swallows every filesystem error into a console
+    // warning, so we can't observe a failed write via a thrown exception -
+    // we have to actually make the write fail. Pointing app.getPath('userData')
+    // at a directory that doesn't exist makes writeFileSync's parent
+    // directory lookup fail (ENOENT), which is what a real "can't persist
+    // the setting" scenario looks like.
+    const writableUserDataDir = userDataDir
+    userDataDir = join(writableUserDataDir, 'does-not-exist', 'nested')
+
+    try {
+      await expect(sourceFolderMigrationService.apply(newRoot)).rejects.toThrow(
+        'Failed to persist the new source folder setting after migrating routes.'
+      )
+    } finally {
+      userDataDir = writableUserDataDir
+    }
+
+    // The route rewrite still committed even though the setting write
+    // failed - this is the "half-applied migration" state the thrown error
+    // is meant to surface to the caller instead of hiding.
+    const rows = await mediaRepo.listMediaRoutes(getDb())
+    expect(rows.find((r) => r.id === id)?.route).toBe('a.png')
+  })
 })
