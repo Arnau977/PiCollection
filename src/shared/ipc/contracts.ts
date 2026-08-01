@@ -101,6 +101,10 @@ export const RelinkOneFileSchema = z.object({
   newRoute: z.string().min(1)
 })
 
+export const SourceFolderPathSchema = z.object({
+  path: z.string().min(1).nullable()
+})
+
 export const MediaUpdateSchema = UpdateByIdSchema(MediaInputSchema)
 export const ArtistUpdateSchema = UpdateByIdSchema(ArtistInputSchema)
 export const CharacterUpdateSchema = UpdateByIdSchema(CharacterInputSchema)
@@ -163,6 +167,11 @@ export const IPC = {
     pickFile: 'maintenance:pick-file',
     relinkMissingFiles: 'maintenance:relink-missing-files',
     relinkOne: 'maintenance:relink-one'
+  },
+  sourceFolder: {
+    get: 'source-folder:get',
+    scanMigration: 'source-folder:scan',
+    applyMigration: 'source-folder:apply'
   },
   sauceNao: {
     lookup: 'sauce-nao:lookup',
