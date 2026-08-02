@@ -1,4 +1,5 @@
 import { isAbsolute } from 'path'
+import { promises as fs } from 'fs'
 import { getDb } from '../database/connection'
 import * as mediaRepo from '../database/repositories/media.repository'
 import { readSourceFolder, relativizeRoute, resolveRoute, writeSourceFolder } from './sourceFolder'
@@ -11,6 +12,15 @@ interface ComputedPlan {
   relocatedCount: number
   warnItems: SourceFolderMigrationItem[]
   warnedCount: number
+}
+
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await fs.access(path)
+    return true
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -32,7 +42,22 @@ async function computePlan(newPath: string | null): Promise<ComputedPlan> {
 
   for (const row of rows) {
     const wasRelative = !isAbsolute(row.route)
-    const absoluteRoute = resolveRoute(row.route, oldPath)
+    let absoluteRoute = resolveRoute(row.route, oldPath)
+
+    // A relative row whose old-anchored file is gone, but the same relative
+    // path exists under the NEW folder, almost certainly means the whole
+    // source folder was moved/renamed on disk (not this one file) - the
+    // naive resolve-against-old-then-test-against-new logic below would
+    // otherwise pin it to a location that no longer exists. Re-anchor to
+    // the new folder instead, so the relative route survives the move
+    // unchanged, matching the "just change the setting" promise.
+    if (wasRelative && newPath && !(await fileExists(absoluteRoute))) {
+      const reAnchored = resolveRoute(row.route, newPath)
+      if (await fileExists(reAnchored)) {
+        absoluteRoute = reAnchored
+      }
+    }
+
     const plannedRoute = relativizeRoute(absoluteRoute, newPath)
     const staysOrBecomesRelative = plannedRoute !== absoluteRoute
 

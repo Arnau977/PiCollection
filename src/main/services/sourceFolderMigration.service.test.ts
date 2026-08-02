@@ -111,6 +111,64 @@ describe('sourceFolderMigrationService.scan', () => {
     })
   })
 
+  it('re-anchors a relative row when the whole source folder moved on disk', async () => {
+    // The "move the whole library" case: D:\Fotos -> E:\Fotos. The row is
+    // already relative, the old-anchored file is gone, but the same relative
+    // path exists under the new folder, so the route must survive unchanged
+    // instead of being pinned absolute to the dead old location.
+    const oldRoot = await fs.mkdtemp(join(tmpdir(), 'sfm-moved-old-'))
+    const newRoot = await fs.mkdtemp(join(tmpdir(), 'sfm-moved-new-'))
+    await fs.mkdir(join(newRoot, 'sub'), { recursive: true })
+    await fs.writeFile(join(newRoot, 'sub', 'a.png'), 'moved')
+    writeSourceFolder(oldRoot)
+    const id = await insertRow(join('sub', 'a.png'))
+
+    try {
+      const plan = await sourceFolderMigrationService.scan(newRoot)
+      expect(plan).toEqual({ relocatedCount: 1, warnItems: [], warnedCount: 0 })
+
+      const result = await sourceFolderMigrationService.apply(newRoot)
+      expect(result).toEqual({ relocatedCount: 1, warnedCount: 0 })
+      const rows = await mediaRepo.listMediaRoutes(getDb())
+      expect(rows.find((r) => r.id === id)?.route).toBe(join('sub', 'a.png'))
+      expect(readSourceFolder()).toBe(newRoot)
+    } finally {
+      await fs.rm(oldRoot, { recursive: true, force: true })
+      await fs.rm(newRoot, { recursive: true, force: true })
+    }
+  })
+
+  it('does not re-anchor when the old-anchored file still exists', async () => {
+    // Nothing moved - the user is genuinely pointing at a different folder,
+    // so the row keeps resolving against the old root and falls outside the
+    // new one, exactly as before the wholesale-move heuristic existed.
+    const oldRoot = await fs.mkdtemp(join(tmpdir(), 'sfm-stay-old-'))
+    const newRoot = await fs.mkdtemp(join(tmpdir(), 'sfm-stay-new-'))
+    await fs.mkdir(join(oldRoot, 'sub'), { recursive: true })
+    await fs.writeFile(join(oldRoot, 'sub', 'a.png'), 'still here')
+    await fs.mkdir(join(newRoot, 'sub'), { recursive: true })
+    await fs.writeFile(join(newRoot, 'sub', 'a.png'), 'a different file with the same name')
+    writeSourceFolder(oldRoot)
+    await insertRow(join('sub', 'a.png'))
+
+    try {
+      const plan = await sourceFolderMigrationService.scan(newRoot)
+
+      expect(plan.relocatedCount).toBe(0)
+      expect(plan.warnedCount).toBe(1)
+      expect(plan.warnItems[0]).toEqual({
+        id: expect.any(String),
+        name: 'pic',
+        route: join('sub', 'a.png'),
+        plannedRoute: join(oldRoot, 'sub', 'a.png'),
+        wasRelative: true
+      })
+    } finally {
+      await fs.rm(oldRoot, { recursive: true, force: true })
+      await fs.rm(newRoot, { recursive: true, force: true })
+    }
+  })
+
   it('treats newPath: null the same as any other target nothing currently fits under', async () => {
     const oldRoot = join(tmpdir(), 'sfm-old-root-2')
     writeSourceFolder(oldRoot)
