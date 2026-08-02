@@ -185,6 +185,14 @@
     "skip": "Skip",
     "close": "Close"
   },
+  "folderBrowser": {
+    "root": "Source folder",
+    "loading": "Loading…",
+    "empty": "This folder has no media files.",
+    "selectedCount": "{{count}} selected",
+    "importSelected": "Import selected ({{count}})",
+    "breadcrumbLabel": "Folder path"
+  },
   "search": {
     "label": "Search",
     "placeholder": "(a OR b) -c   — search tags, characters, series, artists and names",

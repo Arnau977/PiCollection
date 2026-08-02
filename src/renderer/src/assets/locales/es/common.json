@@ -185,6 +185,14 @@
     "skip": "Saltar",
     "close": "Cerrar"
   },
+  "folderBrowser": {
+    "root": "Carpeta origen",
+    "loading": "Cargando…",
+    "empty": "Esta carpeta no tiene archivos de media.",
+    "selectedCount": "{{count}} seleccionados",
+    "importSelected": "Importar seleccionados ({{count}})",
+    "breadcrumbLabel": "Ruta de carpeta"
+  },
   "search": {
     "label": "Buscar",
     "placeholder": "(a OR b) -c   — busca tags, personajes, series, artistas y nombres",

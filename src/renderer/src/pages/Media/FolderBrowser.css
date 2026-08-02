@@ -1,0 +1,52 @@
+.folder-browser-breadcrumb {
+  margin-bottom: var(--space-3);
+}
+
+.folder-browser-crumb {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.folder-browser-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+.folder-browser-tile {
+  align-items: center;
+  background: none;
+  border: 1px solid var(--border-color, #444);
+  border-radius: var(--radius-md, 6px);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+.folder-browser-tile.is-selected {
+  border-color: var(--accent-color, #6c8cff);
+}
+
+.folder-browser-tile:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.folder-browser-tile .media-thumb {
+  height: 90px;
+  width: 100%;
+}
+
+.folder-browser-actions {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+  margin-top: var(--space-4);
+}
