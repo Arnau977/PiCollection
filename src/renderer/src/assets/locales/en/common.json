@@ -178,6 +178,13 @@
     "noResults": "No results",
     "createOption": "Create \"{{name}}\""
   },
+  "importQueue": {
+    "loading": "Preparing files…",
+    "progress": "File {{current}} of {{total}}",
+    "saveAndNext": "Save & next",
+    "skip": "Skip",
+    "close": "Close"
+  },
   "search": {
     "label": "Search",
     "placeholder": "(a OR b) -c   — search tags, characters, series, artists and names",
