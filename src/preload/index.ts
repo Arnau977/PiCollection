@@ -98,6 +98,8 @@ export const api = {
       ipcRenderer.invoke(IPC.system.showInFolder, route),
     copyImageToClipboard: (route: string): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.system.copyImageToClipboard, route),
+    copyLocationToClipboard: (route: string): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.system.copyLocationToClipboard, route),
     getAppVersion: (): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.system.getAppVersion),
     restartApp: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.system.restartApp)
   },

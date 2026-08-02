@@ -154,6 +154,7 @@ export const IPC = {
   system: {
     showInFolder: 'system:show-in-folder',
     copyImageToClipboard: 'system:copy-image-to-clipboard',
+    copyLocationToClipboard: 'system:copy-location-to-clipboard',
     getAppVersion: 'system:get-app-version',
     restartApp: 'system:restart-app'
   },

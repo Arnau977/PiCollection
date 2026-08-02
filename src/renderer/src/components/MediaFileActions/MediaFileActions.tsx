@@ -16,7 +16,10 @@ export function MediaFileActions({ route, type }: MediaFileActionsProps): JSX.El
   const [mediaCopied, setMediaCopied] = useState(false)
 
   async function handleCopyLocation(): Promise<void> {
-    await navigator.clipboard.writeText(route)
+    // Goes through the main process so a route stored relative to the source
+    // folder lands on the clipboard as a usable absolute path.
+    const result = await window.api.system.copyLocationToClipboard(route)
+    if (!result.success) return
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }

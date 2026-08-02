@@ -67,22 +67,15 @@ describe('Media', () => {
   })
 })
 
-function stubClipboard(): { writeText: ReturnType<typeof vi.fn> } {
-  // userEvent.setup() installs its own navigator.clipboard polyfill, so this
-  // must be called *after* setup() in each test, not in a shared beforeEach.
-  const clipboard = { writeText: vi.fn().mockResolvedValue(undefined) }
-  Object.defineProperty(navigator, 'clipboard', {
-    value: clipboard,
-    writable: true,
-    configurable: true
-  })
-  return clipboard
-}
-
 describe('Media lightbox', () => {
   beforeEach(() => {
     Object.defineProperty(window, 'api', {
-      value: { system: { showInFolder: vi.fn() } },
+      value: {
+        system: {
+          showInFolder: vi.fn(),
+          copyLocationToClipboard: vi.fn().mockResolvedValue({ success: true, data: undefined })
+        }
+      },
       writable: true,
       configurable: true
     })
@@ -103,15 +96,14 @@ describe('Media lightbox', () => {
     expect(screen.getByRole('button', { name: 'Open in file explorer' })).toBeInTheDocument()
   })
 
-  it('copies the file route to the clipboard', async () => {
+  it('asks the main process to copy the resolved file location to the clipboard', async () => {
     const user = userEvent.setup()
-    const clipboard = stubClipboard()
     const { container } = render(<Media {...makeMedia({ route: '/pics/1.png' })} />)
     await user.click(container.querySelector('.media-detail-media') as HTMLElement)
 
     await user.click(screen.getByRole('button', { name: 'Copy location' }))
 
-    expect(clipboard.writeText).toHaveBeenCalledWith('/pics/1.png')
+    expect(window.api.system.copyLocationToClipboard).toHaveBeenCalledWith('/pics/1.png')
     // The button is icon-only, so the confirmation shows up as its accessible name.
     expect(await screen.findByRole('button', { name: 'Copied!' })).toBeInTheDocument()
   })
