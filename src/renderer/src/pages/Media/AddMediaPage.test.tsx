@@ -61,6 +61,9 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
     sauceNao: {
       lookup: vi.fn(),
       getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+    },
+    sourceFolder: {
+      get: vi.fn().mockResolvedValue({ success: true, data: null })
     }
   }
 
@@ -651,5 +654,37 @@ describe('AddMediaPage sole-series character linking', () => {
 
     await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalled())
     expect(characterUpdate).not.toHaveBeenCalled()
+  })
+})
+
+describe('AddMediaPage folder tab', () => {
+  it('disables the "From folder" tab when no source folder is configured', async () => {
+    setApi({ sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: null }) } })
+    renderPage()
+
+    expect(await screen.findByRole('tab', { name: 'From folder' })).toBeDisabled()
+  })
+
+  it('shows the folder browser when a source folder is configured and the tab is selected', async () => {
+    const browse = vi.fn().mockResolvedValue({ success: true, data: { folders: [], files: [] } })
+    setApi({
+      sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: 'D:\\Multimedia' }), browse }
+    })
+    const user = userEvent.setup()
+    renderPage()
+
+    const folderTab = await screen.findByRole('tab', { name: 'From folder' })
+    expect(folderTab).not.toBeDisabled()
+    await user.click(folderTab)
+
+    await vi.waitFor(() => expect(browse).toHaveBeenCalledWith(''))
+    expect(document.querySelector('input[type="file"]')).not.toBeInTheDocument()
+  })
+
+  it('keeps the single-file tab active by default, unaffected by the new tab', async () => {
+    setApi({ sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: 'D:\\Multimedia' }) } })
+    renderPage()
+
+    expect(document.querySelector('input[type="file"]')).toBeInTheDocument()
   })
 })
