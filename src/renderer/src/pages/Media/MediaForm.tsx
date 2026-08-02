@@ -309,7 +309,7 @@ export function MediaForm({
       <div className="media-page-actions">
         <button type="button" className="btn" onClick={onCancel}>
           <ArrowLeft size={16} />
-          {t('manage.cancel')}
+          {queueInfo ? t('importQueue.close') : t('manage.cancel')}
         </button>
       </div>
 
