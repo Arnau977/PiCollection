@@ -4,6 +4,7 @@ import { extname } from 'path'
 import { Readable } from 'stream'
 import { resolveThumbnail } from './thumbnails/thumbnails'
 import { canFallBackToOriginal } from './thumbnails/thumbnailCache'
+import { readSourceFolder, resolveRoute } from './services/sourceFolder'
 
 const MIME_TYPES: Record<string, string> = {
   '.png': 'image/png',
@@ -33,11 +34,15 @@ export function registerMediaProtocolScheme(): void {
 
 function resolveFilePathFromUrl(requestUrl: string): string {
   const url = new URL(requestUrl)
-  let filePath = decodeURIComponent(url.pathname)
-  if (/^\/[A-Za-z]:[\\/]/.test(filePath)) {
-    filePath = filePath.slice(1)
-  }
-  return filePath
+  // toProtocolUrl() in shared/utils/mediaUrl.ts always builds the pathname as
+  // exactly "/" + route (whether route itself is relative or absolute), so
+  // stripping that one leading character always exactly reconstructs route -
+  // unlike the previous drive-letter-only check, this also correctly
+  // recovers a genuinely relative stored route instead of leaving it with a
+  // leading separator that Node's path.isAbsolute (on Windows) would treat
+  // as already-absolute.
+  const filePath = decodeURIComponent(url.pathname).slice(1)
+  return resolveRoute(filePath, readSourceFolder())
 }
 
 function mimeTypeFor(filePath: string): string {

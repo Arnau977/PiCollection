@@ -60,7 +60,22 @@
     "missingFilesRelinkConfirm": "This updates the saved path for every file under the old folder to the new one, not just the ones currently reported missing. Continue?",
     "missingFilesRelinked": "Relinked {{updated}} files. {{stillMissing}} still missing.",
     "missingFilesPickFile": "Choose new file...",
-    "missingFilesMoreHidden": "+{{count}} more not shown - use the folder relink above for large batches."
+    "missingFilesMoreHidden": "+{{count}} more not shown - use the folder relink above for large batches.",
+    "sourceFolderTitle": "Source folder",
+    "sourceFolderHint": "Optionally pick one folder your media lives under. Files inside it are stored with a path relative to it, so moving the whole folder (new drive, reorganizing) only needs a settings change here instead of breaking every file.",
+    "sourceFolderNone": "No source folder configured - paths are stored as-is (absolute).",
+    "sourceFolderCurrentValue": "Current: {{path}}",
+    "sourceFolderChoose": "Choose folder...",
+    "sourceFolderClear": "Clear source folder",
+    "sourceFolderScanning": "Scanning...",
+    "sourceFolderPlanSummary": "{{relocated}} files will be stored relative to this folder. {{warned}} files fall outside it and will use an absolute path.",
+    "sourceFolderClearSummary": "This clears the source folder. All {{warned}} media files will go back to using absolute paths.",
+    "sourceFolderPlanMoreHidden": "+{{count}} more not shown.",
+    "sourceFolderApplyConfirm": "This changes how every affected file's path is stored. Continue?",
+    "sourceFolderApply": "Apply",
+    "sourceFolderCancel": "Cancel",
+    "sourceFolderApplying": "Applying...",
+    "sourceFolderApplied": "Done. {{relocated}} files now relative, {{warned}} left absolute."
   },
   "home": {
     "title": "Home",

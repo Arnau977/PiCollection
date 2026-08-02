@@ -24,6 +24,7 @@ vi.mock('electron', () => ({
 
 const { initTestDbSingleton } = await import('../database/testHelpers')
 const mediaRepo = await import('../database/repositories/media.repository')
+const { writeSourceFolder } = await import('./sourceFolder')
 const { backfillMediaHashes } = await import('./mediaHashBackfill')
 
 /** Fake NativeImage returned by the shell thumbnail provider - always succeeds. */
@@ -109,6 +110,21 @@ describe('backfillMediaHashes', () => {
     createThumbnailFromPath.mockClear()
     await backfillMediaHashes()
     expect(createThumbnailFromPath).not.toHaveBeenCalled()
+  })
+
+  it('resolves a relative route against the configured source folder before hashing', async () => {
+    // Without resolution this row would be unreadable and get the
+    // empty-string sentinel, which permanently blacklists it from every
+    // future sweep.
+    await fs.mkdir(join(sourceDir, 'sub'), { recursive: true })
+    await fs.writeFile(join(sourceDir, 'sub', 'c.png'), 'relative content')
+    writeSourceFolder(sourceDir)
+    const row = await insertRow(join('sub', 'c.png'))
+
+    await backfillMediaHashes()
+
+    const updated = await mediaRepo.findMediaRowById(db, row.id)
+    expect(updated?.hash).toMatch(/^[0-9a-f]{64}$/)
   })
 
   it('leaves rows that already have a hash untouched', async () => {

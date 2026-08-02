@@ -4,10 +4,12 @@ import { closeDb } from '../database/connection'
 import { resolveElectronDbPath } from '../database/electronDbPath'
 import { sauceNaoSettingsFilePath } from './sauceNaoSettings'
 import { updaterSettingsFilePath } from '../updater/updaterSettings'
+import { sourceFolderSettingsFilePath } from './sourceFolder'
 
 const DB_ENTRY = 'picollection.sqlite'
 const SAUCE_NAO_ENTRY = 'sauce-nao-settings.json'
 const UPDATER_ENTRY = 'updater-settings.json'
+const SOURCE_FOLDER_ENTRY = 'source-folder-settings.json'
 const GALLERY_SETTINGS_ENTRY = 'gallery-settings.json'
 
 /**
@@ -25,6 +27,9 @@ export async function createBackupZip(destPath: string, gallerySettings: unknown
 
   const updaterPath = updaterSettingsFilePath()
   if (existsSync(updaterPath)) zip.addLocalFile(updaterPath, '', UPDATER_ENTRY)
+
+  const sourceFolderPath = sourceFolderSettingsFilePath()
+  if (existsSync(sourceFolderPath)) zip.addLocalFile(sourceFolderPath, '', SOURCE_FOLDER_ENTRY)
 
   zip.addFile(GALLERY_SETTINGS_ENTRY, Buffer.from(JSON.stringify(gallerySettings ?? {})))
 
@@ -62,6 +67,11 @@ export async function restoreBackupZip(
   const updaterEntry = zip.getEntry(UPDATER_ENTRY)
   if (updaterEntry) {
     await fs.writeFile(updaterSettingsFilePath(), zip.readFile(updaterEntry) as Buffer)
+  }
+
+  const sourceFolderEntry = zip.getEntry(SOURCE_FOLDER_ENTRY)
+  if (sourceFolderEntry) {
+    await fs.writeFile(sourceFolderSettingsFilePath(), zip.readFile(sourceFolderEntry) as Buffer)
   }
 
   // Everything above this point is destructive and has already succeeded, so a

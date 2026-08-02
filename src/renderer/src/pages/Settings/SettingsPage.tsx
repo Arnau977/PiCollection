@@ -7,6 +7,7 @@ import { useAppUpdater } from '../../hooks/useAppUpdater'
 import { LANGUAGES } from '../../i18n'
 import { BackupSection } from './BackupSection'
 import { MissingFilesSection } from './MissingFilesSection'
+import { SourceFolderSection } from './SourceFolderSection'
 import './SettingsPage.css'
 
 /** Loads/saves the optional SauceNAO API key (raises the free anonymous rate limit). */
@@ -280,6 +281,7 @@ export default function SettingsPage(): JSX.Element {
 
         <BackupSection />
         <MissingFilesSection />
+        <SourceFolderSection />
       </div>
     </div>
   )

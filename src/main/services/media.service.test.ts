@@ -1,3 +1,9 @@
+import { vi } from 'vitest'
+
+vi.mock('electron', () => ({
+  app: { getPath: () => '' }
+}))
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { initTestDbSingleton } from '../database/testHelpers'
 import { mediaService } from './media.service'

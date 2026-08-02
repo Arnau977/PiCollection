@@ -13,6 +13,7 @@ import {
   hammingDistance,
   PHASH_SIMILAR_THRESHOLD
 } from './mediaHash'
+import { readSourceFolder, relativizeRoute } from './sourceFolder'
 import type {
   ArtistModel,
   CharacterModel,
@@ -135,29 +136,33 @@ const SIMILAR_MATCH_LIMIT = 5
  * Finds an existing media row that's either the same file (by path or exact
  * content hash) or visually similar (perceptual hash). Used both by the
  * renderer's pre-submit check and, for the exact case, again inside
- * addMedia() itself as a race-safety net.
+ * addMedia() itself as a race-safety net. `absoluteRoute` is always a real
+ * filesystem path (hashing needs it); `storageRoute` is what's actually
+ * saved in the DB, which the exact-route lookup must match against instead.
  */
 async function findDuplicates(
   db: Kysely<DB>,
-  route: string
+  absoluteRoute: string,
+  sourceFolder: string | null
 ): Promise<{ exactRow: MediaTable | undefined; hash: string | null; phash: string | null }> {
-  const byRoute = await mediaRepo.findMediaRowByRoute(db, route)
+  const storageRoute = relativizeRoute(absoluteRoute, sourceFolder)
+  const byRoute = await mediaRepo.findMediaRowByRoute(db, storageRoute)
   if (byRoute) return { exactRow: byRoute, hash: null, phash: null }
 
-  const hash = await computeFileHash(route)
+  const hash = await computeFileHash(absoluteRoute)
   if (hash) {
     const byHash = await mediaRepo.findMediaRowByHash(db, hash)
     if (byHash) return { exactRow: byHash, hash, phash: null }
   }
 
-  const phash = hash ? await computePerceptualHash(route) : null
+  const phash = hash ? await computePerceptualHash(absoluteRoute) : null
   return { exactRow: undefined, hash, phash }
 }
 
 export const mediaService = {
   async checkDuplicate(route: string): Promise<MediaDuplicateCheck> {
     const db = getDb()
-    const { exactRow, phash } = await findDuplicates(db, route)
+    const { exactRow, phash } = await findDuplicates(db, route, readSourceFolder())
 
     if (exactRow) {
       return { exactMatch: await getMediaModelById(db, exactRow.id), similar: [] }
@@ -208,12 +213,13 @@ export const mediaService = {
   async addMedia(input: MediaInput): Promise<MediaModel> {
     const db = getDb()
     await assertRelationsExist(db, input)
+    const sourceFolder = readSourceFolder()
 
     // Repeats the exact-match half of checkDuplicate() as a race-safety net
     // (the renderer already showed a warning/block from its own pre-submit
     // call) - the perceptual "similar" check is advisory-only and never
     // blocks an insert.
-    const { exactRow, hash, phash } = await findDuplicates(db, input.route)
+    const { exactRow, hash, phash } = await findDuplicates(db, input.route, sourceFolder)
     if (exactRow) {
       throw new AppError(
         'DUPLICATE_MEDIA',
@@ -229,7 +235,7 @@ export const mediaService = {
         sfw: input.sfw ? 1 : 0,
         is_ai_generated: input.isAiGenerated ? 1 : 0,
         type: input.type,
-        route: input.route,
+        route: relativizeRoute(input.route, sourceFolder),
         alias: input.alias ?? null,
         artist_id: input.artistId ?? null,
         created_at: Date.now(),
@@ -250,6 +256,7 @@ export const mediaService = {
   async updateMedia(id: string, input: MediaInput): Promise<MediaModel> {
     const db = getDb()
     await assertRelationsExist(db, input)
+    const sourceFolder = readSourceFolder()
 
     await db.transaction().execute(async (trx) => {
       await mediaRepo.updateMediaRow(trx, id, {
@@ -257,7 +264,7 @@ export const mediaService = {
         sfw: input.sfw ? 1 : 0,
         is_ai_generated: input.isAiGenerated ? 1 : 0,
         type: input.type,
-        route: input.route,
+        route: relativizeRoute(input.route, sourceFolder),
         alias: input.alias ?? null,
         artist_id: input.artistId ?? null
       })

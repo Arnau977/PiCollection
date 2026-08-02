@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { mediaService } from '../services/media.service'
 import { cacheThumbnailFromBuffer, THUMBNAIL_MAX_SIZE } from '../thumbnails/thumbnails'
 import { ipcHandler } from './helpers'
+import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
 import {
   CacheThumbnailSchema,
   IPC,
@@ -43,7 +44,11 @@ export function registerMediaHandlers(): void {
   ipcMain.handle(
     IPC.media.cacheThumbnail,
     ipcHandler(CacheThumbnailSchema, ({ route, png }) =>
-      cacheThumbnailFromBuffer(route, THUMBNAIL_MAX_SIZE, Buffer.from(png))
+      cacheThumbnailFromBuffer(
+        resolveRoute(route, readSourceFolder()),
+        THUMBNAIL_MAX_SIZE,
+        Buffer.from(png)
+      )
     )
   )
   ipcMain.handle(

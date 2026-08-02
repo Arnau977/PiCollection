@@ -21,6 +21,8 @@ import type {
   SeriesModel,
   SocialLinkInput,
   Sorting,
+  SourceFolderApplyResult,
+  SourceFolderMigrationPlan,
   StatsSummary,
   TagInput,
   TagModel,
@@ -96,6 +98,8 @@ export const api = {
       ipcRenderer.invoke(IPC.system.showInFolder, route),
     copyImageToClipboard: (route: string): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.system.copyImageToClipboard, route),
+    copyLocationToClipboard: (route: string): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.system.copyLocationToClipboard, route),
     getAppVersion: (): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.system.getAppVersion),
     restartApp: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.system.restartApp)
   },
@@ -115,6 +119,13 @@ export const api = {
       ipcRenderer.invoke(IPC.maintenance.relinkMissingFiles, { oldRoot, newRoot }),
     relinkOne: (mediaId: string, newRoute: string): Promise<IpcResult<RelinkOneResult>> =>
       ipcRenderer.invoke(IPC.maintenance.relinkOne, { mediaId, newRoute })
+  },
+  sourceFolder: {
+    get: (): Promise<IpcResult<string | null>> => ipcRenderer.invoke(IPC.sourceFolder.get),
+    scanMigration: (path: string | null): Promise<IpcResult<SourceFolderMigrationPlan>> =>
+      ipcRenderer.invoke(IPC.sourceFolder.scanMigration, { path }),
+    applyMigration: (path: string | null): Promise<IpcResult<SourceFolderApplyResult>> =>
+      ipcRenderer.invoke(IPC.sourceFolder.applyMigration, { path })
   },
   sauceNao: {
     lookup: (route: string): Promise<IpcResult<SauceNaoLookup>> =>

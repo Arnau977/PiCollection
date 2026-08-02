@@ -3,13 +3,17 @@ import { promises as fs } from 'fs'
 import { join, sep } from 'path'
 import { tmpdir } from 'os'
 
+let userDataDir = ''
+
 // mediaService.addMedia hashes the candidate file, which for a real
 // (non-mocked) file also tries to generate a perceptual hash off its
 // thumbnail - that goes through Electron's nativeImage, unavailable outside
 // a real Electron process, so it's stubbed the same way
-// media.service.duplicate.test.ts does.
+// media.service.duplicate.test.ts does. app.getPath now needs a real,
+// writable directory too, since these tests also read/write the source
+// folder setting.
 vi.mock('electron', () => ({
-  app: { getPath: () => '' },
+  app: { getPath: () => userDataDir },
   nativeImage: {
     createThumbnailFromPath: () => Promise.reject(new Error('unavailable in tests')),
     createFromPath: () => ({ isEmpty: () => true }),
@@ -21,12 +25,14 @@ vi.mock('electron', () => ({
 const { initTestDbSingleton } = await import('../database/testHelpers')
 const { mediaService } = await import('./media.service')
 const { mediaMaintenanceService } = await import('./mediaMaintenance.service')
+const { writeSourceFolder } = await import('./sourceFolder')
 
 let cleanup: () => Promise<void>
 let sourceDir = ''
 
 beforeEach(async () => {
   sourceDir = await fs.mkdtemp(join(tmpdir(), 'maintenance-test-'))
+  userDataDir = await fs.mkdtemp(join(tmpdir(), 'maintenance-userdata-'))
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
 })
@@ -34,6 +40,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await cleanup()
   await fs.rm(sourceDir, { recursive: true, force: true })
+  await fs.rm(userDataDir, { recursive: true, force: true })
 })
 
 function baseInput(route: string): Parameters<typeof mediaService.addMedia>[0] {
@@ -184,6 +191,58 @@ describe('mediaMaintenanceService.relinkOne', () => {
     const result = await mediaMaintenanceService.relinkOne(created.id, newRoute)
 
     expect(result).toEqual({ updated: true })
+    const check = await mediaMaintenanceService.checkMissingFiles()
+    expect(check.missingItems.find((item) => item.id === created.id)?.route).toBe(newRoute)
+  })
+})
+
+describe('mediaMaintenanceService source folder awareness', () => {
+  it('resolves a relative row against the configured source folder when checking for missing files', async () => {
+    writeSourceFolder(sourceDir)
+    const file = join(sourceDir, 'a.png')
+    await fs.writeFile(file, 'hello')
+    await mediaService.addMedia(baseInput(file))
+
+    const result = await mediaMaintenanceService.checkMissingFiles()
+
+    expect(result.missingCount).toBe(0)
+  })
+
+  it('reports a relative row as missing using its resolved absolute path', async () => {
+    writeSourceFolder(sourceDir)
+    await fs.mkdir(join(sourceDir, 'sub'), { recursive: true })
+    await mediaService.addMedia(baseInput(join(sourceDir, 'sub', 'gone.png')))
+
+    const result = await mediaMaintenanceService.checkMissingFiles()
+
+    expect(result.missingCount).toBe(1)
+    expect(result.missingItems[0].route).toBe(join(sourceDir, 'sub', 'gone.png'))
+  })
+
+  it('relinkMissingFiles moves a relative row and keeps it relative when the new location is still under the source folder', async () => {
+    writeSourceFolder(sourceDir)
+    const oldRoot = join(sourceDir, 'old')
+    await fs.mkdir(oldRoot, { recursive: true })
+    await mediaService.addMedia(baseInput(join(oldRoot, 'a.png')))
+
+    const newRoot = join(sourceDir, 'new')
+    await fs.mkdir(newRoot, { recursive: true })
+    await fs.writeFile(join(newRoot, 'a.png'), 'hello')
+
+    const result = await mediaMaintenanceService.relinkMissingFiles(oldRoot, newRoot)
+
+    expect(result.updatedCount).toBe(1)
+    expect(result.stillMissingCount).toBe(0)
+    expect((await mediaMaintenanceService.checkMissingFiles()).missingCount).toBe(0)
+  })
+
+  it('relinkOne stores the new route relative to the configured source folder', async () => {
+    writeSourceFolder(sourceDir)
+    const created = await mediaService.addMedia(baseInput(join(sourceDir, 'old', 'a.png')))
+
+    const newRoute = join(sourceDir, 'new', 'renamed.png')
+    await mediaMaintenanceService.relinkOne(created.id, newRoute)
+
     const check = await mediaMaintenanceService.checkMissingFiles()
     expect(check.missingItems.find((item) => item.id === created.id)?.route).toBe(newRoute)
   })
