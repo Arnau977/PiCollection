@@ -177,7 +177,9 @@ describe('SourceFolderSection', () => {
 
     expect(window.api.sourceFolder.scanMigration).toHaveBeenCalledWith(null)
     expect(
-      await screen.findByText('0 files will be stored relative to this folder. 5 files fall outside it and will use an absolute path.')
+      await screen.findByText(
+        'This clears the source folder. All 5 media files will go back to using absolute paths.'
+      )
     ).toBeInTheDocument()
   })
 
@@ -190,6 +192,23 @@ describe('SourceFolderSection', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Choose folder...' }))
 
+    expect(window.api.sourceFolder.scanMigration).not.toHaveBeenCalled()
+  })
+
+  it('surfaces an error when the folder picker itself fails', async () => {
+    setApi({
+      maintenance: {
+        pickFolder: vi
+          .fn()
+          .mockResolvedValue({ success: false, error: { message: 'Dialog unavailable' } })
+      }
+    })
+    const user = userEvent.setup()
+    render(<SourceFolderSection />)
+
+    await user.click(await screen.findByRole('button', { name: 'Choose folder...' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Dialog unavailable')
     expect(window.api.sourceFolder.scanMigration).not.toHaveBeenCalled()
   })
 })

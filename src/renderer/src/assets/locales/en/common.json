@@ -69,6 +69,7 @@
     "sourceFolderClear": "Clear source folder",
     "sourceFolderScanning": "Scanning...",
     "sourceFolderPlanSummary": "{{relocated}} files will be stored relative to this folder. {{warned}} files fall outside it and will use an absolute path.",
+    "sourceFolderClearSummary": "This clears the source folder. All {{warned}} media files will go back to using absolute paths.",
     "sourceFolderPlanMoreHidden": "+{{count}} more not shown.",
     "sourceFolderApplyConfirm": "This changes how every affected file's path is stored. Continue?",
     "sourceFolderApply": "Apply",

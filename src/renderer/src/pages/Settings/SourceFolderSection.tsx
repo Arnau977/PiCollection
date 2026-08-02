@@ -34,7 +34,12 @@ export function SourceFolderSection(): JSX.Element {
 
   async function handleChoose(): Promise<void> {
     const picked = await window.api.maintenance.pickFolder()
-    if (!picked.success || picked.data.cancelled || !picked.data.path) return
+    // Only a cancelled dialog is silent - a genuine IPC failure has to surface.
+    if (!picked.success) {
+      setState({ kind: 'error', message: picked.error.message })
+      return
+    }
+    if (picked.data.cancelled || !picked.data.path) return
     await startScan(picked.data.path)
   }
 
@@ -101,11 +106,16 @@ export function SourceFolderSection(): JSX.Element {
 
       {(state.kind === 'plan' || state.kind === 'applying') && (
         <div className="settings-relink-form">
-          <p role="alert">
-            {t('settings.sourceFolderPlanSummary', {
-              relocated: state.plan.relocatedCount,
-              warned: state.plan.warnedCount
-            })}
+          {/* A null target only ever comes from handleClear, where every row
+              is legitimately "warned" - the normal summary would read like
+              something went wrong. */}
+          <p role="status">
+            {state.target === null
+              ? t('settings.sourceFolderClearSummary', { warned: state.plan.warnedCount })
+              : t('settings.sourceFolderPlanSummary', {
+                  relocated: state.plan.relocatedCount,
+                  warned: state.plan.warnedCount
+                })}
           </p>
 
           {state.plan.warnItems.length > 0 && (

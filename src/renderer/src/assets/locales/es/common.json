@@ -69,6 +69,7 @@
     "sourceFolderClear": "Quitar carpeta origen",
     "sourceFolderScanning": "Analizando...",
     "sourceFolderPlanSummary": "{{relocated}} archivos se guardarán relativos a esta carpeta. {{warned}} archivos quedan fuera y usarán una ruta absoluta.",
+    "sourceFolderClearSummary": "Esto quita la carpeta origen. Los {{warned}} archivos de media volverán a usar rutas absolutas.",
     "sourceFolderPlanMoreHidden": "+{{count}} más sin mostrar.",
     "sourceFolderApplyConfirm": "Esto cambia cómo se guarda la ruta de cada archivo afectado. ¿Continuar?",
     "sourceFolderApply": "Aplicar",
