@@ -285,6 +285,13 @@ export function listMediaRoutesWithMeta(
   return db.selectFrom('media').select(['id', 'route', 'name', 'type']).execute()
 }
 
+/** Batch existence check for a set of routes - avoids one query per candidate file when browsing a folder. */
+export async function routesExist(db: Kysely<DB>, routes: string[]): Promise<Set<string>> {
+  if (routes.length === 0) return new Set()
+  const rows = await db.selectFrom('media').select('route').where('route', 'in', routes).execute()
+  return new Set(rows.map((row) => row.route))
+}
+
 export async function updateMediaRoutes(
   db: Kysely<DB>,
   updates: { id: string; route: string }[]
