@@ -105,6 +105,15 @@ export const SourceFolderPathSchema = z.object({
   path: z.string().min(1).nullable()
 })
 
+export const SourceFolderBrowsePathSchema = z.object({
+  relativePath: z.string()
+})
+
+export const SourceFolderExpandSelectionSchema = z.object({
+  files: z.array(z.string()),
+  folders: z.array(z.string())
+})
+
 export const MediaUpdateSchema = UpdateByIdSchema(MediaInputSchema)
 export const ArtistUpdateSchema = UpdateByIdSchema(ArtistInputSchema)
 export const CharacterUpdateSchema = UpdateByIdSchema(CharacterInputSchema)
@@ -172,7 +181,9 @@ export const IPC = {
   sourceFolder: {
     get: 'source-folder:get',
     scanMigration: 'source-folder:scan',
-    applyMigration: 'source-folder:apply'
+    applyMigration: 'source-folder:apply',
+    browse: 'source-folder:browse',
+    expandSelection: 'source-folder:expand-selection'
   },
   sauceNao: {
     lookup: 'sauce-nao:lookup',
