@@ -3,6 +3,7 @@ import { promises as fs } from 'fs'
 import { getDb } from '../database/connection'
 import * as mediaRepo from '../database/repositories/media.repository'
 import { readSourceFolder, relativizeRoute, resolveRoute, writeSourceFolder } from './sourceFolder'
+import { logInfo } from '../logging/logger'
 import type { SourceFolderApplyResult, SourceFolderMigrationItem, SourceFolderMigrationPlan } from '@shared/models'
 
 const MAX_WARN_ITEMS = 50
@@ -105,6 +106,8 @@ export const sourceFolderMigrationService = {
     if (persisted !== expected) {
       throw new Error('Failed to persist the new source folder setting after migrating routes.')
     }
+
+    logInfo('settings', 'Source folder changed', { relocatedCount, warnedCount })
 
     return { relocatedCount, warnedCount }
   }
