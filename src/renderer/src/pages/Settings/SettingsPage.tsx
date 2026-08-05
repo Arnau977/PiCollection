@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Languages, SlidersHorizontal, EyeOff, Type, RefreshCw, ScanSearch, Bug } from 'lucide-react'
+import {
+  Languages,
+  SlidersHorizontal,
+  EyeOff,
+  Type,
+  RefreshCw,
+  ScanSearch,
+  Bug
+} from 'lucide-react'
 import type { MediaFilters, MediaSortableProp } from '@shared/models'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { useAppUpdater } from '../../hooks/useAppUpdater'

@@ -4,7 +4,11 @@ import { getDb } from '../database/connection'
 import * as mediaRepo from '../database/repositories/media.repository'
 import { readSourceFolder, relativizeRoute, resolveRoute, writeSourceFolder } from './sourceFolder'
 import { logInfo } from '../logging/logger'
-import type { SourceFolderApplyResult, SourceFolderMigrationItem, SourceFolderMigrationPlan } from '@shared/models'
+import type {
+  SourceFolderApplyResult,
+  SourceFolderMigrationItem,
+  SourceFolderMigrationPlan
+} from '@shared/models'
 
 const MAX_WARN_ITEMS = 50
 
