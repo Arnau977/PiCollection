@@ -40,4 +40,38 @@ describe('installErrorReporting', () => {
       undefined
     )
   })
+
+  it('never lets a synchronous throw from the reporter escape the error listener', () => {
+    Object.defineProperty(window, 'api', {
+      value: {
+        logging: {
+          reportRendererError: vi.fn().mockImplementation(() => {
+            throw new Error('boom')
+          })
+        }
+      },
+      writable: true,
+      configurable: true
+    })
+    installErrorReporting()
+
+    const error = new Error('original')
+    expect(() =>
+      window.dispatchEvent(new ErrorEvent('error', { message: error.message, error }))
+    ).not.toThrow()
+  })
+
+  it('does not throw when window.api is undefined', () => {
+    Object.defineProperty(window, 'api', {
+      value: undefined,
+      writable: true,
+      configurable: true
+    })
+    installErrorReporting()
+
+    const error = new Error('original')
+    expect(() =>
+      window.dispatchEvent(new ErrorEvent('error', { message: error.message, error }))
+    ).not.toThrow()
+  })
 })
