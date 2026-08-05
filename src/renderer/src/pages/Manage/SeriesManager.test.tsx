@@ -145,4 +145,24 @@ describe('SeriesManager', () => {
     expect(screen.getByText('Wonderland')).toBeInTheDocument()
     expect(screen.queryByText('Neverland')).not.toBeInTheDocument()
   })
+
+  it('persists the chosen sort order and re-applies it on next render', async () => {
+    const user = userEvent.setup()
+    window.localStorage.clear()
+    const { unmount } = render(<SeriesManager />)
+
+    await user.selectOptions(screen.getByLabelText('Sort by'), 'createdAt')
+    await user.click(screen.getByRole('button', { name: 'Ascending' }))
+
+    unmount()
+    render(<SeriesManager />)
+
+    expect(screen.getByLabelText('Sort by')).toHaveValue('createdAt')
+    expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
+  })
+
+  it('shows series aliases in the list', () => {
+    render(<SeriesManager />)
+    expect(screen.getByText('Alice in Wonderland')).toBeInTheDocument()
+  })
 })

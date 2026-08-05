@@ -4,6 +4,8 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { useSeries } from '../../hooks/useEntityLists'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
+import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
+import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import type { SeriesModel } from '@shared/models'
 
 interface SeriesFormValues {
@@ -31,9 +33,16 @@ export function SeriesManager(): JSX.Element {
   const [editing, setEditing] = useState<SeriesModel | null>(null)
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [sort, setSort] = useState<ManageSort>(() => loadManageSort('series'))
 
-  const visibleSeries = filterByQuery(seriesList, search, (series) =>
-    [series.name, ...(series.aliases ?? [])].join(' ')
+  function updateSort(next: ManageSort): void {
+    setSort(next)
+    saveManageSort('series', next)
+  }
+
+  const visibleSeries = sortManageEntities(
+    filterByQuery(seriesList, search, (series) => [series.name, ...(series.aliases ?? [])].join(' ')),
+    sort
   )
 
   function startEdit(series: SeriesModel): void {
@@ -126,6 +135,10 @@ export function SeriesManager(): JSX.Element {
           aria-label={t('manage.searchLabel')}
         />
 
+        <div className="manage-sort-row">
+          <ManageSortControl sort={sort} onChange={updateSort} />
+        </div>
+
         <div className="manage-list-scroll">
           {loading ? (
             <p className="loading-state">{t('gallery.loading')}</p>
@@ -145,7 +158,14 @@ export function SeriesManager(): JSX.Element {
                   }
                 >
                   <EntityThumbnail kind="series" id={series.id} />
-                  <span className="manage-item-name">{series.name}</span>
+                  <div className="manage-item-info">
+                    <span className="manage-item-name">{series.name}</span>
+                    {series.aliases && series.aliases.length > 0 && (
+                      <span className="manage-item-meta manage-item-aliases">
+                        {series.aliases.join(', ')}
+                      </span>
+                    )}
+                  </div>
                   <button
                     type="button"
                     className="icon-btn"
