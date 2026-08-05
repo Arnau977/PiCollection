@@ -1,8 +1,14 @@
 import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { ipcHandler } from './helpers'
-import { IPC, SourceFolderPathSchema } from '@shared/ipc/contracts'
+import {
+  IPC,
+  SourceFolderBrowsePathSchema,
+  SourceFolderExpandSelectionSchema,
+  SourceFolderPathSchema
+} from '@shared/ipc/contracts'
 import { readSourceFolder } from '../services/sourceFolder'
+import { sourceFolderBrowserService } from '../services/sourceFolderBrowser.service'
 import { sourceFolderMigrationService } from '../services/sourceFolderMigration.service'
 
 export function registerSourceFolderHandlers(): void {
@@ -19,5 +25,19 @@ export function registerSourceFolderHandlers(): void {
   ipcMain.handle(
     IPC.sourceFolder.applyMigration,
     ipcHandler(SourceFolderPathSchema, ({ path }) => sourceFolderMigrationService.apply(path))
+  )
+
+  ipcMain.handle(
+    IPC.sourceFolder.browse,
+    ipcHandler(SourceFolderBrowsePathSchema, ({ relativePath }) =>
+      sourceFolderBrowserService.browse(relativePath)
+    )
+  )
+
+  ipcMain.handle(
+    IPC.sourceFolder.expandSelection,
+    ipcHandler(SourceFolderExpandSelectionSchema, (selection) =>
+      sourceFolderBrowserService.expandSelection(selection)
+    )
   )
 }

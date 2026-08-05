@@ -1,7 +1,53 @@
-.add-media-page {
-  max-width: 640px;
-}
-
 .add-media-page .media-form {
   margin-top: var(--space-5);
+}
+
+.add-media-tabs {
+  display: inline-flex;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  padding: var(--space-1);
+  background: var(--color-surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill);
+}
+
+.add-media-tab {
+  background: none;
+  border: none;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.5rem 1.1rem;
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.add-media-tab:hover:not(:disabled):not(.is-active) {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.add-media-tab:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+.add-media-tab.is-active {
+  background: var(--accent-gradient);
+  color: var(--accent-text);
+  box-shadow: var(--accent-glow-sm);
+}
+
+.add-media-tab:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.add-media-folder-hint {
+  margin-top: var(--space-4);
 }

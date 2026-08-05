@@ -169,6 +169,10 @@
     "sfw": "SFW",
     "aiGenerated": "AI-generated",
     "submit": "Add",
+    "tabSingle": "Single file",
+    "tabFolder": "From folder",
+    "tabFolderDisabledHint": "Set a source folder in Settings to add media from a folder browser.",
+    "tabFolderDisabledHintLink": "Go to Settings",
     "successTitle": "Media added successfully",
     "duplicateExact": "This file is already in the library as \"{{name}}\".",
     "duplicateSimilar": "This looks similar to media already in the library:",
@@ -177,6 +181,24 @@
   "autocomplete": {
     "noResults": "No results",
     "createOption": "Create \"{{name}}\""
+  },
+  "importQueue": {
+    "loading": "Preparing files…",
+    "empty": "No files to import — everything in your selection is already in the library.",
+    "progress": "File {{current}} of {{total}}",
+    "saveAndNext": "Save & next",
+    "skip": "Skip",
+    "close": "Close"
+  },
+  "folderBrowser": {
+    "root": "Source folder",
+    "loading": "Loading…",
+    "empty": "This folder has no media files.",
+    "selectedCount": "{{count}} selected",
+    "importSelected": "Import selected ({{count}})",
+    "breadcrumbLabel": "Folder path",
+    "retry": "Retry",
+    "cataloged": "Already added"
   },
   "search": {
     "label": "Search",

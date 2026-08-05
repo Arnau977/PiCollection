@@ -306,3 +306,30 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
     expect(totalFiltered).toBe(1)
   })
 })
+
+describe('routesExist', () => {
+  it('returns an empty set for an empty input array', async () => {
+    expect(await mediaRepo.routesExist(db, [])).toEqual(new Set())
+  })
+
+  it('returns only the routes that exist among those queried', async () => {
+    await insertMedia('cat')
+    await insertMedia('dog')
+
+    const result = await mediaRepo.routesExist(db, ['/cat.png', '/dog.png', '/missing.png'])
+
+    expect(result).toEqual(new Set(['/cat.png', '/dog.png']))
+  })
+
+  it('chunks large candidate lists so it does not throw "too many SQL variables"', async () => {
+    await insertMedia('cat')
+    await insertMedia('dog')
+
+    const candidates = Array.from({ length: 600 }, (_, i) => `/missing-${i}.png`)
+    candidates.push('/cat.png', '/dog.png')
+
+    const result = await mediaRepo.routesExist(db, candidates)
+
+    expect(result).toEqual(new Set(['/cat.png', '/dog.png']))
+  })
+})

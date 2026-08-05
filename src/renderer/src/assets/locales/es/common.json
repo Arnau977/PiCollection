@@ -169,6 +169,10 @@
     "sfw": "SFW",
     "aiGenerated": "Generado mediante IA",
     "submit": "Añadir",
+    "tabSingle": "Un archivo",
+    "tabFolder": "Desde carpeta",
+    "tabFolderDisabledHint": "Configura una carpeta origen en Ajustes para añadir media desde un explorador de carpetas.",
+    "tabFolderDisabledHintLink": "Ir a Ajustes",
     "successTitle": "Media añadido correctamente",
     "duplicateExact": "Este archivo ya está en la biblioteca como \"{{name}}\".",
     "duplicateSimilar": "Se parece a media que ya está en la biblioteca:",
@@ -177,6 +181,25 @@
   "autocomplete": {
     "noResults": "Sin resultados",
     "createOption": "Crear \"{{name}}\""
+  },
+  "importQueue": {
+    "loading": "Preparando archivos…",
+    "empty": "No hay archivos que importar — todo lo seleccionado ya está en la biblioteca.",
+    "progress": "Archivo {{current}} de {{total}}",
+    "saveAndNext": "Guardar y siguiente",
+    "skip": "Saltar",
+    "close": "Cerrar"
+  },
+  "folderBrowser": {
+    "root": "Carpeta origen",
+    "loading": "Cargando…",
+    "empty": "Esta carpeta no tiene archivos de media.",
+    "selectedCount_one": "{{count}} seleccionado",
+    "selectedCount_other": "{{count}} seleccionados",
+    "importSelected": "Importar seleccionados ({{count}})",
+    "breadcrumbLabel": "Ruta de carpeta",
+    "retry": "Reintentar",
+    "cataloged": "Ya añadido"
   },
   "search": {
     "label": "Buscar",

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ExternalLink, Plus, ScanSearch } from 'lucide-react'
@@ -14,36 +14,50 @@ import { useSauceNaoSuggestions, type SuggestionCategory } from '../../hooks/use
 import { withImpliedSeries } from '../../utils/withImpliedSeries'
 import './MediaForm.css'
 
+interface InitialFile {
+  route: string
+  name: string
+  type: MediaModel['type']
+}
+
+interface QueueInfo {
+  current: number
+  total: number
+  onSkip: () => void
+}
+
 interface MediaFormProps {
   media?: MediaModel
+  initialFile?: InitialFile
+  queueInfo?: QueueInfo
   onCancel: () => void
   onSaved: (media: MediaModel) => void
 }
 
-function toInput(media?: MediaModel): MediaInput {
-  if (!media) {
+function toInput(media?: MediaModel, initialFile?: InitialFile): MediaInput {
+  if (media) {
     return {
-      name: '',
-      type: 'image',
-      route: '',
-      sfw: true,
-      isAiGenerated: false,
-      artistId: undefined,
-      tagIds: [],
-      characterIds: [],
-      seriesIds: []
+      name: media.name,
+      type: media.type,
+      route: media.route,
+      sfw: media.sfw,
+      isAiGenerated: media.isAiGenerated,
+      artistId: media.artist?.id,
+      tagIds: media.tags?.map((tag) => tag.id) ?? [],
+      characterIds: media.characters?.map((character) => character.id) ?? [],
+      seriesIds: media.series?.map((series) => series.id) ?? []
     }
   }
   return {
-    name: media.name,
-    type: media.type,
-    route: media.route,
-    sfw: media.sfw,
-    isAiGenerated: media.isAiGenerated,
-    artistId: media.artist?.id,
-    tagIds: media.tags?.map((tag) => tag.id) ?? [],
-    characterIds: media.characters?.map((character) => character.id) ?? [],
-    seriesIds: media.series?.map((series) => series.id) ?? []
+    name: initialFile?.name ?? '',
+    type: initialFile?.type ?? 'image',
+    route: initialFile?.route ?? '',
+    sfw: true,
+    isAiGenerated: false,
+    artistId: undefined,
+    tagIds: [],
+    characterIds: [],
+    seriesIds: []
   }
 }
 
@@ -54,7 +68,13 @@ const MISSING_CATEGORIES: { category: SuggestionCategory; labelKey: string }[] =
   { category: 'series', labelKey: 'sauceNao.missingSeries' }
 ]
 
-export function MediaForm({ media, onCancel, onSaved }: MediaFormProps): JSX.Element {
+export function MediaForm({
+  media,
+  initialFile,
+  queueInfo,
+  onCancel,
+  onSaved
+}: MediaFormProps): JSX.Element {
   const { t } = useTranslation()
   const isEditing = Boolean(media)
   const artists = useArtists()
@@ -62,11 +82,26 @@ export function MediaForm({ media, onCancel, onSaved }: MediaFormProps): JSX.Ele
   const characters = useCharacters()
   const series = useSeries()
 
-  const [input, setInput] = useState<MediaInput>(() => toInput(media))
+  const [input, setInput] = useState<MediaInput>(() => toInput(media, initialFile))
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [duplicateCheck, setDuplicateCheck] = useState<MediaDuplicateCheck | null>(null)
   const hasSauceNaoApiKey = useSauceNaoApiKey()
+
+  useEffect((): (() => void) | void => {
+    if (!initialFile) return
+    let cancelled = false
+    window.api.media.checkDuplicate(initialFile.route).then((result) => {
+      if (!cancelled && result.success) setDuplicateCheck(result.data)
+    })
+    return () => {
+      cancelled = true
+    }
+    // Only the initial route matters - ImportQueue mounts a fresh MediaForm
+    // instance (via `key`) for every queue item, so this never needs to
+    // re-run for the same instance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const sauce = useSauceNaoSuggestions({
     artists: artists.data,
@@ -274,12 +309,18 @@ export function MediaForm({ media, onCancel, onSaved }: MediaFormProps): JSX.Ele
       <div className="media-page-actions">
         <button type="button" className="btn" onClick={onCancel}>
           <ArrowLeft size={16} />
-          {t('manage.cancel')}
+          {queueInfo ? t('importQueue.close') : t('manage.cancel')}
         </button>
       </div>
 
       <form className="media-form-card card" onSubmit={handleSubmit}>
-        {!isEditing && (
+        {queueInfo && (
+          <p className="import-queue-progress">
+            {t('importQueue.progress', { current: queueInfo.current, total: queueInfo.total })}
+          </p>
+        )}
+
+        {!isEditing && !initialFile && (
           <div className="field">
             <label htmlFor="media-file">{t('addMedia.file')}</label>
             <input
@@ -487,8 +528,17 @@ export function MediaForm({ media, onCancel, onSaved }: MediaFormProps): JSX.Ele
             className="btn btn-primary"
             disabled={saving || Boolean(duplicateCheck?.exactMatch)}
           >
-            {isEditing ? t('manage.save') : t('addMedia.submit')}
+            {queueInfo
+              ? t('importQueue.saveAndNext')
+              : isEditing
+                ? t('manage.save')
+                : t('addMedia.submit')}
           </button>
+          {queueInfo && (
+            <button type="button" className="btn" onClick={queueInfo.onSkip}>
+              {t('importQueue.skip')}
+            </button>
+          )}
         </div>
       </form>
     </div>

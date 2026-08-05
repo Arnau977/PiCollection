@@ -7,6 +7,7 @@ import type {
   BackupImportResult,
   CharacterInput,
   CharacterModel,
+  ExpandedMediaFile,
   MediaDuplicateCheck,
   MediaFilteredResult,
   MediaFilters,
@@ -22,6 +23,7 @@ import type {
   SocialLinkInput,
   Sorting,
   SourceFolderApplyResult,
+  SourceFolderBrowseResult,
   SourceFolderMigrationPlan,
   StatsSummary,
   TagInput,
@@ -125,7 +127,14 @@ export const api = {
     scanMigration: (path: string | null): Promise<IpcResult<SourceFolderMigrationPlan>> =>
       ipcRenderer.invoke(IPC.sourceFolder.scanMigration, { path }),
     applyMigration: (path: string | null): Promise<IpcResult<SourceFolderApplyResult>> =>
-      ipcRenderer.invoke(IPC.sourceFolder.applyMigration, { path })
+      ipcRenderer.invoke(IPC.sourceFolder.applyMigration, { path }),
+    browse: (relativePath: string): Promise<IpcResult<SourceFolderBrowseResult>> =>
+      ipcRenderer.invoke(IPC.sourceFolder.browse, { relativePath }),
+    expandSelection: (selection: {
+      files: string[]
+      folders: string[]
+    }): Promise<IpcResult<ExpandedMediaFile[]>> =>
+      ipcRenderer.invoke(IPC.sourceFolder.expandSelection, selection)
   },
   sauceNao: {
     lookup: (route: string): Promise<IpcResult<SauceNaoLookup>> =>

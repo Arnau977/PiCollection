@@ -61,6 +61,9 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
     sauceNao: {
       lookup: vi.fn(),
       getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+    },
+    sourceFolder: {
+      get: vi.fn().mockResolvedValue({ success: true, data: null })
     }
   }
 
@@ -651,5 +654,76 @@ describe('AddMediaPage sole-series character linking', () => {
 
     await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalled())
     expect(characterUpdate).not.toHaveBeenCalled()
+  })
+})
+
+describe('AddMediaPage folder tab', () => {
+  it('disables the "From folder" tab when no source folder is configured', async () => {
+    setApi({ sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: null }) } })
+    renderPage()
+
+    expect(await screen.findByRole('tab', { name: 'From folder' })).toBeDisabled()
+  })
+
+  it('shows the folder browser when a source folder is configured and the tab is selected', async () => {
+    const browse = vi.fn().mockResolvedValue({ success: true, data: { folders: [], files: [] } })
+    setApi({
+      sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: 'D:\\Multimedia' }), browse }
+    })
+    const user = userEvent.setup()
+    renderPage()
+
+    const folderTab = await screen.findByRole('tab', { name: 'From folder' })
+    expect(folderTab).not.toBeDisabled()
+    await user.click(folderTab)
+
+    await vi.waitFor(() => expect(browse).toHaveBeenCalledWith(''))
+    expect(document.querySelector('input[type="file"]')).not.toBeInTheDocument()
+  })
+
+  it('keeps the single-file tab active by default, unaffected by the new tab', async () => {
+    setApi({ sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: 'D:\\Multimedia' }) } })
+    renderPage()
+
+    expect(document.querySelector('input[type="file"]')).toBeInTheDocument()
+  })
+
+  it('shows the folder browser again (not a stale queue) after switching to Single file and back mid-import', async () => {
+    const browse = vi.fn().mockResolvedValue({
+      success: true,
+      data: { folders: [], files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false }] }
+    })
+    // Never resolves, so the queue stays on its loading state until this tree unmounts.
+    const expandSelection = vi.fn().mockReturnValue(new Promise(() => {}))
+    setApi({
+      sourceFolder: {
+        get: vi.fn().mockResolvedValue({ success: true, data: 'D:\\Multimedia' }),
+        browse,
+        expandSelection
+      }
+    })
+    const user = userEvent.setup()
+    renderPage()
+
+    const folderTab = await screen.findByRole('tab', { name: 'From folder' })
+    await user.click(folderTab)
+
+    const fileTile = await screen.findByText('a.png')
+    await user.click(fileTile)
+    await user.click(screen.getByRole('button', { name: /Import selected/ }))
+
+    // Import started: the queue is mounted (browser's "Import selected" button is gone).
+    await vi.waitFor(() => expect(expandSelection).toHaveBeenCalled())
+    expect(screen.queryByRole('button', { name: /Import selected/ })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: 'Single file' }))
+    expect(document.querySelector('input[type="file"]')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: 'From folder' }))
+
+    // Back on the folder tab: the browser is shown again, not a resumed/stale queue.
+    expect(await screen.findByText('a.png')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Import selected/ })).toBeInTheDocument()
+    expect(browse).toHaveBeenCalledTimes(2)
   })
 })
