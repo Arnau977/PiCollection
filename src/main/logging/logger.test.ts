@@ -4,6 +4,18 @@ import { promises as fsPromises } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 
+// vi.spyOn can't redefine a built-in ESM module's exports directly, so the
+// module itself is mocked with a vi.fn() wrapper around the real
+// implementation - this lets tests observe call counts while everything
+// still hits the real filesystem underneath.
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>()
+  return {
+    ...actual,
+    readFileSync: vi.fn(actual.readFileSync)
+  }
+})
+
 let userDataDir = ''
 
 vi.mock('electron', () => ({
@@ -13,11 +25,13 @@ vi.mock('electron', () => ({
 }))
 
 const { logInfo, logWarn, logError } = await import('./logger')
-const { writeLoggingEnabled } = await import('./loggingSettings')
+const { writeLoggingEnabled, resetLoggingEnabledCache } = await import('./loggingSettings')
 const { currentLogFilePath } = await import('./rotation')
 
 beforeEach(async () => {
   userDataDir = await fsPromises.mkdtemp(join(tmpdir(), 'logger-'))
+  resetLoggingEnabledCache()
+  vi.mocked(readFileSync).mockClear()
 })
 
 afterEach(async () => {
@@ -67,5 +81,14 @@ describe('logger', () => {
 
     const content = readFileSync(currentLogFilePath(), 'utf-8')
     expect(content).toContain('a plain string reason')
+  })
+
+  it('does not hit the filesystem more than once when disabled, across many calls', () => {
+    logInfo('test', 'one')
+    logInfo('test', 'two')
+    logWarn('test', 'three')
+    logError('test', 'four')
+
+    expect(vi.mocked(readFileSync).mock.calls.length).toBeLessThanOrEqual(1)
   })
 })
