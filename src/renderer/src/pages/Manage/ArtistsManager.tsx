@@ -4,6 +4,8 @@ import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useArtists } from '../../hooks/useEntityLists'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
+import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
+import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import type { ArtistModel } from '@shared/models'
 
 export function ArtistsManager(): JSX.Element {
@@ -15,8 +17,14 @@ export function ArtistsManager(): JSX.Element {
   const [socialUrl, setSocialUrl] = useState('')
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [sort, setSort] = useState<ManageSort>(() => loadManageSort('artists'))
 
-  const visibleArtists = filterByQuery(artists, search, (artist) => artist.name)
+  function updateSort(next: ManageSort): void {
+    setSort(next)
+    saveManageSort('artists', next)
+  }
+
+  const visibleArtists = sortManageEntities(filterByQuery(artists, search, (artist) => artist.name), sort)
   // Editing the same artist by id keeps the panel in sync as `refetch()` swaps
   // in fresh data (e.g. right after adding a social link).
   const editingArtist = editing ? (artists.find((a) => a.id === editing.id) ?? editing) : null
@@ -175,6 +183,10 @@ export function ArtistsManager(): JSX.Element {
           placeholder={t('manage.searchPlaceholder')}
           aria-label={t('manage.searchLabel')}
         />
+
+        <div className="manage-sort-row">
+          <ManageSortControl sort={sort} onChange={updateSort} />
+        </div>
 
         <div className="manage-list-scroll">
           {loading ? (

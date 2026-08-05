@@ -180,4 +180,19 @@ describe('ArtistsManager', () => {
     expect(screen.getByText('Jane Doe')).toBeInTheDocument()
     expect(screen.queryByText('John Smith')).not.toBeInTheDocument()
   })
+
+  it('persists the chosen sort order and re-applies it on next render', async () => {
+    const user = userEvent.setup()
+    window.localStorage.clear()
+    const { unmount } = render(<ArtistsManager />)
+
+    await user.selectOptions(screen.getByLabelText('Sort by'), 'createdAt')
+    await user.click(screen.getByRole('button', { name: 'Ascending' }))
+
+    unmount()
+    render(<ArtistsManager />)
+
+    expect(screen.getByLabelText('Sort by')).toHaveValue('createdAt')
+    expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
+  })
 })
