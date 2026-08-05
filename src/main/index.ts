@@ -15,11 +15,26 @@ import { logError, logInfo } from './logging/logger'
 
 registerMediaProtocolScheme()
 
+// Node's default behavior for an uncaught exception is to print and terminate
+// the process. Registering a handler at all suppresses that default, so this
+// handler restores it after logging - it exists to capture the crash on the
+// way out, not to keep the app limping along in a possibly-corrupted state
+// (e.g. a half-open DB handle or half-initialized window).
 process.on('uncaughtException', (err) => {
   console.error('Uncaught exception', err)
   logError('process', 'Uncaught exception', err)
+  dialog.showErrorBox(
+    'Unexpected error',
+    'PiCollection hit an unrecoverable error and needs to close.\n\n' +
+      (err instanceof Error ? err.message : String(err))
+  )
+  app.exit(1)
 })
 
+// Unlike an uncaught exception, Node does not treat an unhandled rejection as
+// fatal by default, and nothing in this app currently relies on that being
+// fatal for correctness - so this stays log-only, matching pre-existing
+// behavior. It must not silently suppress anything beyond logging.
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection', reason)
   logError('process', 'Unhandled rejection', reason)
