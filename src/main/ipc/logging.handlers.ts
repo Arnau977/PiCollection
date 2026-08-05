@@ -8,7 +8,7 @@ import { logsDir } from '../logging/rotation'
 import { readLoggingEnabled, writeLoggingEnabled } from '../logging/loggingSettings'
 
 const ReportRendererErrorSchema = z.object({
-  message: z.string().min(1),
+  message: z.string(),
   stack: z.string().optional()
 })
 
@@ -41,7 +41,7 @@ export function registerLoggingHandlers(): void {
     if (!parsed.success) return
     logError(
       'renderer',
-      parsed.data.message,
+      parsed.data.message || '(no message)',
       parsed.data.stack ? { stack: parsed.data.stack } : undefined
     )
   })
