@@ -27,7 +27,9 @@ function readStore(): StoredManageSort {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return {}
-    return JSON.parse(raw)
+    const parsed = JSON.parse(raw)
+    if (typeof parsed !== 'object' || parsed === null) return {}
+    return parsed
   } catch {
     return {}
   }

@@ -67,4 +67,10 @@ describe('manage sort persistence', () => {
     window.localStorage.setItem('picollection:manage-sort', 'not-json')
     expect(loadManageSort('characters')).toEqual({ prop: 'name', desc: false })
   })
+
+  it('falls back to defaults when the stored value is valid JSON but not an object', () => {
+    window.localStorage.setItem('picollection:manage-sort', 'null')
+    expect(loadManageSort('artists')).toEqual({ prop: 'name', desc: false })
+    expect(() => saveManageSort('artists', { prop: 'createdAt', desc: true })).not.toThrow()
+  })
 })
