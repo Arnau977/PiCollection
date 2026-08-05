@@ -109,6 +109,7 @@
   }
 
   .react-aria-ListBoxItem {
+    position: relative;
     padding: 0.4rem 0.571rem 0.4rem 1.571rem;
     border-radius: var(--radius-sm);
     font-size: 0.88rem;
@@ -128,8 +129,9 @@
         content: '✓' / '';
         alt: ' ';
         position: absolute;
-        top: 4px;
-        left: 4px;
+        top: 50%;
+        left: 0.5rem;
+        transform: translateY(-50%);
       }
     }
 
