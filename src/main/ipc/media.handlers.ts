@@ -17,33 +17,35 @@ import {
 export function registerMediaHandlers(): void {
   ipcMain.handle(
     IPC.media.getAll,
-    ipcHandler(z.void(), () => mediaService.getAllMedia())
+    ipcHandler(IPC.media.getAll, z.void(), () => mediaService.getAllMedia())
   )
   ipcMain.handle(
     IPC.media.getFiltered,
-    ipcHandler(MediaGetFilteredSchema, ({ filters, sorting }) =>
+    ipcHandler(IPC.media.getFiltered, MediaGetFilteredSchema, ({ filters, sorting }) =>
       mediaService.getMediaFiltered(filters, sorting)
     )
   )
   ipcMain.handle(
     IPC.media.getById,
-    ipcHandler(IdSchema, (id) => mediaService.getMediaById(id))
+    ipcHandler(IPC.media.getById, IdSchema, (id) => mediaService.getMediaById(id))
   )
   ipcMain.handle(
     IPC.media.create,
-    ipcHandler(MediaInputSchema, (input) => mediaService.addMedia(input))
+    ipcHandler(IPC.media.create, MediaInputSchema, (input) => mediaService.addMedia(input))
   )
   ipcMain.handle(
     IPC.media.update,
-    ipcHandler(MediaUpdateSchema, ({ id, input }) => mediaService.updateMedia(id, input))
+    ipcHandler(IPC.media.update, MediaUpdateSchema, ({ id, input }) =>
+      mediaService.updateMedia(id, input)
+    )
   )
   ipcMain.handle(
     IPC.media.delete,
-    ipcHandler(IdSchema, (id) => mediaService.deleteMedia(id))
+    ipcHandler(IPC.media.delete, IdSchema, (id) => mediaService.deleteMedia(id))
   )
   ipcMain.handle(
     IPC.media.cacheThumbnail,
-    ipcHandler(CacheThumbnailSchema, ({ route, png }) =>
+    ipcHandler(IPC.media.cacheThumbnail, CacheThumbnailSchema, ({ route, png }) =>
       cacheThumbnailFromBuffer(
         resolveRoute(route, readSourceFolder()),
         THUMBNAIL_MAX_SIZE,
@@ -53,6 +55,8 @@ export function registerMediaHandlers(): void {
   )
   ipcMain.handle(
     IPC.media.checkDuplicate,
-    ipcHandler(RouteSchema, ({ route }) => mediaService.checkDuplicate(route))
+    ipcHandler(IPC.media.checkDuplicate, RouteSchema, ({ route }) =>
+      mediaService.checkDuplicate(route)
+    )
   )
 }

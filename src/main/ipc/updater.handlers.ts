@@ -15,26 +15,26 @@ const UpdateChannelSchema = z.enum(['stable', 'beta'])
 export function registerUpdaterHandlers(): void {
   ipcMain.handle(
     IPC.updater.checkForUpdates,
-    ipcHandler(z.void(), () => checkForUpdates())
+    ipcHandler(IPC.updater.checkForUpdates, z.void(), () => checkForUpdates())
   )
 
   ipcMain.handle(
     IPC.updater.downloadUpdate,
-    ipcHandler(z.void(), () => downloadUpdate())
+    ipcHandler(IPC.updater.downloadUpdate, z.void(), () => downloadUpdate())
   )
 
   ipcMain.handle(
     IPC.updater.quitAndInstall,
-    ipcHandler(z.void(), async () => quitAndInstall())
+    ipcHandler(IPC.updater.quitAndInstall, z.void(), async () => quitAndInstall())
   )
 
   ipcMain.handle(
     IPC.updater.getChannel,
-    ipcHandler(z.void(), async () => getChannel())
+    ipcHandler(IPC.updater.getChannel, z.void(), async () => getChannel())
   )
 
   ipcMain.handle(
     IPC.updater.setChannel,
-    ipcHandler(UpdateChannelSchema, async (channel) => setChannel(channel))
+    ipcHandler(IPC.updater.setChannel, UpdateChannelSchema, async (channel) => setChannel(channel))
   )
 }

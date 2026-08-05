@@ -3,6 +3,7 @@ import { autoUpdater } from 'electron-updater'
 import { IPC } from '@shared/ipc/contracts'
 import type { UpdateChannel, UpdaterEvent } from '@shared/models'
 import { readUpdateChannel, writeUpdateChannel } from './updaterSettings'
+import { logInfo } from '../logging/logger'
 
 let updaterWindow: BrowserWindow | null = null
 
@@ -59,5 +60,6 @@ export function getChannel(): UpdateChannel {
 
 export function setChannel(channel: UpdateChannel): void {
   writeUpdateChannel(channel)
+  logInfo('settings', 'Update channel changed', { channel })
   applyChannel(channel)
 }

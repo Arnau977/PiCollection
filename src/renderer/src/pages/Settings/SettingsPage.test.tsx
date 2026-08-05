@@ -39,6 +39,11 @@ beforeEach(() => {
         get: vi.fn().mockResolvedValue({ success: true, data: null }),
         scanMigration: vi.fn(),
         applyMigration: vi.fn()
+      },
+      logging: {
+        getEnabled: vi.fn().mockResolvedValue({ success: true, data: false }),
+        setEnabled: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+        openFolder: vi.fn().mockResolvedValue({ success: true, data: undefined })
       }
     },
     writable: true,
@@ -186,5 +191,26 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('heading', { name: 'Backup & Restore' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Missing files' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Source folder' })).toBeInTheDocument()
+  })
+
+  it('defaults debug logging to disabled and enables it via the checkbox', async () => {
+    const user = userEvent.setup()
+    render(<SettingsPage />)
+
+    const loggingCheckbox = await screen.findByRole('checkbox', { name: 'Enable debug logging' })
+    expect(loggingCheckbox).not.toBeChecked()
+
+    await user.click(loggingCheckbox)
+
+    expect(window.api.logging.setEnabled).toHaveBeenCalledWith(true)
+  })
+
+  it('opens the logs folder when the button is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SettingsPage />)
+
+    await user.click(screen.getByRole('button', { name: 'Open logs folder' }))
+
+    expect(window.api.logging.openFolder).toHaveBeenCalled()
   })
 })

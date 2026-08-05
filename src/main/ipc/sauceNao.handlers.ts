@@ -9,19 +9,19 @@ import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
 export function registerSauceNaoHandlers(): void {
   ipcMain.handle(
     IPC.sauceNao.lookup,
-    ipcHandler(z.string().min(1), (route) =>
+    ipcHandler(IPC.sauceNao.lookup, z.string().min(1), (route) =>
       lookupSauceNao(resolveRoute(route, readSourceFolder()))
     )
   )
 
   ipcMain.handle(
     IPC.sauceNao.getApiKey,
-    ipcHandler(z.void(), async () => readSauceNaoApiKey())
+    ipcHandler(IPC.sauceNao.getApiKey, z.void(), async () => readSauceNaoApiKey())
   )
 
   ipcMain.handle(
     IPC.sauceNao.setApiKey,
-    ipcHandler(z.string().optional(), async (apiKey) => {
+    ipcHandler(IPC.sauceNao.setApiKey, z.string().optional(), async (apiKey) => {
       writeSauceNaoApiKey(apiKey)
     })
   )

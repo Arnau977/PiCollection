@@ -45,7 +45,7 @@ A few things worth knowing before you touch any of this:
   contracts, and the gallery search-query parser live there. If a type or
   pure function is needed on both sides of the IPC boundary, it belongs here,
   not duplicated.
-- **Every IPC handler is wrapped in `ipcHandler(schema, fn)`**
+- **Every IPC handler is wrapped in `ipcHandler(channel, schema, fn)`**
   ([`src/main/ipc/helpers.ts`](../src/main/ipc/helpers.ts)), which validates
   the incoming payload with zod and always resolves to an `IpcResult<T>`
   (`{ success: true, data } | { success: false, error }`) instead of
@@ -217,4 +217,5 @@ add a `Location` entity, taggable on media the same way.
 | Gallery search parser | `src/shared/query/searchQuery.ts` |
 | Pages/components | `src/renderer/src/pages/`, `src/renderer/src/components/` |
 | Auto-update | `src/main/updater/` (see [`docs/auto-update.md`](auto-update.md)) |
+| Debug logging (settings, rotation, logger) | `src/main/logging/` |
 | SauceNAO tag suggestions | `src/main/services/sauceNao.*.ts` — the only module making outbound network calls for user content, and only on an explicit button press (see `src/renderer/src/pages/Media/MediaForm.tsx`) |

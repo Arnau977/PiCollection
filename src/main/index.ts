@@ -11,8 +11,34 @@ import { registerIpcHandlers } from './ipc/registerIpcHandlers'
 import { createWindowStateKeeper } from './window/windowState'
 import { MIN_WIDTH, MIN_HEIGHT } from './window/windowBounds'
 import { checkForUpdates, initAutoUpdater } from './updater/autoUpdater'
+import { logError, logInfo } from './logging/logger'
 
 registerMediaProtocolScheme()
+
+// Node's default behavior for an uncaught exception is to print and terminate
+// the process. Registering a handler at all suppresses that default, so this
+// handler restores it after logging - it exists to capture the crash on the
+// way out, not to keep the app limping along in a possibly-corrupted state
+// (e.g. a half-open DB handle or half-initialized window).
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception', err)
+  logError('process', 'Uncaught exception', err)
+  dialog.showErrorBox(
+    'Unexpected error',
+    'PiCollection hit an unrecoverable error and needs to close.\n\n' +
+      (err instanceof Error ? err.message : String(err))
+  )
+  app.exit(1)
+})
+
+// Unlike an uncaught exception, Node does not treat an unhandled rejection as
+// fatal by default, and nothing in this app currently relies on that being
+// fatal for correctness - so this stays log-only, matching pre-existing
+// behavior. It must not silently suppress anything beyond logging.
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection', reason)
+  logError('process', 'Unhandled rejection', reason)
+})
 
 /** Give the window a moment to finish loading before an update check starts competing for bandwidth. */
 const STARTUP_UPDATE_CHECK_DELAY_MS = 5000
@@ -73,12 +99,15 @@ const setupDatabase = async (): Promise<void> => {
   const db = initDb(resolveElectronDbPath(), { verboseLogging: !app.isPackaged })
   await runMigrations(db)
   console.info('Database ready')
+  logInfo('lifecycle', 'Database ready')
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
+  logInfo('lifecycle', 'App ready')
+
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -93,6 +122,7 @@ app.whenReady().then(async () => {
     await setupDatabase()
   } catch (err) {
     console.error('Failed to initialize database', err)
+    logError('lifecycle', 'Failed to initialize database', err)
     dialog.showErrorBox(
       'Database error',
       'PiCollection could not initialize its local database and cannot continue.\n\n' +
@@ -105,10 +135,14 @@ app.whenReady().then(async () => {
   registerMediaProtocolHandler()
   registerIpcHandlers()
   const mainWindow = createWindow()
+  logInfo('lifecycle', 'Main window created')
 
   // Fire-and-forget: fills in hash/phash for media added before duplicate
   // detection existed, without delaying the window from showing.
-  backfillMediaHashes().catch((err) => console.error('Media hash backfill failed', err))
+  backfillMediaHashes().catch((err) => {
+    console.error('Media hash backfill failed', err)
+    logError('lifecycle', 'Media hash backfill failed', err)
+  })
 
   initAutoUpdater(mainWindow)
   // A quiet startup check - the renderer surfaces the result and lets the

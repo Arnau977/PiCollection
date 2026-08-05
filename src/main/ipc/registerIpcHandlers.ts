@@ -10,6 +10,7 @@ import { registerSauceNaoHandlers } from './sauceNao.handlers'
 import { registerBackupHandlers } from './backup.handlers'
 import { registerMediaMaintenanceHandlers } from './mediaMaintenance.handlers'
 import { registerSourceFolderHandlers } from './sourceFolder.handlers'
+import { registerLoggingHandlers } from './logging.handlers'
 
 export function registerIpcHandlers(): void {
   registerMediaHandlers()
@@ -24,4 +25,5 @@ export function registerIpcHandlers(): void {
   registerBackupHandlers()
   registerMediaMaintenanceHandlers()
   registerSourceFolderHandlers()
+  registerLoggingHandlers()
 }

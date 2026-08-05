@@ -8,22 +8,26 @@ import type { BackupExportResult, BackupImportResult } from '@shared/models'
 export function registerBackupHandlers(): void {
   ipcMain.handle(
     IPC.backup.export,
-    ipcHandler(BackupExportSchema, async ({ gallerySettings }): Promise<BackupExportResult> => {
-      const result = await dialog.showSaveDialog({
-        title: 'Export backup',
-        defaultPath: `picollection-backup-${new Date().toISOString().slice(0, 10)}.zip`,
-        filters: [{ name: 'PiCollection backup', extensions: ['zip'] }]
-      })
-      if (result.canceled || !result.filePath) return { cancelled: true }
+    ipcHandler(
+      IPC.backup.export,
+      BackupExportSchema,
+      async ({ gallerySettings }): Promise<BackupExportResult> => {
+        const result = await dialog.showSaveDialog({
+          title: 'Export backup',
+          defaultPath: `picollection-backup-${new Date().toISOString().slice(0, 10)}.zip`,
+          filters: [{ name: 'PiCollection backup', extensions: ['zip'] }]
+        })
+        if (result.canceled || !result.filePath) return { cancelled: true }
 
-      await createBackupZip(result.filePath, gallerySettings)
-      return { cancelled: false }
-    })
+        await createBackupZip(result.filePath, gallerySettings)
+        return { cancelled: false }
+      }
+    )
   )
 
   ipcMain.handle(
     IPC.backup.import,
-    ipcHandler(z.void(), async (): Promise<BackupImportResult> => {
+    ipcHandler(IPC.backup.import, z.void(), async (): Promise<BackupImportResult> => {
       const result = await dialog.showOpenDialog({
         title: 'Import backup',
         properties: ['openFile'],

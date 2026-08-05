@@ -7,6 +7,6 @@ import { IPC } from '@shared/ipc/contracts'
 export function registerStatsHandlers(): void {
   ipcMain.handle(
     IPC.stats.getSummary,
-    ipcHandler(z.void(), () => statsService.getSummary())
+    ipcHandler(IPC.stats.getSummary, z.void(), () => statsService.getSummary())
   )
 }

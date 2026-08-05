@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Languages, SlidersHorizontal, EyeOff, Type, RefreshCw, ScanSearch } from 'lucide-react'
+import {
+  Languages,
+  SlidersHorizontal,
+  EyeOff,
+  Type,
+  RefreshCw,
+  ScanSearch,
+  Bug
+} from 'lucide-react'
 import type { MediaFilters, MediaSortableProp } from '@shared/models'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { useAppUpdater } from '../../hooks/useAppUpdater'
@@ -46,11 +54,39 @@ function useSauceNaoApiKeyField(): {
   return { value, saved, onChange, save, clear }
 }
 
+/** Loads/saves the debug-logging on/off setting. */
+function useLoggingSettings(): {
+  enabled: boolean
+  toggle: () => void
+  openFolder: () => void
+} {
+  const [enabled, setEnabled] = useState(false)
+
+  useEffect(() => {
+    window.api.logging.getEnabled().then((result) => {
+      if (result.success) setEnabled(result.data)
+    })
+  }, [])
+
+  function toggle(): void {
+    const next = !enabled
+    setEnabled(next)
+    window.api.logging.setEnabled(next)
+  }
+
+  function openFolder(): void {
+    window.api.logging.openFolder()
+  }
+
+  return { enabled, toggle, openFolder }
+}
+
 export default function SettingsPage(): JSX.Element {
   const { t, i18n } = useTranslation()
   const { defaults, setDefaults } = useGalleryDefaults()
   const updater = useAppUpdater()
   const sauceNaoApiKey = useSauceNaoApiKeyField()
+  const logging = useLoggingSettings()
 
   return (
     <div className="page settings-page">
@@ -277,6 +313,21 @@ export default function SettingsPage(): JSX.Element {
               <span className="settings-version">{t('settings.sauceNaoApiKeySaved')}</span>
             )}
           </div>
+        </section>
+
+        <section className="card">
+          <h2>
+            <Bug size={16} aria-hidden="true" />
+            {t('settings.loggingTitle')}
+          </h2>
+          <p className="settings-version">{t('settings.loggingHint')}</p>
+          <label className="checkbox-row">
+            <input type="checkbox" checked={logging.enabled} onChange={logging.toggle} />
+            {t('settings.loggingEnable')}
+          </label>
+          <button type="button" className="btn" onClick={logging.openFolder}>
+            {t('settings.loggingOpenFolder')}
+          </button>
         </section>
 
         <BackupSection />

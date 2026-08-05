@@ -4,6 +4,7 @@ import { resolveThumbnail } from '../thumbnails/thumbnails'
 import { readSauceNaoApiKey } from './sauceNaoSettings'
 import { fetchDanbooruTags } from './danbooruTags'
 import { SauceNaoResponseSchema, pickBestMatch } from './sauceNao.parse'
+import { logError, logInfo } from '../logging/logger'
 
 const SEARCH_URL = 'https://saucenao.com/search.php'
 const REQUEST_TIMEOUT_MS = 20_000
@@ -36,11 +37,12 @@ function maskApiKey(key: string): string {
 }
 
 /**
- * Logs the raw response to the terminal running the app so a rejected
- * request can actually be diagnosed - the fetch happens in the main
- * process, so it never shows up in the renderer's DevTools Network tab.
- * SauceNAO returns an informative `header.message` in the body even on
- * non-2xx statuses (e.g. "The anonymous account type does not permit API
+ * Logs the raw response to the terminal running the app, and (when the user
+ * has debug logging enabled in Settings) to the persistent debug log too -
+ * the fetch happens in the main process, so it never shows up in the
+ * renderer's DevTools Network tab, and the terminal is only visible in dev
+ * mode. SauceNAO returns an informative `header.message` in the body even
+ * on non-2xx statuses (e.g. "The anonymous account type does not permit API
  * usage."), so this returns that when present instead of a generic message.
  */
 async function describeSauceNaoErrorResponse(res: Response): Promise<string | null> {
@@ -66,6 +68,11 @@ async function describeSauceNaoErrorResponse(res: Response): Promise<string | nu
       2
     )
   )
+  logError('sauceNao', 'Request rejected', {
+    status: res.status,
+    headers: headerSnapshot,
+    bodySnippet: bodyText.slice(0, 500)
+  })
 
   try {
     const parsed = SauceNaoResponseSchema.safeParse(JSON.parse(bodyText))
@@ -106,20 +113,15 @@ export async function lookupSauceNao(route: string): Promise<SauceNaoLookup> {
     const apiKey = readSauceNaoApiKey()
     if (apiKey) url.searchParams.set('api_key', apiKey)
 
+    const requestMeta = {
+      hasApiKey: Boolean(apiKey),
+      params: Object.fromEntries(Array.from(url.searchParams).filter(([key]) => key !== 'api_key'))
+    }
     console.error(
       '[sauceNao] sending request',
-      JSON.stringify(
-        {
-          hasApiKey: Boolean(apiKey),
-          apiKeyPreview: apiKey ? maskApiKey(apiKey) : null,
-          params: Object.fromEntries(
-            Array.from(url.searchParams).filter(([key]) => key !== 'api_key')
-          )
-        },
-        null,
-        2
-      )
+      JSON.stringify({ ...requestMeta, apiKeyPreview: apiKey ? maskApiKey(apiKey) : null }, null, 2)
     )
+    logInfo('sauceNao', 'Sending request', requestMeta)
 
     let res: Response
     try {
@@ -158,15 +160,26 @@ export async function lookupSauceNao(route: string): Promise<SauceNaoLookup> {
       throw new Error(detail ?? `SauceNAO returned an error (${res.status}).`)
     }
 
+    let rawBodyText = ''
     let body: unknown
     try {
-      body = await res.json()
+      rawBodyText = await res.text()
+      body = JSON.parse(rawBodyText)
     } catch {
+      logError('sauceNao', 'Could not parse SauceNAO response as JSON', {
+        status: res.status,
+        bodySnippet: rawBodyText.slice(0, 500)
+      })
       throw new Error('Unexpected response from SauceNAO.')
     }
 
     const parsed = SauceNaoResponseSchema.safeParse(body)
     if (!parsed.success) {
+      logError('sauceNao', 'SauceNAO response failed schema validation', {
+        status: res.status,
+        bodySnippet: rawBodyText.slice(0, 500),
+        issues: parsed.error.issues.slice(0, 5)
+      })
       throw new Error('Unexpected response from SauceNAO.')
     }
 
