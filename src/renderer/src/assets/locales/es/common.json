@@ -40,7 +40,7 @@
     "sauceNaoApiKeyClear": "Borrar",
     "sauceNaoApiKeySaved": "Guardado.",
     "loggingTitle": "Registro de depuración",
-    "loggingHint": "Registra errores y eventos clave en un archivo de log local para ayudar a diagnosticar fallos. Desactivado por defecto; el log tiene un tope de unos 10MB y nunca sale de tu equipo salvo que lo compartas tú.",
+    "loggingHint": "Registra errores y eventos clave en un archivo de log local para ayudar a diagnosticar fallos. Desactivado por defecto; el log tiene un tope de unos 10MB y nunca sale de tu equipo salvo que lo compartas tú. El log puede incluir rutas de archivos locales de tu biblioteca.",
     "loggingEnable": "Activar registro de depuración",
     "loggingOpenFolder": "Abrir carpeta de logs",
     "backupTitle": "Copia de seguridad",

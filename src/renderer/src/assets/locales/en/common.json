@@ -40,7 +40,7 @@
     "sauceNaoApiKeyClear": "Clear",
     "sauceNaoApiKeySaved": "Saved.",
     "loggingTitle": "Debug logging",
-    "loggingHint": "Records errors and key events to a local log file to help diagnose bugs. Off by default; the log is capped at about 10MB and never leaves your device unless you share it yourself.",
+    "loggingHint": "Records errors and key events to a local log file to help diagnose bugs. Off by default; the log is capped at about 10MB and never leaves your device unless you share it yourself. The log may include local file paths from your library.",
     "loggingEnable": "Enable debug logging",
     "loggingOpenFolder": "Open logs folder",
     "backupTitle": "Backup & Restore",
