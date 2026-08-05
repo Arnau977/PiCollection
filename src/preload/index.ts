@@ -144,6 +144,14 @@ export const api = {
     setApiKey: (apiKey: string | undefined): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.sauceNao.setApiKey, apiKey)
   },
+  logging: {
+    getEnabled: (): Promise<IpcResult<boolean>> => ipcRenderer.invoke(IPC.logging.getEnabled),
+    setEnabled: (enabled: boolean): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.logging.setEnabled, enabled),
+    openFolder: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.logging.openFolder),
+    reportRendererError: (message: string, stack?: string): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.logging.reportRendererError, { message, stack })
+  },
   updater: {
     checkForUpdates: (): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.updater.checkForUpdates),

@@ -190,6 +190,12 @@ export const IPC = {
     getApiKey: 'sauce-nao:get-api-key',
     setApiKey: 'sauce-nao:set-api-key'
   },
+  logging: {
+    getEnabled: 'logging:get-enabled',
+    setEnabled: 'logging:set-enabled',
+    openFolder: 'logging:open-folder',
+    reportRendererError: 'logging:report-renderer-error'
+  },
   updater: {
     checkForUpdates: 'updater:check-for-updates',
     downloadUpdate: 'updater:download-update',
