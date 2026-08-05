@@ -170,3 +170,52 @@ export function parseSearchQuery(input: string): QueryNode | null {
   const root = parseOr()
   return root
 }
+
+function isAiTerm(node: QueryNode): boolean {
+  return node.type === 'term' && node.value.toLowerCase() === 'ai'
+}
+
+function isNegatedAiTerm(node: QueryNode): boolean {
+  return node.type === 'not' && isAiTerm(node.child)
+}
+
+/**
+ * Pulls a standalone `ai` / `-ai` token out of a parsed query so it can drive
+ * `MediaFilters.isAiGenerated` instead of being matched as free text. Only
+ * looks at the top-level AND chain (or a lone term/not node) - `parseSearchQuery`
+ * already flattens any AND-only parenthesized group into that same top level,
+ * so this covers every case except `ai` appearing inside an OR, which keeps
+ * its plain search-term meaning since "restrict to AI" has no clear meaning
+ * inside an alternative.
+ */
+export function extractAiToken(node: QueryNode | null): {
+  node: QueryNode | null
+  isAiGenerated?: boolean
+} {
+  if (!node) return { node: null, isAiGenerated: undefined }
+
+  if (isAiTerm(node)) return { node: null, isAiGenerated: true }
+  if (isNegatedAiTerm(node)) return { node: null, isAiGenerated: false }
+
+  if (node.type === 'and') {
+    let isAiGenerated: boolean | undefined
+    const remaining = node.children.filter((child) => {
+      if (isAiTerm(child)) {
+        isAiGenerated = true
+        return false
+      }
+      if (isNegatedAiTerm(child)) {
+        isAiGenerated = false
+        return false
+      }
+      return true
+    })
+
+    if (isAiGenerated === undefined) return { node, isAiGenerated: undefined }
+    if (remaining.length === 0) return { node: null, isAiGenerated }
+    if (remaining.length === 1) return { node: remaining[0], isAiGenerated }
+    return { node: { type: 'and', children: remaining }, isAiGenerated }
+  }
+
+  return { node, isAiGenerated: undefined }
+}
