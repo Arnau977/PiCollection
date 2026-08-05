@@ -19,7 +19,7 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
   const { t } = useTranslation()
   const [state, setState] = useState<QueueState>({ kind: 'loading' })
 
-  useEffect(() => {
+  useEffect((): (() => void) => {
     let cancelled = false
     window.api.sourceFolder.expandSelection(selection).then((result) => {
       if (cancelled) return

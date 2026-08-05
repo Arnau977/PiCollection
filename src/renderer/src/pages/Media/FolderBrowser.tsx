@@ -63,7 +63,7 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
     return () => clearTimeout(previewTimer.current)
   }, [])
 
-  useEffect(() => {
+  useEffect((): (() => void) => {
     let cancelled = false
     setState({ kind: 'loading' })
     window.api.sourceFolder.browse(currentPath).then((result) => {

@@ -88,7 +88,7 @@ export function MediaForm({
   const [duplicateCheck, setDuplicateCheck] = useState<MediaDuplicateCheck | null>(null)
   const hasSauceNaoApiKey = useSauceNaoApiKey()
 
-  useEffect(() => {
+  useEffect((): (() => void) | void => {
     if (!initialFile) return
     let cancelled = false
     window.api.media.checkDuplicate(initialFile.route).then((result) => {
