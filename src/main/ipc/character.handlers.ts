@@ -7,20 +7,22 @@ import { CharacterInputSchema, CharacterUpdateSchema, IPC, IdSchema } from '@sha
 export function registerCharacterHandlers(): void {
   ipcMain.handle(
     IPC.character.getAll,
-    ipcHandler(z.void(), () => characterService.getAllCharacters())
+    ipcHandler(IPC.character.getAll, z.void(), () => characterService.getAllCharacters())
   )
   ipcMain.handle(
     IPC.character.create,
-    ipcHandler(CharacterInputSchema, (input) => characterService.createCharacter(input))
+    ipcHandler(IPC.character.create, CharacterInputSchema, (input) =>
+      characterService.createCharacter(input)
+    )
   )
   ipcMain.handle(
     IPC.character.update,
-    ipcHandler(CharacterUpdateSchema, ({ id, input }) =>
+    ipcHandler(IPC.character.update, CharacterUpdateSchema, ({ id, input }) =>
       characterService.updateCharacter(id, input)
     )
   )
   ipcMain.handle(
     IPC.character.delete,
-    ipcHandler(IdSchema, (id) => characterService.deleteCharacter(id))
+    ipcHandler(IPC.character.delete, IdSchema, (id) => characterService.deleteCharacter(id))
   )
 }

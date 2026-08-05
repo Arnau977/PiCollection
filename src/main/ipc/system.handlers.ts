@@ -8,14 +8,14 @@ import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
 export function registerSystemHandlers(): void {
   ipcMain.handle(
     IPC.system.showInFolder,
-    ipcHandler(z.string().min(1), async (route) => {
+    ipcHandler(IPC.system.showInFolder, z.string().min(1), async (route) => {
       shell.showItemInFolder(resolveRoute(route, readSourceFolder()))
     })
   )
 
   ipcMain.handle(
     IPC.system.copyImageToClipboard,
-    ipcHandler(z.string().min(1), async (route) => {
+    ipcHandler(IPC.system.copyImageToClipboard, z.string().min(1), async (route) => {
       const image = await loadImageForClipboard(resolveRoute(route, readSourceFolder()))
       if (!image) {
         throw new Error('Could not read image data from that file.')
@@ -29,19 +29,19 @@ export function registerSystemHandlers(): void {
   // trip through IPC to put a usable absolute path on the clipboard.
   ipcMain.handle(
     IPC.system.copyLocationToClipboard,
-    ipcHandler(z.string().min(1), async (route) => {
+    ipcHandler(IPC.system.copyLocationToClipboard, z.string().min(1), async (route) => {
       clipboard.writeText(resolveRoute(route, readSourceFolder()))
     })
   )
 
   ipcMain.handle(
     IPC.system.getAppVersion,
-    ipcHandler(z.void(), async () => app.getVersion())
+    ipcHandler(IPC.system.getAppVersion, z.void(), async () => app.getVersion())
   )
 
   ipcMain.handle(
     IPC.system.restartApp,
-    ipcHandler(z.void(), async () => {
+    ipcHandler(IPC.system.restartApp, z.void(), async () => {
       app.relaunch()
       app.exit()
     })

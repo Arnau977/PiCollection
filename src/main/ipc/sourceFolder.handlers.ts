@@ -14,29 +14,33 @@ import { sourceFolderMigrationService } from '../services/sourceFolderMigration.
 export function registerSourceFolderHandlers(): void {
   ipcMain.handle(
     IPC.sourceFolder.get,
-    ipcHandler(z.void(), async () => readSourceFolder())
+    ipcHandler(IPC.sourceFolder.get, z.void(), async () => readSourceFolder())
   )
 
   ipcMain.handle(
     IPC.sourceFolder.scanMigration,
-    ipcHandler(SourceFolderPathSchema, ({ path }) => sourceFolderMigrationService.scan(path))
+    ipcHandler(IPC.sourceFolder.scanMigration, SourceFolderPathSchema, ({ path }) =>
+      sourceFolderMigrationService.scan(path)
+    )
   )
 
   ipcMain.handle(
     IPC.sourceFolder.applyMigration,
-    ipcHandler(SourceFolderPathSchema, ({ path }) => sourceFolderMigrationService.apply(path))
+    ipcHandler(IPC.sourceFolder.applyMigration, SourceFolderPathSchema, ({ path }) =>
+      sourceFolderMigrationService.apply(path)
+    )
   )
 
   ipcMain.handle(
     IPC.sourceFolder.browse,
-    ipcHandler(SourceFolderBrowsePathSchema, ({ relativePath }) =>
+    ipcHandler(IPC.sourceFolder.browse, SourceFolderBrowsePathSchema, ({ relativePath }) =>
       sourceFolderBrowserService.browse(relativePath)
     )
   )
 
   ipcMain.handle(
     IPC.sourceFolder.expandSelection,
-    ipcHandler(SourceFolderExpandSelectionSchema, (selection) =>
+    ipcHandler(IPC.sourceFolder.expandSelection, SourceFolderExpandSelectionSchema, (selection) =>
       sourceFolderBrowserService.expandSelection(selection)
     )
   )

@@ -7,18 +7,18 @@ import { IPC, IdSchema, TagInputSchema, TagUpdateSchema } from '@shared/ipc/cont
 export function registerTagHandlers(): void {
   ipcMain.handle(
     IPC.tag.getAll,
-    ipcHandler(z.void(), () => tagService.getAllTags())
+    ipcHandler(IPC.tag.getAll, z.void(), () => tagService.getAllTags())
   )
   ipcMain.handle(
     IPC.tag.create,
-    ipcHandler(TagInputSchema, (input) => tagService.createTag(input))
+    ipcHandler(IPC.tag.create, TagInputSchema, (input) => tagService.createTag(input))
   )
   ipcMain.handle(
     IPC.tag.update,
-    ipcHandler(TagUpdateSchema, ({ id, input }) => tagService.updateTag(id, input))
+    ipcHandler(IPC.tag.update, TagUpdateSchema, ({ id, input }) => tagService.updateTag(id, input))
   )
   ipcMain.handle(
     IPC.tag.delete,
-    ipcHandler(IdSchema, (id) => tagService.deleteTag(id))
+    ipcHandler(IPC.tag.delete, IdSchema, (id) => tagService.deleteTag(id))
   )
 }

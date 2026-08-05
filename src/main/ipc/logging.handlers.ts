@@ -15,19 +15,19 @@ const ReportRendererErrorSchema = z.object({
 export function registerLoggingHandlers(): void {
   ipcMain.handle(
     IPC.logging.getEnabled,
-    ipcHandler(z.void(), async () => readLoggingEnabled())
+    ipcHandler(IPC.logging.getEnabled, z.void(), async () => readLoggingEnabled())
   )
 
   ipcMain.handle(
     IPC.logging.setEnabled,
-    ipcHandler(z.boolean(), async (enabled) => {
+    ipcHandler(IPC.logging.setEnabled, z.boolean(), async (enabled) => {
       writeLoggingEnabled(enabled)
     })
   )
 
   ipcMain.handle(
     IPC.logging.openFolder,
-    ipcHandler(z.void(), async () => {
+    ipcHandler(IPC.logging.openFolder, z.void(), async () => {
       mkdirSync(logsDir(), { recursive: true })
       await shell.openPath(logsDir())
     })

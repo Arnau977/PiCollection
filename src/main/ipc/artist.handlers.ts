@@ -14,30 +14,34 @@ import {
 export function registerArtistHandlers(): void {
   ipcMain.handle(
     IPC.artist.getAll,
-    ipcHandler(z.void(), () => artistService.getAllArtists())
+    ipcHandler(IPC.artist.getAll, z.void(), () => artistService.getAllArtists())
   )
   ipcMain.handle(
     IPC.artist.create,
-    ipcHandler(ArtistInputSchema, (input) => artistService.createArtist(input))
+    ipcHandler(IPC.artist.create, ArtistInputSchema, (input) => artistService.createArtist(input))
   )
   ipcMain.handle(
     IPC.artist.update,
-    ipcHandler(ArtistUpdateSchema, ({ id, input }) => artistService.updateArtist(id, input))
+    ipcHandler(IPC.artist.update, ArtistUpdateSchema, ({ id, input }) =>
+      artistService.updateArtist(id, input)
+    )
   )
   ipcMain.handle(
     IPC.artist.delete,
-    ipcHandler(IdSchema, (id) => artistService.deleteArtist(id))
+    ipcHandler(IPC.artist.delete, IdSchema, (id) => artistService.deleteArtist(id))
   )
   ipcMain.handle(
     IPC.artist.addSocialLink,
-    ipcHandler(AddSocialLinkSchema, ({ artistId, socialLink }) =>
+    ipcHandler(IPC.artist.addSocialLink, AddSocialLinkSchema, ({ artistId, socialLink }) =>
       artistService.addSocialLink(artistId, socialLink)
     )
   )
   ipcMain.handle(
     IPC.artist.removeSocialLink,
-    ipcHandler(RemoveSocialLinkSchema, ({ artistId, socialLinkId }) =>
-      artistService.removeSocialLink(artistId, socialLinkId)
+    ipcHandler(
+      IPC.artist.removeSocialLink,
+      RemoveSocialLinkSchema,
+      ({ artistId, socialLinkId }) => artistService.removeSocialLink(artistId, socialLinkId)
     )
   )
 }
