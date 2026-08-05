@@ -320,4 +320,16 @@ describe('routesExist', () => {
 
     expect(result).toEqual(new Set(['/cat.png', '/dog.png']))
   })
+
+  it('chunks large candidate lists so it does not throw "too many SQL variables"', async () => {
+    await insertMedia('cat')
+    await insertMedia('dog')
+
+    const candidates = Array.from({ length: 600 }, (_, i) => `/missing-${i}.png`)
+    candidates.push('/cat.png', '/dog.png')
+
+    const result = await mediaRepo.routesExist(db, candidates)
+
+    expect(result).toEqual(new Set(['/cat.png', '/dog.png']))
+  })
 })

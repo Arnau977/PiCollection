@@ -184,6 +184,7 @@
   },
   "importQueue": {
     "loading": "Preparing files…",
+    "empty": "No files to import — everything in your selection is already in the library.",
     "progress": "File {{current}} of {{total}}",
     "saveAndNext": "Save & next",
     "skip": "Skip",
@@ -195,7 +196,8 @@
     "empty": "This folder has no media files.",
     "selectedCount": "{{count}} selected",
     "importSelected": "Import selected ({{count}})",
-    "breadcrumbLabel": "Folder path"
+    "breadcrumbLabel": "Folder path",
+    "retry": "Retry"
   },
   "search": {
     "label": "Search",

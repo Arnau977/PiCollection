@@ -110,4 +110,22 @@ describe('FolderBrowser', () => {
 
     expect(await screen.findByRole('button', { name: /Import selected/ })).toBeDisabled()
   })
+
+  it('retries the same folder when Retry is clicked after a browse error', async () => {
+    browse.mockResolvedValueOnce({ success: false, error: { code: 'INTERNAL', message: 'Folder is gone' } })
+    browse.mockResolvedValueOnce({
+      success: true,
+      data: { folders: [], files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false }] }
+    })
+
+    render(<FolderBrowser onStartImport={vi.fn()} />)
+
+    expect(await screen.findByText('Folder is gone')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+    expect(await screen.findByText('a.png')).toBeInTheDocument()
+    expect(browse).toHaveBeenCalledTimes(2)
+    expect(browse).toHaveBeenNthCalledWith(2, '')
+  })
 })

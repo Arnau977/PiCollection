@@ -285,11 +285,21 @@ export function listMediaRoutesWithMeta(
   return db.selectFrom('media').select(['id', 'route', 'name', 'type']).execute()
 }
 
+// SQLite's default SQLITE_MAX_VARIABLE_NUMBER is 32766 - chunk well under that
+// so a single `IN (...)` clause never risks "too many SQL variables".
+const ROUTES_EXIST_CHUNK_SIZE = 500
+
 /** Batch existence check for a set of routes - avoids one query per candidate file when browsing a folder. */
 export async function routesExist(db: Kysely<DB>, routes: string[]): Promise<Set<string>> {
   if (routes.length === 0) return new Set()
-  const rows = await db.selectFrom('media').select('route').where('route', 'in', routes).execute()
-  return new Set(rows.map((row) => row.route))
+
+  const found = new Set<string>()
+  for (let i = 0; i < routes.length; i += ROUTES_EXIST_CHUNK_SIZE) {
+    const chunk = routes.slice(i, i + ROUTES_EXIST_CHUNK_SIZE)
+    const rows = await db.selectFrom('media').select('route').where('route', 'in', chunk).execute()
+    for (const row of rows) found.add(row.route)
+  }
+  return found
 }
 
 export async function updateMediaRoutes(

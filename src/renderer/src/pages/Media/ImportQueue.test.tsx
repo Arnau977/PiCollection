@@ -113,4 +113,24 @@ describe('ImportQueue', () => {
 
     expect(await screen.findByText('Boom')).toBeInTheDocument()
   })
+
+  it('shows an empty message and a Close button, with no form, when the expansion has no files', async () => {
+    const onClose = vi.fn()
+    expandSelection.mockResolvedValue({ success: true, data: [] })
+
+    const { container } = render(
+      <MemoryRouter>
+        <ImportQueue selection={{ files: [], folders: ['sub'] }} onClose={onClose} onLastSaved={vi.fn()} />
+      </MemoryRouter>
+    )
+
+    expect(
+      await screen.findByText('No files to import — everything in your selection is already in the library.')
+    ).toBeInTheDocument()
+    expect(mediaCreate).not.toHaveBeenCalled()
+    expect(container.querySelector('form')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
 })

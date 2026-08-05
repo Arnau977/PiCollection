@@ -40,6 +40,18 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
   if (state.kind === 'error') return <p role="alert">{state.message}</p>
 
   const { items, index } = state
+
+  if (items.length === 0) {
+    return (
+      <div className="import-queue-empty">
+        <p>{t('importQueue.empty')}</p>
+        <button type="button" className="btn" onClick={onClose}>
+          {t('importQueue.close')}
+        </button>
+      </div>
+    )
+  }
+
   const current = items[index]
 
   function advance(): void {

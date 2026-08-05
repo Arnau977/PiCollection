@@ -103,3 +103,9 @@
   cursor: pointer;
   padding: 0;
 }
+
+.import-queue-progress {
+  margin: 0 0 var(--space-2);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}

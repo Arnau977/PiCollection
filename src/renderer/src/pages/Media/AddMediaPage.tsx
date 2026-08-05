@@ -38,7 +38,10 @@ export default function AddMediaPage(): JSX.Element {
           role="tab"
           aria-selected={tab === 'single'}
           className={`add-media-tab${tab === 'single' ? ' is-active' : ''}`}
-          onClick={() => setTab('single')}
+          onClick={() => {
+            setTab('single')
+            setImportSelection(null)
+          }}
         >
           {t('addMedia.tabSingle')}
         </button>

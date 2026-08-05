@@ -20,6 +20,7 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   const [state, setState] = useState<BrowseState>({ kind: 'loading' })
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set())
+  const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -35,7 +36,11 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
     return () => {
       cancelled = true
     }
-  }, [currentPath])
+  }, [currentPath, reloadToken])
+
+  function retry(): void {
+    setReloadToken((token) => token + 1)
+  }
 
   function toggleFile(relativePath: string): void {
     setSelectedFiles((prev) => {
@@ -82,7 +87,14 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
       </nav>
 
       {state.kind === 'loading' && <p className="settings-version">{t('folderBrowser.loading')}</p>}
-      {state.kind === 'error' && <p role="alert">{state.message}</p>}
+      {state.kind === 'error' && (
+        <div className="folder-browser-error">
+          <p role="alert">{state.message}</p>
+          <button type="button" className="btn" onClick={retry}>
+            {t('folderBrowser.retry')}
+          </button>
+        </div>
+      )}
 
       {state.kind === 'loaded' && (
         <div className="folder-browser-grid">
