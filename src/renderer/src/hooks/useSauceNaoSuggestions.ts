@@ -6,7 +6,12 @@ import type {
   SeriesModel,
   TagModel
 } from '@shared/models'
-import { capitalizeFirstLetter, matchEntityNames } from '../utils/matchEntityNames'
+import {
+  capitalizeFirstLetter,
+  matchCharacterNames,
+  matchEntityNames,
+  normalizeEntityName
+} from '../utils/matchEntityNames'
 
 export type SuggestionCategory = 'artist' | 'tags' | 'characters' | 'series'
 
@@ -96,8 +101,10 @@ export function useSauceNaoSuggestions({
         ? matchEntityNames([found.artist], artists)
         : { existing: [], missing: [] }
       const tagsMatch = matchEntityNames(found.tags, tags)
-      const charactersMatch = matchEntityNames(found.characters, characters)
-      const seriesMatch = matchEntityNames([...found.series, ...found.seriesHints], series)
+      const seriesSuggestions = [...found.series, ...found.seriesHints]
+      const seriesContext = seriesSuggestions.map((s) => normalizeEntityName(s.name))
+      const charactersMatch = matchCharacterNames(found.characters, characters, seriesContext)
+      const seriesMatch = matchEntityNames(seriesSuggestions, series)
 
       onApplyExisting({
         artistId: artistMatch.existing[0]?.id,

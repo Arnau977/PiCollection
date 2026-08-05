@@ -8,6 +8,7 @@ import type {
   SeriesModel,
   TagModel
 } from '@shared/models'
+import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import { InfoTooltip } from '../InfoTooltip/InfoTooltip'
 import './SearchBar.css'
@@ -46,6 +47,18 @@ function completeTrailingToken(value: string, replacement: string): string {
   const start = match?.index ?? value.length
   const negation = (match?.[0] ?? '').startsWith('-') ? '-' : ''
   return `${value.slice(0, start)}${negation}${quoteIfNeeded(replacement)} `
+}
+
+/**
+ * Removes the word currently being typed, leaving everything before it
+ * (including any separator that was already there) untouched. Used for
+ * character suggestions, which resolve to a structured filter instead of
+ * being inserted as text - see `applySuggestion`.
+ */
+function removeTrailingToken(value: string): string {
+  const match = value.match(TRAILING_TOKEN)
+  const start = match?.index ?? value.length
+  return value.slice(0, start)
 }
 
 export function SearchBar({
@@ -93,7 +106,7 @@ export function SearchBar({
         .map((character) => ({
           kind: 'character' as const,
           id: character.id,
-          label: character.name
+          label: formatCharacterOptionLabel(character)
         })),
       ...series
         .filter((s) => matches(s.name))
@@ -118,8 +131,41 @@ export function SearchBar({
     setHighlighted(0)
   }, [suggestions.length])
 
+  /**
+   * Unlike tag/series/artist (unique names, safe to search as free text),
+   * a character name can collide across series - `character.name` has no
+   * UNIQUE constraint in the DB. Free text has no way to reference a
+   * specific character's ID, so a clicked character suggestion is applied
+   * as a structured `characterGroups` filter instead of being inserted
+   * into the query, guaranteeing it resolves to exactly the character that
+   * was clicked. It's added (AND) to the first existing group, or starts a
+   * new one - never a new OR group, per the confirmed design.
+   */
+  function applyCharacterSuggestion(characterId: string): void {
+    const nextQuery = removeTrailingToken(query)
+    setQuery(nextQuery)
+
+    const groups = filters.characterGroups ?? []
+    const nextGroups: string[][] =
+      groups.length === 0
+        ? [[characterId]]
+        : groups.map((group, index) =>
+            index === 0 && !group.includes(characterId) ? [...group, characterId] : group
+          )
+
+    onFiltersChange({
+      ...filters,
+      query: nextQuery.trim() || undefined,
+      characterGroups: nextGroups
+    })
+  }
+
   function applySuggestion(suggestion: Suggestion): void {
-    setQuery((current) => completeTrailingToken(current, suggestion.label))
+    if (suggestion.kind === 'character') {
+      applyCharacterSuggestion(suggestion.id)
+    } else {
+      setQuery((current) => completeTrailingToken(current, suggestion.label))
+    }
     setDismissed(true)
     inputRef.current?.focus()
   }

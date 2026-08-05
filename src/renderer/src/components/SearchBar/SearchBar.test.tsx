@@ -16,7 +16,10 @@ const tags: TagModel[] = [
   { id: 't1', name: 'landscape' },
   { id: 't2', name: 'lantern' }
 ]
-const characters: CharacterModel[] = [{ id: 'c1', name: 'Alice', series: [] }]
+const characters: CharacterModel[] = [
+  { id: 'c1', name: 'Alice', series: [{ id: 's2', name: 'Wonderland' }] },
+  { id: 'c2', name: 'Cheshire Cat', series: [] }
+]
 const series: SeriesModel[] = [{ id: 's1', name: 'Wonder Land' }]
 
 function renderSearchBar(filters: MediaFilters = {}) {
@@ -188,5 +191,68 @@ describe('SearchBar', () => {
   it('explains the query syntax in a tooltip', () => {
     renderSearchBar()
     expect(screen.getByLabelText(/a space means and/i)).toBeInTheDocument()
+  })
+
+  it('shows the linked series next to a character suggestion', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    renderSearchBar()
+
+    await user.type(searchInput(), 'Alic')
+
+    expect(await screen.findByRole('option', { name: /Alice \(Wonderland\)/ })).toBeInTheDocument()
+  })
+
+  it('adds the character to characterGroups instead of the query text when a suggestion is clicked', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderSearchBar()
+
+    await user.type(searchInput(), 'Alic')
+    await user.click(await screen.findByRole('option', { name: /Alice \(Wonderland\)/ }))
+
+    expect(onFiltersChange).toHaveBeenCalledWith({
+      query: undefined,
+      characterGroups: [['c1']]
+    })
+    expect(searchInput()).toHaveValue('')
+  })
+
+  it('leaves earlier terms in the query when completing a character suggestion', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderSearchBar()
+
+    await user.type(searchInput(), 'sunset Alic')
+    await user.click(await screen.findByRole('option', { name: /Alice \(Wonderland\)/ }))
+
+    expect(searchInput()).toHaveValue('sunset ')
+    expect(onFiltersChange).toHaveBeenCalledWith({
+      query: 'sunset',
+      characterGroups: [['c1']]
+    })
+  })
+
+  it('appends a second, different character to the same group', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderSearchBar({ characterGroups: [['c1']] })
+
+    await user.type(searchInput(), 'Cheshire')
+    await user.click(await screen.findByRole('option', { name: /Cheshire Cat/ }))
+
+    expect(onFiltersChange).toHaveBeenCalledWith({
+      query: undefined,
+      characterGroups: [['c1', 'c2']]
+    })
+  })
+
+  it('does not duplicate a character already in the group', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderSearchBar({ characterGroups: [['c1']] })
+
+    await user.type(searchInput(), 'Alic')
+    await user.click(await screen.findByRole('option', { name: /Alice \(Wonderland\)/ }))
+
+    expect(onFiltersChange).toHaveBeenCalledWith({
+      query: undefined,
+      characterGroups: [['c1']]
+    })
   })
 })

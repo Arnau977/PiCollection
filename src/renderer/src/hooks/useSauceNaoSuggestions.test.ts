@@ -220,4 +220,44 @@ describe('useSauceNaoSuggestions', () => {
     expect(result.current.match).toBeNull()
     expect(result.current.missing).toEqual({ artist: [], tags: [], characters: [], series: [] })
   })
+
+  it('disambiguates same-named characters using the series SauceNAO returned', async () => {
+    const otherIshtar: CharacterModel = {
+      id: 'c2',
+      name: 'Ishtar',
+      series: [{ id: 's2', name: 'Some Other Series' }]
+    }
+    const fgoIshtar: CharacterModel = {
+      id: 'c1',
+      name: 'Ishtar',
+      series: [{ id: 's1', name: 'Fate/Grand Order' }]
+    }
+    setApi(
+      vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          match: makeMatch({ characters: [{ name: 'Ishtar' }] }),
+          remaining: { short: 5, long: 90 }
+        }
+      })
+    )
+    const onApplyExisting = vi.fn()
+    const { result } = renderHook(() =>
+      useSauceNaoSuggestions({
+        artists,
+        tags,
+        // Deliberately listed in this order - the old first-match-wins
+        // behavior would incorrectly resolve to 'c2'.
+        characters: [otherIshtar, fgoIshtar],
+        series,
+        onApplyExisting
+      })
+    )
+
+    await act(async () => {
+      await result.current.run('/pic.png')
+    })
+
+    expect(onApplyExisting).toHaveBeenCalledWith(expect.objectContaining({ characterIds: ['c1'] }))
+  })
 })

@@ -12,6 +12,8 @@ interface MultiSelectAutocompleteProps<T> {
   onCreate?: (name: string) => void
   /** Hides the visible label when the surrounding layout already provides one. */
   hideLabel?: boolean
+  /** Passed through to `Autocomplete`; see its docs for the create-suppression matching behavior. */
+  getOptionMatchName?: (option: T) => string
 }
 
 export function MultiSelectAutocomplete<T>({
@@ -23,7 +25,8 @@ export function MultiSelectAutocomplete<T>({
   selectedValues,
   onChange,
   onCreate,
-  hideLabel = false
+  hideLabel = false,
+  getOptionMatchName
 }: MultiSelectAutocompleteProps<T>): JSX.Element {
   const selectedOptions = options.filter((option) =>
     selectedValues.includes(getOptionValue(option))
@@ -57,6 +60,7 @@ export function MultiSelectAutocomplete<T>({
         resetQueryAfterSelect
         onCreate={onCreate}
         hideLabel={hideLabel}
+        getOptionMatchName={getOptionMatchName}
       />
       {selectedOptions.length > 0 && (
         <ul className="multi-select-chips">

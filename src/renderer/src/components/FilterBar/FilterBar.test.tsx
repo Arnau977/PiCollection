@@ -2,7 +2,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { MediaFilters, Sorting, TagModel } from '@shared/models'
+import type { CharacterModel, MediaFilters, Sorting, TagModel } from '@shared/models'
 import { FilterBar } from './FilterBar'
 
 function advancedPanel(): HTMLElement {
@@ -10,11 +10,12 @@ function advancedPanel(): HTMLElement {
 }
 
 let tagsData: TagModel[] = []
+let charactersData: CharacterModel[] = []
 
 vi.mock('../../hooks/useEntityLists', () => ({
   useArtists: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
   useTags: () => ({ data: tagsData, loading: false, error: null, refetch: vi.fn() }),
-  useCharacters: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
+  useCharacters: () => ({ data: charactersData, loading: false, error: null, refetch: vi.fn() }),
   useSeries: () => ({ data: [], loading: false, error: null, refetch: vi.fn() })
 }))
 
@@ -35,6 +36,7 @@ function renderFilterBar(filters: MediaFilters = {}) {
 
 beforeEach(() => {
   tagsData = []
+  charactersData = []
   vi.useFakeTimers({ shouldAdvanceTime: true })
 })
 
@@ -156,5 +158,20 @@ describe('FilterBar', () => {
     renderFilterBar({ seriesIds: ['s1'] })
 
     expect(screen.getByRole('button', { name: /advanced filters/i })).toHaveTextContent('1')
+  })
+
+  it('shows the linked series next to a character option', async () => {
+    charactersData = [{ id: 'c1', name: 'Ishtar', series: [{ id: 's1', name: 'Fate/Grand Order' }] }]
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    renderFilterBar()
+
+    await user.click(screen.getByRole('button', { name: /advanced filters/i }))
+    // Combobox order in the advanced panel: Artist, Tags, Characters, Series.
+    const [, , charactersCombobox] = within(advancedPanel()).getAllByRole('combobox')
+    await user.type(charactersCombobox, 'Ishtar')
+
+    expect(
+      await screen.findByRole('option', { name: 'Ishtar (Fate/Grand Order)' })
+    ).toBeInTheDocument()
   })
 })

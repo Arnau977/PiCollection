@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
+import type { CharacterModel } from '@shared/models'
 import { MemoryRouter } from 'react-router-dom'
 import { MediaForm } from './MediaForm'
 
@@ -29,10 +31,12 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
   Object.defineProperty(window, 'api', { value: merged, writable: true, configurable: true })
 }
 
+let charactersData: CharacterModel[] = []
+
 vi.mock('../../hooks/useEntityLists', () => ({
   useArtists: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
   useTags: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
-  useCharacters: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
+  useCharacters: () => ({ data: charactersData, loading: false, error: null, refetch: vi.fn() }),
   useSeries: () => ({ data: [], loading: false, error: null, refetch: vi.fn() })
 }))
 
@@ -49,6 +53,7 @@ function renderForm(props: Partial<ComponentProps<typeof MediaForm>> = {}) {
 
 beforeEach(() => {
   setApi()
+  charactersData = []
 })
 
 describe('MediaForm initialFile', () => {
@@ -117,5 +122,22 @@ describe('MediaForm queueInfo', () => {
 
     await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' })))
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalled())
+  })
+})
+
+describe('MediaForm character picker', () => {
+  it('shows the linked series next to a character option in the picker', async () => {
+    charactersData = [
+      { id: 'c1', name: 'Ishtar', series: [{ id: 's1', name: 'Fate/Grand Order' }] }
+    ]
+    const user = userEvent.setup()
+    renderForm({ initialFile: { route: '/pic.png', name: 'pic', type: 'image' } })
+
+    const charactersCombobox = screen.getByRole('combobox', { name: /characters/i })
+    await user.type(charactersCombobox, 'Ishtar')
+
+    expect(
+      await screen.findByRole('option', { name: 'Ishtar (Fate/Grand Order)' })
+    ).toBeInTheDocument()
   })
 })

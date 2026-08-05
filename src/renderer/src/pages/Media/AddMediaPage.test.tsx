@@ -207,7 +207,7 @@ describe('AddMediaPage', () => {
 
     const [, , charactersInput] = screen.getAllByRole('combobox')
     await user.type(charactersInput, 'Alice')
-    await user.click(await screen.findByRole('option', { name: 'Alice' }))
+    await user.click(await screen.findByRole('option', { name: 'Alice (Wonderland)' }))
 
     // The series chip appears without the user touching the Series field.
     expect(await screen.findByText('Wonderland')).toBeInTheDocument()
@@ -233,7 +233,7 @@ describe('AddMediaPage', () => {
 
     const [, , charactersInput] = screen.getAllByRole('combobox')
     await user.type(charactersInput, 'Alice')
-    await user.click(await screen.findByRole('option', { name: 'Alice' }))
+    await user.click(await screen.findByRole('option', { name: 'Alice (Wonderland, Looking Glass)' }))
 
     expect(screen.queryByText('Wonderland')).not.toBeInTheDocument()
     expect(screen.queryByText('Looking Glass')).not.toBeInTheDocument()
@@ -262,6 +262,20 @@ describe('AddMediaPage', () => {
 
     expect(screen.queryByText('Create "landscape"')).not.toBeInTheDocument()
     expect(await screen.findByRole('option', { name: 'landscape' })).toBeInTheDocument()
+  })
+
+  it('does not show a "Create" option for an existing character with a linked series', async () => {
+    charactersData = [{ id: 'c1', name: 'Ishtar', series: [{ id: 's1', name: 'Fate/Grand Order' }] }]
+    const user = userEvent.setup()
+    renderPage()
+
+    const [, , charactersInput] = screen.getAllByRole('combobox')
+    await user.type(charactersInput, 'Ishtar')
+
+    expect(screen.queryByText('Create "Ishtar"')).not.toBeInTheDocument()
+    expect(
+      await screen.findByRole('option', { name: 'Ishtar (Fate/Grand Order)' })
+    ).toBeInTheDocument()
   })
 })
 
@@ -644,7 +658,7 @@ describe('AddMediaPage sole-series character linking', () => {
 
     const [, , charactersInput] = screen.getAllByRole('combobox')
     await user.type(charactersInput, 'Alice')
-    await user.click(await screen.findByRole('option', { name: 'Alice' }))
+    await user.click(await screen.findByRole('option', { name: 'Alice (Wonderland)' }))
     // Alice has exactly one series already, so picking her auto-adds
     // Wonderland via the existing implied-series behavior.
     expect(await screen.findByText('Wonderland')).toBeInTheDocument()
