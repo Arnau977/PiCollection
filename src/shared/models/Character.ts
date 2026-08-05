@@ -5,7 +5,7 @@ export interface CharacterModel {
   name: string
   series: SeriesModel[]
   aliases?: string[]
-  createdAt: number
+  createdAt?: number
 }
 
 export interface CharacterInput {

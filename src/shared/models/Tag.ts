@@ -1,7 +1,7 @@
 export interface TagModel {
   id: string
   name: string
-  createdAt: number
+  createdAt?: number
 }
 
 export interface TagInput {

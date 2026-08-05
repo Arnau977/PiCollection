@@ -320,25 +320,20 @@ export async function updateMediaRoutes(
 export async function findTagsForMediaIds(
   db: Kysely<DB>,
   mediaIds: string[]
-): Promise<Map<string, { id: string; name: string; created_at: number }[]>> {
-  const map = new Map<string, { id: string; name: string; created_at: number }[]>()
+): Promise<Map<string, { id: string; name: string }[]>> {
+  const map = new Map<string, { id: string; name: string }[]>()
   if (!mediaIds.length) return map
 
   const rows = await db
     .selectFrom('media_tag')
     .innerJoin('tag', 'tag.id', 'media_tag.tag_id')
-    .select([
-      'media_tag.media_id as mediaId',
-      'tag.id as id',
-      'tag.name as name',
-      'tag.created_at as created_at'
-    ])
+    .select(['media_tag.media_id as mediaId', 'tag.id as id', 'tag.name as name'])
     .where('media_tag.media_id', 'in', mediaIds)
     .execute()
 
   for (const row of rows) {
     const list = map.get(row.mediaId) ?? []
-    list.push({ id: row.id, name: row.name, created_at: row.created_at })
+    list.push({ id: row.id, name: row.name })
     map.set(row.mediaId, list)
   }
   return map
@@ -347,11 +342,8 @@ export async function findTagsForMediaIds(
 export async function findCharactersForMediaIds(
   db: Kysely<DB>,
   mediaIds: string[]
-): Promise<Map<string, { id: string; name: string; aliases_json: string; created_at: number }[]>> {
-  const map = new Map<
-    string,
-    { id: string; name: string; aliases_json: string; created_at: number }[]
-  >()
+): Promise<Map<string, { id: string; name: string; aliases_json: string }[]>> {
+  const map = new Map<string, { id: string; name: string; aliases_json: string }[]>()
   if (!mediaIds.length) return map
 
   const rows = await db
@@ -361,8 +353,7 @@ export async function findCharactersForMediaIds(
       'media_character.media_id as mediaId',
       'character.id as id',
       'character.name as name',
-      'character.aliases_json as aliases_json',
-      'character.created_at as created_at'
+      'character.aliases_json as aliases_json'
     ])
     .where('media_character.media_id', 'in', mediaIds)
     .execute()
@@ -372,8 +363,7 @@ export async function findCharactersForMediaIds(
     list.push({
       id: row.id,
       name: row.name,
-      aliases_json: row.aliases_json,
-      created_at: row.created_at
+      aliases_json: row.aliases_json
     })
     map.set(row.mediaId, list)
   }
@@ -383,11 +373,8 @@ export async function findCharactersForMediaIds(
 export async function findSeriesForMediaIds(
   db: Kysely<DB>,
   mediaIds: string[]
-): Promise<Map<string, { id: string; name: string; aliases_json: string; created_at: number }[]>> {
-  const map = new Map<
-    string,
-    { id: string; name: string; aliases_json: string; created_at: number }[]
-  >()
+): Promise<Map<string, { id: string; name: string; aliases_json: string }[]>> {
+  const map = new Map<string, { id: string; name: string; aliases_json: string }[]>()
   if (!mediaIds.length) return map
 
   const rows = await db
@@ -397,20 +384,14 @@ export async function findSeriesForMediaIds(
       'media_series.media_id as mediaId',
       'series.id as id',
       'series.name as name',
-      'series.aliases_json as aliases_json',
-      'series.created_at as created_at'
+      'series.aliases_json as aliases_json'
     ])
     .where('media_series.media_id', 'in', mediaIds)
     .execute()
 
   for (const row of rows) {
     const list = map.get(row.mediaId) ?? []
-    list.push({
-      id: row.id,
-      name: row.name,
-      aliases_json: row.aliases_json,
-      created_at: row.created_at
-    })
+    list.push({ id: row.id, name: row.name, aliases_json: row.aliases_json })
     map.set(row.mediaId, list)
   }
   return map

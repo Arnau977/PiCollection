@@ -48,23 +48,17 @@ async function hydrateMedia(db: Kysely<DB>, rows: MediaTable[]): Promise<MediaMo
   const artistById = new Map(artistRows.map((artist) => [artist.id, artist]))
 
   return rows.map((row): MediaModel => {
-    const tags: TagModel[] = (tagsByMedia.get(row.id) ?? []).map((tag) => ({
-      id: tag.id,
-      name: tag.name,
-      createdAt: tag.created_at
-    }))
+    const tags: TagModel[] = tagsByMedia.get(row.id) ?? []
     const characters: CharacterModel[] = (charactersByMedia.get(row.id) ?? []).map((character) => ({
       id: character.id,
       name: character.name,
       series: [],
-      aliases: JSON.parse(character.aliases_json),
-      createdAt: character.created_at
+      aliases: JSON.parse(character.aliases_json)
     }))
     const series: SeriesModel[] = (seriesByMedia.get(row.id) ?? []).map((s) => ({
       id: s.id,
       name: s.name,
-      aliases: JSON.parse(s.aliases_json),
-      createdAt: s.created_at
+      aliases: JSON.parse(s.aliases_json)
     }))
 
     let artist: ArtistModel | undefined
@@ -74,7 +68,6 @@ async function hydrateMedia(db: Kysely<DB>, rows: MediaTable[]): Promise<MediaMo
         artist = {
           id: artistRow.id,
           name: artistRow.name,
-          createdAt: artistRow.created_at,
           socials: socialLinks
             .filter((link) => link.artist_id === artistRow.id)
             .map((link) => ({
