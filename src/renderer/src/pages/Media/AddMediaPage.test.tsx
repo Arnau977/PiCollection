@@ -207,7 +207,7 @@ describe('AddMediaPage', () => {
 
     const [, , charactersInput] = screen.getAllByRole('combobox')
     await user.type(charactersInput, 'Alice')
-    await user.click(await screen.findByRole('option', { name: 'Alice' }))
+    await user.click(await screen.findByRole('option', { name: 'Alice (Wonderland)' }))
 
     // The series chip appears without the user touching the Series field.
     expect(await screen.findByText('Wonderland')).toBeInTheDocument()
@@ -233,7 +233,7 @@ describe('AddMediaPage', () => {
 
     const [, , charactersInput] = screen.getAllByRole('combobox')
     await user.type(charactersInput, 'Alice')
-    await user.click(await screen.findByRole('option', { name: 'Alice' }))
+    await user.click(await screen.findByRole('option', { name: 'Alice (Wonderland, Looking Glass)' }))
 
     expect(screen.queryByText('Wonderland')).not.toBeInTheDocument()
     expect(screen.queryByText('Looking Glass')).not.toBeInTheDocument()
@@ -644,7 +644,7 @@ describe('AddMediaPage sole-series character linking', () => {
 
     const [, , charactersInput] = screen.getAllByRole('combobox')
     await user.type(charactersInput, 'Alice')
-    await user.click(await screen.findByRole('option', { name: 'Alice' }))
+    await user.click(await screen.findByRole('option', { name: 'Alice (Wonderland)' }))
     // Alice has exactly one series already, so picking her auto-adds
     // Wonderland via the existing implied-series behavior.
     expect(await screen.findByText('Wonderland')).toBeInTheDocument()

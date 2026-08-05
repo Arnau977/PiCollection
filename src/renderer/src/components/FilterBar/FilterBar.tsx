@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ChevronDown } from 'lucide-react'
 import type { MediaFilters, MediaSortableProp, Sorting } from '@shared/models'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
+import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import { Autocomplete } from '../Autocomplete/Autocomplete'
 import { MultiSelectAutocomplete } from '../Autocomplete/MultiSelectAutocomplete'
 import { SearchBar } from '../SearchBar/SearchBar'
@@ -189,7 +190,7 @@ export function FilterBar({
               onFiltersChange({ ...filters, characterGroups: normalizeGroups(characterGroups) })
             }
             options={characters}
-            getOptionLabel={(character) => character.name}
+            getOptionLabel={formatCharacterOptionLabel}
             getOptionValue={(character) => character.id}
           />
 
