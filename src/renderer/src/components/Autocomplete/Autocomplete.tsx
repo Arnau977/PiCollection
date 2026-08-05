@@ -36,6 +36,12 @@ interface AutocompleteProps<T> {
   onCreate?: (name: string) => void
   /** Hides the visible label when the surrounding layout already provides one; `label` still names the field for assistive tech. */
   hideLabel?: boolean
+  /**
+   * Used only for the "does the typed text already match an existing option" (create-suppression)
+   * check - distinct from `getOptionLabel`, which may render extra context (e.g. linked series)
+   * that would otherwise prevent an exact match. Defaults to `getOptionLabel` when not provided.
+   */
+  getOptionMatchName?: (option: T) => string
 }
 
 export function Autocomplete<T>({
@@ -48,7 +54,8 @@ export function Autocomplete<T>({
   selectedKey = null,
   resetQueryAfterSelect = false,
   onCreate,
-  hideLabel = false
+  hideLabel = false,
+  getOptionMatchName = getOptionLabel
 }: AutocompleteProps<T>): JSX.Element {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
@@ -73,7 +80,7 @@ export function Autocomplete<T>({
 
   const trimmedQuery = query.trim()
   const hasExactMatch = options.some(
-    (option) => getOptionLabel(option).toLowerCase() === trimmedQuery.toLowerCase()
+    (option) => getOptionMatchName(option).toLowerCase() === trimmedQuery.toLowerCase()
   )
   const showCreateOption = Boolean(onCreate) && trimmedQuery.length > 0 && !hasExactMatch
 

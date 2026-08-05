@@ -263,6 +263,20 @@ describe('AddMediaPage', () => {
     expect(screen.queryByText('Create "landscape"')).not.toBeInTheDocument()
     expect(await screen.findByRole('option', { name: 'landscape' })).toBeInTheDocument()
   })
+
+  it('does not show a "Create" option for an existing character with a linked series', async () => {
+    charactersData = [{ id: 'c1', name: 'Ishtar', series: [{ id: 's1', name: 'Fate/Grand Order' }] }]
+    const user = userEvent.setup()
+    renderPage()
+
+    const [, , charactersInput] = screen.getAllByRole('combobox')
+    await user.type(charactersInput, 'Ishtar')
+
+    expect(screen.queryByText('Create "Ishtar"')).not.toBeInTheDocument()
+    expect(
+      await screen.findByRole('option', { name: 'Ishtar (Fate/Grand Order)' })
+    ).toBeInTheDocument()
+  })
 })
 
 describe('AddMediaPage duplicate detection', () => {

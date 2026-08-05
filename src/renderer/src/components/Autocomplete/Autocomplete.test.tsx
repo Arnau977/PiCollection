@@ -148,4 +148,58 @@ describe('Autocomplete', () => {
 
     expect(screen.getByRole('combobox')).toHaveValue('Portrait')
   })
+
+  describe('create-suppression matching', () => {
+    interface LabeledOption {
+      id: string
+      name: string
+      series: string
+    }
+
+    const TAGGED_OPTIONS: LabeledOption[] = [{ id: '1', name: 'Ishtar', series: 'Fate' }]
+
+    it('falls back to getOptionLabel for the "Create" suppression check when getOptionMatchName is not provided', async () => {
+      const user = userEvent.setup()
+      render(
+        <Autocomplete
+          name="test"
+          label="Test field"
+          options={TAGGED_OPTIONS}
+          getOptionLabel={(o) => `${o.name} (${o.series})`}
+          getOptionValue={(o) => o.id}
+          onSelect={vi.fn()}
+          onCreate={vi.fn()}
+        />
+      )
+
+      const input = screen.getByRole('combobox')
+      await user.type(input, 'Ishtar')
+
+      // The typed text doesn't exactly match the rendered label ("Ishtar (Fate)"),
+      // so without an explicit getOptionMatchName the create option is still offered.
+      expect(await screen.findByText('Create "Ishtar"')).toBeInTheDocument()
+    })
+
+    it('uses getOptionMatchName instead of getOptionLabel to suppress the "Create" option', async () => {
+      const user = userEvent.setup()
+      render(
+        <Autocomplete
+          name="test"
+          label="Test field"
+          options={TAGGED_OPTIONS}
+          getOptionLabel={(o) => `${o.name} (${o.series})`}
+          getOptionMatchName={(o) => o.name}
+          getOptionValue={(o) => o.id}
+          onSelect={vi.fn()}
+          onCreate={vi.fn()}
+        />
+      )
+
+      const input = screen.getByRole('combobox')
+      await user.type(input, 'Ishtar')
+
+      expect(await screen.findByRole('option', { name: 'Ishtar (Fate)' })).toBeInTheDocument()
+      expect(screen.queryByText('Create "Ishtar"')).not.toBeInTheDocument()
+    })
+  })
 })

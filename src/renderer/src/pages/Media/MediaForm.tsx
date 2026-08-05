@@ -505,6 +505,7 @@ export function MediaForm({
           label={t('filters.characters')}
           options={characters.data}
           getOptionLabel={formatCharacterOptionLabel}
+          getOptionMatchName={(character) => character.name}
           getOptionValue={(character) => character.id}
           selectedValues={input.characterIds ?? []}
           onChange={handleCharactersChange}
