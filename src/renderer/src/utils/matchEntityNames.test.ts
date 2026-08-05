@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
   capitalizeFirstLetter,
+  formatCharacterOptionLabel,
+  matchCharacterNames,
   matchEntityNames,
   normalizeEntityName,
   type NameMatchable
 } from './matchEntityNames'
+import type { CharacterModel } from '@shared/models'
 
 interface Entity extends NameMatchable {
   id: string
@@ -101,5 +104,96 @@ describe('matchEntityNames', () => {
     const options = [entity('1', 'Ishtar', ['Fate Ishtar'])]
     const result = matchEntityNames([{ name: 'Ishtar' }, { name: 'Fate Ishtar' }], options)
     expect(result.existing).toEqual([options[0]])
+  })
+})
+
+function character(
+  id: string,
+  name: string,
+  seriesNames: string[] = [],
+  aliases?: string[]
+): CharacterModel {
+  return {
+    id,
+    name,
+    series: seriesNames.map((seriesName, index) => ({ id: `s-${id}-${index}`, name: seriesName })),
+    aliases
+  }
+}
+
+describe('matchCharacterNames', () => {
+  it('behaves like a single-candidate match when there is no name collision', () => {
+    const options = [character('1', 'Hatsune Miku')]
+    const result = matchCharacterNames([{ name: 'hatsune miku' }], options, [])
+    expect(result.existing).toEqual([options[0]])
+  })
+
+  it('disambiguates two same-named characters using the series context', () => {
+    const fgoIshtar = character('1', 'Ishtar', ['Fate/Grand Order'])
+    const otherIshtar = character('2', 'Ishtar', ['Some Other Series'])
+    const result = matchCharacterNames(
+      [{ name: 'Ishtar' }],
+      [otherIshtar, fgoIshtar],
+      [normalizeEntityName('Fate/Grand Order')]
+    )
+    expect(result.existing).toEqual([fgoIshtar])
+  })
+
+  it('falls back to the first candidate in array order when the series context cannot disambiguate at all', () => {
+    const first = character('1', 'Ishtar', ['Fate/Grand Order'])
+    const second = character('2', 'Ishtar', ['Some Other Series'])
+    const result = matchCharacterNames([{ name: 'Ishtar' }], [first, second], [])
+    expect(result.existing).toEqual([first])
+  })
+
+  it('falls back to the first candidate when the series context matches more than one candidate', () => {
+    const first = character('1', 'Ishtar', ['Shared Series'])
+    const second = character('2', 'Ishtar', ['Shared Series'])
+    const result = matchCharacterNames(
+      [{ name: 'Ishtar' }],
+      [first, second],
+      [normalizeEntityName('Shared Series')]
+    )
+    expect(result.existing).toEqual([first])
+  })
+
+  it('still matches by alias for a character with no name collision', () => {
+    const options = [character('1', 'Fate/Grand Order Ishtar', [], ['Ishtar'])]
+    const result = matchCharacterNames([{ name: 'ishtar' }], options, [])
+    expect(result.existing).toEqual([options[0]])
+  })
+
+  it('matches the same entity only once even via two different suggestion keys', () => {
+    const options = [character('1', 'Ishtar', [], ['Fate Ishtar'])]
+    const result = matchCharacterNames(
+      [{ name: 'Ishtar' }, { name: 'Fate Ishtar' }],
+      options,
+      []
+    )
+    expect(result.existing).toEqual([options[0]])
+  })
+
+  it('puts an unmatched suggestion in missing', () => {
+    const result = matchCharacterNames([{ name: 'New Character' }], [], [])
+    expect(result.missing).toEqual(['New Character'])
+    expect(result.existing).toEqual([])
+  })
+})
+
+describe('formatCharacterOptionLabel', () => {
+  it('returns the bare name when the character has no linked series', () => {
+    expect(formatCharacterOptionLabel(character('1', 'Ishtar'))).toBe('Ishtar')
+  })
+
+  it('appends a single linked series in parentheses', () => {
+    expect(formatCharacterOptionLabel(character('1', 'Ishtar', ['Fate/Grand Order']))).toBe(
+      'Ishtar (Fate/Grand Order)'
+    )
+  })
+
+  it('joins multiple linked series with a comma', () => {
+    expect(
+      formatCharacterOptionLabel(character('1', 'Ishtar', ['Fate/Grand Order', 'Fate/EXTRA']))
+    ).toBe('Ishtar (Fate/Grand Order, Fate/EXTRA)')
   })
 })
