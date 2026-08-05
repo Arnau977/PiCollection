@@ -5,6 +5,7 @@ import { Check, Folder } from 'lucide-react'
 import type { SourceFolderBrowseFile, SourceFolderBrowseResult } from '@shared/models'
 import { toThumbUrl } from '@shared/utils/mediaUrl'
 import { MediaThumb } from '../../components/MediaThumb/MediaThumb'
+import { Pagination } from '../../components/Pagination/Pagination'
 import './FolderBrowser.css'
 
 interface FolderBrowserProps {
@@ -26,6 +27,7 @@ interface PreviewState {
 const PREVIEW_SIZE = 320
 const PREVIEW_MARGIN = 12
 const PREVIEW_DELAY_MS = 150
+const FILES_PER_PAGE = 60
 
 /** Keeps the enlarged preview clear of the viewport edges: flips to the tile's
  * left when there's no room on the right, and clamps vertically instead of
@@ -56,6 +58,7 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set())
   const [reloadToken, setReloadToken] = useState(0)
+  const [filePage, setFilePage] = useState(0)
   const [preview, setPreview] = useState<PreviewState | null>(null)
   const previewTimer = useRef<ReturnType<typeof setTimeout>>()
 
@@ -66,6 +69,7 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   useEffect((): (() => void) => {
     let cancelled = false
     setState({ kind: 'loading' })
+    setFilePage(0)
     window.api.sourceFolder.browse(currentPath).then((result) => {
       if (cancelled) return
       if (!result.success) {
@@ -81,6 +85,15 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
 
   function retry(): void {
     setReloadToken((token) => token + 1)
+  }
+
+  // setCurrentPath alone won't reset the page when navigating to the folder
+  // that's already current (e.g. clicking the root breadcrumb while at root):
+  // React bails out of the state update - and the effect that resets
+  // filePage - when the value is unchanged. Reset explicitly here instead.
+  function navigateTo(path: string): void {
+    setFilePage(0)
+    setCurrentPath(path)
   }
 
   function toggleFile(relativePath: string): void {
@@ -121,7 +134,7 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
     <>
       <div className="folder-browser">
         <nav className="folder-browser-breadcrumb" aria-label={t('folderBrowser.breadcrumbLabel')}>
-          <button type="button" className="folder-browser-crumb" onClick={() => setCurrentPath('')}>
+          <button type="button" className="folder-browser-crumb" onClick={() => navigateTo('')}>
             {t('folderBrowser.root')}
           </button>
           {breadcrumbSegments.map((segment, index) => {
@@ -132,7 +145,7 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                 <button
                   type="button"
                   className="folder-browser-crumb"
-                  onClick={() => setCurrentPath(pathUpToHere)}
+                  onClick={() => navigateTo(pathUpToHere)}
                 >
                   {segment}
                 </button>
@@ -162,7 +175,7 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                 title={folder.name}
                 className={`folder-browser-tile${selectedFolders.has(folder.relativePath) ? ' is-selected' : ''}`}
                 onClick={() => toggleFolder(folder.relativePath)}
-                onDoubleClick={() => setCurrentPath(folder.relativePath)}
+                onDoubleClick={() => navigateTo(folder.relativePath)}
               >
                 <span className="folder-browser-tile-thumb">
                   <Folder size={32} aria-hidden="true" />
@@ -170,44 +183,56 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                 <span className="folder-browser-tile-name">{folder.name}</span>
               </button>
             ))}
-            {state.result.files.map((file) => (
-              // Hover detection lives on this wrapper, not the button: disabled
-              // buttons (cataloged files) don't dispatch mouse events, and the
-              // preview should still work for them.
-              <div
-                key={file.relativePath}
-                className="folder-browser-tile-wrap"
-                onMouseEnter={(e) => {
-                  // The wrapper is `display: contents` (no box of its own, so no
-                  // rect) - the button underneath is the real anchor.
-                  const button = e.currentTarget.querySelector('button')
-                  if (button) startPreview(file, button)
-                }}
-                onMouseLeave={endPreview}
-              >
-                <button
-                  type="button"
-                  title={file.name}
-                  className={`folder-browser-tile${selectedFiles.has(file.relativePath) ? ' is-selected' : ''}${file.cataloged ? ' is-cataloged' : ''}`}
-                  onClick={() => toggleFile(file.relativePath)}
-                  disabled={file.cataloged}
+            {state.result.files
+              .slice(filePage * FILES_PER_PAGE, (filePage + 1) * FILES_PER_PAGE)
+              .map((file) => (
+                // Hover detection lives on this wrapper, not the button: disabled
+                // buttons (cataloged files) don't dispatch mouse events, and the
+                // preview should still work for them.
+                <div
+                  key={file.relativePath}
+                  className="folder-browser-tile-wrap"
+                  onMouseEnter={(e) => {
+                    // The wrapper is `display: contents` (no box of its own, so no
+                    // rect) - the button underneath is the real anchor.
+                    const button = e.currentTarget.querySelector('button')
+                    if (button) startPreview(file, button)
+                  }}
+                  onMouseLeave={endPreview}
                 >
-                  <span className="folder-browser-tile-thumb">
-                    <MediaThumb type={file.type} route={file.relativePath} alt={file.name} />
-                    {file.cataloged && (
-                      <span className="folder-browser-tile-badge">
-                        <Check size={12} aria-hidden="true" />
-                        {t('folderBrowser.cataloged')}
-                      </span>
-                    )}
-                  </span>
-                  <span className="folder-browser-tile-name">{file.name}</span>
-                </button>
-              </div>
-            ))}
+                  <button
+                    type="button"
+                    title={file.name}
+                    className={`folder-browser-tile${selectedFiles.has(file.relativePath) ? ' is-selected' : ''}${file.cataloged ? ' is-cataloged' : ''}`}
+                    onClick={() => toggleFile(file.relativePath)}
+                    disabled={file.cataloged}
+                  >
+                    <span className="folder-browser-tile-thumb">
+                      <MediaThumb type={file.type} route={file.relativePath} alt={file.name} />
+                      {file.cataloged && (
+                        <span className="folder-browser-tile-badge">
+                          <Check size={12} aria-hidden="true" />
+                          {t('folderBrowser.cataloged')}
+                        </span>
+                      )}
+                    </span>
+                    <span className="folder-browser-tile-name">{file.name}</span>
+                  </button>
+                </div>
+              ))}
             {state.result.folders.length === 0 && state.result.files.length === 0 && (
               <p className="folder-browser-status">{t('folderBrowser.empty')}</p>
             )}
+          </div>
+        )}
+
+        {state.kind === 'loaded' && state.result.files.length > FILES_PER_PAGE && (
+          <div className="folder-browser-pagination">
+            <Pagination
+              page={filePage}
+              totalPages={Math.ceil(state.result.files.length / FILES_PER_PAGE)}
+              onPageChange={setFilePage}
+            />
           </div>
         )}
 

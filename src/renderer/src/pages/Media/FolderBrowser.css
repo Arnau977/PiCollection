@@ -17,6 +17,10 @@
   gap: var(--space-3);
 }
 
+.folder-browser-pagination {
+  margin-top: var(--space-3);
+}
+
 /* Keeps the button as the actual grid item (so track sizing is unaffected)
    while still giving hover detection a target that isn't disabled for
    cataloged files. */

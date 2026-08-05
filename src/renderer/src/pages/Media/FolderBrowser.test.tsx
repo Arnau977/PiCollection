@@ -128,4 +128,50 @@ describe('FolderBrowser', () => {
     expect(browse).toHaveBeenCalledTimes(2)
     expect(browse).toHaveBeenNthCalledWith(2, '')
   })
+
+  it('paginates the file grid and does not paginate folders', async () => {
+    const files = Array.from({ length: 130 }, (_, i) => ({
+      name: `file-${i}.png`,
+      relativePath: `file-${i}.png`,
+      type: 'image' as const,
+      cataloged: false
+    }))
+    browse.mockResolvedValue({
+      success: true,
+      data: { folders: [{ name: 'sub', relativePath: 'sub' }], files }
+    })
+
+    render(<FolderBrowser onStartImport={vi.fn()} />)
+
+    await screen.findByText('file-0.png')
+    expect(screen.getAllByText(/^file-\d+\.png$/)).toHaveLength(60)
+    expect(screen.getByText('sub')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+
+    expect(await screen.findByText('file-60.png')).toBeInTheDocument()
+    expect(screen.queryByText('file-0.png')).not.toBeInTheDocument()
+  })
+
+  it('resets to page 1 when navigating into a different folder', async () => {
+    const files = Array.from({ length: 70 }, (_, i) => ({
+      name: `file-${i}.png`,
+      relativePath: `file-${i}.png`,
+      type: 'image' as const,
+      cataloged: false
+    }))
+    browse.mockResolvedValueOnce({ success: true, data: { folders: [], files } })
+    browse.mockResolvedValueOnce({ success: true, data: { folders: [], files: [] } })
+
+    render(<FolderBrowser onStartImport={vi.fn()} />)
+
+    await screen.findByText('file-0.png')
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(await screen.findByText('file-60.png')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Source folder' }))
+
+    expect(browse).toHaveBeenLastCalledWith('')
+    expect(screen.queryByText('file-60.png')).not.toBeInTheDocument()
+  })
 })
