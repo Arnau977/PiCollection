@@ -23,6 +23,7 @@ export interface MediaFilters {
   query?: string
   artistId?: string
   sfw?: boolean
+  isAiGenerated?: boolean
   type?: 'image' | 'video' | 'gif'
   /** Each inner array is AND'd together; the outer arrays are OR'd. */
   tagGroups?: string[][]

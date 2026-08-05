@@ -1,7 +1,7 @@
 import type { Expression, ExpressionBuilder, Kysely, SelectQueryBuilder, SqlBool } from 'kysely'
 import type { DB, MediaTable } from '../schema'
 import type { MediaFilters, Sorting } from '@shared/models'
-import { parseSearchQuery, type QueryNode } from '@shared/query/searchQuery'
+import { extractAiToken, parseSearchQuery, type QueryNode } from '@shared/query/searchQuery'
 
 const SORT_COLUMNS: Record<string, keyof MediaTable> = {
   name: 'name',
@@ -120,9 +120,15 @@ function compileQueryNode(
 function applyMediaFilters(db: Kysely<DB>, filters: MediaFilters) {
   let qb = db.selectFrom('media')
 
-  const queryAst = filters.query?.trim() ? parseSearchQuery(filters.query) : null
+  const rawAst = filters.query?.trim() ? parseSearchQuery(filters.query) : null
+  const { node: queryAst, isAiGenerated: aiFromQuery } = extractAiToken(rawAst)
   if (queryAst) {
     qb = qb.where((eb) => compileQueryNode(eb, queryAst))
+  }
+
+  const isAiGenerated = filters.isAiGenerated ?? aiFromQuery
+  if (isAiGenerated !== undefined) {
+    qb = qb.where('media.is_ai_generated', '=', isAiGenerated ? 1 : 0)
   }
 
   if (filters.artistId) {

@@ -50,4 +50,9 @@ describe('hasActiveFilters', () => {
   it('returns true when type is set', () => {
     expect(hasActiveFilters({ type: 'video' })).toBe(true)
   })
+
+  it('is true when isAiGenerated is set', () => {
+    expect(hasActiveFilters({ isAiGenerated: true })).toBe(true)
+    expect(hasActiveFilters({ isAiGenerated: false })).toBe(true)
+  })
 })

@@ -245,3 +245,81 @@ describe('media.repository free-text query', () => {
     expect(await mediaRepo.countMediaRows(db, { query: '-landscape' })).toBe(1)
   })
 })
+
+function insertAiMedia(name: string): Promise<{ id: string }> {
+  return mediaRepo.insertMediaRow(db, {
+    id: randomUUID(),
+    name,
+    sfw: 1,
+    is_ai_generated: 1,
+    type: 'image',
+    route: `/${name}.png`,
+    alias: null,
+    artist_id: null,
+    created_at: Date.now(),
+    hash: null,
+    phash: null
+  })
+}
+
+describe('media.repository isAiGenerated filter', () => {
+  it('filters to AI-generated media via the isAiGenerated filter', async () => {
+    await insertAiMedia('ai-art')
+    await insertMedia('regular-art')
+
+    const rows = await mediaRepo.findMediaRows(db, { isAiGenerated: true })
+    expect(rows.map((r) => r.name)).toEqual(['ai-art'])
+  })
+
+  it('filters to non-AI media via isAiGenerated: false', async () => {
+    await insertAiMedia('ai-art')
+    await insertMedia('regular-art')
+
+    const rows = await mediaRepo.findMediaRows(db, { isAiGenerated: false })
+    expect(rows.map((r) => r.name)).toEqual(['regular-art'])
+  })
+
+  it('applies the bare "ai" search keyword the same as the isAiGenerated filter', async () => {
+    await insertAiMedia('ai-art')
+    await insertMedia('regular-art')
+
+    const rows = await mediaRepo.findMediaRows(db, { query: 'ai' })
+    expect(rows.map((r) => r.name)).toEqual(['ai-art'])
+  })
+
+  it('applies the "-ai" search keyword to exclude AI media', async () => {
+    await insertAiMedia('ai-art')
+    await insertMedia('regular-art')
+
+    const rows = await mediaRepo.findMediaRows(db, { query: '-ai' })
+    expect(rows.map((r) => r.name)).toEqual(['regular-art'])
+  })
+
+  it('an explicit isAiGenerated filter wins over a conflicting "-ai" search keyword', async () => {
+    await insertAiMedia('ai-art')
+    await insertMedia('regular-art')
+
+    const rows = await mediaRepo.findMediaRows(db, { query: '-ai', isAiGenerated: true })
+    expect(rows.map((r) => r.name)).toEqual(['ai-art'])
+  })
+
+  it('combines the "ai" keyword with an ordinary search term', async () => {
+    await insertAiMedia('ai-landscape')
+    await mediaRepo.insertMediaRow(db, {
+      id: randomUUID(),
+      name: 'ai-portrait',
+      sfw: 1,
+      is_ai_generated: 1,
+      type: 'image',
+      route: '/ai-portrait.png',
+      alias: null,
+      artist_id: null,
+      created_at: Date.now(),
+      hash: null,
+      phash: null
+    })
+
+    const rows = await mediaRepo.findMediaRows(db, { query: 'landscape ai' })
+    expect(rows.map((r) => r.name)).toEqual(['ai-landscape'])
+  })
+})
