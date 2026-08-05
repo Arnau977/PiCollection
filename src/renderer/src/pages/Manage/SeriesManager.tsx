@@ -32,7 +32,9 @@ export function SeriesManager(): JSX.Element {
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const visibleSeries = filterByQuery(seriesList, search, (series) => series.name)
+  const visibleSeries = filterByQuery(seriesList, search, (series) =>
+    [series.name, ...(series.aliases ?? [])].join(' ')
+  )
 
   function startEdit(series: SeriesModel): void {
     setEditing(series)

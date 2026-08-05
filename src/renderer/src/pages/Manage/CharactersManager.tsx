@@ -35,7 +35,9 @@ export function CharactersManager(): JSX.Element {
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const visibleCharacters = filterByQuery(characters, search, (character) => character.name)
+  const visibleCharacters = filterByQuery(characters, search, (character) =>
+    [character.name, ...(character.aliases ?? [])].join(' ')
+  )
 
   async function handleCreateSeries(name: string): Promise<void> {
     const result = await window.api.series.create({ name })

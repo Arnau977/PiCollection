@@ -40,7 +40,9 @@ export function useEntityThumbnail(kind: EntityThumbnailKind, id: string): Entit
         return
       }
       const items = result.data.items
-      const pick = items[Math.floor(Math.random() * items.length)]
+      const solo = kind === 'character' ? items.filter((item) => item.characters?.length === 1) : []
+      const pool = solo.length > 0 ? solo : items
+      const pick = pool[Math.floor(Math.random() * pool.length)]
       setState({ route: pick.route, type: pick.type, loading: false })
     })
 
