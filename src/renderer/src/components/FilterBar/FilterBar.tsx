@@ -101,6 +101,24 @@ export function FilterBar({
         </label>
 
         <label className="filter-field">
+          <span className="filter-label">{t('filters.ai')}</span>
+          <select
+            value={filters.isAiGenerated === undefined ? 'all' : filters.isAiGenerated ? 'ai' : 'notAi'}
+            onChange={(e) => {
+              const selected = e.target.value
+              onFiltersChange({
+                ...filters,
+                isAiGenerated: selected === 'all' ? undefined : selected === 'ai'
+              })
+            }}
+          >
+            <option value="all">{t('filters.aiAll')}</option>
+            <option value="ai">{t('filters.aiOnly')}</option>
+            <option value="notAi">{t('filters.aiExcluded')}</option>
+          </select>
+        </label>
+
+        <label className="filter-field">
           <span className="filter-label">{t('filters.type')}</span>
           <select
             value={filters.type ?? 'all'}

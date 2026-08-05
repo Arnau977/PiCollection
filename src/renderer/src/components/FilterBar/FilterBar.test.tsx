@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { CharacterModel, MediaFilters, Sorting, TagModel } from '@shared/models'
 import { FilterBar } from './FilterBar'
@@ -173,5 +173,29 @@ describe('FilterBar', () => {
     expect(
       await screen.findByRole('option', { name: 'Ishtar (Fate/Grand Order)' })
     ).toBeInTheDocument()
+  })
+
+  it('sets isAiGenerated: true when "AI only" is selected', async () => {
+    const { onFiltersChange } = renderFilterBar({ sfw: true })
+
+    fireEvent.change(screen.getByLabelText('AI'), { target: { value: 'ai' } })
+
+    expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, isAiGenerated: true })
+  })
+
+  it('sets isAiGenerated: false when "Exclude AI" is selected', async () => {
+    const { onFiltersChange } = renderFilterBar({ sfw: true })
+
+    fireEvent.change(screen.getByLabelText('AI'), { target: { value: 'notAi' } })
+
+    expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, isAiGenerated: false })
+  })
+
+  it('clears isAiGenerated when "All" is selected again', async () => {
+    const { onFiltersChange } = renderFilterBar({ sfw: true, isAiGenerated: true })
+
+    fireEvent.change(screen.getByLabelText('AI'), { target: { value: 'all' } })
+
+    expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, isAiGenerated: undefined })
   })
 })
