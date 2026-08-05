@@ -82,7 +82,9 @@ describe('ManagePage', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Series' }))
 
-    expect(screen.getByText('Wonderland')).toBeVisible()
+    // The (hidden, but still mounted) Characters tab now has its own series filter
+    // listing 'Wonderland' as an <option>, so scope to the active panel.
+    expect(within(activePanel()).getByText('Wonderland')).toBeVisible()
   })
 
   it('preserves a draft name after switching tabs away and back', async () => {

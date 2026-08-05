@@ -220,6 +220,7 @@
     "characters": "Characters",
     "name": "Name",
     "series": "Series",
+    "seriesFilterAll": "All series",
     "aliases": "Aliases",
     "aliasesPlaceholder": "Comma-separated",
     "aliasesHint": "Alternate names or nicknames for this character.",

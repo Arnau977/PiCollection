@@ -5,6 +5,8 @@ import { useCharacters, useSeries } from '../../hooks/useEntityLists'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { MultiSelectAutocomplete } from '../../components/Autocomplete/MultiSelectAutocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
+import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
+import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import type { CharacterModel } from '@shared/models'
 
 interface CharacterFormValues {
@@ -34,10 +36,21 @@ export function CharactersManager(): JSX.Element {
   const [editing, setEditing] = useState<CharacterModel | null>(null)
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [sort, setSort] = useState<ManageSort>(() => loadManageSort('characters'))
+  const [seriesFilter, setSeriesFilter] = useState<string>('')
 
-  const visibleCharacters = filterByQuery(characters, search, (character) =>
+  function updateSort(next: ManageSort): void {
+    setSort(next)
+    saveManageSort('characters', next)
+  }
+
+  const searchedCharacters = filterByQuery(characters, search, (character) =>
     [character.name, ...(character.aliases ?? [])].join(' ')
   )
+  const seriesFilteredCharacters = seriesFilter
+    ? searchedCharacters.filter((character) => character.series.some((s) => s.id === seriesFilter))
+    : searchedCharacters
+  const visibleCharacters = sortManageEntities(seriesFilteredCharacters, sort)
 
   async function handleCreateSeries(name: string): Promise<void> {
     const result = await window.api.series.create({ name })
@@ -158,6 +171,21 @@ export function CharactersManager(): JSX.Element {
           aria-label={t('manage.searchLabel')}
         />
 
+        <div className="manage-sort-row">
+          <ManageSortControl sort={sort} onChange={updateSort} />
+          <label className="filter-field">
+            <span className="filter-label">{t('manage.series')}</span>
+            <select value={seriesFilter} onChange={(e) => setSeriesFilter(e.target.value)}>
+              <option value="">{t('manage.seriesFilterAll')}</option>
+              {series.data.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <div className="manage-list-scroll">
           {loading ? (
             <p className="loading-state">{t('gallery.loading')}</p>
@@ -182,6 +210,11 @@ export function CharactersManager(): JSX.Element {
                     {character.series.length > 0 && (
                       <span className="manage-item-meta">
                         {character.series.map((s) => s.name).join(', ')}
+                      </span>
+                    )}
+                    {character.aliases && character.aliases.length > 0 && (
+                      <span className="manage-item-meta manage-item-aliases">
+                        {character.aliases.join(', ')}
                       </span>
                     )}
                   </div>

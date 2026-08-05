@@ -69,7 +69,9 @@ describe('CharactersManager', () => {
   it('renders existing characters with their series', () => {
     render(<CharactersManager />)
     expect(screen.getByText('Alice')).toBeInTheDocument()
-    expect(screen.getByText('Wonderland')).toBeInTheDocument()
+    // 'Wonderland' also appears as an <option> in the series filter select added in
+    // this task, so scope the match to the list item's series-meta span.
+    expect(screen.getByText('Wonderland', { selector: '.manage-item-meta' })).toBeInTheDocument()
   })
 
   it('creates a new character with a selected series and comma-separated aliases', async () => {
@@ -198,5 +200,39 @@ describe('CharactersManager', () => {
 
     expect(screen.getByText('Alice')).toBeInTheDocument()
     expect(screen.queryByText('Peter Pan')).not.toBeInTheDocument()
+  })
+
+  it('persists the chosen sort order and re-applies it on next render', async () => {
+    const user = userEvent.setup()
+    window.localStorage.clear()
+    const { unmount } = render(<CharactersManager />)
+
+    await user.selectOptions(screen.getByLabelText('Sort by'), 'createdAt')
+    await user.click(screen.getByRole('button', { name: 'Ascending' }))
+
+    unmount()
+    render(<CharactersManager />)
+
+    expect(screen.getByLabelText('Sort by')).toHaveValue('createdAt')
+    expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
+  })
+
+  it('filters the list to characters linked to the selected series', async () => {
+    const user = userEvent.setup()
+    render(<CharactersManager />)
+
+    // The add/edit form's MultiSelectAutocomplete series picker also resolves to an
+    // accessible name of exactly "Series" for its combobox input and hidden
+    // "Show suggestions" button (react-aria labelledby quirk), so scope to the
+    // plain <select> this task adds for the filter.
+    await user.selectOptions(screen.getByLabelText('Series', { selector: 'select' }), 's1')
+
+    expect(screen.getByText('Alice')).toBeInTheDocument()
+    expect(screen.queryByText('Peter Pan')).not.toBeInTheDocument()
+  })
+
+  it('shows character aliases in the list', () => {
+    render(<CharactersManager />)
+    expect(screen.getByText('Ali')).toBeInTheDocument()
   })
 })

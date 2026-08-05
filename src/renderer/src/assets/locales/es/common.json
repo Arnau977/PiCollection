@@ -221,6 +221,7 @@
     "characters": "Personajes",
     "name": "Nombre",
     "series": "Series",
+    "seriesFilterAll": "Todas las series",
     "aliases": "Alias",
     "aliasesPlaceholder": "Separados por coma",
     "aliasesHint": "Nombres alternativos o apodos de este personaje.",
