@@ -28,7 +28,11 @@ describe('ipcHandler', () => {
 
     await handler(fakeEvent, undefined)
 
-    expect(logInfo).toHaveBeenCalledWith('ipc', 'test:echo', expect.objectContaining({ ms: expect.any(Number) }))
+    expect(logInfo).toHaveBeenCalledWith(
+      'ipc',
+      'test:echo',
+      expect.objectContaining({ ms: expect.any(Number) })
+    )
   })
 
   it('returns a validation error envelope when input does not match the schema', async () => {

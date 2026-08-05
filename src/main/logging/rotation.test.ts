@@ -12,8 +12,9 @@ vi.mock('electron', () => ({
   }
 }))
 
-const { MAX_LOG_FILE_BYTES, currentLogFilePath, logsDir, rotateIfNeeded } =
-  await import('./rotation')
+const { MAX_LOG_FILE_BYTES, currentLogFilePath, logsDir, rotateIfNeeded } = await import(
+  './rotation'
+)
 
 beforeEach(async () => {
   userDataDir = await fsPromises.mkdtemp(join(tmpdir(), 'logging-rotation-'))

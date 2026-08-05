@@ -33,8 +33,10 @@ export function registerMediaMaintenanceHandlers(): void {
 
   ipcMain.handle(
     IPC.maintenance.relinkMissingFiles,
-    ipcHandler(IPC.maintenance.relinkMissingFiles, RelinkMissingFilesSchema, ({ oldRoot, newRoot }) =>
-      mediaMaintenanceService.relinkMissingFiles(oldRoot, newRoot)
+    ipcHandler(
+      IPC.maintenance.relinkMissingFiles,
+      RelinkMissingFilesSchema,
+      ({ oldRoot, newRoot }) => mediaMaintenanceService.relinkMissingFiles(oldRoot, newRoot)
     )
   )
 

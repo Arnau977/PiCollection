@@ -38,10 +38,8 @@ export function registerArtistHandlers(): void {
   )
   ipcMain.handle(
     IPC.artist.removeSocialLink,
-    ipcHandler(
-      IPC.artist.removeSocialLink,
-      RemoveSocialLinkSchema,
-      ({ artistId, socialLinkId }) => artistService.removeSocialLink(artistId, socialLinkId)
+    ipcHandler(IPC.artist.removeSocialLink, RemoveSocialLinkSchema, ({ artistId, socialLinkId }) =>
+      artistService.removeSocialLink(artistId, socialLinkId)
     )
   )
 }
