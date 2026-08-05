@@ -5,6 +5,8 @@ import type { TagModel } from '@shared/models'
 import { useTags } from '../../hooks/useEntityLists'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
+import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
+import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 
 export function TagsManager(): JSX.Element {
   const { t } = useTranslation()
@@ -13,8 +15,14 @@ export function TagsManager(): JSX.Element {
   const [editing, setEditing] = useState<TagModel | null>(null)
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [sort, setSort] = useState<ManageSort>(() => loadManageSort('tags'))
 
-  const visibleTags = filterByQuery(tags, search, (tag) => tag.name)
+  function updateSort(next: ManageSort): void {
+    setSort(next)
+    saveManageSort('tags', next)
+  }
+
+  const visibleTags = sortManageEntities(filterByQuery(tags, search, (tag) => tag.name), sort)
 
   function startEdit(tag: TagModel): void {
     setEditing(tag)
@@ -89,6 +97,10 @@ export function TagsManager(): JSX.Element {
           placeholder={t('manage.searchPlaceholder')}
           aria-label={t('manage.searchLabel')}
         />
+
+        <div className="manage-sort-row">
+          <ManageSortControl sort={sort} onChange={updateSort} />
+        </div>
 
         <div className="manage-list-scroll">
           {loading ? (

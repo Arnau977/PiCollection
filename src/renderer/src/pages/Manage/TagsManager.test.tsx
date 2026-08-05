@@ -176,4 +176,19 @@ describe('TagsManager', () => {
 
     expect(screen.getByText('No matches for your search.')).toBeInTheDocument()
   })
+
+  it('persists the chosen sort order and re-applies it on next render', async () => {
+    const user = userEvent.setup()
+    window.localStorage.clear()
+    const { unmount } = render(<TagsManager />)
+
+    await user.selectOptions(screen.getByLabelText('Sort by'), 'createdAt')
+    await user.click(screen.getByRole('button', { name: 'Ascending' }))
+
+    unmount()
+    render(<TagsManager />)
+
+    expect(screen.getByLabelText('Sort by')).toHaveValue('createdAt')
+    expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
+  })
 })
