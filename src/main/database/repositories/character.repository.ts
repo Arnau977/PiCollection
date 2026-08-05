@@ -55,8 +55,11 @@ export async function setCharacterSeries(
 export async function findSeriesForCharacterIds(
   db: Kysely<DB>,
   characterIds: string[]
-): Promise<Map<string, { id: string; name: string; aliases_json: string }[]>> {
-  const map = new Map<string, { id: string; name: string; aliases_json: string }[]>()
+): Promise<Map<string, { id: string; name: string; aliases_json: string; created_at: number }[]>> {
+  const map = new Map<
+    string,
+    { id: string; name: string; aliases_json: string; created_at: number }[]
+  >()
   if (!characterIds.length) return map
 
   const rows = await db
@@ -66,14 +69,20 @@ export async function findSeriesForCharacterIds(
       'character_series.character_id as characterId',
       'series.id as id',
       'series.name as name',
-      'series.aliases_json as aliases_json'
+      'series.aliases_json as aliases_json',
+      'series.created_at as created_at'
     ])
     .where('character_series.character_id', 'in', characterIds)
     .execute()
 
   for (const row of rows) {
     const list = map.get(row.characterId) ?? []
-    list.push({ id: row.id, name: row.name, aliases_json: row.aliases_json })
+    list.push({
+      id: row.id,
+      name: row.name,
+      aliases_json: row.aliases_json,
+      created_at: row.created_at
+    })
     map.set(row.characterId, list)
   }
   return map

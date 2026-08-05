@@ -5,7 +5,12 @@ import type { SeriesInput, SeriesModel } from '@shared/models'
 import type { SeriesTable } from '../database/schema'
 
 function toModel(row: SeriesTable): SeriesModel {
-  return { id: row.id, name: row.name, aliases: JSON.parse(row.aliases_json) }
+  return {
+    id: row.id,
+    name: row.name,
+    aliases: JSON.parse(row.aliases_json),
+    createdAt: row.created_at
+  }
 }
 
 export const seriesService = {

@@ -32,8 +32,8 @@ function setApi(overrides: Record<string, unknown> = {}): void {
 
 beforeEach(() => {
   tagsData = [
-    { id: 't1', name: 'landscape' },
-    { id: 't2', name: 'portrait' }
+    { id: 't1', name: 'landscape', createdAt: 1700000000000 },
+    { id: 't2', name: 'portrait', createdAt: 1700000001000 }
   ]
   refetchTags.mockReset()
   vi.spyOn(window, 'confirm').mockReturnValue(true)

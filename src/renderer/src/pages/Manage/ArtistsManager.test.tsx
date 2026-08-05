@@ -37,9 +37,10 @@ beforeEach(() => {
     {
       id: 'a1',
       name: 'Jane Doe',
+      createdAt: 1700000000000,
       socials: [{ id: 's1', name: 'Twitter', url: 'https://twitter.com/jane' }]
     },
-    { id: 'a2', name: 'John Smith', socials: [] }
+    { id: 'a2', name: 'John Smith', createdAt: 1700000001000, socials: [] }
   ]
   refetchArtists.mockReset()
   vi.spyOn(window, 'confirm').mockReturnValue(true)

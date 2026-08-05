@@ -4,8 +4,10 @@ import { renderHook, waitFor, act } from '@testing-library/react'
 import type { SeriesModel, TagModel } from '@shared/models'
 import { useSeries, useTags } from './useEntityLists'
 
-const tags: TagModel[] = [{ id: '1', name: 'landscape' }]
-const series: SeriesModel[] = [{ id: 's1', name: 'Wonderland', aliases: [] }]
+const tags: TagModel[] = [{ id: '1', name: 'landscape', createdAt: 1700000000000 }]
+const series: SeriesModel[] = [
+  { id: 's1', name: 'Wonderland', aliases: [], createdAt: 1700000000000 }
+]
 
 function setApi(api: unknown): void {
   Object.defineProperty(window, 'api', { value: api, writable: true, configurable: true })

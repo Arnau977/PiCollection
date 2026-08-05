@@ -18,13 +18,15 @@ async function hydrateCharacters(
     const series: SeriesModel[] = (seriesByCharacter.get(row.id) ?? []).map((s) => ({
       id: s.id,
       name: s.name,
-      aliases: JSON.parse(s.aliases_json)
+      aliases: JSON.parse(s.aliases_json),
+      createdAt: s.created_at
     }))
     return {
       id: row.id,
       name: row.name,
       series,
-      aliases: JSON.parse(row.aliases_json)
+      aliases: JSON.parse(row.aliases_json),
+      createdAt: row.created_at
     }
   })
 }

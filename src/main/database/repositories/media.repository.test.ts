@@ -39,8 +39,16 @@ function insertMedia(name: string): ReturnType<typeof mediaRepo.insertMediaRow> 
 
 describe('media.repository tag/character grouped AND/OR filtering', () => {
   it('OR (two singleton groups) returns media matching at least one of the given tags', async () => {
-    const tagA = await tagRepo.insertTag(db, { id: randomUUID(), name: 'tagA' })
-    const tagB = await tagRepo.insertTag(db, { id: randomUUID(), name: 'tagB' })
+    const tagA = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagA',
+      created_at: Date.now()
+    })
+    const tagB = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagB',
+      created_at: Date.now()
+    })
     const onlyA = await insertMedia('onlyA')
     const ab = await insertMedia('ab')
     const none = await insertMedia('none')
@@ -57,8 +65,16 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
   })
 
   it('AND (single group) returns only media matching every given tag', async () => {
-    const tagA = await tagRepo.insertTag(db, { id: randomUUID(), name: 'tagA' })
-    const tagB = await tagRepo.insertTag(db, { id: randomUUID(), name: 'tagB' })
+    const tagA = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagA',
+      created_at: Date.now()
+    })
+    const tagB = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagB',
+      created_at: Date.now()
+    })
     const onlyA = await insertMedia('onlyA')
     const ab = await insertMedia('ab')
 
@@ -73,8 +89,16 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
   })
 
   it('AND (single group) returns nothing when no single media has every requested tag', async () => {
-    const tagA = await tagRepo.insertTag(db, { id: randomUUID(), name: 'tagA' })
-    const tagC = await tagRepo.insertTag(db, { id: randomUUID(), name: 'tagC' })
+    const tagA = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagA',
+      created_at: Date.now()
+    })
+    const tagC = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagC',
+      created_at: Date.now()
+    })
     const onlyA = await insertMedia('onlyA')
     await mediaRepo.setMediaTags(db, onlyA.id, [tagA.id])
 
@@ -132,8 +156,16 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
   })
 
   it('tags and characters filters combine with AND at the top level, independently of their own groups', async () => {
-    const tagA = await tagRepo.insertTag(db, { id: randomUUID(), name: 'tagA' })
-    const tagB = await tagRepo.insertTag(db, { id: randomUUID(), name: 'tagB' })
+    const tagA = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagA',
+      created_at: Date.now()
+    })
+    const tagB = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagB',
+      created_at: Date.now()
+    })
     const charX = await characterRepo.insertCharacter(db, {
       id: randomUUID(),
       name: 'charX',
@@ -160,7 +192,11 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
   })
 
   it('ignores empty groups when computing the OR-of-AND filter', async () => {
-    const tagA = await tagRepo.insertTag(db, { id: randomUUID(), name: 'tagA' })
+    const tagA = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagA',
+      created_at: Date.now()
+    })
     const onlyA = await insertMedia('onlyA')
     await insertMedia('none')
     await mediaRepo.setMediaTags(db, onlyA.id, [tagA.id])
@@ -298,7 +334,11 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
     const totalUnfiltered = await mediaRepo.countMediaRows(db, { limit: 1 })
     expect(totalUnfiltered).toBe(3)
 
-    const tagA = await tagRepo.insertTag(db, { id: randomUUID(), name: 'tagA' })
+    const tagA = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagA',
+      created_at: Date.now()
+    })
     const onlyOne = await insertMedia('onlyOne')
     await mediaRepo.setMediaTags(db, onlyOne.id, [tagA.id])
 

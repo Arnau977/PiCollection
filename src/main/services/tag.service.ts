@@ -5,7 +5,7 @@ import type { TagInput, TagModel } from '@shared/models'
 import type { TagTable } from '../database/schema'
 
 function toModel(row: TagTable): TagModel {
-  return { id: row.id, name: row.name }
+  return { id: row.id, name: row.name, createdAt: row.created_at }
 }
 
 export const tagService = {
@@ -15,7 +15,11 @@ export const tagService = {
   },
 
   async createTag(input: TagInput): Promise<TagModel> {
-    const row = await tagRepo.insertTag(getDb(), { id: randomUUID(), name: input.name })
+    const row = await tagRepo.insertTag(getDb(), {
+      id: randomUUID(),
+      name: input.name,
+      created_at: Date.now()
+    })
     return toModel(row)
   },
 

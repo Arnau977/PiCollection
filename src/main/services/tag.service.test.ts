@@ -37,4 +37,10 @@ describe('tagService', () => {
     const all = await tagService.getAllTags()
     expect(all).toEqual([])
   })
+
+  it('sets createdAt on a newly created tag', async () => {
+    const before = Date.now()
+    const tag = await tagService.createTag({ name: 'fresh' })
+    expect(tag.createdAt).toBeGreaterThanOrEqual(before)
+  })
 })

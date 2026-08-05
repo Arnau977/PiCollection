@@ -50,7 +50,11 @@ describe('foreign key delete behavior', () => {
   })
 
   it('deleting a tag removes it from media_tag but leaves the media row intact', async () => {
-    const tag = await tagRepo.insertTag(db, { id: randomUUID(), name: 'landscape' })
+    const tag = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'landscape',
+      created_at: Date.now()
+    })
     const media = await mediaRepo.insertMediaRow(db, {
       id: randomUUID(),
       name: 'pic',
@@ -105,7 +109,11 @@ describe('foreign key delete behavior', () => {
   })
 
   it('deleting media removes its junction rows (media_tag/media_character)', async () => {
-    const tag = await tagRepo.insertTag(db, { id: randomUUID(), name: 'landscape' })
+    const tag = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'landscape',
+      created_at: Date.now()
+    })
     const character = await characterRepo.insertCharacter(db, {
       id: randomUUID(),
       name: 'Hero',

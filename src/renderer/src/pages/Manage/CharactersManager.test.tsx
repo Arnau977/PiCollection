@@ -46,17 +46,19 @@ beforeEach(() => {
     {
       id: 'c1',
       name: 'Alice',
-      series: [{ id: 's1', name: 'Wonderland' }],
-      aliases: ['Ali']
+      series: [{ id: 's1', name: 'Wonderland', createdAt: 1700000000000 }],
+      aliases: ['Ali'],
+      createdAt: 1700000000000
     },
     {
       id: 'c2',
       name: 'Peter Pan',
       series: [],
-      aliases: []
+      aliases: [],
+      createdAt: 1700000001000
     }
   ]
-  seriesData = [{ id: 's1', name: 'Wonderland' }]
+  seriesData = [{ id: 's1', name: 'Wonderland', createdAt: 1700000000000 }]
   refetchCharacters.mockReset()
   refetchSeries.mockReset()
   vi.spyOn(window, 'confirm').mockReturnValue(true)

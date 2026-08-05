@@ -8,6 +8,7 @@ function toModel(row: ArtistTable, links: ArtistSocialLinkTable[]): ArtistModel 
   return {
     id: row.id,
     name: row.name,
+    createdAt: row.created_at,
     socials: links.map((link) => ({
       id: link.id,
       name: link.name,

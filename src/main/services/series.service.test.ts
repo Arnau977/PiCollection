@@ -52,4 +52,10 @@ describe('seriesService', () => {
     const all = await seriesService.getAllSeries()
     expect(all).toEqual([])
   })
+
+  it('sets createdAt on a newly created series', async () => {
+    const before = Date.now()
+    const series = await seriesService.createSeries({ name: 'fresh' })
+    expect(series.createdAt).toBeGreaterThanOrEqual(before)
+  })
 })

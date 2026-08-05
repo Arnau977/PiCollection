@@ -8,6 +8,7 @@ export interface SocialLink {
 export interface ArtistModel {
   id: string
   name: string
+  createdAt: number
   socials?: SocialLink[]
 }
 

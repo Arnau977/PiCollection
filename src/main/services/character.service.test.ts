@@ -80,4 +80,10 @@ describe('characterService', () => {
     const all = await characterService.getAllCharacters()
     expect(all).toEqual([])
   })
+
+  it('sets createdAt on a newly created character', async () => {
+    const before = Date.now()
+    const character = await characterService.createCharacter({ name: 'Hero' })
+    expect(character.createdAt).toBeGreaterThanOrEqual(before)
+  })
 })

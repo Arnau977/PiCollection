@@ -67,4 +67,10 @@ describe('artistService', () => {
     const all = await artistService.getAllArtists()
     expect(all).toEqual([])
   })
+
+  it('sets createdAt on a newly created artist', async () => {
+    const before = Date.now()
+    const artist = await artistService.createArtist({ name: 'Jane' })
+    expect(artist.createdAt).toBeGreaterThanOrEqual(before)
+  })
 })
