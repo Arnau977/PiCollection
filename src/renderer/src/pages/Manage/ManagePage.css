@@ -137,6 +137,12 @@
   width: 100%;
 }
 
+.manage-sort-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
 .manage-list-item.manage-list-item-editing {
   border: 1px solid var(--accent);
 }

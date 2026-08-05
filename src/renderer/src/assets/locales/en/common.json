@@ -239,7 +239,12 @@
     "editingItem": "Editing \"{{name}}\"",
     "searchPlaceholder": "Search by name...",
     "searchLabel": "Search",
-    "noResults": "No matches for your search."
+    "noResults": "No matches for your search.",
+    "sortBy": "Sort by",
+    "sortName": "Name",
+    "sortDate": "Date added",
+    "ascending": "Ascending",
+    "descending": "Descending"
   },
   "mediaThumb": {
     "missingFile": "File not found"

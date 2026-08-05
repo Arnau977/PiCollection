@@ -240,7 +240,12 @@
     "editingItem": "Editando \"{{name}}\"",
     "searchPlaceholder": "Buscar por nombre...",
     "searchLabel": "Buscar",
-    "noResults": "No hay coincidencias para tu búsqueda."
+    "noResults": "No hay coincidencias para tu búsqueda.",
+    "sortBy": "Ordenar por",
+    "sortName": "Nombre",
+    "sortDate": "Fecha de añadido",
+    "ascending": "Ascendente",
+    "descending": "Descendente"
   },
   "mediaThumb": {
     "missingFile": "Archivo no encontrado"
