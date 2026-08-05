@@ -54,6 +54,33 @@ describe('mediaService.addMedia', () => {
     expect(typeof created.createdAt).toBe('number')
   })
 
+  it('hydrates nested tag/character/series/artist models with their own createdAt', async () => {
+    const artist = await artistService.createArtist({ name: 'Some Artist' })
+    const tag = await tagService.createTag({ name: 'landscape' })
+    const character = await characterService.createCharacter({ name: 'Hero' })
+    const series = await seriesService.createSeries({ name: 'Some Series' })
+
+    const created = await mediaService.addMedia(
+      baseInput({
+        artistId: artist.id,
+        tagIds: [tag.id],
+        characterIds: [character.id],
+        seriesIds: [series.id]
+      })
+    )
+
+    expect(created.artist?.createdAt).toBe(artist.createdAt)
+    expect(created.tags?.[0]?.createdAt).toBe(tag.createdAt)
+    expect(created.characters?.[0]?.createdAt).toBe(character.createdAt)
+    expect(created.series?.[0]?.createdAt).toBe(series.createdAt)
+
+    const fetched = await mediaService.getMediaById(created.id)
+    expect(fetched?.artist?.createdAt).toBe(artist.createdAt)
+    expect(fetched?.tags?.[0]?.createdAt).toBe(tag.createdAt)
+    expect(fetched?.characters?.[0]?.createdAt).toBe(character.createdAt)
+    expect(fetched?.series?.[0]?.createdAt).toBe(series.createdAt)
+  })
+
   it('creates media linked to one or more series', async () => {
     const seriesA = await seriesService.createSeries({ name: 'Series A' })
     const seriesB = await seriesService.createSeries({ name: 'Series B' })
