@@ -11,6 +11,7 @@ import { PATH } from '../../app.routes.const'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
 import { useSauceNaoApiKey } from '../../hooks/useSauceNaoApiKey'
 import { useSauceNaoSuggestions, type SuggestionCategory } from '../../hooks/useSauceNaoSuggestions'
+import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import { withImpliedSeries } from '../../utils/withImpliedSeries'
 import './MediaForm.css'
 
@@ -503,7 +504,7 @@ export function MediaForm({
           name="characters"
           label={t('filters.characters')}
           options={characters.data}
-          getOptionLabel={(character) => character.name}
+          getOptionLabel={formatCharacterOptionLabel}
           getOptionValue={(character) => character.id}
           selectedValues={input.characterIds ?? []}
           onChange={handleCharactersChange}
