@@ -4,6 +4,8 @@ const resolveThumbnail = vi.fn()
 const readSauceNaoApiKey = vi.fn()
 const fetchDanbooruTags = vi.fn()
 const readFile = vi.fn()
+const logInfo = vi.fn()
+const logError = vi.fn()
 
 vi.mock('../thumbnails/thumbnails', () => ({
   resolveThumbnail: (...args: unknown[]) => resolveThumbnail(...args)
@@ -16,6 +18,10 @@ vi.mock('./danbooruTags', () => ({
 }))
 vi.mock('fs', () => ({
   promises: { readFile: (...args: unknown[]) => readFile(...args) }
+}))
+vi.mock('../logging/logger', () => ({
+  logInfo: (...args: unknown[]) => logInfo(...args),
+  logError: (...args: unknown[]) => logError(...args)
 }))
 
 const { lookupSauceNao, clearSauceNaoCache } = await import('./sauceNao.service')
@@ -36,6 +42,8 @@ beforeEach(() => {
   readFile.mockReset().mockResolvedValue(Buffer.from('fake-png-bytes'))
   readSauceNaoApiKey.mockReset().mockReturnValue(undefined)
   fetchDanbooruTags.mockReset().mockResolvedValue([])
+  logInfo.mockReset()
+  logError.mockReset()
   // The result cache is module-scoped state and would otherwise leak
   // between test cases that all resolve to the same mocked thumbnail path.
   clearSauceNaoCache()
@@ -131,14 +139,32 @@ describe('lookupSauceNao', () => {
     await expect(lookupSauceNao('/pic.png')).rejects.toThrow('Image too small.')
   })
 
-  it('surfaces a generic message when the response body is not valid JSON', async () => {
+  it('surfaces a generic message when the response body is not valid JSON, and logs the cause', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       status: 200,
-      json: () => Promise.reject(new Error('bad json'))
+      text: () => Promise.resolve('<html>not json</html>')
     } as unknown as Response)
 
     await expect(lookupSauceNao('/pic.png')).rejects.toThrow('Unexpected response')
+
+    expect(logError).toHaveBeenCalledWith(
+      'sauceNao',
+      'Could not parse SauceNAO response as JSON',
+      expect.objectContaining({ status: 200, bodySnippet: '<html>not json</html>' })
+    )
+  })
+
+  it('surfaces a generic message when the response body is valid JSON but fails schema validation, and logs the cause', async () => {
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({ results: 'not-an-array' }))
+
+    await expect(lookupSauceNao('/pic.png')).rejects.toThrow('Unexpected response')
+
+    expect(logError).toHaveBeenCalledWith(
+      'sauceNao',
+      'SauceNAO response failed schema validation',
+      expect.objectContaining({ status: 200, bodySnippet: expect.stringContaining('not-an-array') })
+    )
   })
 
   it('resolves with a null match (not an error) when nothing is above the threshold', async () => {
