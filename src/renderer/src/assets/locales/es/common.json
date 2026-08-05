@@ -198,7 +198,8 @@
     "selectedCount_other": "{{count}} seleccionados",
     "importSelected": "Importar seleccionados ({{count}})",
     "breadcrumbLabel": "Ruta de carpeta",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "cataloged": "Ya añadido"
   },
   "search": {
     "label": "Buscar",

@@ -13,34 +13,108 @@
 
 .folder-browser-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(clamp(110px, 12vw, 160px), 1fr));
   gap: var(--space-3);
 }
 
+/* Keeps the button as the actual grid item (so track sizing is unaffected)
+   while still giving hover detection a target that isn't disabled for
+   cataloged files. */
+.folder-browser-tile-wrap {
+  display: contents;
+}
+
 .folder-browser-tile {
-  align-items: center;
-  background: none;
-  border: 1px solid var(--border-color, #444);
-  border-radius: var(--radius-md, 6px);
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: inherit;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-2);
+  font-family: inherit;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  transition:
+    border-color var(--transition-base),
+    background-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.folder-browser-tile:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  border-color: var(--border-color-strong);
+}
+
+.folder-browser-tile:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 
 .folder-browser-tile.is-selected {
-  border-color: var(--accent-color, #6c8cff);
+  border-color: var(--accent);
+  box-shadow: var(--accent-glow-sm);
 }
 
 .folder-browser-tile:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
 }
 
-.folder-browser-tile .media-thumb {
-  height: 90px;
+.folder-browser-tile.is-cataloged {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+  color: var(--color-text-muted);
+}
+
+.folder-browser-tile-thumb {
+  align-items: center;
+  aspect-ratio: 1 / 1;
+  background: var(--color-background-mute);
+  color: var(--color-text-muted);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
   width: 100%;
+}
+
+.folder-browser-tile.is-cataloged .folder-browser-tile-thumb {
+  filter: grayscale(0.7) brightness(0.6);
+}
+
+/* Positioned absolutely (rather than height: 100%) because a percentage
+   height on a flex item doesn't reliably resolve against an aspect-ratio-
+   derived height - tall source images were rendering at full intrinsic
+   height instead of being cropped to the square cell. */
+.folder-browser-tile-thumb .media-thumb {
+  inset: 0;
+  position: absolute;
+}
+
+.folder-browser-tile-badge {
+  align-items: center;
+  background: var(--color-success);
+  bottom: 0;
+  color: #06240f;
+  display: flex;
+  font-size: 0.68rem;
+  font-weight: 700;
+  gap: 0.3rem;
+  justify-content: center;
+  left: 0;
+  letter-spacing: 0.01em;
+  padding: 0.3rem 0;
+  position: absolute;
+  right: 0;
+}
+
+.folder-browser-tile-name {
+  overflow: hidden;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .folder-browser-error {
@@ -56,4 +130,36 @@
   gap: var(--space-3);
   justify-content: space-between;
   margin-top: var(--space-4);
+}
+
+.folder-browser-actions-count {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.folder-browser-status {
+  color: var(--color-text-muted);
+  padding: var(--space-5) 0;
+  text-align: center;
+}
+
+.folder-browser-preview {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--border-color-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+  position: fixed;
+  z-index: 200;
+}
+
+.folder-browser-preview img {
+  display: block;
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
 }

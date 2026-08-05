@@ -197,7 +197,8 @@
     "selectedCount": "{{count}} selected",
     "importSelected": "Import selected ({{count}})",
     "breadcrumbLabel": "Folder path",
-    "retry": "Retry"
+    "retry": "Retry",
+    "cataloged": "Already added"
   },
   "search": {
     "label": "Search",
