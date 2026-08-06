@@ -244,6 +244,7 @@
     "edit": "Editar",
     "delete": "Eliminar",
     "confirmDelete": "¿Eliminar \"{{name}}\"? No se puede deshacer.",
+    "confirmDeleteWithMedia": "'{{name}}' está vinculado a {{count}} elemento(s) multimedia. Eliminarlo quita ese vínculo pero conserva los archivos. ¿Continuar?",
     "empty": "Todavía no hay nada aquí.",
     "socials": "Redes sociales",
     "addSocial": "Añadir enlace",

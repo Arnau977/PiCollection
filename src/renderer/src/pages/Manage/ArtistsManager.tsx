@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useArtists } from '../../hooks/useEntityLists'
+import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
 import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
@@ -12,6 +13,7 @@ import type { ArtistModel } from '@shared/models'
 export function ArtistsManager(): JSX.Element {
   const { t } = useTranslation()
   const { data: artists, loading, refetch } = useArtists()
+  const confirm = useConfirm()
   const [name, setName] = useState('')
   const [editing, setEditing] = useState<ArtistModel | null>(null)
   const [socialName, setSocialName] = useState('')
@@ -60,8 +62,14 @@ export function ArtistsManager(): JSX.Element {
     }
   }
 
-  async function handleDelete(id: string, name: string): Promise<void> {
-    if (!window.confirm(t('manage.confirmDelete', { name }))) return
+  async function handleDelete(id: string, name: string, mediaCount: number): Promise<void> {
+    if (mediaCount > 0) {
+      const ok = await confirm({
+        message: t('manage.confirmDeleteWithMedia', { name, count: mediaCount }),
+        danger: true
+      })
+      if (!ok) return
+    }
     const result = await window.api.artist.delete(id)
     if (result.success) {
       if (editing?.id === id) resetForm()
@@ -224,7 +232,7 @@ export function ArtistsManager(): JSX.Element {
                     type="button"
                     className="icon-btn"
                     aria-label={`${t('manage.delete')} ${artist.name}`}
-                    onClick={() => handleDelete(artist.id, artist.name)}
+                    onClick={() => handleDelete(artist.id, artist.name, artist.mediaCount ?? 0)}
                   >
                     <Trash2 size={16} />
                   </button>

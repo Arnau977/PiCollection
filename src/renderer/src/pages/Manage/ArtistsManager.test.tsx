@@ -12,6 +12,12 @@ vi.mock('../../hooks/useEntityLists', () => ({
   useArtists: () => ({ data: artistsData, loading: false, error: null, refetch: refetchArtists })
 }))
 
+const confirmMock = vi.fn().mockResolvedValue(true)
+
+vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => confirmMock
+}))
+
 function setApi(overrides: Record<string, unknown> = {}): void {
   Object.defineProperty(window, 'api', {
     value: {
@@ -38,12 +44,14 @@ beforeEach(() => {
       id: 'a1',
       name: 'Jane Doe',
       createdAt: 1700000000000,
-      socials: [{ id: 's1', name: 'Twitter', url: 'https://twitter.com/jane' }]
+      socials: [{ id: 's1', name: 'Twitter', url: 'https://twitter.com/jane' }],
+      mediaCount: 3
     },
     { id: 'a2', name: 'John Smith', createdAt: 1700000001000, socials: [] }
   ]
   refetchArtists.mockReset()
-  vi.spyOn(window, 'confirm').mockReturnValue(true)
+  confirmMock.mockReset()
+  confirmMock.mockResolvedValue(true)
   setApi()
 })
 
@@ -111,7 +119,7 @@ describe('ArtistsManager', () => {
     expect(screen.queryByText('Social links')).not.toBeInTheDocument()
   })
 
-  it('deletes an artist after confirming', async () => {
+  it('deletes an artist after confirming, when it has media', async () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
@@ -119,7 +127,24 @@ describe('ArtistsManager', () => {
 
     await user.click(screen.getByRole('button', { name: 'Delete Jane Doe' }))
 
+    expect(confirmMock).toHaveBeenCalledWith({
+      message: "'Jane Doe' is linked to 3 media item(s). Deleting it removes that link but keeps the media. Continue?",
+      danger: true
+    })
     expect(del).toHaveBeenCalledWith('a1')
+    expect(refetchArtists).toHaveBeenCalled()
+  })
+
+  it('deletes an artist immediately without confirming, when it has no media', async () => {
+    const user = userEvent.setup()
+    const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    setApi({ delete: del })
+    render(<ArtistsManager />)
+
+    await user.click(screen.getByRole('button', { name: 'Delete John Smith' }))
+
+    expect(confirmMock).not.toHaveBeenCalled()
+    expect(del).toHaveBeenCalledWith('a2')
     expect(refetchArtists).toHaveBeenCalled()
   })
 
