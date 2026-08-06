@@ -1,0 +1,9 @@
+{
+  "skillOverrides": {
+    "superpowers:dispatching-parallel-agents": "off",
+    "superpowers:receiving-code-review": "off",
+    "superpowers:requesting-code-review": "off",
+    "superpowers:verification-before-completion": "off",
+    "superpowers:writing-skills": "off"
+  }
+}
