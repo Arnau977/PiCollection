@@ -109,6 +109,36 @@ describe('SearchBar', () => {
     expect(screen.getByRole('option', { name: /lantern/ })).toBeInTheDocument()
   })
 
+  it('suggests the AI keyword while typing "ai"', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    renderSearchBar()
+
+    await user.type(searchInput(), 'ai')
+
+    expect(await screen.findByRole('option', { name: /AI generated/ })).toBeInTheDocument()
+  })
+
+  it('inserts the bare "ai" keyword when the AI suggestion is clicked', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    renderSearchBar()
+
+    await user.type(searchInput(), 'ai')
+    await user.click(await screen.findByRole('option', { name: /AI generated/ }))
+
+    expect(searchInput()).toHaveValue('ai ')
+  })
+
+  it('suggests excluding AI and keeps the leading minus when negated', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    renderSearchBar()
+
+    await user.type(searchInput(), '-ai')
+    expect(await screen.findByRole('option', { name: /Not AI generated/ })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('option', { name: /Not AI generated/ }))
+    expect(searchInput()).toHaveValue('-ai ')
+  })
+
   it('completes the word being typed when a suggestion is clicked', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     renderSearchBar()

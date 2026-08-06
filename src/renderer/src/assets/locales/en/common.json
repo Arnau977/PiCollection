@@ -215,7 +215,9 @@
     "tagPrefix": "Tag",
     "characterPrefix": "Character",
     "artistPrefix": "Artist",
-    "seriesPrefix": "Series"
+    "seriesPrefix": "Series",
+    "aiSuggestion": "AI generated",
+    "notAiSuggestion": "Not AI generated"
   },
   "manage": {
     "title": "Metadata",

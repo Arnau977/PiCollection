@@ -13,12 +13,14 @@ import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import { InfoTooltip } from '../InfoTooltip/InfoTooltip'
 import './SearchBar.css'
 
-type SuggestionKind = 'tag' | 'character' | 'artist' | 'series'
+type SuggestionKind = 'tag' | 'character' | 'artist' | 'series' | 'ai'
 
 interface Suggestion {
   kind: SuggestionKind
   id: string
   label: string
+  /** Text inserted into the query; defaults to `label` when omitted. */
+  insertValue?: string
 }
 
 interface SearchBarProps {
@@ -87,13 +89,25 @@ export function SearchBar({
   }, [debouncedQuery])
 
   // A leading `-` is syntax, not part of the name being searched for.
-  const token = trailingToken(query).replace(/^-+/, '').replace(/"/g, '').toLowerCase()
+  const rawToken = trailingToken(query)
+  const isNegated = rawToken.startsWith('-')
+  const token = rawToken.replace(/^-+/, '').replace(/"/g, '').toLowerCase()
 
   const suggestions = useMemo<Suggestion[]>(() => {
     if (!token) return []
     const matches = (name: string): boolean => name.toLowerCase().includes(token)
 
     return [
+      ...('ai'.startsWith(token)
+        ? [
+            {
+              kind: 'ai' as const,
+              id: 'ai',
+              label: isNegated ? t('search.notAiSuggestion') : t('search.aiSuggestion'),
+              insertValue: 'ai'
+            }
+          ]
+        : []),
       ...tags
         .filter((tag) => matches(tag.name))
         .map((tag) => ({
@@ -123,7 +137,7 @@ export function SearchBar({
           label: artist.name
         }))
     ].slice(0, 8)
-  }, [token, tags, characters, series, artists])
+  }, [token, isNegated, tags, characters, series, artists, t])
 
   const visibleSuggestions = dismissed ? [] : suggestions
 
@@ -164,7 +178,8 @@ export function SearchBar({
     if (suggestion.kind === 'character') {
       applyCharacterSuggestion(suggestion.id)
     } else {
-      setQuery((current) => completeTrailingToken(current, suggestion.label))
+      const text = suggestion.insertValue ?? suggestion.label
+      setQuery((current) => completeTrailingToken(current, text))
     }
     setDismissed(true)
     inputRef.current?.focus()
@@ -193,7 +208,8 @@ export function SearchBar({
     tag: t('search.tagPrefix'),
     character: t('search.characterPrefix'),
     artist: t('search.artistPrefix'),
-    series: t('search.seriesPrefix')
+    series: t('search.seriesPrefix'),
+    ai: t('filters.ai')
   }
 
   return (
