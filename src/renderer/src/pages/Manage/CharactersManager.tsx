@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Trash2 } from 'lucide-react'
 import { useCharacters, useSeries } from '../../hooks/useEntityLists'
+import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { MultiSelectAutocomplete } from '../../components/Autocomplete/MultiSelectAutocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
@@ -38,6 +39,7 @@ export function CharactersManager(): JSX.Element {
   const { t } = useTranslation()
   const { data: characters, loading, refetch } = useCharacters()
   const series = useSeries()
+  const confirm = useConfirm()
   const [form, setForm] = useState<CharacterFormValues>(EMPTY_FORM)
   const [editing, setEditing] = useState<CharacterModel | null>(null)
   const [search, setSearch] = useState('')
@@ -93,8 +95,14 @@ export function CharactersManager(): JSX.Element {
     }
   }
 
-  async function handleDelete(id: string, name: string): Promise<void> {
-    if (!window.confirm(t('manage.confirmDelete', { name }))) return
+  async function handleDelete(id: string, name: string, mediaCount: number): Promise<void> {
+    if (mediaCount > 0) {
+      const ok = await confirm({
+        message: t('manage.confirmDeleteWithMedia', { name, count: mediaCount }),
+        danger: true
+      })
+      if (!ok) return
+    }
     const result = await window.api.character.delete(id)
     if (result.success) {
       if (editing?.id === id) resetForm()
@@ -226,7 +234,7 @@ export function CharactersManager(): JSX.Element {
                     type="button"
                     className="icon-btn"
                     aria-label={`${t('manage.delete')} ${character.name}`}
-                    onClick={() => handleDelete(character.id, character.name)}
+                    onClick={() => handleDelete(character.id, character.name, character.mediaCount ?? 0)}
                   >
                     <Trash2 size={16} />
                   </button>

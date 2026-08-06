@@ -7,6 +7,7 @@ import { CharactersManager } from './CharactersManager'
 
 const refetchCharacters = vi.fn()
 const refetchSeries = vi.fn()
+const confirmMock = vi.fn().mockResolvedValue(true)
 let charactersData: CharacterModel[] = []
 let seriesData: SeriesModel[] = []
 
@@ -18,6 +19,10 @@ vi.mock('../../hooks/useEntityLists', () => ({
     refetch: refetchCharacters
   }),
   useSeries: () => ({ data: seriesData, loading: false, error: null, refetch: refetchSeries })
+}))
+
+vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => confirmMock
 }))
 
 function setApi(overrides: Record<string, unknown> = {}): void {
@@ -48,7 +53,8 @@ beforeEach(() => {
       name: 'Alice',
       series: [{ id: 's1', name: 'Wonderland', createdAt: 1700000000000 }],
       aliases: ['Ali'],
-      createdAt: 1700000000000
+      createdAt: 1700000000000,
+      mediaCount: 3
     },
     {
       id: 'c2',
@@ -61,7 +67,8 @@ beforeEach(() => {
   seriesData = [{ id: 's1', name: 'Wonderland', createdAt: 1700000000000 }]
   refetchCharacters.mockReset()
   refetchSeries.mockReset()
-  vi.spyOn(window, 'confirm').mockReturnValue(true)
+  confirmMock.mockReset()
+  confirmMock.mockResolvedValue(true)
   setApi()
 })
 
@@ -160,7 +167,7 @@ describe('CharactersManager', () => {
     expect(screen.getByText('Add new')).toBeInTheDocument()
   })
 
-  it('deletes a character after confirming', async () => {
+  it('deletes a character after confirming, when it has media', async () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
@@ -168,7 +175,21 @@ describe('CharactersManager', () => {
 
     await user.click(screen.getByRole('button', { name: 'Delete Alice' }))
 
+    expect(confirmMock).toHaveBeenCalled()
     expect(del).toHaveBeenCalledWith('c1')
+    expect(refetchCharacters).toHaveBeenCalled()
+  })
+
+  it('deletes a character immediately without confirming, when it has no media', async () => {
+    const user = userEvent.setup()
+    const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    setApi({ delete: del })
+    render(<CharactersManager />)
+
+    await user.click(screen.getByRole('button', { name: 'Delete Peter Pan' }))
+
+    expect(confirmMock).not.toHaveBeenCalled()
+    expect(del).toHaveBeenCalledWith('c2')
     expect(refetchCharacters).toHaveBeenCalled()
   })
 
