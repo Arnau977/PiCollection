@@ -11,6 +11,18 @@ interface GroupedEntityFilterProps<T> {
   options: T[]
   getOptionLabel: (option: T) => string
   getOptionValue: (option: T) => string
+  /**
+   * Renders a checkbox for "no entity linked at all", mutually exclusive with
+   * `groups`. The caller (not this component) is responsible for clearing
+   * `groups` when it's checked — both changes must land in a single state
+   * update on the caller's side, so this component only reports the
+   * checkbox's own state via `onChange` and never touches `groups` itself.
+   */
+  noneOption?: {
+    checked: boolean
+    onChange: (checked: boolean) => void
+    label: string
+  }
 }
 
 /**
@@ -24,7 +36,8 @@ export function GroupedEntityFilter<T>({
   onChange,
   options,
   getOptionLabel,
-  getOptionValue
+  getOptionValue,
+  noneOption
 }: GroupedEntityFilterProps<T>): JSX.Element {
   const { t } = useTranslation()
   const effectiveGroups = groups.length > 0 ? groups : [[]]
@@ -50,6 +63,17 @@ export function GroupedEntityFilter<T>({
         <InfoTooltip text={t('filters.groupTooltip')} />
       </div>
 
+      {noneOption && (
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={noneOption.checked}
+            onChange={(e) => noneOption.onChange(e.target.checked)}
+          />
+          {noneOption.label}
+        </label>
+      )}
+
       {effectiveGroups.map((group, index) => {
         const groupLabel = effectiveGroups.length > 1 ? `${label} ${index + 1}` : label
         return (
@@ -67,6 +91,7 @@ export function GroupedEntityFilter<T>({
                 getOptionValue={getOptionValue}
                 selectedValues={group}
                 onChange={(values) => updateGroup(index, values)}
+                disabled={noneOption?.checked}
               />
               {effectiveGroups.length > 1 && (
                 <button
@@ -83,7 +108,12 @@ export function GroupedEntityFilter<T>({
         )
       })}
 
-      <button type="button" className="grouped-entity-filter-add" onClick={addGroup}>
+      <button
+        type="button"
+        className="grouped-entity-filter-add"
+        onClick={addGroup}
+        disabled={noneOption?.checked}
+      >
         <Plus size={14} />
         {t('filters.addGroup')}
       </button>

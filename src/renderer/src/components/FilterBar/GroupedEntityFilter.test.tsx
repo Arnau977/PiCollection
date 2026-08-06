@@ -16,7 +16,10 @@ const options: Option[] = [
   { id: 'shirou', name: 'Shirou' }
 ]
 
-function renderFilter(groups: string[][] = []) {
+function renderFilter(
+  groups: string[][] = [],
+  noneOption?: { checked: boolean; onChange: (checked: boolean) => void; label: string }
+) {
   const onChange = vi.fn()
   render(
     <GroupedEntityFilter
@@ -26,6 +29,7 @@ function renderFilter(groups: string[][] = []) {
       options={options}
       getOptionLabel={(o: Option) => o.name}
       getOptionValue={(o: Option) => o.id}
+      noneOption={noneOption}
     />
   )
   return { onChange }
@@ -36,6 +40,33 @@ describe('GroupedEntityFilter', () => {
     renderFilter()
     expect(screen.getAllByRole('combobox')).toHaveLength(1)
     expect(screen.queryByRole('button', { name: /add or group/i })).toBeInTheDocument()
+  })
+
+  it('does not show a "none" checkbox when noneOption is not provided', () => {
+    renderFilter()
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+  })
+
+  it('checking the "none" checkbox calls noneOption.onChange and does not touch the groups directly', async () => {
+    const user = userEvent.setup()
+    const onNoneChange = vi.fn()
+    const { onChange } = renderFilter([['ishtar']], {
+      checked: false,
+      onChange: onNoneChange,
+      label: 'No character assigned'
+    })
+
+    await user.click(screen.getByRole('checkbox', { name: 'No character assigned' }))
+
+    expect(onNoneChange).toHaveBeenCalledWith(true)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('disables the picker and "Add OR group" button while the "none" checkbox is checked', () => {
+    renderFilter([], { checked: true, onChange: vi.fn(), label: 'No character assigned' })
+
+    expect(screen.getByRole('combobox')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /add or group/i })).toBeDisabled()
   })
 
   it('calls onChange with an added empty group when "Add OR group" is clicked', async () => {
