@@ -54,7 +54,13 @@ package's semver **at build time** - no separate config per channel:
    `GITHUB_TOKEN` (`permissions: contents: write`), no extra secret to
    configure. The release is left as a draft so the notes can be reviewed/
    edited before publishing.
-4. One Linux artifact only: AppImage (runs on any distro with no install
+4. Before publishing, edit the draft release on GitHub and replace the
+   `## Highlights` placeholder with 2-3 bullet points of user-facing
+   changes (new features, notable fixes) - this is what
+   `extractHighlights()` (`src/shared/utils/extractHighlights.ts`) pulls
+   out to show in the app's update dialog. Leaving the placeholder in place
+   is safe: the app just won't show a highlights block for that release.
+5. One Linux artifact only: AppImage (runs on any distro with no install
    step, and is the one format electron-updater can actually auto-update -
    see `electron-builder.yml`'s `linux.target`).
 
