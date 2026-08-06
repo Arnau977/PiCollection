@@ -146,8 +146,8 @@ export function SearchBar({
   }, [suggestions.length])
 
   /**
-   * Unlike tag/series/artist (unique names, safe to search as free text),
-   * a character name can collide across series - `character.name` has no
+   * Unlike tag/artist (unique names, safe to search as free text), a
+   * character name can collide across series - `character.name` has no
    * UNIQUE constraint in the DB. Free text has no way to reference a
    * specific character's ID, so a clicked character suggestion is applied
    * as a structured `characterGroups` filter instead of being inserted
@@ -175,9 +175,39 @@ export function SearchBar({
     })
   }
 
+  /**
+   * A free-text series name only matches media linked to that exact series,
+   * not its descendants - only the structured `seriesGroups` filter expands
+   * through the parent/child closure on the backend. So, like characters, a
+   * clicked series suggestion is applied as a structured filter instead of
+   * being inserted into the query, added (AND) to the first existing group
+   * or starting a new one - mirroring the character suggestion's grouping.
+   */
+  function applySeriesSuggestion(seriesId: string): void {
+    const nextQuery = removeTrailingToken(query)
+    setQuery(nextQuery)
+
+    const groups = filters.seriesGroups ?? []
+    const nextGroups: string[][] =
+      groups.length === 0
+        ? [[seriesId]]
+        : groups.map((group, index) =>
+            index === 0 && !group.includes(seriesId) ? [...group, seriesId] : group
+          )
+
+    onFiltersChange({
+      ...filters,
+      query: nextQuery.trim() || undefined,
+      seriesGroups: nextGroups,
+      noSeries: undefined
+    })
+  }
+
   function applySuggestion(suggestion: Suggestion): void {
     if (suggestion.kind === 'character') {
       applyCharacterSuggestion(suggestion.id)
+    } else if (suggestion.kind === 'series') {
+      applySeriesSuggestion(suggestion.id)
     } else {
       const text = suggestion.insertValue ?? suggestion.label
       setQuery((current) => completeTrailingToken(current, text))

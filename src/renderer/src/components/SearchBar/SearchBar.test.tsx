@@ -20,7 +20,10 @@ const characters: CharacterModel[] = [
   { id: 'c1', name: 'Alice', series: [{ id: 's2', name: 'Wonderland' }] },
   { id: 'c2', name: 'Cheshire Cat', series: [] }
 ]
-const series: SeriesModel[] = [{ id: 's1', name: 'Wonder Land' }]
+const series: SeriesModel[] = [
+  { id: 's1', name: 'Wonder Land' },
+  { id: 's3', name: 'Wonderland Party' }
+]
 
 function renderSearchBar(filters: MediaFilters = {}) {
   const onFiltersChange = vi.fn()
@@ -173,10 +176,10 @@ describe('SearchBar', () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     renderSearchBar()
 
-    await user.type(searchInput(), 'Wonder')
-    await user.click(await screen.findByRole('option', { name: /Wonder Land/ }))
+    await user.type(searchInput(), 'Jane')
+    await user.click(await screen.findByRole('option', { name: /Jane Doe/ }))
 
-    expect(searchInput()).toHaveValue('"Wonder Land" ')
+    expect(searchInput()).toHaveValue('"Jane Doe" ')
   })
 
   it('completes a term typed right after an opening parenthesis', async () => {
@@ -297,6 +300,47 @@ describe('SearchBar', () => {
       query: undefined,
       characterGroups: [['c1']],
       noCharacter: undefined
+    })
+  })
+
+  it('adds the series to seriesGroups instead of the query text when a suggestion is clicked', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderSearchBar()
+
+    await user.type(searchInput(), 'Wonder')
+    await user.click(await screen.findByRole('option', { name: /Series.*Wonder Land/ }))
+
+    expect(onFiltersChange).toHaveBeenCalledWith({
+      query: undefined,
+      seriesGroups: [['s1']]
+    })
+    expect(searchInput()).toHaveValue('')
+  })
+
+  it('appends a second, different series to the same group', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderSearchBar({ seriesGroups: [['s1']] })
+
+    await user.type(searchInput(), 'Party')
+    await user.click(await screen.findByRole('option', { name: /Series.*Wonderland Party/ }))
+
+    expect(onFiltersChange).toHaveBeenCalledWith({
+      query: undefined,
+      seriesGroups: [['s1', 's3']]
+    })
+  })
+
+  it('clears noSeries when a series suggestion is clicked', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderSearchBar({ noSeries: true })
+
+    await user.type(searchInput(), 'Wonder')
+    await user.click(await screen.findByRole('option', { name: /Series.*Wonder Land/ }))
+
+    expect(onFiltersChange).toHaveBeenCalledWith({
+      query: undefined,
+      seriesGroups: [['s1']],
+      noSeries: undefined
     })
   })
 })
