@@ -16,6 +16,12 @@ interface MultiSelectAutocompleteProps<T> {
   disabled?: boolean
   /** Passed through to `Autocomplete`; see its docs for the create-suppression matching behavior. */
   getOptionMatchName?: (option: T) => string
+  /** Passed straight through to the inner `Autocomplete`; see its docs. */
+  noneToggle?: {
+    checked: boolean
+    onChange: (checked: boolean) => void
+    label: string
+  }
 }
 
 export function MultiSelectAutocomplete<T>({
@@ -29,7 +35,8 @@ export function MultiSelectAutocomplete<T>({
   onCreate,
   hideLabel = false,
   disabled = false,
-  getOptionMatchName
+  getOptionMatchName,
+  noneToggle
 }: MultiSelectAutocompleteProps<T>): JSX.Element {
   const selectedOptions = options.filter((option) =>
     selectedValues.includes(getOptionValue(option))
@@ -65,6 +72,7 @@ export function MultiSelectAutocomplete<T>({
         hideLabel={hideLabel}
         getOptionMatchName={getOptionMatchName}
         disabled={disabled}
+        noneToggle={noneToggle}
       />
       {selectedOptions.length > 0 && (
         <ul className="multi-select-chips">

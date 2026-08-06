@@ -79,6 +79,27 @@ describe('MultiSelectAutocomplete', () => {
     expect(screen.getByRole('combobox')).toBeDisabled()
   })
 
+  it('passes noneToggle through to the inner Autocomplete', async () => {
+    const user = userEvent.setup()
+    const onNoneChange = vi.fn()
+    render(
+      <MultiSelectAutocomplete
+        name="tags"
+        label="Tags"
+        options={OPTIONS}
+        getOptionLabel={(o) => o.name}
+        getOptionValue={(o) => o.id}
+        selectedValues={[]}
+        onChange={vi.fn()}
+        noneToggle={{ checked: false, onChange: onNoneChange, label: 'No tag assigned' }}
+      />
+    )
+
+    await user.click(screen.getByRole('button', { name: 'No tag assigned' }))
+
+    expect(onNoneChange).toHaveBeenCalledWith(true)
+  })
+
   it('excludes already-selected options from the dropdown', async () => {
     const user = userEvent.setup()
     render(<Wrapper initial={['1']} />)

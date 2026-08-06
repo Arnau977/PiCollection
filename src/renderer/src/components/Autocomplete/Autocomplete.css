@@ -54,6 +54,39 @@
   }
 }
 
+.has-none-toggle .react-aria-Input {
+  padding-right: 3.6rem;
+}
+
+.autocomplete-none-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.429rem;
+  height: 1.429rem;
+  margin-left: -3.143rem;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.autocomplete-none-toggle:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.autocomplete-none-toggle[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
 .multi-select-chips {
   display: flex;
   flex-wrap: wrap;

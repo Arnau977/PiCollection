@@ -95,6 +95,36 @@ describe('Autocomplete', () => {
     expect(screen.getByRole('combobox')).toBeDisabled()
   })
 
+  it('does not show a none-toggle button when noneToggle is not provided', () => {
+    renderAutocomplete()
+    expect(screen.queryByRole('button', { name: /no .* assigned/i })).not.toBeInTheDocument()
+  })
+
+  it('shows a none-toggle button reflecting its checked state, and calls onChange with the flipped value when clicked', async () => {
+    const user = userEvent.setup()
+    const onNoneChange = vi.fn()
+    renderAutocomplete({
+      noneToggle: { checked: false, onChange: onNoneChange, label: 'No character assigned' }
+    })
+
+    const toggle = screen.getByRole('button', { name: 'No character assigned' })
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(toggle)
+
+    expect(onNoneChange).toHaveBeenCalledWith(true)
+  })
+
+  it('keeps the none-toggle button enabled even when the field itself is disabled', () => {
+    renderAutocomplete({
+      disabled: true,
+      noneToggle: { checked: true, onChange: vi.fn(), label: 'No character assigned' }
+    })
+
+    expect(screen.getByRole('combobox')).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'No character assigned' })).toBeEnabled()
+  })
+
   it('clears the input back to empty after a pick when resetQueryAfterSelect is set', async () => {
     const user = userEvent.setup()
     const { onSelect } = renderAutocomplete({ resetQueryAfterSelect: true })

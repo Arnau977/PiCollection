@@ -1,4 +1,4 @@
-import { ChevronDown, Plus } from 'lucide-react'
+import { Ban, ChevronDown, Plus } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -44,6 +44,18 @@ interface AutocompleteProps<T> {
   getOptionMatchName?: (option: T) => string
   /** Disables the input and dropdown trigger — used to make a single-selection field unusable while a "none of these" toggle elsewhere is active. */
   disabled?: boolean
+  /**
+   * Renders a small icon toggle inside the field, next to the dropdown chevron, for "none of
+   * these" filters. Deliberately a plain `<button>` rather than react-aria's `Button` — it must
+   * stay clickable even when `disabled` is true, so the user can uncheck it to re-enable the
+   * field; a RAC `Button` would inherit `isDisabled` from the surrounding `ComboBox` and become
+   * unclickable along with everything else.
+   */
+  noneToggle?: {
+    checked: boolean
+    onChange: (checked: boolean) => void
+    label: string
+  }
 }
 
 export function Autocomplete<T>({
@@ -58,7 +70,8 @@ export function Autocomplete<T>({
   onCreate,
   hideLabel = false,
   getOptionMatchName = getOptionLabel,
-  disabled = false
+  disabled = false,
+  noneToggle
 }: AutocompleteProps<T>): JSX.Element {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
@@ -125,8 +138,19 @@ export function Autocomplete<T>({
       isDisabled={disabled}
     >
       {!hideLabel && <Label>{label}</Label>}
-      <div>
+      <div className={noneToggle ? 'autocomplete-input-row has-none-toggle' : 'autocomplete-input-row'}>
         <Input />
+        {noneToggle && (
+          <button
+            type="button"
+            className="autocomplete-none-toggle"
+            aria-pressed={noneToggle.checked}
+            aria-label={noneToggle.label}
+            onClick={() => noneToggle.onChange(!noneToggle.checked)}
+          >
+            <Ban size={14} />
+          </button>
+        )}
         <Button>
           <ChevronDown size={16} />
         </Button>
