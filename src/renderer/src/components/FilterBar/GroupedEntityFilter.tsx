@@ -12,11 +12,11 @@ interface GroupedEntityFilterProps<T> {
   getOptionLabel: (option: T) => string
   getOptionValue: (option: T) => string
   /**
-   * Renders a checkbox for "no entity linked at all", mutually exclusive with
+   * Renders a toggle for "no entity linked at all", mutually exclusive with
    * `groups`. The caller (not this component) is responsible for clearing
    * `groups` when it's checked — both changes must land in a single state
    * update on the caller's side, so this component only reports the
-   * checkbox's own state via `onChange` and never touches `groups` itself.
+   * toggle's own state via `onChange` and never touches `groups` itself.
    */
   noneOption?: {
     checked: boolean

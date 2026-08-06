@@ -74,7 +74,10 @@ function applySeriesGroupedFilter<O>(
             eb(
               'media.id',
               'in',
-              db.selectFrom('media_series').select('media_id').where('series_id', 'in', closureFor(id))
+              db
+                .selectFrom('media_series')
+                .select('media_id')
+                .where('series_id', 'in', closureFor(id))
             )
           )
         )

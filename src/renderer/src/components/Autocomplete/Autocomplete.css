@@ -87,6 +87,10 @@
   color: var(--accent-text);
 }
 
+.has-none-toggle .react-aria-Button {
+  margin-left: 0;
+}
+
 .multi-select-chips {
   display: flex;
   flex-wrap: wrap;

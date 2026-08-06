@@ -138,7 +138,9 @@ export function Autocomplete<T>({
       isDisabled={disabled}
     >
       {!hideLabel && <Label>{label}</Label>}
-      <div className={noneToggle ? 'autocomplete-input-row has-none-toggle' : 'autocomplete-input-row'}>
+      <div
+        className={noneToggle ? 'autocomplete-input-row has-none-toggle' : 'autocomplete-input-row'}
+      >
         <Input />
         {noneToggle && (
           <button

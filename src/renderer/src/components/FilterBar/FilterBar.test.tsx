@@ -174,7 +174,10 @@ describe('FilterBar', () => {
 
     await user.click(screen.getByRole('button', { name: 'No character assigned' }))
 
-    expect(onFiltersChange).toHaveBeenCalledWith({ noCharacter: undefined, characterGroups: undefined })
+    expect(onFiltersChange).toHaveBeenCalledWith({
+      noCharacter: undefined,
+      characterGroups: undefined
+    })
   })
 
   it('adds a series to the series filter group and merges it into the existing filters', async () => {
