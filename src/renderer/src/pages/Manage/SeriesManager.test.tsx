@@ -161,8 +161,9 @@ describe('SeriesManager', () => {
     ]
     render(<SeriesManager />)
 
-    const parentItem = screen.getByText('Parent Series').closest('li')
-    const deleteButton = within(parentItem!).getByRole('button', { name: /Delete/ })
+    const parentItem = screen.getByText('Parent Series').closest('li') as HTMLElement
+    expect(parentItem).toHaveTextContent('5') // the displayed count is the rolled-up one
+    const deleteButton = within(parentItem).getByRole('button', { name: /Delete/ })
     await user.click(deleteButton)
 
     expect(confirmMock).not.toHaveBeenCalled()
