@@ -5,3 +5,7 @@ export function resolveElectronDbPath(): string {
   const fileName = app.isPackaged ? 'picollection.sqlite' : 'picollection.dev.sqlite'
   return path.join(app.getPath('userData'), fileName)
 }
+
+export function resolveBackupsDir(): string {
+  return path.join(app.getPath('userData'), 'backups')
+}

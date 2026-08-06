@@ -3,8 +3,13 @@ import { app, BrowserWindow, dialog, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 import { initDb } from './database/connection'
-import { resolveElectronDbPath } from './database/electronDbPath'
+import { resolveElectronDbPath, resolveBackupsDir } from './database/electronDbPath'
 import { runMigrations } from './database/migrations/migrator'
+import {
+  hasPendingMigrations,
+  pruneSnapshots,
+  snapshotDatabase
+} from './database/migrations/preMigrationBackup'
 import { backfillMediaHashes } from './services/mediaHashBackfill'
 import { registerMediaProtocolHandler, registerMediaProtocolScheme } from './media-protocol'
 import { registerIpcHandlers } from './ipc/registerIpcHandlers'
@@ -96,7 +101,16 @@ function createWindow(): BrowserWindow {
 }
 
 const setupDatabase = async (): Promise<void> => {
-  const db = initDb(resolveElectronDbPath(), { verboseLogging: !app.isPackaged })
+  const dbPath = resolveElectronDbPath()
+  const db = initDb(dbPath, { verboseLogging: !app.isPackaged })
+
+  if (await hasPendingMigrations(db)) {
+    const backupsDir = resolveBackupsDir()
+    await snapshotDatabase(dbPath, backupsDir)
+    await pruneSnapshots(backupsDir)
+    logInfo('lifecycle', 'Pre-migration snapshot created', { backupsDir })
+  }
+
   await runMigrations(db)
   console.info('Database ready')
   logInfo('lifecycle', 'Database ready')
@@ -126,6 +140,10 @@ app.whenReady().then(async () => {
     dialog.showErrorBox(
       'Database error',
       'PiCollection could not initialize its local database and cannot continue.\n\n' +
+        'If this happened right after an update, a snapshot of your database from just ' +
+        'before the update may be available in:\n' +
+        resolveBackupsDir() +
+        '\n\n' +
         (err instanceof Error ? err.message : String(err))
     )
     app.quit()
