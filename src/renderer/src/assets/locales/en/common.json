@@ -14,6 +14,10 @@
   },
   "settings": {
     "title": "Settings",
+    "tabGeneral": "General",
+    "tabFilters": "Filters",
+    "tabData": "Data",
+    "tabAdvanced": "Advanced",
     "language": "Language",
     "languageEnglish": "English",
     "languageSpanish": "Spanish",

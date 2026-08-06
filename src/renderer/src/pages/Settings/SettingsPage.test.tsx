@@ -10,6 +10,10 @@ vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
   useConfirm: () => vi.fn().mockResolvedValue(true)
 }))
 
+async function openTab(user: ReturnType<typeof userEvent.setup>, name: string): Promise<void> {
+  await user.click(screen.getByRole('tab', { name }))
+}
+
 beforeEach(() => {
   window.localStorage.clear()
   Object.defineProperty(window, 'api', {
@@ -78,6 +82,7 @@ describe('SettingsPage', () => {
   it('persists a change to the default SFW filter', async () => {
     const user = userEvent.setup()
     render(<SettingsPage />)
+    await openTab(user, 'Filters')
 
     await user.selectOptions(screen.getByLabelText('SFW'), 'sfw')
 
@@ -87,6 +92,7 @@ describe('SettingsPage', () => {
   it('persists a change to the default sort direction', async () => {
     const user = userEvent.setup()
     render(<SettingsPage />)
+    await openTab(user, 'Filters')
 
     expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Descending' }))
@@ -122,6 +128,7 @@ describe('SettingsPage', () => {
   it('shows the current app version and lets the user check for updates', async () => {
     const user = userEvent.setup()
     render(<SettingsPage />)
+    await openTab(user, 'Advanced')
 
     await waitFor(() => expect(screen.getByText('Current version: 1.0.0')).toBeInTheDocument())
     expect(screen.getByLabelText(/^Stable/)).toBeChecked()
@@ -134,6 +141,7 @@ describe('SettingsPage', () => {
   it('switches the update channel and persists it via IPC', async () => {
     const user = userEvent.setup()
     render(<SettingsPage />)
+    await openTab(user, 'Advanced')
 
     await user.click(screen.getByLabelText(/^Beta/))
 
@@ -152,7 +160,9 @@ describe('SettingsPage', () => {
       writable: true,
       configurable: true
     })
+    const user = userEvent.setup()
     render(<SettingsPage />)
+    await openTab(user, 'Advanced')
 
     await waitFor(() => expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('saved-key'))
   })
@@ -160,6 +170,7 @@ describe('SettingsPage', () => {
   it('saves the SauceNAO API key when Save is clicked', async () => {
     const user = userEvent.setup()
     render(<SettingsPage />)
+    await openTab(user, 'Advanced')
 
     await user.type(screen.getByLabelText('SauceNAO API key'), 'my-new-key')
     await user.click(screen.getByRole('button', { name: 'Save' }))
@@ -182,6 +193,7 @@ describe('SettingsPage', () => {
     })
     const user = userEvent.setup()
     render(<SettingsPage />)
+    await openTab(user, 'Advanced')
 
     await waitFor(() => expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('saved-key'))
     await user.click(screen.getByRole('button', { name: 'Clear' }))
@@ -190,8 +202,11 @@ describe('SettingsPage', () => {
     expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('')
   })
 
-  it('renders the backup, missing-files and source-folder sections', () => {
+  it('renders the backup, missing-files and source-folder sections', async () => {
+    const user = userEvent.setup()
     render(<SettingsPage />)
+    await openTab(user, 'Data')
+
     expect(screen.getByRole('heading', { name: 'Backup & Restore' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Missing files' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Source folder' })).toBeInTheDocument()
@@ -200,6 +215,7 @@ describe('SettingsPage', () => {
   it('defaults debug logging to disabled and enables it via the checkbox', async () => {
     const user = userEvent.setup()
     render(<SettingsPage />)
+    await openTab(user, 'Advanced')
 
     const loggingCheckbox = await screen.findByRole('checkbox', { name: 'Enable debug logging' })
     expect(loggingCheckbox).not.toBeChecked()
@@ -212,6 +228,7 @@ describe('SettingsPage', () => {
   it('opens the logs folder when the button is clicked', async () => {
     const user = userEvent.setup()
     render(<SettingsPage />)
+    await openTab(user, 'Advanced')
 
     await user.click(screen.getByRole('button', { name: 'Open logs folder' }))
 

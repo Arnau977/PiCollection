@@ -4,6 +4,36 @@
   gap: var(--space-5);
 }
 
+.settings-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.settings-tablist {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-tab {
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid transparent;
+  outline: none;
+}
+
+.settings-tab[data-selected] {
+  color: var(--color-text);
+  border-bottom-color: var(--accent);
+}
+
+.settings-tab[data-focus-visible] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .settings-sections {
   display: flex;
   flex-direction: column;
