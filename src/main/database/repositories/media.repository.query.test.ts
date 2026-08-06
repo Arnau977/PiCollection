@@ -324,3 +324,50 @@ describe('media.repository isAiGenerated filter', () => {
     expect(rows.map((r) => r.name)).toEqual(['ai-landscape'])
   })
 })
+
+describe('media.repository noCharacter / noSeries filters', () => {
+  it('filters to media with no character linked via noCharacter', async () => {
+    const character = await insertCharacter('Ishtar')
+    const withCharacter = await insertMedia('withCharacter')
+    const withoutCharacter = await insertMedia('withoutCharacter')
+    await mediaRepo.setMediaCharacters(db, withCharacter.id, [character.id])
+
+    const rows = await mediaRepo.findMediaRows(db, { noCharacter: true })
+    expect(rows.map((r) => r.name)).toEqual([withoutCharacter.name])
+  })
+
+  it('filters to media with no series linked via noSeries', async () => {
+    const series = await seriesRepo.insertSeries(db, {
+      id: randomUUID(),
+      name: 'Wonderland',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const withSeries = await insertMedia('withSeries')
+    const withoutSeries = await insertMedia('withoutSeries')
+    await mediaRepo.setMediaSeries(db, withSeries.id, [series.id])
+
+    const rows = await mediaRepo.findMediaRows(db, { noSeries: true })
+    expect(rows.map((r) => r.name)).toEqual([withoutSeries.name])
+  })
+
+  it('combines noCharacter and noSeries filters using AND', async () => {
+    const character = await insertCharacter('Ishtar')
+    const series = await seriesRepo.insertSeries(db, {
+      id: randomUUID(),
+      name: 'Wonderland',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const bare = await insertMedia('bare')
+    const withSeriesOnly = await insertMedia('withSeriesOnly')
+    const withCharacterOnly = await insertMedia('withCharacterOnly')
+    await mediaRepo.setMediaSeries(db, withSeriesOnly.id, [series.id])
+    await mediaRepo.setMediaCharacters(db, withCharacterOnly.id, [character.id])
+
+    const rows = await mediaRepo.findMediaRows(db, { noCharacter: true, noSeries: true })
+    expect(rows.map((r) => r.name)).toEqual([bare.name])
+  })
+})

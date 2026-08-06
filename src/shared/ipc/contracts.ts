@@ -11,8 +11,10 @@ export const MediaFiltersSchema = z.object({
   type: z.enum(['image', 'video', 'gif']).optional(),
   tagGroups: z.array(z.array(z.string())).optional(),
   characterGroups: z.array(z.array(z.string())).optional(),
+  noCharacter: z.boolean().optional(),
   seriesIds: z.array(z.string()).optional(),
   seriesOperator: z.enum(['AND', 'OR']).optional(),
+  noSeries: z.boolean().optional(),
   isAiGenerated: z.boolean().optional(),
   limit: z.number().int().positive().max(500).optional(),
   offset: z.number().int().nonnegative().optional()

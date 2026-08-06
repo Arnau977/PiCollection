@@ -148,6 +148,14 @@ function applyMediaFilters(
   qb = applyGroupedFilter(qb, db, 'media_tag', 'tag_id', filters.tagGroups)
   qb = applyGroupedFilter(qb, db, 'media_character', 'character_id', filters.characterGroups)
 
+  if (filters.noCharacter) {
+    qb = qb.where(
+      'media.id',
+      'not in',
+      db.selectFrom('media_character').select('media_id')
+    )
+  }
+
   if (filters.seriesIds?.length) {
     const seriesIds = filters.seriesIds
     // Each selected series may imply descendants (parent/child hierarchy) - seriesClosures maps
@@ -170,6 +178,10 @@ function applyMediaFilters(
         eb.selectFrom('media_series').select('media_id').where('series_id', 'in', expandedIds)
       )
     }
+  }
+
+  if (filters.noSeries) {
+    qb = qb.where('media.id', 'not in', db.selectFrom('media_series').select('media_id'))
   }
 
   return qb
