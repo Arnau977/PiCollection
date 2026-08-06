@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Trash2 } from 'lucide-react'
 import { useSeries } from '../../hooks/useEntityLists'
+import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
@@ -38,6 +39,7 @@ function fromCsv(value: string): string[] {
 export function SeriesManager(): JSX.Element {
   const { t } = useTranslation()
   const { data: seriesList, loading, refetch } = useSeries()
+  const confirm = useConfirm()
   const [form, setForm] = useState<SeriesFormValues>(EMPTY_FORM)
   const [editing, setEditing] = useState<SeriesModel | null>(null)
   const [search, setSearch] = useState('')
@@ -96,8 +98,14 @@ export function SeriesManager(): JSX.Element {
     }
   }
 
-  async function handleDelete(id: string, name: string): Promise<void> {
-    if (!window.confirm(t('manage.confirmDelete', { name }))) return
+  async function handleDelete(id: string, name: string, mediaCount: number): Promise<void> {
+    if (mediaCount > 0) {
+      const ok = await confirm({
+        message: t('manage.confirmDeleteWithMedia', { name, count: mediaCount }),
+        danger: true
+      })
+      if (!ok) return
+    }
     const result = await window.api.series.delete(id)
     if (result.success) {
       if (editing?.id === id) resetForm()
@@ -139,7 +147,7 @@ export function SeriesManager(): JSX.Element {
           type="button"
           className="icon-btn"
           aria-label={`${t('manage.delete')} ${series.name}`}
-          onClick={() => handleDelete(series.id, series.name)}
+          onClick={() => handleDelete(series.id, series.name, series.mediaCount ?? 0)}
         >
           <Trash2 size={16} />
         </button>

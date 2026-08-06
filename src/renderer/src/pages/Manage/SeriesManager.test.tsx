@@ -1,15 +1,20 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { SeriesModel } from '@shared/models'
 import { SeriesManager } from './SeriesManager'
 
 const refetchSeries = vi.fn()
+const confirmMock = vi.fn().mockResolvedValue(true)
 let seriesData: SeriesModel[] = []
 
 vi.mock('../../hooks/useEntityLists', () => ({
   useSeries: () => ({ data: seriesData, loading: false, error: null, refetch: refetchSeries })
+}))
+
+vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => confirmMock
 }))
 
 function setApi(overrides: Record<string, unknown> = {}): void {
@@ -34,11 +39,12 @@ function setApi(overrides: Record<string, unknown> = {}): void {
 
 beforeEach(() => {
   seriesData = [
-    { id: 's1', name: 'Wonderland', aliases: ['Alice in Wonderland'], createdAt: 1700000000000 },
+    { id: 's1', name: 'Wonderland', aliases: ['Alice in Wonderland'], createdAt: 1700000000000, mediaCount: 3 },
     { id: 's2', name: 'Neverland', aliases: [], createdAt: 1700000001000 }
   ]
   refetchSeries.mockReset()
-  vi.spyOn(window, 'confirm').mockReturnValue(true)
+  confirmMock.mockReset()
+  confirmMock.mockResolvedValue(true)
   setApi()
 })
 
@@ -106,7 +112,7 @@ describe('SeriesManager', () => {
     expect(screen.getByLabelText('Name')).toHaveValue('')
   })
 
-  it('deletes a series after confirming', async () => {
+  it('deletes a series after confirming, when it has media', async () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
@@ -114,7 +120,52 @@ describe('SeriesManager', () => {
 
     await user.click(screen.getByRole('button', { name: 'Delete Wonderland' }))
 
-    expect(window.confirm).toHaveBeenCalled()
+    expect(confirmMock).toHaveBeenCalled()
+    expect(del).toHaveBeenCalledWith('s1')
+    expect(refetchSeries).toHaveBeenCalled()
+  })
+
+  it('deletes a series immediately without confirming, when it has no media', async () => {
+    const user = userEvent.setup()
+    const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    setApi({ delete: del })
+    render(<SeriesManager />)
+
+    await user.click(screen.getByRole('button', { name: 'Delete Neverland' }))
+
+    expect(confirmMock).not.toHaveBeenCalled()
+    expect(del).toHaveBeenCalledWith('s2')
+    expect(refetchSeries).toHaveBeenCalled()
+  })
+
+  it('skips confirmation dialog for a parent series with direct mediaCount: 0, even though its rolled-up count is nonzero', async () => {
+    const user = userEvent.setup()
+    const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    setApi({ delete: del })
+    seriesData = [
+      {
+        id: 's1',
+        name: 'Parent Series',
+        aliases: [],
+        createdAt: 1700000000000,
+        mediaCount: 0
+      },
+      {
+        id: 's2',
+        name: 'Child Series',
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 's1',
+        mediaCount: 5
+      }
+    ]
+    render(<SeriesManager />)
+
+    const parentItem = screen.getByText('Parent Series').closest('li')
+    const deleteButton = within(parentItem!).getByRole('button', { name: /Delete/ })
+    await user.click(deleteButton)
+
+    expect(confirmMock).not.toHaveBeenCalled()
     expect(del).toHaveBeenCalledWith('s1')
     expect(refetchSeries).toHaveBeenCalled()
   })
