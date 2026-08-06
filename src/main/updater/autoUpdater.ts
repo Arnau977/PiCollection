@@ -30,7 +30,9 @@ export function initAutoUpdater(window: BrowserWindow): void {
   applyChannel(readUpdateChannel())
 
   autoUpdater.on('checking-for-update', () => send({ type: 'checking' }))
-  autoUpdater.on('update-available', (info) => send({ type: 'available', version: info.version }))
+  autoUpdater.on('update-available', (info) =>
+    send({ type: 'available', version: info.version, highlights: null })
+  )
   autoUpdater.on('update-not-available', () => send({ type: 'not-available' }))
   autoUpdater.on('download-progress', (progress) =>
     send({ type: 'download-progress', percent: Math.round(progress.percent) })
