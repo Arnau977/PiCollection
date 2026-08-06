@@ -13,6 +13,7 @@ export const MediaFiltersSchema = z.object({
   characterGroups: z.array(z.array(z.string())).optional(),
   seriesIds: z.array(z.string()).optional(),
   seriesOperator: z.enum(['AND', 'OR']).optional(),
+  isAiGenerated: z.boolean().optional(),
   limit: z.number().int().positive().max(500).optional(),
   offset: z.number().int().nonnegative().optional()
 })
