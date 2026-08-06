@@ -12,6 +12,8 @@ interface MultiSelectAutocompleteProps<T> {
   onCreate?: (name: string) => void
   /** Hides the visible label when the surrounding layout already provides one. */
   hideLabel?: boolean
+  /** Disables the picker — used to make the whole field unusable while a "none of these" toggle elsewhere is active. Existing chips (if any) are unaffected. */
+  disabled?: boolean
   /** Passed through to `Autocomplete`; see its docs for the create-suppression matching behavior. */
   getOptionMatchName?: (option: T) => string
 }
@@ -26,6 +28,7 @@ export function MultiSelectAutocomplete<T>({
   onChange,
   onCreate,
   hideLabel = false,
+  disabled = false,
   getOptionMatchName
 }: MultiSelectAutocompleteProps<T>): JSX.Element {
   const selectedOptions = options.filter((option) =>
@@ -61,6 +64,7 @@ export function MultiSelectAutocomplete<T>({
         onCreate={onCreate}
         hideLabel={hideLabel}
         getOptionMatchName={getOptionMatchName}
+        disabled={disabled}
       />
       {selectedOptions.length > 0 && (
         <ul className="multi-select-chips">

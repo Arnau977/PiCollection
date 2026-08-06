@@ -90,6 +90,11 @@ describe('Autocomplete', () => {
     expect(input).toHaveValue('Portrait')
   })
 
+  it('disables the input when disabled is true', () => {
+    renderAutocomplete({ disabled: true })
+    expect(screen.getByRole('combobox')).toBeDisabled()
+  })
+
   it('clears the input back to empty after a pick when resetQueryAfterSelect is set', async () => {
     const user = userEvent.setup()
     const { onSelect } = renderAutocomplete({ resetQueryAfterSelect: true })

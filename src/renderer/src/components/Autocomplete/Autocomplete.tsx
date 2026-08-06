@@ -42,6 +42,8 @@ interface AutocompleteProps<T> {
    * that would otherwise prevent an exact match. Defaults to `getOptionLabel` when not provided.
    */
   getOptionMatchName?: (option: T) => string
+  /** Disables the input and dropdown trigger — used to make a single-selection field unusable while a "none of these" toggle elsewhere is active. */
+  disabled?: boolean
 }
 
 export function Autocomplete<T>({
@@ -55,7 +57,8 @@ export function Autocomplete<T>({
   resetQueryAfterSelect = false,
   onCreate,
   hideLabel = false,
-  getOptionMatchName = getOptionLabel
+  getOptionMatchName = getOptionLabel,
+  disabled = false
 }: AutocompleteProps<T>): JSX.Element {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
@@ -119,6 +122,7 @@ export function Autocomplete<T>({
       inputValue={query}
       onInputChange={handleInputChange}
       onSelectionChange={handleSelectionChange}
+      isDisabled={disabled}
     >
       {!hideLabel && <Label>{label}</Label>}
       <div>

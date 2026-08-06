@@ -62,6 +62,23 @@ describe('MultiSelectAutocomplete', () => {
     expect(onChange).toHaveBeenCalledWith(['2'])
   })
 
+  it('disables the picker when disabled is true', () => {
+    render(
+      <MultiSelectAutocomplete
+        name="tags"
+        label="Tags"
+        options={OPTIONS}
+        getOptionLabel={(o) => o.name}
+        getOptionValue={(o) => o.id}
+        selectedValues={[]}
+        onChange={vi.fn()}
+        disabled
+      />
+    )
+
+    expect(screen.getByRole('combobox')).toBeDisabled()
+  })
+
   it('excludes already-selected options from the dropdown', async () => {
     const user = userEvent.setup()
     render(<Wrapper initial={['1']} />)
