@@ -4,6 +4,12 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SourceFolderSection } from './SourceFolderSection'
 
+const confirmMock = vi.fn().mockResolvedValue(true)
+
+vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => confirmMock
+}))
+
 function setApi(overrides: {
   sourceFolder?: Record<string, unknown>
   maintenance?: Record<string, unknown>
@@ -87,7 +93,7 @@ describe('SourceFolderSection', () => {
   })
 
   it('applies the migration after confirmation and shows the result', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    confirmMock.mockResolvedValueOnce(true)
     setApi({
       maintenance: {
         pickFolder: vi
@@ -116,7 +122,7 @@ describe('SourceFolderSection', () => {
   })
 
   it('does nothing when apply is not confirmed', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    confirmMock.mockResolvedValueOnce(false)
     setApi({
       maintenance: {
         pickFolder: vi

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FolderOpen } from 'lucide-react'
 import type { SourceFolderMigrationPlan } from '@shared/models'
+import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 
 type State =
   | { kind: 'idle' }
@@ -13,6 +14,7 @@ type State =
 
 export function SourceFolderSection(): JSX.Element {
   const { t } = useTranslation()
+  const confirm = useConfirm()
   const [current, setCurrent] = useState<string | null>(null)
   const [state, setState] = useState<State>({ kind: 'idle' })
 
@@ -49,7 +51,7 @@ export function SourceFolderSection(): JSX.Element {
 
   async function handleApply(): Promise<void> {
     if (state.kind !== 'plan') return
-    if (!window.confirm(t('settings.sourceFolderApplyConfirm'))) return
+    if (!(await confirm(t('settings.sourceFolderApplyConfirm')))) return
 
     const { target, plan } = state
     setState({ kind: 'applying', target, plan })

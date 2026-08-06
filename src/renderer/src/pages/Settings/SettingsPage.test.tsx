@@ -6,6 +6,10 @@ import i18n from 'i18next'
 import SettingsPage from './SettingsPage'
 import { loadGalleryDefaults } from '../../utils/gallerySettings'
 
+vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => vi.fn().mockResolvedValue(true)
+}))
+
 beforeEach(() => {
   window.localStorage.clear()
   Object.defineProperty(window, 'api', {
