@@ -234,7 +234,9 @@ export function CharactersManager(): JSX.Element {
                     type="button"
                     className="icon-btn"
                     aria-label={`${t('manage.delete')} ${character.name}`}
-                    onClick={() => handleDelete(character.id, character.name, character.mediaCount ?? 0)}
+                    onClick={() =>
+                      handleDelete(character.id, character.name, character.mediaCount ?? 0)
+                    }
                   >
                     <Trash2 size={16} />
                   </button>

@@ -128,7 +128,8 @@ describe('ArtistsManager', () => {
     await user.click(screen.getByRole('button', { name: 'Delete Jane Doe' }))
 
     expect(confirmMock).toHaveBeenCalledWith({
-      message: "'Jane Doe' is linked to 3 media item(s). Deleting it removes that link but keeps the media. Continue?",
+      message:
+        "'Jane Doe' is linked to 3 media item(s). Deleting it removes that link but keeps the media. Continue?",
       danger: true
     })
     expect(del).toHaveBeenCalledWith('a1')

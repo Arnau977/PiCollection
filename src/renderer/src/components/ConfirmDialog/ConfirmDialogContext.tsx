@@ -25,7 +25,10 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }): JS
   const confirm = useCallback<ConfirmFn>((options) => {
     const normalized = typeof options === 'string' ? { message: options } : options
     return new Promise<boolean>((resolve) => {
-      setPending({ options: normalized, resolve })
+      setPending((prev) => {
+        prev?.resolve(false)
+        return { options: normalized, resolve }
+      })
     })
   }, [])
 

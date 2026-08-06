@@ -39,7 +39,13 @@ function setApi(overrides: Record<string, unknown> = {}): void {
 
 beforeEach(() => {
   seriesData = [
-    { id: 's1', name: 'Wonderland', aliases: ['Alice in Wonderland'], createdAt: 1700000000000, mediaCount: 3 },
+    {
+      id: 's1',
+      name: 'Wonderland',
+      aliases: ['Alice in Wonderland'],
+      createdAt: 1700000000000,
+      mediaCount: 3
+    },
     { id: 's2', name: 'Neverland', aliases: [], createdAt: 1700000001000 }
   ]
   refetchSeries.mockReset()
