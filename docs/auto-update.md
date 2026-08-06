@@ -10,8 +10,12 @@ publish installers.
 - The main process wires up `electron-updater` in
   [`src/main/updater/autoUpdater.ts`](../src/main/updater/autoUpdater.ts). A
   packaged app does a quiet check ~5s after launch (see
-  `STARTUP_UPDATE_CHECK_DELAY_MS` in `src/main/index.ts`), and the user can
-  trigger one manually from **Settings → Updates**.
+  `STARTUP_UPDATE_CHECK_DELAY_MS` in `src/main/index.ts`), repeats that check
+  once a day for sessions left running (`DAILY_UPDATE_CHECK_INTERVAL_MS`),
+  and the user can trigger one manually from **Settings → Updates**.
+- When an update is available or ready to install, the sidebar shows a small
+  badge next to Settings (`src/renderer/src/components/AppHeader.tsx`) so
+  it's noticeable without having to visit the Settings page first.
 - Downloading and installing are always explicit user actions
   (`autoDownload = false`) - a check only reports that an update exists; the
   user clicks "Download update", then "Restart and install" once it's ready.
@@ -58,8 +62,10 @@ package's semver **at build time** - no separate config per channel:
    `## Highlights` placeholder with 2-3 bullet points of user-facing
    changes (new features, notable fixes) - this is what
    `extractHighlights()` (`src/shared/utils/extractHighlights.ts`) pulls
-   out to show in the app's update dialog. Leaving the placeholder in place
-   is safe: the app just won't show a highlights block for that release.
+   out to show inline in the **Settings → Advanced → Updates** card
+   (`SettingsPage.tsx`) - there is no separate update dialog. Leaving the
+   placeholder in place is safe: the app just won't show a highlights block
+   for that release.
 5. One Linux artifact only: AppImage (runs on any distro with no install
    step, and is the one format electron-updater can actually auto-update -
    see `electron-builder.yml`'s `linux.target`).

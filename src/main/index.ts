@@ -45,6 +45,21 @@ process.on('unhandledRejection', (reason) => {
   logError('process', 'Unhandled rejection', reason)
 })
 
+/**
+ * Thrown by `setupDatabase()` when the pre-migration safety snapshot itself
+ * fails (disk full, permissions, antivirus lock) - as opposed to a failure
+ * in the migrations that snapshot exists to protect against. Kept as a
+ * distinct type (not just a distinct message) so the top-level error dialog
+ * can tell the two apart and avoid pointing the user at a backup folder that,
+ * in this case, was never populated.
+ */
+class SnapshotFailedError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'SnapshotFailedError'
+  }
+}
+
 /** Give the window a moment to finish loading before an update check starts competing for bandwidth. */
 const STARTUP_UPDATE_CHECK_DELAY_MS = 5000
 /** Also re-check periodically for sessions left running across days, not just at launch. */
@@ -108,9 +123,22 @@ const setupDatabase = async (): Promise<void> => {
 
   if (await hasPendingMigrations(db)) {
     const backupsDir = resolveBackupsDir()
-    await snapshotDatabase(dbPath, backupsDir)
-    await pruneSnapshots(backupsDir)
-    logInfo('lifecycle', 'Pre-migration snapshot created', { backupsDir })
+    try {
+      await snapshotDatabase(dbPath, backupsDir)
+      await pruneSnapshots(backupsDir)
+      logInfo('lifecycle', 'Pre-migration snapshot created', { backupsDir })
+    } catch (err) {
+      logError('lifecycle', 'Pre-migration snapshot failed', err)
+      // Don't fall through to running migrations without a backup in place -
+      // that would defeat the whole point of snapshotting first. Thrown as a
+      // distinct error type so the top-level dialog below can tell this
+      // apart from a genuine migration failure and avoid claiming a snapshot
+      // exists when it never got created.
+      throw new SnapshotFailedError(
+        'Could not create a safety backup before updating the database, so the update was ' +
+          'stopped before making any changes. Your data is untouched.'
+      )
+    }
   }
 
   await runMigrations(db)
@@ -139,15 +167,20 @@ app.whenReady().then(async () => {
   } catch (err) {
     console.error('Failed to initialize database', err)
     logError('lifecycle', 'Failed to initialize database', err)
-    dialog.showErrorBox(
-      'Database error',
-      'PiCollection could not initialize its local database and cannot continue.\n\n' +
-        'If this happened right after an update, a snapshot of your database from just ' +
-        'before the update may be available in:\n' +
-        resolveBackupsDir() +
-        '\n\n' +
-        (err instanceof Error ? err.message : String(err))
-    )
+    const detail = err instanceof Error ? err.message : String(err)
+    // A snapshot failure gets its own wording: the boilerplate below claims a
+    // pre-update snapshot may be sitting in the backups folder, which is
+    // false in exactly this case - the snapshot is the thing that failed.
+    const message =
+      err instanceof SnapshotFailedError
+        ? `PiCollection could not initialize its local database and cannot continue.\n\n${detail}`
+        : 'PiCollection could not initialize its local database and cannot continue.\n\n' +
+          'If this happened right after an update, a snapshot of your database from just ' +
+          'before the update may be available in:\n' +
+          resolveBackupsDir() +
+          '\n\n' +
+          detail
+    dialog.showErrorBox('Database error', message)
     app.quit()
     return
   }
