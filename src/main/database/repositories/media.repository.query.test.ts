@@ -329,7 +329,7 @@ describe('media.repository noCharacter / noSeries filters', () => {
   it('filters to media with no character linked via noCharacter', async () => {
     const character = await insertCharacter('Ishtar')
     const withCharacter = await insertMedia('withCharacter')
-    const withoutCharacter = await insertMedia('withoutCharacter')
+    await insertMedia('withoutCharacter')
     await mediaRepo.setMediaCharacters(db, withCharacter.id, [character.id])
 
     const rows = await mediaRepo.findMediaRows(db, { noCharacter: true })
@@ -345,7 +345,7 @@ describe('media.repository noCharacter / noSeries filters', () => {
       parent_id: null
     })
     const withSeries = await insertMedia('withSeries')
-    const withoutSeries = await insertMedia('withoutSeries')
+    await insertMedia('withoutSeries')
     await mediaRepo.setMediaSeries(db, withSeries.id, [series.id])
 
     const rows = await mediaRepo.findMediaRows(db, { noSeries: true })
@@ -361,7 +361,7 @@ describe('media.repository noCharacter / noSeries filters', () => {
       created_at: Date.now(),
       parent_id: null
     })
-    const bare = await insertMedia('bare')
+    await insertMedia('bare')
     const withSeriesOnly = await insertMedia('withSeriesOnly')
     const withCharacterOnly = await insertMedia('withCharacterOnly')
     await mediaRepo.setMediaSeries(db, withSeriesOnly.id, [series.id])
