@@ -84,6 +84,18 @@ export function Autocomplete<T>({
   )
   const showCreateOption = Boolean(onCreate) && trimmedQuery.length > 0 && !hasExactMatch
 
+  function handleInputChange(value: string): void {
+    setQuery(value)
+    // Clearing the text is the only way to remove a single selection (there's no
+    // separate "x" button here, unlike MultiSelectAutocomplete's chips). Without
+    // this, `selectedKey` stays set while the input is merely empty, and on
+    // blur/Enter the ComboBox reverts the text back to the still-selected
+    // option instead of clearing it.
+    if (value === '' && selectedKey) {
+      onSelect(null)
+    }
+  }
+
   function handleSelectionChange(key: Key | null): void {
     if (key === CREATE_KEY) {
       onCreate?.(trimmedQuery)
@@ -105,7 +117,7 @@ export function Autocomplete<T>({
       aria-label={label}
       selectedKey={selectedKey}
       inputValue={query}
-      onInputChange={setQuery}
+      onInputChange={handleInputChange}
       onSelectionChange={handleSelectionChange}
     >
       {!hideLabel && <Label>{label}</Label>}

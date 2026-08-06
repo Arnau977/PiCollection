@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -34,6 +35,23 @@ function renderAutocomplete(
 
 function openDropdown(user: ReturnType<typeof userEvent.setup>) {
   return user.click(screen.getByRole('button', { name: /show suggestions/i }))
+}
+
+/** Mirrors real usage (FilterBar, MediaForm, SeriesManager): `selectedKey` is fed
+ * back from the parent's own state rather than left uncontrolled. */
+function ControlledAutocomplete(): JSX.Element {
+  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  return (
+    <Autocomplete
+      name="test"
+      label="Test field"
+      options={OPTIONS}
+      getOptionLabel={(o) => o.name}
+      getOptionValue={(o) => o.id}
+      selectedKey={selectedKey}
+      onSelect={(option) => setSelectedKey(option?.id ?? null)}
+    />
+  )
 }
 
 describe('Autocomplete', () => {
@@ -82,6 +100,41 @@ describe('Autocomplete', () => {
     await user.click(option)
 
     expect(onSelect).toHaveBeenCalledWith(OPTIONS[1])
+    expect(input).toHaveValue('')
+  })
+
+  it('clears a selection when the text is deleted and the field loses focus', async () => {
+    const user = userEvent.setup()
+    render(
+      <div>
+        <ControlledAutocomplete />
+        <button>outside</button>
+      </div>
+    )
+
+    const input = screen.getByRole('combobox')
+    await openDropdown(user)
+    await user.click(await screen.findByRole('option', { name: 'Portrait' }))
+    expect(input).toHaveValue('Portrait')
+
+    await user.clear(input)
+    await user.click(screen.getByText('outside'))
+
+    expect(input).toHaveValue('')
+  })
+
+  it('clears a selection when the text is deleted and Enter is pressed', async () => {
+    const user = userEvent.setup()
+    render(<ControlledAutocomplete />)
+
+    const input = screen.getByRole('combobox')
+    await openDropdown(user)
+    await user.click(await screen.findByRole('option', { name: 'Portrait' }))
+    expect(input).toHaveValue('Portrait')
+
+    await user.clear(input)
+    await user.keyboard('{Enter}')
+
     expect(input).toHaveValue('')
   })
 
