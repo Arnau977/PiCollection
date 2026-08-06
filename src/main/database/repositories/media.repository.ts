@@ -51,6 +51,39 @@ function applyGroupedFilter<O>(
 }
 
 /**
+ * Same OR-of-AND-groups shape as `applyGroupedFilter`, but each id inside a group first expands
+ * to its series-hierarchy closure (itself + descendants) via `seriesClosures` before being
+ * ANDed - so "media must match series A AND series B" really means "must be in A's closure AND
+ * in B's closure", not just carry exactly those two ids.
+ */
+function applySeriesGroupedFilter<O>(
+  qb: SelectQueryBuilder<DB, 'media', O>,
+  db: Kysely<DB>,
+  groups: string[][] | undefined,
+  seriesClosures?: Map<string, string[]>
+): SelectQueryBuilder<DB, 'media', O> {
+  const nonEmptyGroups = (groups ?? []).filter((group) => group.length > 0)
+  if (!nonEmptyGroups.length) return qb
+  const closureFor = (id: string): string[] => seriesClosures?.get(id) ?? [id]
+
+  return qb.where((eb) =>
+    eb.or(
+      nonEmptyGroups.map((group) =>
+        eb.and(
+          group.map((id) =>
+            eb(
+              'media.id',
+              'in',
+              db.selectFrom('media_series').select('media_id').where('series_id', 'in', closureFor(id))
+            )
+          )
+        )
+      )
+    )
+  )
+}
+
+/**
  * A search term matches media whose own name, artist, or any linked tag,
  * character or series contains the text.
  */
@@ -152,29 +185,7 @@ function applyMediaFilters(
     qb = qb.where('media.id', 'not in', db.selectFrom('media_character').select('media_id'))
   }
 
-  if (filters.seriesIds?.length) {
-    const seriesIds = filters.seriesIds
-    // Each selected series may imply descendants (parent/child hierarchy) - seriesClosures maps
-    // a selected id to itself + all its descendant ids. Falls back to a singleton closure (just
-    // the id itself) when the caller doesn't resolve hierarchy (e.g. tests, or no parent tree).
-    const closureFor = (id: string): string[] => seriesClosures?.get(id) ?? [id]
-
-    if (filters.seriesOperator === 'AND') {
-      // AND across the *selected* series: media must match each selection's own closure
-      // (itself or any of its descendants), not just match `seriesIds.length` ids in total.
-      for (const id of seriesIds) {
-        const closure = closureFor(id)
-        qb = qb.where('media.id', 'in', (eb) =>
-          eb.selectFrom('media_series').select('media_id').where('series_id', 'in', closure)
-        )
-      }
-    } else {
-      const expandedIds = [...new Set(seriesIds.flatMap(closureFor))]
-      qb = qb.where('media.id', 'in', (eb) =>
-        eb.selectFrom('media_series').select('media_id').where('series_id', 'in', expandedIds)
-      )
-    }
-  }
+  qb = applySeriesGroupedFilter(qb, db, filters.seriesGroups, seriesClosures)
 
   if (filters.noSeries) {
     qb = qb.where('media.id', 'not in', db.selectFrom('media_series').select('media_id'))

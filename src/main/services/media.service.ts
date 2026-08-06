@@ -206,8 +206,9 @@ export const mediaService = {
 
   async getMediaFiltered(filters: MediaFilters, sorting?: Sorting): Promise<MediaFilteredResult> {
     const db = getDb()
-    const seriesClosures = filters.seriesIds?.length
-      ? buildSeriesClosureMap(await seriesRepo.findSeriesHierarchy(db), filters.seriesIds)
+    const flatSeriesIds = filters.seriesGroups?.flat() ?? []
+    const seriesClosures = flatSeriesIds.length
+      ? buildSeriesClosureMap(await seriesRepo.findSeriesHierarchy(db), flatSeriesIds)
       : undefined
     const [rows, total] = await Promise.all([
       mediaRepo.findMediaRows(db, filters, sorting, seriesClosures),

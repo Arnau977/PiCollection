@@ -31,9 +31,9 @@ export interface MediaFilters {
   characterGroups?: string[][]
   /** Media with no character linked at all. Mutually exclusive with `characterGroups` in the UI. */
   noCharacter?: boolean
-  seriesIds?: string[]
-  seriesOperator?: 'AND' | 'OR'
-  /** Media with no series linked at all. Mutually exclusive with `seriesIds` in the UI. */
+  /** Each inner array is AND'd together; the outer arrays are OR'd. */
+  seriesGroups?: string[][]
+  /** Media with no series linked at all. Mutually exclusive with `seriesGroups` in the UI. */
   noSeries?: boolean
   limit?: number
   offset?: number

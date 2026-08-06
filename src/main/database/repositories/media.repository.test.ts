@@ -232,8 +232,7 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
     await mediaRepo.setMediaSeries(db, none.id, [])
 
     const result = await mediaRepo.findMediaRows(db, {
-      seriesIds: [seriesA.id, seriesB.id],
-      seriesOperator: 'OR'
+      seriesGroups: [[seriesA.id], [seriesB.id]]
     })
 
     expect(result.map((r) => r.name).sort()).toEqual(['ab', 'onlyA'])
@@ -261,8 +260,7 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
     await mediaRepo.setMediaSeries(db, ab.id, [seriesA.id, seriesB.id])
 
     const result = await mediaRepo.findMediaRows(db, {
-      seriesIds: [seriesA.id, seriesB.id],
-      seriesOperator: 'AND'
+      seriesGroups: [[seriesA.id, seriesB.id]]
     })
 
     expect(result.map((r) => r.name)).toEqual(['ab'])
@@ -292,7 +290,7 @@ describe('media.repository series hierarchy filtering (seriesClosures)', () => {
     const seriesClosures = new Map([[parent.id, [parent.id, child.id]]])
     const result = await mediaRepo.findMediaRows(
       db,
-      { seriesIds: [parent.id] },
+      { seriesGroups: [[parent.id]] },
       undefined,
       seriesClosures
     )
@@ -348,7 +346,7 @@ describe('media.repository series hierarchy filtering (seriesClosures)', () => {
     ])
     const result = await mediaRepo.findMediaRows(
       db,
-      { seriesIds: [parentA.id, parentB.id], seriesOperator: 'AND' },
+      { seriesGroups: [[parentA.id, parentB.id]] },
       undefined,
       seriesClosures
     )

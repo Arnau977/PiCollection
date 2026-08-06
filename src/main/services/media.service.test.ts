@@ -194,12 +194,10 @@ describe('mediaService.getMediaFiltered', () => {
     )
 
     const or = await mediaService.getMediaFiltered({
-      seriesIds: [seriesA.id, seriesB.id],
-      seriesOperator: 'OR'
+      seriesGroups: [[seriesA.id], [seriesB.id]]
     })
     const and = await mediaService.getMediaFiltered({
-      seriesIds: [seriesA.id, seriesB.id],
-      seriesOperator: 'AND'
+      seriesGroups: [[seriesA.id, seriesB.id]]
     })
 
     expect(or.items.map((m) => m.name).sort()).toEqual(['both', 'onlyA'])
@@ -221,7 +219,7 @@ describe('mediaService.getMediaFiltered', () => {
     )
     await mediaService.addMedia(baseInput({ name: 'unrelated', route: '/some/path-b.png' }))
 
-    const byGrandparent = await mediaService.getMediaFiltered({ seriesIds: [grandparent.id] })
+    const byGrandparent = await mediaService.getMediaFiltered({ seriesGroups: [[grandparent.id]] })
 
     expect(byGrandparent.items.map((m) => m.name)).toEqual(['onlyChild'])
     expect(byGrandparent.total).toBe(1)
