@@ -63,17 +63,6 @@ export function GroupedEntityFilter<T>({
         <InfoTooltip text={t('filters.groupTooltip')} />
       </div>
 
-      {noneOption && (
-        <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={noneOption.checked}
-            onChange={(e) => noneOption.onChange(e.target.checked)}
-          />
-          {noneOption.label}
-        </label>
-      )}
-
       {effectiveGroups.map((group, index) => {
         const groupLabel = effectiveGroups.length > 1 ? `${label} ${index + 1}` : label
         return (
@@ -92,6 +81,7 @@ export function GroupedEntityFilter<T>({
                 selectedValues={group}
                 onChange={(values) => updateGroup(index, values)}
                 disabled={noneOption?.checked}
+                noneToggle={index === 0 ? noneOption : undefined}
               />
               {effectiveGroups.length > 1 && (
                 <button
