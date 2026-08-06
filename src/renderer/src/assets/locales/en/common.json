@@ -242,7 +242,6 @@
     "cancel": "Cancel",
     "edit": "Edit",
     "delete": "Delete",
-    "confirmDelete": "Delete \"{{name}}\"? This cannot be undone.",
     "confirmDeleteWithMedia": "'{{name}}' is linked to {{count}} media item(s). Deleting it removes that link but keeps the media. Continue?",
     "empty": "Nothing here yet.",
     "socials": "Social links",

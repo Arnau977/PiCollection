@@ -12,6 +12,12 @@ vi.mock('../../hooks/useEntityLists', () => ({
   useTags: () => ({ data: tagsData, loading: false, error: null, refetch: refetchTags })
 }))
 
+const confirmMock = vi.fn().mockResolvedValue(true)
+
+vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => confirmMock
+}))
+
 function setApi(overrides: Record<string, unknown> = {}): void {
   Object.defineProperty(window, 'api', {
     value: {
@@ -32,11 +38,12 @@ function setApi(overrides: Record<string, unknown> = {}): void {
 
 beforeEach(() => {
   tagsData = [
-    { id: 't1', name: 'landscape', createdAt: 1700000000000 },
+    { id: 't1', name: 'landscape', createdAt: 1700000000000, mediaCount: 3 },
     { id: 't2', name: 'portrait', createdAt: 1700000001000 }
   ]
   refetchTags.mockReset()
-  vi.spyOn(window, 'confirm').mockReturnValue(true)
+  confirmMock.mockReset()
+  confirmMock.mockResolvedValue(true)
   setApi()
 })
 
@@ -116,7 +123,7 @@ describe('TagsManager', () => {
     expect(editingItem).toHaveClass('manage-list-item-editing')
   })
 
-  it('deletes a tag after confirming', async () => {
+  it('deletes a tag after confirming, when it has media', async () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
@@ -124,13 +131,13 @@ describe('TagsManager', () => {
 
     await user.click(screen.getByRole('button', { name: 'Delete landscape' }))
 
-    expect(window.confirm).toHaveBeenCalled()
+    expect(confirmMock).toHaveBeenCalled()
     expect(del).toHaveBeenCalledWith('t1')
     expect(refetchTags).toHaveBeenCalled()
   })
 
-  it('does not delete when confirmation is cancelled', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
+  it('does not delete when confirmation is declined', async () => {
+    confirmMock.mockResolvedValueOnce(false)
     const user = userEvent.setup()
     const del = vi.fn()
     setApi({ delete: del })
@@ -139,6 +146,19 @@ describe('TagsManager', () => {
     await user.click(screen.getByRole('button', { name: 'Delete landscape' }))
 
     expect(del).not.toHaveBeenCalled()
+  })
+
+  it('deletes a tag immediately without confirming, when it has no media', async () => {
+    const user = userEvent.setup()
+    const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    setApi({ delete: del })
+    render(<TagsManager />)
+
+    await user.click(screen.getByRole('button', { name: 'Delete portrait' }))
+
+    expect(confirmMock).not.toHaveBeenCalled()
+    expect(del).toHaveBeenCalledWith('t2')
+    expect(refetchTags).toHaveBeenCalled()
   })
 
   it('shows an empty state when there are no tags', () => {

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { TagModel } from '@shared/models'
 import { useTags } from '../../hooks/useEntityLists'
+import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
 import {
@@ -16,6 +17,7 @@ import { formatCompactCount } from '../../utils/formatCompactCount'
 
 export function TagsManager(): JSX.Element {
   const { t } = useTranslation()
+  const confirm = useConfirm()
   const { data: tags, loading, refetch } = useTags()
   const [formName, setFormName] = useState('')
   const [editing, setEditing] = useState<TagModel | null>(null)
@@ -59,8 +61,14 @@ export function TagsManager(): JSX.Element {
     }
   }
 
-  async function handleDelete(id: string, name: string): Promise<void> {
-    if (!window.confirm(t('manage.confirmDelete', { name }))) return
+  async function handleDelete(id: string, name: string, mediaCount: number): Promise<void> {
+    if (mediaCount > 0) {
+      const ok = await confirm({
+        message: t('manage.confirmDeleteWithMedia', { name, count: mediaCount }),
+        danger: true
+      })
+      if (!ok) return
+    }
     const result = await window.api.tag.delete(id)
     if (result.success) {
       if (editing?.id === id) resetForm()
@@ -146,7 +154,7 @@ export function TagsManager(): JSX.Element {
                     type="button"
                     className="icon-btn"
                     aria-label={`${t('manage.delete')} ${tag.name}`}
-                    onClick={() => handleDelete(tag.id, tag.name)}
+                    onClick={() => handleDelete(tag.id, tag.name, tag.mediaCount ?? 0)}
                   >
                     <Trash2 size={16} />
                   </button>

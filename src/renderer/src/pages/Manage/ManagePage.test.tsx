@@ -35,6 +35,10 @@ vi.mock('../../hooks/useEntityLists', () => ({
   })
 }))
 
+vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => vi.fn().mockResolvedValue(true)
+}))
+
 beforeEach(() => {
   Object.defineProperty(window, 'api', {
     value: {
