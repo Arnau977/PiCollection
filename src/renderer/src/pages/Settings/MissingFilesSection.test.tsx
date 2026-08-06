@@ -4,6 +4,12 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MissingFilesSection } from './MissingFilesSection'
 
+const confirmMock = vi.fn().mockResolvedValue(true)
+
+vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => confirmMock
+}))
+
 function setApi(overrides: Record<string, unknown> = {}): void {
   Object.defineProperty(window, 'api', {
     value: {
@@ -93,7 +99,7 @@ describe('MissingFilesSection', () => {
     // *second* checkMissingFiles call (the post-relink refresh) to report
     // clean - a plain mockResolvedValue would return "still 5 missing"
     // forever and the component would never reach the clean state.
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    confirmMock.mockResolvedValueOnce(true)
     setApi({
       checkMissingFiles: vi
         .fn()
@@ -125,7 +131,7 @@ describe('MissingFilesSection', () => {
   })
 
   it('asks for confirmation before relinking, and does nothing if declined', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    confirmMock.mockResolvedValueOnce(false)
     setRelinkableApi()
     const user = userEvent.setup()
     render(<MissingFilesSection />)

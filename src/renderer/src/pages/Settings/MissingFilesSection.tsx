@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { FolderSearch } from 'lucide-react'
 import type { MissingFileItem } from '@shared/models'
 import { MediaThumb } from '../../components/MediaThumb/MediaThumb'
+import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 
 type CheckState =
   | { kind: 'idle' }
@@ -21,6 +22,7 @@ type CheckState =
 
 export function MissingFilesSection(): JSX.Element {
   const { t } = useTranslation()
+  const confirm = useConfirm()
   const [state, setState] = useState<CheckState>({ kind: 'idle' })
   const [relinkingIds, setRelinkingIds] = useState<Set<string>>(new Set())
 
@@ -60,7 +62,7 @@ export function MissingFilesSection(): JSX.Element {
 
   async function handleRelink(): Promise<void> {
     if (state.kind !== 'missing' || !state.oldRoot || !state.newRoot) return
-    if (!window.confirm(t('settings.missingFilesRelinkConfirm'))) return
+    if (!(await confirm(t('settings.missingFilesRelinkConfirm')))) return
 
     const result = await window.api.maintenance.relinkMissingFiles(state.oldRoot, state.newRoot)
     if (!result.success) {
