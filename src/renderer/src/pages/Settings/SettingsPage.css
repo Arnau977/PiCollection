@@ -88,6 +88,25 @@
   font-size: 0.88rem;
 }
 
+.update-highlights {
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-hover);
+}
+
+.update-highlights h3 {
+  margin: 0 0 var(--space-2);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.update-highlights ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.9rem;
+}
+
 .settings-field-actions {
   display: flex;
   align-items: center;

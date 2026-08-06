@@ -37,6 +37,7 @@
     "checkingForUpdates": "Buscando actualizaciones...",
     "upToDate": "Ya tienes la última versión.",
     "updateAvailable": "La versión {{version}} está disponible.",
+    "whatsNew": "Novedades",
     "downloadUpdate": "Descargar actualización",
     "downloadingUpdate": "Descargando actualización... {{percent}}%",
     "updateReady": "La versión {{version}} está lista para instalarse.",

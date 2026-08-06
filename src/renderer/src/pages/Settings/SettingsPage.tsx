@@ -292,6 +292,21 @@ export default function SettingsPage(): JSX.Element {
               </p>
             )}
 
+            {updater.status.state === 'available' && updater.status.highlights && (
+              <div className="update-highlights">
+                <h3>{t('settings.whatsNew')}</h3>
+                <ul>
+                  {updater.status.highlights
+                    .split('\n')
+                    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+                    .filter(Boolean)
+                    .map((line, index) => (
+                      <li key={index}>{line}</li>
+                    ))}
+                </ul>
+              </div>
+            )}
+
             {updater.status.state === 'downloaded' ? (
               <button type="button" className="btn" onClick={updater.quitAndInstall}>
                 {t('settings.restartAndInstall')}
