@@ -2,7 +2,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { CharacterModel, MediaFilters, Sorting, TagModel } from '@shared/models'
+import type { CharacterModel, MediaFilters, SeriesModel, Sorting, TagModel } from '@shared/models'
 import { FilterBar } from './FilterBar'
 
 function advancedPanel(): HTMLElement {
@@ -11,12 +11,13 @@ function advancedPanel(): HTMLElement {
 
 let tagsData: TagModel[] = []
 let charactersData: CharacterModel[] = []
+let seriesData: SeriesModel[] = []
 
 vi.mock('../../hooks/useEntityLists', () => ({
   useArtists: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
   useTags: () => ({ data: tagsData, loading: false, error: null, refetch: vi.fn() }),
   useCharacters: () => ({ data: charactersData, loading: false, error: null, refetch: vi.fn() }),
-  useSeries: () => ({ data: [], loading: false, error: null, refetch: vi.fn() })
+  useSeries: () => ({ data: seriesData, loading: false, error: null, refetch: vi.fn() })
 }))
 
 function renderFilterBar(filters: MediaFilters = {}) {
@@ -37,6 +38,7 @@ function renderFilterBar(filters: MediaFilters = {}) {
 beforeEach(() => {
   tagsData = []
   charactersData = []
+  seriesData = []
   vi.useFakeTimers({ shouldAdvanceTime: true })
 })
 
@@ -147,12 +149,12 @@ describe('FilterBar', () => {
     expect(screen.getByRole('button', { name: /advanced filters/i })).toHaveTextContent('2')
   })
 
-  it('shows a "no character" checkbox that clears character groups and sets noCharacter, atomically', async () => {
+  it('shows a "no character" toggle that clears character groups and sets noCharacter, atomically', async () => {
     charactersData = [{ id: 'c1', name: 'Ishtar', series: [] }]
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const { onFiltersChange } = renderFilterBar({ sfw: true, characterGroups: [['c1']] })
 
-    await user.click(screen.getByRole('checkbox', { name: /no character assigned/i }))
+    await user.click(screen.getByRole('button', { name: 'No character assigned' }))
 
     expect(onFiltersChange).toHaveBeenCalledTimes(1)
     expect(onFiltersChange).toHaveBeenCalledWith({
@@ -162,48 +164,69 @@ describe('FilterBar', () => {
     })
   })
 
-  it('disables the character picker while noCharacter is checked', () => {
-    renderFilterBar({ noCharacter: true })
+  it('disables the character picker while noCharacter is checked, but keeps its toggle clickable', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderFilterBar({ noCharacter: true })
 
     // Combobox order in the advanced panel: Artist, Tags, Characters, Series.
     const [, , charactersCombobox] = within(advancedPanel()).getAllByRole('combobox')
     expect(charactersCombobox).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'No character assigned' }))
+
+    expect(onFiltersChange).toHaveBeenCalledWith({ noCharacter: undefined, characterGroups: undefined })
   })
 
-  it('shows a "no series" checkbox that clears seriesIds and sets noSeries, atomically', async () => {
+  it('adds a series to the series filter group and merges it into the existing filters', async () => {
+    seriesData = [{ id: 's1', name: 'Fate/Grand Order' }]
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    const { onFiltersChange } = renderFilterBar({ seriesIds: ['s1'] })
+    const { onFiltersChange } = renderFilterBar({ sfw: true })
 
-    await user.click(screen.getByRole('checkbox', { name: /no series assigned/i }))
+    await user.click(screen.getByRole('button', { name: /advanced filters/i }))
+    // Combobox order in the advanced panel: Artist, Tags, Characters, Series.
+    const [, , , seriesCombobox] = within(advancedPanel()).getAllByRole('combobox')
+    await user.type(seriesCombobox, 'Fate')
+    await user.click(await screen.findByRole('option', { name: 'Fate/Grand Order' }))
+
+    expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, seriesGroups: [['s1']] })
+  })
+
+  it('builds an OR-of-AND-groups series query, updating only the targeted group', async () => {
+    seriesData = [
+      { id: 's1', name: 'Fate/Grand Order' },
+      { id: 's2', name: 'Fate/stay night' }
+    ]
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    // an already-active series group auto-expands Advanced Filters on mount
+    const { onFiltersChange } = renderFilterBar({ seriesGroups: [['s1'], []] })
+
+    const comboboxes = screen.getAllByRole('combobox', { name: /^Series/ })
+    expect(comboboxes).toHaveLength(2)
+    await user.type(comboboxes[1], 'Fate/stay')
+    await user.click(await screen.findByRole('option', { name: 'Fate/stay night' }))
+
+    expect(onFiltersChange).toHaveBeenCalledWith({ seriesGroups: [['s1'], ['s2']] })
+  })
+
+  it('shows a "no series" toggle that clears series groups and sets noSeries, atomically', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderFilterBar({ seriesGroups: [['s1']] })
+
+    await user.click(screen.getByRole('button', { name: 'No series assigned' }))
 
     expect(onFiltersChange).toHaveBeenCalledTimes(1)
-    expect(onFiltersChange).toHaveBeenCalledWith({ seriesIds: undefined, noSeries: true })
+    expect(onFiltersChange).toHaveBeenCalledWith({ seriesGroups: undefined, noSeries: true })
   })
 
-  it('disables the series picker and operator toggle while noSeries is checked', () => {
+  it('disables the series picker while noSeries is checked', () => {
     renderFilterBar({ noSeries: true })
 
     const [seriesCombobox] = within(advancedPanel()).getAllByRole('combobox', { name: /series/i })
     expect(seriesCombobox).toBeDisabled()
-    expect(screen.getByRole('button', { name: /any \(or\)/i })).toBeDisabled()
-    expect(screen.getByRole('button', { name: /all \(and\)/i })).toBeDisabled()
-  })
-
-  it('toggles the series AND/OR operator', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    const { onFiltersChange } = renderFilterBar({ seriesIds: ['s1', 's2'] })
-
-    const andButtons = screen.getAllByRole('button', { name: /all \(and\)/i })
-    await user.click(andButtons[andButtons.length - 1])
-
-    expect(onFiltersChange).toHaveBeenCalledWith({
-      seriesIds: ['s1', 's2'],
-      seriesOperator: 'AND'
-    })
   })
 
   it('counts an active series filter in the advanced filters badge', () => {
-    renderFilterBar({ seriesIds: ['s1'] })
+    renderFilterBar({ seriesGroups: [['s1']] })
 
     expect(screen.getByRole('button', { name: /advanced filters/i })).toHaveTextContent('1')
   })

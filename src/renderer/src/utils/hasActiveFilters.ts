@@ -14,7 +14,7 @@ export function hasActiveFilters(filters: MediaFilters): boolean {
       hasNonEmptyGroup(filters.tagGroups) ||
       hasNonEmptyGroup(filters.characterGroups) ||
       filters.noCharacter ||
-      filters.seriesIds?.length ||
+      hasNonEmptyGroup(filters.seriesGroups) ||
       filters.noSeries
   )
 }

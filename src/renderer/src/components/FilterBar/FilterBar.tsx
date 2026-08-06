@@ -5,9 +5,7 @@ import type { MediaFilters, MediaSortableProp, Sorting } from '@shared/models'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
 import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import { Autocomplete } from '../Autocomplete/Autocomplete'
-import { MultiSelectAutocomplete } from '../Autocomplete/MultiSelectAutocomplete'
 import { SearchBar } from '../SearchBar/SearchBar'
-import { InfoTooltip } from '../InfoTooltip/InfoTooltip'
 import { GroupedEntityFilter } from './GroupedEntityFilter'
 import './FilterBar.css'
 
@@ -16,39 +14,6 @@ interface FilterBarProps {
   onFiltersChange: (filters: MediaFilters) => void
   sorting?: Sorting
   onSortingChange: (sorting: Sorting) => void
-}
-
-interface OperatorToggleProps {
-  value: 'AND' | 'OR'
-  onChange: (operator: 'AND' | 'OR') => void
-  disabled?: boolean
-}
-
-function OperatorToggle({ value, onChange, disabled }: OperatorToggleProps): JSX.Element {
-  const { t } = useTranslation()
-  return (
-    <div className="operator-toggle-row">
-      <div className="operator-toggle" role="radiogroup" aria-label={t('filters.operatorGroup')}>
-        <button
-          type="button"
-          aria-pressed={value === 'OR'}
-          onClick={() => onChange('OR')}
-          disabled={disabled}
-        >
-          {t('filters.operatorOr')}
-        </button>
-        <button
-          type="button"
-          aria-pressed={value === 'AND'}
-          onClick={() => onChange('AND')}
-          disabled={disabled}
-        >
-          {t('filters.operatorAnd')}
-        </button>
-      </div>
-      <InfoTooltip text={t('filters.operatorTooltip')} />
-    </div>
-  )
 }
 
 function hasNonEmptyGroup(groups: string[][] | undefined): boolean {
@@ -77,7 +42,7 @@ export function FilterBar({
     hasNonEmptyGroup(filters.tagGroups) ? 1 : 0,
     hasNonEmptyGroup(filters.characterGroups) ? 1 : 0,
     filters.noCharacter ? 1 : 0,
-    filters.seriesIds?.length ? 1 : 0,
+    hasNonEmptyGroup(filters.seriesGroups) ? 1 : 0,
     filters.noSeries ? 1 : 0
   ].reduce((a, b) => a + b, 0)
 
@@ -235,42 +200,26 @@ export function FilterBar({
             }}
           />
 
-          <div className="filter-group">
-            <span className="filter-label">{t('manage.series')}</span>
-            <label className="checkbox-row">
-              <input
-                type="checkbox"
-                checked={filters.noSeries ?? false}
-                onChange={(e) => {
-                  const checked = e.target.checked
-                  onFiltersChange({
-                    ...filters,
-                    noSeries: checked || undefined,
-                    seriesIds: checked ? undefined : filters.seriesIds
-                  })
-                }}
-              />
-              {t('filters.noSeries')}
-            </label>
-            <MultiSelectAutocomplete
-              name="series-filter"
-              label={t('manage.series')}
-              hideLabel
-              options={series}
-              getOptionLabel={(s) => s.name}
-              getOptionValue={(s) => s.id}
-              selectedValues={filters.seriesIds ?? []}
-              onChange={(seriesIds) =>
-                onFiltersChange({ ...filters, seriesIds: seriesIds.length ? seriesIds : undefined })
-              }
-              disabled={filters.noSeries}
-            />
-            <OperatorToggle
-              value={filters.seriesOperator ?? 'OR'}
-              onChange={(seriesOperator) => onFiltersChange({ ...filters, seriesOperator })}
-              disabled={filters.noSeries}
-            />
-          </div>
+          <GroupedEntityFilter
+            label={t('manage.series')}
+            groups={filters.seriesGroups ?? []}
+            onChange={(seriesGroups) =>
+              onFiltersChange({ ...filters, seriesGroups: normalizeGroups(seriesGroups) })
+            }
+            options={series}
+            getOptionLabel={(s) => s.name}
+            getOptionValue={(s) => s.id}
+            noneOption={{
+              checked: filters.noSeries ?? false,
+              onChange: (checked) =>
+                onFiltersChange({
+                  ...filters,
+                  noSeries: checked || undefined,
+                  seriesGroups: checked ? undefined : filters.seriesGroups
+                }),
+              label: t('filters.noSeries')
+            }}
+          />
         </div>
       )}
     </div>

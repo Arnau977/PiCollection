@@ -35,12 +35,13 @@ describe('hasActiveFilters', () => {
     expect(hasActiveFilters({ characterGroups: [['c1']] })).toBe(true)
   })
 
-  it('returns true when seriesIds has entries', () => {
-    expect(hasActiveFilters({ seriesIds: ['s1'] })).toBe(true)
+  it('returns true when seriesGroups has a non-empty group', () => {
+    expect(hasActiveFilters({ seriesGroups: [['s1']] })).toBe(true)
   })
 
-  it('returns false when seriesIds is an empty array', () => {
-    expect(hasActiveFilters({ seriesIds: [] })).toBe(false)
+  it('returns false when seriesGroups is empty or only has empty groups', () => {
+    expect(hasActiveFilters({ seriesGroups: [] })).toBe(false)
+    expect(hasActiveFilters({ seriesGroups: [[], []] })).toBe(false)
   })
 
   it('returns true when noCharacter is set', () => {
