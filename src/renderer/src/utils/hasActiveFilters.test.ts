@@ -43,6 +43,14 @@ describe('hasActiveFilters', () => {
     expect(hasActiveFilters({ seriesIds: [] })).toBe(false)
   })
 
+  it('returns true when noCharacter is set', () => {
+    expect(hasActiveFilters({ noCharacter: true })).toBe(true)
+  })
+
+  it('returns true when noSeries is set', () => {
+    expect(hasActiveFilters({ noSeries: true })).toBe(true)
+  })
+
   it('returns true when artistId is set', () => {
     expect(hasActiveFilters({ artistId: 'a1' })).toBe(true)
   })

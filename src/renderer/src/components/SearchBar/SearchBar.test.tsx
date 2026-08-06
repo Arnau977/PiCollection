@@ -285,4 +285,18 @@ describe('SearchBar', () => {
       characterGroups: [['c1']]
     })
   })
+
+  it('clears noCharacter when a character suggestion is clicked', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderSearchBar({ noCharacter: true })
+
+    await user.type(searchInput(), 'Alic')
+    await user.click(await screen.findByRole('option', { name: /Alice \(Wonderland\)/ }))
+
+    expect(onFiltersChange).toHaveBeenCalledWith({
+      query: undefined,
+      characterGroups: [['c1']],
+      noCharacter: undefined
+    })
+  })
 })

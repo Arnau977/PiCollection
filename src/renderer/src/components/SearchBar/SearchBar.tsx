@@ -170,7 +170,8 @@ export function SearchBar({
     onFiltersChange({
       ...filters,
       query: nextQuery.trim() || undefined,
-      characterGroups: nextGroups
+      characterGroups: nextGroups,
+      noCharacter: undefined
     })
   }
 

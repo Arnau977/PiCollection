@@ -370,4 +370,16 @@ describe('media.repository noCharacter / noSeries filters', () => {
     const rows = await mediaRepo.findMediaRows(db, { noCharacter: true, noSeries: true })
     expect(rows.map((r) => r.name)).toEqual(['bare'])
   })
+
+  it('returns zero rows when noCharacter and a non-empty characterGroups are both active (contradictory filters)', async () => {
+    const character = await insertCharacter('Ishtar')
+    const withCharacter = await insertMedia('withCharacter')
+    await mediaRepo.setMediaCharacters(db, withCharacter.id, [character.id])
+
+    const rows = await mediaRepo.findMediaRows(db, {
+      noCharacter: true,
+      characterGroups: [[character.id]]
+    })
+    expect(rows).toEqual([])
+  })
 })

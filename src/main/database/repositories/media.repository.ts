@@ -149,11 +149,7 @@ function applyMediaFilters(
   qb = applyGroupedFilter(qb, db, 'media_character', 'character_id', filters.characterGroups)
 
   if (filters.noCharacter) {
-    qb = qb.where(
-      'media.id',
-      'not in',
-      db.selectFrom('media_character').select('media_id')
-    )
+    qb = qb.where('media.id', 'not in', db.selectFrom('media_character').select('media_id'))
   }
 
   if (filters.seriesIds?.length) {

@@ -13,6 +13,8 @@ export function hasActiveFilters(filters: MediaFilters): boolean {
       filters.type ||
       hasNonEmptyGroup(filters.tagGroups) ||
       hasNonEmptyGroup(filters.characterGroups) ||
-      filters.seriesIds?.length
+      filters.noCharacter ||
+      filters.seriesIds?.length ||
+      filters.noSeries
   )
 }
