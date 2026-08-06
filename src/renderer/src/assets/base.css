@@ -55,6 +55,8 @@
   --color-danger-soft: rgba(248, 113, 113, 0.15);
   --color-info: #4fb6ff;
   --color-info-soft: rgba(79, 182, 255, 0.15);
+  --color-artist: #f0a860;
+  --color-artist-soft: rgba(240, 168, 96, 0.15);
 
   /* Radii */
   --radius-sm: 6px;

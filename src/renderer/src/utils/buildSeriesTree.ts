@@ -44,3 +44,37 @@ export function buildSeriesTree(series: SeriesModel[]): SeriesTreeNode[] {
 
   return nodes
 }
+
+/**
+ * Builds a tree containing just `matched` plus every ancestor needed to place them correctly,
+ * resolved from `allSeries` - for cases where only a subset of series is known to be relevant
+ * (a search result, a single media's directly-linked series) but the hierarchy still needs to
+ * read the same way it would unfiltered.
+ *
+ * `rolledUpCount` on the result only sums descendants that are themselves in the ancestor
+ * closure of `matched`, not the true global rolled-up count - fine for callers that don't
+ * display counts in this partial mode, misleading otherwise.
+ */
+export function buildAncestorAwareSeriesTree(
+  matched: SeriesModel[],
+  allSeries: SeriesModel[]
+): SeriesTreeNode[] {
+  const byId = new Map(allSeries.map((s) => [s.id, s]))
+  const includedById = new Map<string, SeriesModel>()
+
+  for (const series of matched) {
+    let current: SeriesModel | undefined = byId.get(series.id) ?? series
+    while (current && !includedById.has(current.id)) {
+      includedById.set(current.id, current)
+      current = current.parentId ? byId.get(current.parentId) : undefined
+    }
+  }
+
+  // Prefer `allSeries`'s order for sibling placement (matches what an unfiltered tree would
+  // show). A matched series not found in `allSeries` (e.g. it hasn't loaded yet) would otherwise
+  // vanish entirely if we filtered `allSeries` alone, so it falls back to appearing in walk order.
+  const fromAllSeries = allSeries.filter((s) => includedById.has(s.id))
+  const notYetLoaded = [...includedById.values()].filter((s) => !byId.has(s.id))
+
+  return buildSeriesTree([...fromAllSeries, ...notYetLoaded])
+}

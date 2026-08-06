@@ -18,15 +18,32 @@ function makeMedia(overrides: Partial<MediaModel> = {}): MediaModel {
   }
 }
 
+/** `Media` fetches the full series list (via `useSeries`) to resolve a linked series' ancestors. */
+function setApi(overrides: Record<string, unknown> = {}): void {
+  Object.defineProperty(window, 'api', {
+    value: {
+      series: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+      ...overrides
+    },
+    writable: true,
+    configurable: true
+  })
+}
+
+beforeEach(() => {
+  setApi()
+})
+
 describe('Media', () => {
-  it('shows the artist name when an artist is present', () => {
+  it('shows the artist name under its own heading when an artist is present', () => {
     render(<Media {...makeMedia({ artist: { id: 'a1', name: 'Jane Doe' } })} />)
-    expect(screen.getByText('Artist: Jane Doe')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Artist' })).toBeInTheDocument()
+    expect(screen.getByText('Jane Doe')).toBeInTheDocument()
   })
 
   it('falls back to "Unknown" when there is no artist, instead of rendering an object', () => {
     render(<Media {...makeMedia({ artist: undefined })} />)
-    expect(screen.getByText('Artist: Unknown')).toBeInTheDocument()
+    expect(screen.getByText('Unknown')).toBeInTheDocument()
     expect(screen.queryByText('[object Object]')).not.toBeInTheDocument()
   })
 
@@ -43,6 +60,25 @@ describe('Media', () => {
     expect(screen.getByText('landscape')).toBeInTheDocument()
     expect(screen.getByText('Hero')).toBeInTheDocument()
     expect(screen.getByText('Wonderland')).toBeInTheDocument()
+  })
+
+  it("shows a linked series' parent for context even when only the child is directly linked", async () => {
+    setApi({
+      series: {
+        getAll: vi.fn().mockResolvedValue({
+          success: true,
+          data: [
+            { id: 'p1', name: 'Honkai (series)', parentId: null },
+            { id: 's1', name: 'Honkai: Star Rail', parentId: 'p1' }
+          ]
+        })
+      }
+    })
+
+    render(<Media {...makeMedia({ series: [{ id: 's1', name: 'Honkai: Star Rail' }] })} />)
+
+    expect(await screen.findByText('Honkai (series)')).toBeInTheDocument()
+    expect(screen.getByText('Honkai: Star Rail')).toBeInTheDocument()
   })
 
   it('does not crash when tags/characters are omitted', () => {
@@ -69,15 +105,11 @@ describe('Media', () => {
 
 describe('Media lightbox', () => {
   beforeEach(() => {
-    Object.defineProperty(window, 'api', {
-      value: {
-        system: {
-          showInFolder: vi.fn(),
-          copyLocationToClipboard: vi.fn().mockResolvedValue({ success: true, data: undefined })
-        }
-      },
-      writable: true,
-      configurable: true
+    setApi({
+      system: {
+        showInFolder: vi.fn(),
+        copyLocationToClipboard: vi.fn().mockResolvedValue({ success: true, data: undefined })
+      }
     })
   })
 

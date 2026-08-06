@@ -259,6 +259,28 @@ describe('SeriesManager', () => {
     expect(parentInput).toHaveValue('Wonderland')
   })
 
+  it("still shows a matched series' parent for context while searching, indented the same way as unfiltered", async () => {
+    const user = userEvent.setup()
+    seriesData = [
+      { id: 's1', name: 'Honkai (series)', aliases: [], createdAt: 1700000000000, mediaCount: 1 },
+      {
+        id: 's2',
+        name: 'Honkai: Star Rail',
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 's1',
+        mediaCount: 5
+      }
+    ]
+    render(<SeriesManager />)
+
+    await user.type(screen.getByRole('searchbox'), 'Star Rail')
+
+    expect(screen.getByText('Honkai (series)')).toBeInTheDocument()
+    const childItem = screen.getByText('Honkai: Star Rail').closest('li')
+    expect(childItem?.className).toContain('depth-1')
+  })
+
   it('renders a child series indented under its parent with a rolled-up media count', () => {
     seriesData = [
       { id: 's1', name: 'Wonderland', aliases: [], createdAt: 1700000000000, mediaCount: 2 },

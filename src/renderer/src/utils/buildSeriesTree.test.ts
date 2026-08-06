@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildSeriesTree } from './buildSeriesTree'
+import { buildAncestorAwareSeriesTree, buildSeriesTree } from './buildSeriesTree'
 import type { SeriesModel } from '@shared/models'
 
 function series(id: string, parentId: string | null, mediaCount = 0): SeriesModel {
@@ -63,5 +63,65 @@ describe('buildSeriesTree', () => {
     const nodes = buildSeriesTree([{ id: 'a', name: 'a', parentId: null }])
 
     expect(nodes[0].rolledUpCount).toBe(0)
+  })
+})
+
+describe('buildAncestorAwareSeriesTree', () => {
+  const grandparent = series('grandparent', null)
+  const parent = series('parent', 'grandparent')
+  const child = series('child', 'parent')
+  const unrelated = series('unrelated', null)
+  const all = [grandparent, parent, child, unrelated]
+
+  it("pulls in a matched series' whole ancestor chain, even though only the leaf matched", () => {
+    const nodes = buildAncestorAwareSeriesTree([child], all)
+
+    expect(nodes.map((n) => [n.series.id, n.depth])).toEqual([
+      ['grandparent', 0],
+      ['parent', 1],
+      ['child', 2]
+    ])
+  })
+
+  it('leaves a parentless matched series as a single root node', () => {
+    const nodes = buildAncestorAwareSeriesTree([unrelated], all)
+
+    expect(nodes).toHaveLength(1)
+    expect(nodes[0]).toMatchObject({ series: unrelated, depth: 0 })
+  })
+
+  it('does not duplicate an ancestor shared by two matched descendants', () => {
+    const otherChild = series('other-child', 'parent')
+    const withSibling = [...all, otherChild]
+
+    const nodes = buildAncestorAwareSeriesTree([child, otherChild], withSibling)
+
+    expect(nodes.map((n) => n.series.id)).toEqual(['grandparent', 'parent', 'child', 'other-child'])
+  })
+
+  it("follows allSeries's order for sibling placement, not the order matches were passed in", () => {
+    const rootB = series('rootB', null)
+    const rootA = series('rootA', null)
+    const orderedAll = [rootB, rootA]
+
+    // Passed in reverse of `orderedAll` - the result should still follow orderedAll's order.
+    const nodes = buildAncestorAwareSeriesTree([rootA, rootB], orderedAll)
+
+    expect(nodes.map((n) => n.series.id)).toEqual(['rootB', 'rootA'])
+  })
+
+  it('excludes series that are neither matched nor an ancestor of a match', () => {
+    const nodes = buildAncestorAwareSeriesTree([child], all)
+
+    expect(nodes.some((n) => n.series.id === 'unrelated')).toBe(false)
+  })
+
+  it("still shows a matched series even when it isn't found in allSeries yet (e.g. still loading)", () => {
+    const notYetLoaded = series('not-loaded', null)
+
+    const nodes = buildAncestorAwareSeriesTree([notYetLoaded], [])
+
+    expect(nodes).toHaveLength(1)
+    expect(nodes[0]).toMatchObject({ series: notYetLoaded, depth: 0 })
   })
 })

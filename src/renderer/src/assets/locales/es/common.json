@@ -163,7 +163,6 @@
     "nsfwTitle": "Contenido erótico",
     "sfwBadge": "SFW",
     "nsfwBadge": "NSFW",
-    "artistLabel": "Artista: {{name}}",
     "unknownArtist": "Desconocido",
     "notFound": "Media no encontrado",
     "revealNsfw": "Clic para revelar",

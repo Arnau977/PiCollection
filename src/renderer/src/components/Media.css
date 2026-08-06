@@ -66,11 +66,41 @@
   gap: var(--space-2);
 }
 
-.media-detail-artist {
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
-}
-
 .media-detail-section h2 {
   margin-bottom: var(--space-2);
+}
+
+.media-detail-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.media-detail-name-artist {
+  color: var(--color-artist);
+}
+
+.media-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.media-detail-name-series {
+  color: var(--accent);
+}
+
+.media-detail-name-character {
+  color: var(--color-success);
+}
+
+.media-detail-tree-connector {
+  color: var(--color-text-faint);
+  font-weight: normal;
+  margin-right: var(--space-1);
+}
+
+.chip-list-tags li {
+  color: var(--color-info);
 }

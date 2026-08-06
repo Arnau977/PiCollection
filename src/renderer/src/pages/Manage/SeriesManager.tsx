@@ -13,7 +13,7 @@ import {
   type ManageSort
 } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
-import { buildSeriesTree } from '../../utils/buildSeriesTree'
+import { buildAncestorAwareSeriesTree, buildSeriesTree } from '../../utils/buildSeriesTree'
 import { formatCompactCount } from '../../utils/formatCompactCount'
 import type { SeriesModel } from '@shared/models'
 
@@ -59,9 +59,12 @@ export function SeriesManager(): JSX.Element {
     ),
     sort
   )
-  // Only a full (non-filtered) list makes sense as a tree - a search result can drop a series'
-  // ancestors, which would either orphan it or misrepresent its rolled-up count.
-  const treeNodes = isSearching ? null : buildSeriesTree(sortedSeries)
+  // While searching, still show each match's ancestor chain (pulled from the full sorted list)
+  // so the hierarchy reads the same way it does unfiltered - just restricted to matches plus the
+  // ancestors needed to place them.
+  const treeNodes = isSearching
+    ? buildAncestorAwareSeriesTree(visibleSeries, sortedSeries)
+    : buildSeriesTree(sortedSeries)
 
   // A series can't be its own parent; the backend also rejects deeper cycles (e.g. parenting to
   // one of its own descendants), so this is a best-effort narrowing rather than the source of truth.
@@ -232,9 +235,7 @@ export function SeriesManager(): JSX.Element {
             <p className="manage-empty">{t('manage.noResults')}</p>
           ) : (
             <ul className="manage-list">
-              {treeNodes
-                ? treeNodes.map((node) => renderItem(node.series, node.depth, node.rolledUpCount))
-                : visibleSeries.map((series) => renderItem(series, 0, series.mediaCount ?? 0))}
+              {treeNodes.map((node) => renderItem(node.series, node.depth, node.rolledUpCount))}
             </ul>
           )}
         </div>

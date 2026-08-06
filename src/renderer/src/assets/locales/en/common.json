@@ -163,7 +163,6 @@
     "nsfwTitle": "Explicit content",
     "sfwBadge": "SFW",
     "nsfwBadge": "NSFW",
-    "artistLabel": "Artist: {{name}}",
     "unknownArtist": "Unknown",
     "notFound": "Media not found",
     "revealNsfw": "Click to reveal",
