@@ -236,6 +236,7 @@ export function FilterBar({
           />
 
           <div className="filter-group">
+            <span className="filter-label">{t('manage.series')}</span>
             <label className="checkbox-row">
               <input
                 type="checkbox"
@@ -254,6 +255,7 @@ export function FilterBar({
             <MultiSelectAutocomplete
               name="series-filter"
               label={t('manage.series')}
+              hideLabel
               options={series}
               getOptionLabel={(s) => s.name}
               getOptionValue={(s) => s.id}
