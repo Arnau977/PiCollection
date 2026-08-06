@@ -8,6 +8,10 @@
     "settings": "Ajustes",
     "manage": "Metadatos"
   },
+  "confirmDialog": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
   "settings": {
     "title": "Ajustes",
     "language": "Idioma",

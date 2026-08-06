@@ -8,6 +8,10 @@
     "settings": "Settings",
     "manage": "Metadata"
   },
+  "confirmDialog": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
   "settings": {
     "title": "Settings",
     "language": "Language",

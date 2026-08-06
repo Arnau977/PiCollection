@@ -99,6 +99,16 @@ code {
   box-shadow: var(--accent-glow);
 }
 
+.btn-danger {
+  background: var(--color-danger);
+  border-color: transparent;
+  color: var(--color-background);
+}
+
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
 /* ---------- Form fields ---------- */
 
 .field {
