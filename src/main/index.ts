@@ -47,6 +47,8 @@ process.on('unhandledRejection', (reason) => {
 
 /** Give the window a moment to finish loading before an update check starts competing for bandwidth. */
 const STARTUP_UPDATE_CHECK_DELAY_MS = 5000
+/** Also re-check periodically for sessions left running across days, not just at launch. */
+const DAILY_UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
 
 function createWindow(): BrowserWindow {
   const windowState = createWindowStateKeeper()
@@ -168,6 +170,12 @@ app.whenReady().then(async () => {
   setTimeout(() => {
     checkForUpdates().catch((err) => console.info('Startup update check skipped:', err.message))
   }, STARTUP_UPDATE_CHECK_DELAY_MS)
+
+  // Catches updates published while the app stays open across multiple days -
+  // the startup check alone only covers the moment of launch.
+  setInterval(() => {
+    checkForUpdates().catch((err) => console.info('Daily update check skipped:', err.message))
+  }, DAILY_UPDATE_CHECK_INTERVAL_MS)
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
