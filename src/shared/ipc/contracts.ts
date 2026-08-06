@@ -73,7 +73,8 @@ export const TagInputSchema = z.object({
 
 export const SeriesInputSchema = z.object({
   name: z.string().min(1),
-  aliases: z.array(z.string()).optional()
+  aliases: z.array(z.string()).optional(),
+  parentId: z.string().nullable().optional()
 })
 
 export const CharacterInputSchema = z.object({

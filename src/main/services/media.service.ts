@@ -6,6 +6,7 @@ import * as artistRepo from '../database/repositories/artist.repository'
 import * as tagRepo from '../database/repositories/tag.repository'
 import * as characterRepo from '../database/repositories/character.repository'
 import * as seriesRepo from '../database/repositories/series.repository'
+import { buildSeriesClosureMap } from '../database/repositories/seriesHierarchy'
 import { AppError } from '../errors'
 import {
   computeFileHash,
@@ -205,9 +206,12 @@ export const mediaService = {
 
   async getMediaFiltered(filters: MediaFilters, sorting?: Sorting): Promise<MediaFilteredResult> {
     const db = getDb()
+    const seriesClosures = filters.seriesIds?.length
+      ? buildSeriesClosureMap(await seriesRepo.findSeriesHierarchy(db), filters.seriesIds)
+      : undefined
     const [rows, total] = await Promise.all([
-      mediaRepo.findMediaRows(db, filters, sorting),
-      mediaRepo.countMediaRows(db, filters)
+      mediaRepo.findMediaRows(db, filters, sorting, seriesClosures),
+      mediaRepo.countMediaRows(db, filters, seriesClosures)
     ])
     const items = await hydrateMedia(db, rows)
     return { items, total }

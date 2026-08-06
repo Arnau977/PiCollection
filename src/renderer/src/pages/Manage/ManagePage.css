@@ -222,9 +222,22 @@
 }
 
 .manage-item-aliases {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--color-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.manage-item-connector {
+  color: var(--color-text-faint);
+}
+
+.manage-item-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: var(--color-text-faint);
 }
 
 .manage-socials {

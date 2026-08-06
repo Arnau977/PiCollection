@@ -213,13 +213,15 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
       id: randomUUID(),
       name: 'seriesA',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
     const seriesB = await seriesRepo.insertSeries(db, {
       id: randomUUID(),
       name: 'seriesB',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
     const onlyA = await insertMedia('onlyA')
     const ab = await insertMedia('ab')
@@ -242,13 +244,15 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
       id: randomUUID(),
       name: 'seriesA',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
     const seriesB = await seriesRepo.insertSeries(db, {
       id: randomUUID(),
       name: 'seriesB',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
     const onlyA = await insertMedia('onlyA')
     const ab = await insertMedia('ab')
@@ -263,7 +267,97 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
 
     expect(result.map((r) => r.name)).toEqual(['ab'])
   })
+})
 
+describe('media.repository series hierarchy filtering (seriesClosures)', () => {
+  it('expands a parent series filter to also match media tagged only with a descendant', async () => {
+    const parent = await seriesRepo.insertSeries(db, {
+      id: randomUUID(),
+      name: 'parent',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const child = await seriesRepo.insertSeries(db, {
+      id: randomUUID(),
+      name: 'child',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: parent.id
+    })
+    const onlyChild = await insertMedia('onlyChild')
+    await insertMedia('unrelated')
+    await mediaRepo.setMediaSeries(db, onlyChild.id, [child.id])
+
+    const seriesClosures = new Map([[parent.id, [parent.id, child.id]]])
+    const result = await mediaRepo.findMediaRows(
+      db,
+      { seriesIds: [parent.id] },
+      undefined,
+      seriesClosures
+    )
+
+    expect(result.map((r) => r.name)).toEqual(['onlyChild'])
+  })
+
+  it('AND requires a match within each selected series own closure, not just any two matching ids', async () => {
+    const parentA = await seriesRepo.insertSeries(db, {
+      id: randomUUID(),
+      name: 'parentA',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const childA1 = await seriesRepo.insertSeries(db, {
+      id: randomUUID(),
+      name: 'childA1',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: parentA.id
+    })
+    const childA2 = await seriesRepo.insertSeries(db, {
+      id: randomUUID(),
+      name: 'childA2',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: parentA.id
+    })
+    const parentB = await seriesRepo.insertSeries(db, {
+      id: randomUUID(),
+      name: 'parentB',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const childB1 = await seriesRepo.insertSeries(db, {
+      id: randomUUID(),
+      name: 'childB1',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: parentB.id
+    })
+
+    const matchesBoth = await insertMedia('matchesBoth')
+    const onlyUnderA = await insertMedia('onlyUnderA')
+    await mediaRepo.setMediaSeries(db, matchesBoth.id, [childA1.id, childB1.id])
+    await mediaRepo.setMediaSeries(db, onlyUnderA.id, [childA1.id, childA2.id])
+
+    const seriesClosures = new Map([
+      [parentA.id, [parentA.id, childA1.id, childA2.id]],
+      [parentB.id, [parentB.id, childB1.id]]
+    ])
+    const result = await mediaRepo.findMediaRows(
+      db,
+      { seriesIds: [parentA.id, parentB.id], seriesOperator: 'AND' },
+      undefined,
+      seriesClosures
+    )
+
+    expect(result.map((r) => r.name)).toEqual(['matchesBoth'])
+  })
+})
+
+describe('media.repository free-text/sfw/type filtering', () => {
   it('filters by free-text query, sfw and type', async () => {
     await mediaRepo.insertMediaRow(db, {
       id: randomUUID(),

@@ -86,4 +86,10 @@ describe('characterService', () => {
     const character = await characterService.createCharacter({ name: 'Hero' })
     expect(character.createdAt).toBeGreaterThanOrEqual(before)
   })
+
+  it('includes each character direct media count, 0 when untagged', async () => {
+    const character = await characterService.createCharacter({ name: 'untagged' })
+    const all = await characterService.getAllCharacters()
+    expect(all.find((c) => c.id === character.id)?.mediaCount).toBe(0)
+  })
 })

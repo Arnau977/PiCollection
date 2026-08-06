@@ -35,6 +35,18 @@ export async function deleteArtist(db: Kysely<DB>, id: string): Promise<void> {
   await db.deleteFrom('artist').where('id', '=', id).execute()
 }
 
+/** Media linked per artist (direct media.artist_id FK), 0 for artists with none. */
+export async function countMediaPerArtist(db: Kysely<DB>): Promise<Record<string, number>> {
+  const rows = await db
+    .selectFrom('artist')
+    .leftJoin('media', 'media.artist_id', 'artist.id')
+    .select(['artist.id as id'])
+    .select((eb) => eb.fn.count('media.id').as('count'))
+    .groupBy('artist.id')
+    .execute()
+  return Object.fromEntries(rows.map((row) => [row.id, Number(row.count)]))
+}
+
 export function findSocialLinksForArtistIds(
   db: Kysely<DB>,
   artistIds: string[]

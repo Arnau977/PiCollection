@@ -73,4 +73,10 @@ describe('artistService', () => {
     const artist = await artistService.createArtist({ name: 'Jane' })
     expect(artist.createdAt).toBeGreaterThanOrEqual(before)
   })
+
+  it('includes each artist direct media count, 0 when untagged', async () => {
+    const artist = await artistService.createArtist({ name: 'untagged' })
+    const all = await artistService.getAllArtists()
+    expect(all.find((a) => a.id === artist.id)?.mediaCount).toBe(0)
+  })
 })

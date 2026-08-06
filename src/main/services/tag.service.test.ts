@@ -43,4 +43,10 @@ describe('tagService', () => {
     const tag = await tagService.createTag({ name: 'fresh' })
     expect(tag.createdAt).toBeGreaterThanOrEqual(before)
   })
+
+  it('includes each tag direct media count, 0 when untagged', async () => {
+    const tag = await tagService.createTag({ name: 'untagged' })
+    const all = await tagService.getAllTags()
+    expect(all.find((t) => t.id === tag.id)?.mediaCount).toBe(0)
+  })
 })

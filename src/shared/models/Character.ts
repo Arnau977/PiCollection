@@ -6,6 +6,7 @@ export interface CharacterModel {
   series: SeriesModel[]
   aliases?: string[]
   createdAt?: number
+  mediaCount?: number
 }
 
 export interface CharacterInput {

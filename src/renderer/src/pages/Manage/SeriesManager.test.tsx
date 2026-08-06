@@ -165,4 +165,59 @@ describe('SeriesManager', () => {
     render(<SeriesManager />)
     expect(screen.getByText('Alice in Wonderland')).toBeInTheDocument()
   })
+
+  it('sends the chosen parent series on create', async () => {
+    const user = userEvent.setup()
+    const create = vi.fn().mockResolvedValue({ success: true, data: { id: 's3', name: 'child' } })
+    setApi({ create })
+    render(<SeriesManager />)
+
+    await user.type(screen.getByLabelText('Name'), 'child')
+    const [parentInput] = screen.getAllByRole('combobox')
+    await user.type(parentInput, 'Wonderland')
+    await user.click(await screen.findByRole('option', { name: 'Wonderland' }))
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(create).toHaveBeenCalledWith({ name: 'child', aliases: [], parentId: 's1' })
+  })
+
+  it('pre-fills the parent series field when editing a series that has one', async () => {
+    seriesData = [
+      { id: 's1', name: 'Wonderland', aliases: [], createdAt: 1700000000000 },
+      {
+        id: 's2',
+        name: 'Alice in Wonderland (1951)',
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 's1'
+      }
+    ]
+    const user = userEvent.setup()
+    render(<SeriesManager />)
+
+    await user.click(screen.getByRole('button', { name: 'Edit Alice in Wonderland (1951)' }))
+
+    const [parentInput] = screen.getAllByRole('combobox')
+    expect(parentInput).toHaveValue('Wonderland')
+  })
+
+  it('renders a child series indented under its parent with a rolled-up media count', () => {
+    seriesData = [
+      { id: 's1', name: 'Wonderland', aliases: [], createdAt: 1700000000000, mediaCount: 2 },
+      {
+        id: 's2',
+        name: 'Alice in Wonderland (1951)',
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 's1',
+        mediaCount: 5
+      }
+    ]
+    render(<SeriesManager />)
+
+    const parentItem = screen.getByText('Wonderland').closest('li')
+    const childItem = screen.getByText('Alice in Wonderland (1951)').closest('li')
+    expect(parentItem).toHaveTextContent('7')
+    expect(childItem?.className).toContain('depth-1')
+  })
 })

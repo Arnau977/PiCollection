@@ -4,7 +4,7 @@ import * as artistRepo from '../database/repositories/artist.repository'
 import type { ArtistInput, ArtistModel, SocialLinkInput } from '@shared/models'
 import type { ArtistSocialLinkTable, ArtistTable } from '../database/schema'
 
-function toModel(row: ArtistTable, links: ArtistSocialLinkTable[]): ArtistModel {
+function toModel(row: ArtistTable, links: ArtistSocialLinkTable[], mediaCount?: number): ArtistModel {
   return {
     id: row.id,
     name: row.name,
@@ -14,14 +14,18 @@ function toModel(row: ArtistTable, links: ArtistSocialLinkTable[]): ArtistModel 
       name: link.name,
       url: link.url,
       icon: link.icon ?? undefined
-    }))
+    })),
+    mediaCount
   }
 }
 
 export const artistService = {
   async getAllArtists(): Promise<ArtistModel[]> {
     const db = getDb()
-    const rows = await artistRepo.findAllArtists(db)
+    const [rows, counts] = await Promise.all([
+      artistRepo.findAllArtists(db),
+      artistRepo.countMediaPerArtist(db)
+    ])
     const links = await artistRepo.findSocialLinksForArtistIds(
       db,
       rows.map((row) => row.id)
@@ -29,7 +33,8 @@ export const artistService = {
     return rows.map((row) =>
       toModel(
         row,
-        links.filter((link) => link.artist_id === row.id)
+        links.filter((link) => link.artist_id === row.id),
+        counts[row.id] ?? 0
       )
     )
   },

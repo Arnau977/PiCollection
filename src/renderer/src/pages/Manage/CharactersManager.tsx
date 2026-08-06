@@ -5,8 +5,14 @@ import { useCharacters, useSeries } from '../../hooks/useEntityLists'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { MultiSelectAutocomplete } from '../../components/Autocomplete/MultiSelectAutocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
-import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
+import {
+  loadManageSort,
+  saveManageSort,
+  sortManageEntities,
+  type ManageSort
+} from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
+import { formatCompactCount } from '../../utils/formatCompactCount'
 import type { CharacterModel } from '@shared/models'
 
 interface CharacterFormValues {
@@ -51,16 +57,6 @@ export function CharactersManager(): JSX.Element {
     ? searchedCharacters.filter((character) => character.series.some((s) => s.id === seriesFilter))
     : searchedCharacters
   const visibleCharacters = sortManageEntities(seriesFilteredCharacters, sort)
-
-  async function handleCreateSeries(name: string): Promise<void> {
-    const result = await window.api.series.create({ name })
-    if (result.success) {
-      series.refetch()
-      setForm((prev) => ({ ...prev, seriesIds: [...prev.seriesIds, result.data.id] }))
-    } else {
-      setError(result.error.message)
-    }
-  }
 
   function startEdit(character: CharacterModel): void {
     setEditing(character)
@@ -131,7 +127,6 @@ export function CharactersManager(): JSX.Element {
             getOptionValue={(s) => s.id}
             selectedValues={form.seriesIds}
             onChange={(seriesIds) => setForm((prev) => ({ ...prev, seriesIds }))}
-            onCreate={handleCreateSeries}
           />
 
           <div className="field">
@@ -213,11 +208,12 @@ export function CharactersManager(): JSX.Element {
                       </span>
                     )}
                     {character.aliases && character.aliases.length > 0 && (
-                      <span className="manage-item-meta manage-item-aliases">
-                        {character.aliases.join(', ')}
-                      </span>
+                      <span className="manage-item-aliases">{character.aliases.join(', ')}</span>
                     )}
                   </div>
+                  <span className="manage-item-count">
+                    {formatCompactCount(character.mediaCount ?? 0)}
+                  </span>
                   <button
                     type="button"
                     className="icon-btn"

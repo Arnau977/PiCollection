@@ -10,6 +10,7 @@ export interface ArtistModel {
   name: string
   createdAt?: number
   socials?: SocialLink[]
+  mediaCount?: number
 }
 
 export interface ArtistFilters {

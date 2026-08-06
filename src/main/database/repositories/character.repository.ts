@@ -38,6 +38,18 @@ export async function deleteCharacter(db: Kysely<DB>, id: string): Promise<void>
   await db.deleteFrom('character').where('id', '=', id).execute()
 }
 
+/** Direct media_character link count per character, 0 for characters with none. */
+export async function countMediaPerCharacter(db: Kysely<DB>): Promise<Record<string, number>> {
+  const rows = await db
+    .selectFrom('character')
+    .leftJoin('media_character', 'media_character.character_id', 'character.id')
+    .select(['character.id as id'])
+    .select((eb) => eb.fn.count('media_character.media_id').as('count'))
+    .groupBy('character.id')
+    .execute()
+  return Object.fromEntries(rows.map((row) => [row.id, Number(row.count)]))
+}
+
 export async function setCharacterSeries(
   db: Kysely<DB>,
   characterId: string,

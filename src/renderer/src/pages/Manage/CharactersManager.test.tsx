@@ -97,11 +97,9 @@ describe('CharactersManager', () => {
     expect(refetchCharacters).toHaveBeenCalled()
   })
 
-  it('creates a new series inline from the character form when it does not exist yet', async () => {
+  it('does not offer inline series creation from the character form', async () => {
     const user = userEvent.setup()
-    const seriesCreate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: { id: 's2', name: 'Show A' } })
+    const seriesCreate = vi.fn()
     Object.defineProperty(window, 'api', {
       value: {
         character: { create: vi.fn().mockResolvedValue({ success: true, data: {} }) },
@@ -117,10 +115,9 @@ describe('CharactersManager', () => {
 
     const [seriesInput] = screen.getAllByRole('combobox')
     await user.type(seriesInput, 'Show A')
-    await user.click(await screen.findByText('Create "Show A"'))
 
-    expect(seriesCreate).toHaveBeenCalledWith({ name: 'Show A' })
-    expect(refetchSeries).toHaveBeenCalled()
+    expect(screen.queryByText('Create "Show A"')).not.toBeInTheDocument()
+    expect(seriesCreate).not.toHaveBeenCalled()
   })
 
   it('edits a character, preserving its existing series selection', async () => {
@@ -234,5 +231,18 @@ describe('CharactersManager', () => {
   it('shows character aliases in the list', () => {
     render(<CharactersManager />)
     expect(screen.getByText('Ali')).toBeInTheDocument()
+  })
+
+  it('shows each character media count, compactly formatted', () => {
+    charactersData = [
+      { id: 'c1', name: 'Alice', series: [], aliases: [], createdAt: 1700000000000, mediaCount: 29000 },
+      { id: 'c2', name: 'Peter Pan', series: [], aliases: [], createdAt: 1700000001000, mediaCount: 0 }
+    ]
+    render(<CharactersManager />)
+
+    const aliceItem = screen.getByText('Alice').closest('li')
+    const peterItem = screen.getByText('Peter Pan').closest('li')
+    expect(aliceItem).toHaveTextContent('29k')
+    expect(peterItem).toHaveTextContent('0')
   })
 })

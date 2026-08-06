@@ -231,6 +231,8 @@
     "aliasesPlaceholder": "Comma-separated",
     "aliasesHint": "Alternate names or nicknames for this character.",
     "seriesAliasesHint": "Alternate or original titles for this series.",
+    "parentSeries": "Parent series",
+    "noParentSeries": "No parent (top-level)",
     "add": "Add",
     "save": "Save",
     "cancel": "Cancel",

@@ -48,7 +48,11 @@ export const characterService = {
   async getAllCharacters(): Promise<CharacterModel[]> {
     const db = getDb()
     const rows = await characterRepo.findAllCharacters(db)
-    return hydrateCharacters(db, rows)
+    const [characters, counts] = await Promise.all([
+      hydrateCharacters(db, rows),
+      characterRepo.countMediaPerCharacter(db)
+    ])
+    return characters.map((character) => ({ ...character, mediaCount: counts[character.id] ?? 0 }))
   },
 
   async getCharacterById(id: string): Promise<CharacterModel | null> {

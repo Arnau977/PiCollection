@@ -117,7 +117,11 @@ function compileQueryNode(
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inferred Kysely SelectQueryBuilder generic is impractical to spell out
-function applyMediaFilters(db: Kysely<DB>, filters: MediaFilters) {
+function applyMediaFilters(
+  db: Kysely<DB>,
+  filters: MediaFilters,
+  seriesClosures?: Map<string, string[]>
+) {
   let qb = db.selectFrom('media')
 
   const rawAst = filters.query?.trim() ? parseSearchQuery(filters.query) : null
@@ -146,15 +150,26 @@ function applyMediaFilters(db: Kysely<DB>, filters: MediaFilters) {
 
   if (filters.seriesIds?.length) {
     const seriesIds = filters.seriesIds
-    qb = qb.where('media.id', 'in', (eb) => {
-      let sub = eb.selectFrom('media_series').select('media_id').where('series_id', 'in', seriesIds)
-      if (filters.seriesOperator === 'AND') {
-        sub = sub
-          .groupBy('media_id')
-          .having((e) => e.fn.count('series_id').distinct(), '=', seriesIds.length)
+    // Each selected series may imply descendants (parent/child hierarchy) - seriesClosures maps
+    // a selected id to itself + all its descendant ids. Falls back to a singleton closure (just
+    // the id itself) when the caller doesn't resolve hierarchy (e.g. tests, or no parent tree).
+    const closureFor = (id: string): string[] => seriesClosures?.get(id) ?? [id]
+
+    if (filters.seriesOperator === 'AND') {
+      // AND across the *selected* series: media must match each selection's own closure
+      // (itself or any of its descendants), not just match `seriesIds.length` ids in total.
+      for (const id of seriesIds) {
+        const closure = closureFor(id)
+        qb = qb.where('media.id', 'in', (eb) =>
+          eb.selectFrom('media_series').select('media_id').where('series_id', 'in', closure)
+        )
       }
-      return sub
-    })
+    } else {
+      const expandedIds = [...new Set(seriesIds.flatMap(closureFor))]
+      qb = qb.where('media.id', 'in', (eb) =>
+        eb.selectFrom('media_series').select('media_id').where('series_id', 'in', expandedIds)
+      )
+    }
   }
 
   return qb
@@ -163,11 +178,12 @@ function applyMediaFilters(db: Kysely<DB>, filters: MediaFilters) {
 export function findMediaRows(
   db: Kysely<DB>,
   filters: MediaFilters,
-  sorting?: Sorting
+  sorting?: Sorting,
+  seriesClosures?: Map<string, string[]>
 ): Promise<MediaTable[]> {
   const sortColumn = SORT_COLUMNS[sorting?.prop ?? 'createdAt'] ?? 'created_at'
 
-  return applyMediaFilters(db, filters)
+  return applyMediaFilters(db, filters, seriesClosures)
     .selectAll('media')
     .orderBy(sortColumn, sorting?.desc ? 'desc' : 'asc')
     .limit(filters.limit ?? DEFAULT_LIMIT)
@@ -175,8 +191,12 @@ export function findMediaRows(
     .execute()
 }
 
-export async function countMediaRows(db: Kysely<DB>, filters: MediaFilters): Promise<number> {
-  const result = await applyMediaFilters(db, filters)
+export async function countMediaRows(
+  db: Kysely<DB>,
+  filters: MediaFilters,
+  seriesClosures?: Map<string, string[]>
+): Promise<number> {
+  const result = await applyMediaFilters(db, filters, seriesClosures)
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .executeTakeFirstOrThrow()
   return Number(result.count)

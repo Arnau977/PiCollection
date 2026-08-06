@@ -195,4 +195,17 @@ describe('ArtistsManager', () => {
     expect(screen.getByLabelText('Sort by')).toHaveValue('createdAt')
     expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
   })
+
+  it('shows each artist media count, compactly formatted', () => {
+    artistsData = [
+      { id: 'a1', name: 'Jane Doe', createdAt: 1700000000000, socials: [], mediaCount: 29000 },
+      { id: 'a2', name: 'John Smith', createdAt: 1700000001000, socials: [], mediaCount: 0 }
+    ]
+    render(<ArtistsManager />)
+
+    const janeItem = screen.getByText('Jane Doe').closest('li')
+    const johnItem = screen.getByText('John Smith').closest('li')
+    expect(janeItem).toHaveTextContent('29k')
+    expect(johnItem).toHaveTextContent('0')
+  })
 })

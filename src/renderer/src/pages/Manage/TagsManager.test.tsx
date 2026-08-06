@@ -191,4 +191,17 @@ describe('TagsManager', () => {
     expect(screen.getByLabelText('Sort by')).toHaveValue('createdAt')
     expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
   })
+
+  it('shows each tag media count, compactly formatted', () => {
+    tagsData = [
+      { id: 't1', name: 'landscape', createdAt: 1700000000000, mediaCount: 29000 },
+      { id: 't2', name: 'portrait', createdAt: 1700000001000, mediaCount: 0 }
+    ]
+    render(<TagsManager />)
+
+    const landscapeItem = screen.getByText('landscape').closest('li')
+    const portraitItem = screen.getByText('portrait').closest('li')
+    expect(landscapeItem).toHaveTextContent('29k')
+    expect(portraitItem).toHaveTextContent('0')
+  })
 })

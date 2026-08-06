@@ -87,7 +87,8 @@ describe('media.repository free-text query', () => {
       id: randomUUID(),
       name: 'Wonderland',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
     const withSeries = await insertMedia('withSeries')
     await insertMedia('plain')

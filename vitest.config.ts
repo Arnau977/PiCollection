@@ -15,6 +15,9 @@ export default defineConfig({
     // files opt into jsdom individually via a `// @vitest-environment jsdom` comment.
     environment: 'node',
     setupFiles: ['./src/renderer/src/test-setup.ts'],
-    exclude: ['node_modules', 'dist', 'out']
+    // '.claude' excludes nested git worktrees (e.g. .claude/worktrees/*), which are
+    // full separate checkouts with their own node_modules and would otherwise get
+    // test-discovered too, causing duplicate-React/module-instance failures.
+    exclude: ['node_modules', 'dist', 'out', '.claude']
   }
 })

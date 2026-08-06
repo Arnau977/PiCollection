@@ -5,8 +5,14 @@ import type { TagModel } from '@shared/models'
 import { useTags } from '../../hooks/useEntityLists'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
-import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
+import {
+  loadManageSort,
+  saveManageSort,
+  sortManageEntities,
+  type ManageSort
+} from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
+import { formatCompactCount } from '../../utils/formatCompactCount'
 
 export function TagsManager(): JSX.Element {
   const { t } = useTranslation()
@@ -22,7 +28,10 @@ export function TagsManager(): JSX.Element {
     saveManageSort('tags', next)
   }
 
-  const visibleTags = sortManageEntities(filterByQuery(tags, search, (tag) => tag.name), sort)
+  const visibleTags = sortManageEntities(
+    filterByQuery(tags, search, (tag) => tag.name),
+    sort
+  )
 
   function startEdit(tag: TagModel): void {
     setEditing(tag)
@@ -122,6 +131,9 @@ export function TagsManager(): JSX.Element {
                 >
                   <EntityThumbnail kind="tag" id={tag.id} />
                   <span className="manage-item-name">{tag.name}</span>
+                  <span className="manage-item-count">
+                    {formatCompactCount(tag.mediaCount ?? 0)}
+                  </span>
                   <button
                     type="button"
                     className="icon-btn"

@@ -4,14 +4,18 @@ import * as tagRepo from '../database/repositories/tag.repository'
 import type { TagInput, TagModel } from '@shared/models'
 import type { TagTable } from '../database/schema'
 
-function toModel(row: TagTable): TagModel {
-  return { id: row.id, name: row.name, createdAt: row.created_at }
+function toModel(row: TagTable, mediaCount?: number): TagModel {
+  return { id: row.id, name: row.name, createdAt: row.created_at, mediaCount }
 }
 
 export const tagService = {
   async getAllTags(): Promise<TagModel[]> {
-    const rows = await tagRepo.findAllTags(getDb())
-    return rows.map(toModel)
+    const db = getDb()
+    const [rows, counts] = await Promise.all([
+      tagRepo.findAllTags(db),
+      tagRepo.countMediaPerTag(db)
+    ])
+    return rows.map((row) => toModel(row, counts[row.id] ?? 0))
   },
 
   async createTag(input: TagInput): Promise<TagModel> {

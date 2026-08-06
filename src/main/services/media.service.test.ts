@@ -206,6 +206,27 @@ describe('mediaService.getMediaFiltered', () => {
     expect(and.items.map((m) => m.name)).toEqual(['both'])
   })
 
+  it('filtering by a parent series also surfaces media tagged only with a descendant series, and updates the count', async () => {
+    const grandparent = await seriesService.createSeries({ name: 'Xenoblade Chronicles (series)' })
+    const parent = await seriesService.createSeries({
+      name: 'Xenoblade Chronicles 3',
+      parentId: grandparent.id
+    })
+    const child = await seriesService.createSeries({
+      name: 'Xenoblade Chronicles 3: Future Redeemed',
+      parentId: parent.id
+    })
+    await mediaService.addMedia(
+      baseInput({ name: 'onlyChild', route: '/some/path-a.png', seriesIds: [child.id] })
+    )
+    await mediaService.addMedia(baseInput({ name: 'unrelated', route: '/some/path-b.png' }))
+
+    const byGrandparent = await mediaService.getMediaFiltered({ seriesIds: [grandparent.id] })
+
+    expect(byGrandparent.items.map((m) => m.name)).toEqual(['onlyChild'])
+    expect(byGrandparent.total).toBe(1)
+  })
+
   it('reports the total count of matching media independently of limit/offset', async () => {
     for (let i = 0; i < 5; i += 1) {
       await mediaService.addMedia(baseInput({ name: `media-${i}`, route: `/some/path-${i}.png` }))
