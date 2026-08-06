@@ -29,6 +29,19 @@ describe('EntityThumbnail', () => {
     expect(getFiltered).toHaveBeenCalledWith({ tagGroups: [['t1']], sfw: true })
   })
 
+  it('queries by seriesGroups for a series thumbnail', async () => {
+    const getFiltered = vi.fn().mockResolvedValue({
+      success: true,
+      data: { items: [{ id: 'm1', route: '/pics/a.png', type: 'image' }], total: 1 }
+    })
+    setApi(getFiltered)
+
+    const { container } = render(<EntityThumbnail kind="series" id="s1" />)
+
+    await waitFor(() => expect(container.querySelector('img')).toBeInTheDocument())
+    expect(getFiltered).toHaveBeenCalledWith({ seriesGroups: [['s1']], sfw: true })
+  })
+
   it('uses a preview image for videos too instead of loading the video', async () => {
     const getFiltered = vi.fn().mockResolvedValue({
       success: true,

@@ -31,7 +31,7 @@ export function useEntityThumbnail(kind: EntityThumbnailKind, id: string): Entit
           ? { tagGroups: [[id]], sfw: true }
           : kind === 'character'
             ? { characterGroups: [[id]], sfw: true }
-            : { seriesIds: [id], sfw: true }
+            : { seriesGroups: [[id]], sfw: true }
 
     window.api.media.getFiltered(filters).then((result) => {
       if (cancelled) return
