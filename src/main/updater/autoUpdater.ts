@@ -2,6 +2,7 @@ import { app, type BrowserWindow } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { IPC } from '@shared/ipc/contracts'
 import type { UpdateChannel, UpdaterEvent } from '@shared/models'
+import { extractHighlights, normalizeReleaseNotes } from '@shared/utils'
 import { readUpdateChannel, writeUpdateChannel } from './updaterSettings'
 import { logInfo } from '../logging/logger'
 
@@ -31,7 +32,11 @@ export function initAutoUpdater(window: BrowserWindow): void {
 
   autoUpdater.on('checking-for-update', () => send({ type: 'checking' }))
   autoUpdater.on('update-available', (info) =>
-    send({ type: 'available', version: info.version, highlights: null })
+    send({
+      type: 'available',
+      version: info.version,
+      highlights: extractHighlights(normalizeReleaseNotes(info.releaseNotes))
+    })
   )
   autoUpdater.on('update-not-available', () => send({ type: 'not-available' }))
   autoUpdater.on('download-progress', (progress) =>
