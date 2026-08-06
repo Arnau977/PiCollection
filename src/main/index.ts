@@ -121,24 +121,27 @@ const setupDatabase = async (): Promise<void> => {
   const dbPath = resolveElectronDbPath()
   const db = initDb(dbPath, { verboseLogging: !app.isPackaged })
 
-  if (await hasPendingMigrations(db)) {
-    const backupsDir = resolveBackupsDir()
-    try {
+  try {
+    if (await hasPendingMigrations(db)) {
+      const backupsDir = resolveBackupsDir()
       await snapshotDatabase(dbPath, backupsDir)
       await pruneSnapshots(backupsDir)
       logInfo('lifecycle', 'Pre-migration snapshot created', { backupsDir })
-    } catch (err) {
-      logError('lifecycle', 'Pre-migration snapshot failed', err)
-      // Don't fall through to running migrations without a backup in place -
-      // that would defeat the whole point of snapshotting first. Thrown as a
-      // distinct error type so the top-level dialog below can tell this
-      // apart from a genuine migration failure and avoid claiming a snapshot
-      // exists when it never got created.
-      throw new SnapshotFailedError(
-        'Could not create a safety backup before updating the database, so the update was ' +
-          'stopped before making any changes. Your data is untouched.'
-      )
     }
+  } catch (err) {
+    logError('lifecycle', 'Pre-migration snapshot failed', err)
+    // Don't fall through to running migrations without a backup in place -
+    // that would defeat the whole point of snapshotting first. Thrown as a
+    // distinct error type so the top-level dialog below can tell this
+    // apart from a genuine migration failure and avoid claiming a snapshot
+    // exists when it never got created. Wrapping hasPendingMigrations too
+    // (not just the snapshot/prune calls) means any failure in deciding
+    // whether to snapshot also gets this accurate error, not the generic
+    // "database could not initialize" one.
+    throw new SnapshotFailedError(
+      'Could not create a safety backup before updating the database, so the update was ' +
+        'stopped before making any changes. Your data is untouched.'
+    )
   }
 
   await runMigrations(db)
