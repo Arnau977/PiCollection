@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Download, Upload } from 'lucide-react'
+import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { loadGalleryDefaults, saveGalleryDefaults } from '../../utils/gallerySettings'
 
 type Status =
@@ -11,6 +12,7 @@ type Status =
 
 export function BackupSection(): JSX.Element {
   const { t } = useTranslation()
+  const confirm = useConfirm()
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
 
   async function handleExport(): Promise<void> {
@@ -23,7 +25,7 @@ export function BackupSection(): JSX.Element {
   }
 
   async function handleImport(): Promise<void> {
-    if (!window.confirm(t('settings.backupImportConfirm'))) return
+    if (!(await confirm(t('settings.backupImportConfirm')))) return
 
     const result = await window.api.backup.import()
     if (!result.success) {

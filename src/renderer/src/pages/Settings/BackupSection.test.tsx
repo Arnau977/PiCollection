@@ -4,6 +4,12 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BackupSection } from './BackupSection'
 
+const confirmMock = vi.fn().mockResolvedValue(true)
+
+vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => confirmMock
+}))
+
 function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
   Object.defineProperty(window, 'api', {
     value: {
@@ -67,7 +73,7 @@ describe('BackupSection', () => {
   })
 
   it('asks for confirmation before importing, and does nothing if declined', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    confirmMock.mockResolvedValueOnce(false)
     const user = userEvent.setup()
     render(<BackupSection />)
 
@@ -77,7 +83,7 @@ describe('BackupSection', () => {
   })
 
   it('imports, saves the returned gallery settings, and prompts to restart', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    confirmMock.mockResolvedValueOnce(true)
     setApi({
       backup: {
         import: vi.fn().mockResolvedValue({
@@ -98,7 +104,7 @@ describe('BackupSection', () => {
   })
 
   it('restarts the app when the restart button is clicked', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    confirmMock.mockResolvedValueOnce(true)
     const user = userEvent.setup()
     render(<BackupSection />)
 
