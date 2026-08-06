@@ -333,7 +333,7 @@ describe('media.repository noCharacter / noSeries filters', () => {
     await mediaRepo.setMediaCharacters(db, withCharacter.id, [character.id])
 
     const rows = await mediaRepo.findMediaRows(db, { noCharacter: true })
-    expect(rows.map((r) => r.name)).toEqual([withoutCharacter.name])
+    expect(rows.map((r) => r.name)).toEqual(['withoutCharacter'])
   })
 
   it('filters to media with no series linked via noSeries', async () => {
@@ -349,7 +349,7 @@ describe('media.repository noCharacter / noSeries filters', () => {
     await mediaRepo.setMediaSeries(db, withSeries.id, [series.id])
 
     const rows = await mediaRepo.findMediaRows(db, { noSeries: true })
-    expect(rows.map((r) => r.name)).toEqual([withoutSeries.name])
+    expect(rows.map((r) => r.name)).toEqual(['withoutSeries'])
   })
 
   it('combines noCharacter and noSeries filters using AND', async () => {
@@ -368,6 +368,6 @@ describe('media.repository noCharacter / noSeries filters', () => {
     await mediaRepo.setMediaCharacters(db, withCharacterOnly.id, [character.id])
 
     const rows = await mediaRepo.findMediaRows(db, { noCharacter: true, noSeries: true })
-    expect(rows.map((r) => r.name)).toEqual([bare.name])
+    expect(rows.map((r) => r.name)).toEqual(['bare'])
   })
 })
