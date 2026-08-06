@@ -1,5 +1,5 @@
 import { Ban, ChevronDown, Plus } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Button,
@@ -78,12 +78,24 @@ export function Autocomplete<T>({
 
   // Keeps the displayed text in sync when `selectedKey` changes from outside
   // a direct pick in this dropdown - e.g. a newly-created option is linked
-  // in in a parent's async handler, or a suggestion elsewhere sets the id
-  // straight into state. Without this, the input stays blank until the user
-  // opens and closes the popover, since `query` is otherwise only ever set
-  // by `handleSelectionChange` below.
+  // in in a parent's async handler, a suggestion elsewhere sets the id
+  // straight into state, or a form switches to editing a different record
+  // (whose value for this field may be unset). Without this, the input
+  // keeps showing whatever was previously selected - including text left
+  // over from a different record - since `query` is otherwise only ever
+  // set by `handleSelectionChange` below.
+  const prevSelectedKeyRef = useRef(selectedKey)
   useEffect(() => {
-    if (!selectedKey) return
+    const keyChanged = selectedKey !== prevSelectedKeyRef.current
+    prevSelectedKeyRef.current = selectedKey
+
+    if (!selectedKey) {
+      // Only clear on an actual transition, not on every unrelated re-render
+      // while nothing is selected - otherwise this would wipe out text the
+      // user is mid-typing to search for a new (not-yet-selected) option.
+      if (keyChanged) setQuery('')
+      return
+    }
     const option = options.find((item) => getOptionValue(item) === selectedKey)
     if (option) setQuery(getOptionLabel(option))
     // eslint-disable-next-line react-hooks/exhaustive-deps

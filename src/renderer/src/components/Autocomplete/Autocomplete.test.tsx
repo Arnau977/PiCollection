@@ -205,6 +205,39 @@ describe('Autocomplete', () => {
     expect(screen.getByRole('combobox')).toHaveValue('Portrait')
   })
 
+  it('clears the displayed text when selectedKey changes to null from outside the dropdown', () => {
+    const { rerender } = render(
+      <Autocomplete
+        name="test"
+        label="Test field"
+        options={OPTIONS}
+        getOptionLabel={(o) => o.name}
+        getOptionValue={(o) => o.id}
+        onSelect={vi.fn()}
+        selectedKey="2"
+      />
+    )
+
+    expect(screen.getByRole('combobox')).toHaveValue('Portrait')
+
+    // Simulates a parent switching to editing a different record that has no
+    // selection for this field (e.g. SeriesManager editing a series with no
+    // parent, right after editing one that had a parent set).
+    rerender(
+      <Autocomplete
+        name="test"
+        label="Test field"
+        options={OPTIONS}
+        getOptionLabel={(o) => o.name}
+        getOptionValue={(o) => o.id}
+        onSelect={vi.fn()}
+        selectedKey={null}
+      />
+    )
+
+    expect(screen.getByRole('combobox')).toHaveValue('')
+  })
+
   it('picks up the label once the matching option arrives after selectedKey is already set', () => {
     const { rerender } = render(
       <Autocomplete
