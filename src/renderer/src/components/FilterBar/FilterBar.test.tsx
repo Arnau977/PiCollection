@@ -141,6 +141,54 @@ describe('FilterBar', () => {
     expect(screen.getByRole('button', { name: /advanced filters/i })).toHaveTextContent('2')
   })
 
+  it('counts noCharacter and noSeries as active advanced filters', () => {
+    renderFilterBar({ noCharacter: true, noSeries: true })
+
+    expect(screen.getByRole('button', { name: /advanced filters/i })).toHaveTextContent('2')
+  })
+
+  it('shows a "no character" checkbox that clears character groups and sets noCharacter, atomically', async () => {
+    charactersData = [{ id: 'c1', name: 'Ishtar', series: [] }]
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderFilterBar({ sfw: true, characterGroups: [['c1']] })
+
+    await user.click(screen.getByRole('checkbox', { name: /no character assigned/i }))
+
+    expect(onFiltersChange).toHaveBeenCalledTimes(1)
+    expect(onFiltersChange).toHaveBeenCalledWith({
+      sfw: true,
+      noCharacter: true,
+      characterGroups: undefined
+    })
+  })
+
+  it('disables the character picker while noCharacter is checked', () => {
+    renderFilterBar({ noCharacter: true })
+
+    // Combobox order in the advanced panel: Artist, Tags, Characters, Series.
+    const [, , charactersCombobox] = within(advancedPanel()).getAllByRole('combobox')
+    expect(charactersCombobox).toBeDisabled()
+  })
+
+  it('shows a "no series" checkbox that clears seriesIds and sets noSeries, atomically', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange } = renderFilterBar({ seriesIds: ['s1'] })
+
+    await user.click(screen.getByRole('checkbox', { name: /no series assigned/i }))
+
+    expect(onFiltersChange).toHaveBeenCalledTimes(1)
+    expect(onFiltersChange).toHaveBeenCalledWith({ seriesIds: undefined, noSeries: true })
+  })
+
+  it('disables the series picker and operator toggle while noSeries is checked', () => {
+    renderFilterBar({ noSeries: true })
+
+    const [seriesCombobox] = within(advancedPanel()).getAllByRole('combobox', { name: /series/i })
+    expect(seriesCombobox).toBeDisabled()
+    expect(screen.getByRole('button', { name: /any \(or\)/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /all \(and\)/i })).toBeDisabled()
+  })
+
   it('toggles the series AND/OR operator', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const { onFiltersChange } = renderFilterBar({ seriesIds: ['s1', 's2'] })

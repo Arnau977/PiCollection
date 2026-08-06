@@ -127,6 +127,7 @@
     "artist": "Artista",
     "tags": "Tags",
     "characters": "Personajes",
+    "noCharacter": "Sin personaje asignado",
     "operatorGroup": "Operador de filtro",
     "operatorOr": "Cualquiera (OR)",
     "operatorAnd": "Todos (AND)",
@@ -154,7 +155,8 @@
     "groupTooltip": "Los elementos dentro de un grupo deben coincidir todos (AND). Añade otro grupo para que baste con ese grupo (OR) — por ejemplo, (Ishtar AND Ereshkigal) OR (Rin AND Shirou).",
     "addGroup": "Añadir grupo OR",
     "removeGroup": "Quitar grupo",
-    "groupOr": "OR"
+    "groupOr": "OR",
+    "noSeries": "Sin serie asignada"
   },
   "media": {
     "sfwTitle": "Apta para todo público",
