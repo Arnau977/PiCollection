@@ -98,9 +98,7 @@ describe('media protocol source folder resolution', () => {
     writeSourceFolder(sourceDir)
     await fs.writeFile(join(sourceDir, 'a.png'), 'hello')
 
-    const response = await protocolHandler!(
-      new Request(`app://thumb/${encodeURI('a.png')}`)
-    )
+    const response = await protocolHandler!(new Request(`app://thumb/${encodeURI('a.png')}`))
 
     expect(response.status).toBe(200)
     await response.arrayBuffer()

@@ -54,7 +54,10 @@ export const mediaMaintenanceService = {
     const db = getDb()
     const sourceFolder = readSourceFolder()
     const rows = await mediaRepo.listMediaRoutesWithMeta(db)
-    const resolvedRows = rows.map((row) => ({ ...row, resolved: resolveRoute(row.route, sourceFolder) }))
+    const resolvedRows = rows.map((row) => ({
+      ...row,
+      resolved: resolveRoute(row.route, sourceFolder)
+    }))
     const existsFlags = await checkExistenceChunked(resolvedRows.map((row) => row.resolved))
     const missingRows = resolvedRows.filter((_, index) => !existsFlags[index])
 

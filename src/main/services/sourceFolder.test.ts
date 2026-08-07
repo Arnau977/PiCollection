@@ -11,8 +11,13 @@ vi.mock('electron', () => ({
   }
 }))
 
-const { readSourceFolder, writeSourceFolder, resolveRoute, relativizeRoute, resetSourceFolderCache } =
-  await import('./sourceFolder')
+const {
+  readSourceFolder,
+  writeSourceFolder,
+  resolveRoute,
+  relativizeRoute,
+  resetSourceFolderCache
+} = await import('./sourceFolder')
 
 beforeEach(async () => {
   userDataDir = await fsPromises.mkdtemp(join(tmpdir(), 'source-folder-settings-'))

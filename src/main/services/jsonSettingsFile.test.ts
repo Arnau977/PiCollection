@@ -79,7 +79,11 @@ describe('createJsonSettingsFile', () => {
   it('re-reads from disk after invalidate()', () => {
     const file = makeFile()
     file.read()
-    writeFileSync(join(userDataDir, 'test-settings.json'), JSON.stringify({ enabled: true }), 'utf-8')
+    writeFileSync(
+      join(userDataDir, 'test-settings.json'),
+      JSON.stringify({ enabled: true }),
+      'utf-8'
+    )
     file.invalidate()
 
     expect(file.read()).toEqual({ enabled: true })

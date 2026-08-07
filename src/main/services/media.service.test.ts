@@ -241,7 +241,10 @@ describe('mediaService.getEntityThumbnails', () => {
   it('delegates to the repository and returns its rows', async () => {
     const tag = await tagService.createTag({ name: 'a' })
     const media = await mediaService.addMedia(baseInput({ name: 'm', route: '/m.png' }))
-    await mediaService.updateMedia(media.id, { ...baseInput({ name: 'm', route: '/m.png' }), tagIds: [tag.id] })
+    await mediaService.updateMedia(media.id, {
+      ...baseInput({ name: 'm', route: '/m.png' }),
+      tagIds: [tag.id]
+    })
 
     const result = await mediaService.getEntityThumbnails('tag', [tag.id])
 

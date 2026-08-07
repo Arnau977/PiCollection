@@ -110,7 +110,10 @@ describe('sourceFolderBrowserService.expandSelection', () => {
   it('resolves loose selected files to absolute routes', async () => {
     await fs.writeFile(join(sourceDir, 'a.png'), 'x')
 
-    const result = await sourceFolderBrowserService.expandSelection({ files: ['a.png'], folders: [] })
+    const result = await sourceFolderBrowserService.expandSelection({
+      files: ['a.png'],
+      folders: []
+    })
 
     expect(result).toEqual([{ route: join(sourceDir, 'a.png'), fileName: 'a.png', type: 'image' }])
   })
@@ -140,7 +143,9 @@ describe('sourceFolderBrowserService.expandSelection', () => {
 
     const result = await sourceFolderBrowserService.expandSelection({ files: [], folders: ['sub'] })
 
-    expect(result).toEqual([{ route: join(sourceDir, 'sub', 'b.png'), fileName: 'b.png', type: 'image' }])
+    expect(result).toEqual([
+      { route: join(sourceDir, 'sub', 'b.png'), fileName: 'b.png', type: 'image' }
+    ])
   })
 
   it('dedupes a file reachable both directly and via a selected ancestor folder', async () => {

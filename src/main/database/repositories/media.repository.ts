@@ -473,7 +473,10 @@ export interface EntityThumbnailRow {
 
 const ENTITY_THUMBNAIL_JOIN: Record<
   'tag' | 'character' | 'series',
-  { table: 'media_tag' | 'media_character' | 'media_series'; column: 'tag_id' | 'character_id' | 'series_id' }
+  {
+    table: 'media_tag' | 'media_character' | 'media_series'
+    column: 'tag_id' | 'character_id' | 'series_id'
+  }
 > = {
   tag: { table: 'media_tag', column: 'tag_id' },
   character: { table: 'media_character', column: 'character_id' },
@@ -520,9 +523,7 @@ export async function findEntityThumbnails(
 
   const { table, column } = ENTITY_THUMBNAIL_JOIN[kind]
   const soloTiebreak =
-    kind === 'character'
-      ? sql`(CASE WHEN char_count.cnt = 1 THEN 0 ELSE 1 END), `
-      : sql``
+    kind === 'character' ? sql`(CASE WHEN char_count.cnt = 1 THEN 0 ELSE 1 END), ` : sql``
   const soloJoin =
     kind === 'character'
       ? sql`LEFT JOIN (SELECT media_id, COUNT(*) AS cnt FROM media_character GROUP BY media_id) char_count ON char_count.media_id = media.id`
