@@ -70,4 +70,85 @@ describe('useEntityThumbnails', () => {
     await waitFor(() => expect(result.current.get('t2')?.route).toBe('/pics/b.png'))
     expect(result.current.get('t1')).toEqual({ route: '/pics/a.png', type: 'image' })
   })
+
+  it('resolves requested ids to null when the IPC call reports failure', async () => {
+    const getEntityThumbnails = vi
+      .fn()
+      .mockResolvedValue({ success: false, error: { code: 'DB_ERROR', message: 'boom' } })
+    setApi({ media: { getEntityThumbnails } })
+
+    const { result } = renderHook(() => useEntityThumbnails('tag', ['t1', 't2']))
+
+    // Both ids must land in the map (as null) rather than staying absent, which
+    // callers read as "still loading" - a failed request would otherwise shimmer forever.
+    await waitFor(() => expect(result.current.has('t1')).toBe(true))
+    expect(result.current.get('t1')).toBeNull()
+    expect(result.current.has('t2')).toBe(true)
+    expect(result.current.get('t2')).toBeNull()
+  })
+
+  it('resolves requested ids to null when the IPC promise rejects', async () => {
+    const getEntityThumbnails = vi.fn().mockRejectedValue(new Error('channel closed'))
+    setApi({ media: { getEntityThumbnails } })
+
+    const { result } = renderHook(() => useEntityThumbnails('tag', ['t1', 't2']))
+
+    await waitFor(() => expect(result.current.has('t1')).toBe(true))
+    expect(result.current.get('t1')).toBeNull()
+    expect(result.current.get('t2')).toBeNull()
+  })
+
+  it('only requests ids that are not already resolved', async () => {
+    const getEntityThumbnails = vi
+      .fn()
+      .mockResolvedValueOnce({
+        success: true,
+        data: [{ entityId: 't1', route: '/pics/a.png', type: 'image' }]
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: [{ entityId: 't2', route: '/pics/b.png', type: 'image' }]
+      })
+    setApi({ media: { getEntityThumbnails } })
+
+    const { result, rerender } = renderHook(({ ids }) => useEntityThumbnails('tag', ids), {
+      initialProps: { ids: ['t1'] }
+    })
+
+    await waitFor(() => expect(result.current.get('t1')?.route).toBe('/pics/a.png'))
+    expect(getEntityThumbnails).toHaveBeenCalledTimes(1)
+    expect(getEntityThumbnails).toHaveBeenLastCalledWith('tag', ['t1'])
+
+    // A sort toggle / search keystroke re-orders and extends the visible list.
+    // Only the genuinely-new id may be re-requested: re-asking for 't1' would
+    // hand back a different ORDER BY RANDOM() thumbnail and visibly re-shuffle it.
+    act(() => {
+      rerender({ ids: ['t2', 't1'] })
+    })
+
+    await waitFor(() => expect(result.current.get('t2')?.route).toBe('/pics/b.png'))
+    expect(getEntityThumbnails).toHaveBeenCalledTimes(2)
+    expect(getEntityThumbnails).toHaveBeenLastCalledWith('tag', ['t2'])
+    expect(result.current.get('t1')).toEqual({ route: '/pics/a.png', type: 'image' })
+  })
+
+  it('does not re-request ids that resolved to no thumbnail when only the order changes', async () => {
+    const getEntityThumbnails = vi.fn().mockResolvedValue({ success: true, data: [] })
+    setApi({ media: { getEntityThumbnails } })
+
+    const { result, rerender } = renderHook(({ ids }) => useEntityThumbnails('tag', ids), {
+      initialProps: { ids: ['t1', 't2'] }
+    })
+
+    await waitFor(() => expect(result.current.has('t2')).toBe(true))
+    expect(getEntityThumbnails).toHaveBeenCalledTimes(1)
+
+    // A sort toggle reorders the same set - the join key changes, so the effect
+    // re-runs, but nothing is missing and no IPC call may be made.
+    act(() => {
+      rerender({ ids: ['t2', 't1'] })
+    })
+
+    expect(getEntityThumbnails).toHaveBeenCalledTimes(1)
+  })
 })
