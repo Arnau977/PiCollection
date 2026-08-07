@@ -1,14 +1,70 @@
+/* Fills the remaining viewport height handed down by .add-media-page.is-
+   folder-browsing, so .folder-browser-scroll below can own the scrolling
+   and the actions bar never needs a page scroll to reach (same pattern as
+   .gallery-scroll-region). */
+.folder-browser {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  /* .add-media-page.is-folder-browsing zeroes the page's own bottom padding
+     (same reasoning as .gallery-page/.manage-page), so the actions bar needs
+     its own breathing room from the window edge. */
+  padding-bottom: var(--space-5);
+}
+
+.folder-browser-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .folder-browser-breadcrumb {
-  margin-bottom: var(--space-3);
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-5);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+}
+
+.folder-browser-breadcrumb-icon {
+  color: var(--accent-2);
+  flex-shrink: 0;
+  margin-right: var(--space-1);
 }
 
 .folder-browser-crumb {
   background: none;
   border: none;
-  color: inherit;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
   cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
+  font-family: inherit;
+  font-size: 0.92rem;
+  padding: var(--space-1);
+  transition: color var(--transition-fast);
+}
+
+.folder-browser-crumb:hover {
+  color: var(--accent-2);
+}
+
+.folder-browser-crumb:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+.folder-browser-crumb.is-current {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.folder-browser-crumb-sep {
+  color: var(--color-text-faint);
+  flex-shrink: 0;
 }
 
 .folder-browser-grid {
@@ -57,8 +113,11 @@
 }
 
 .folder-browser-tile.is-selected {
+  background: var(--color-surface-hover);
   border-color: var(--accent);
-  box-shadow: var(--accent-glow-sm);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    var(--accent-glow-sm);
 }
 
 .folder-browser-tile:disabled {
@@ -94,6 +153,21 @@
 .folder-browser-tile-thumb .media-thumb {
   inset: 0;
   position: absolute;
+}
+
+.folder-browser-tile-selected-badge {
+  align-items: center;
+  background: var(--accent);
+  border-radius: 999px;
+  box-shadow: var(--accent-glow-sm);
+  color: #fff;
+  display: flex;
+  height: 22px;
+  justify-content: center;
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 22px;
 }
 
 .folder-browser-tile-badge {
@@ -132,13 +206,8 @@
   align-items: center;
   display: flex;
   gap: var(--space-3);
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-top: var(--space-4);
-}
-
-.folder-browser-actions-count {
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
 }
 
 .folder-browser-status {

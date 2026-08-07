@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { MediaModel } from '@shared/models'
+import { __resetEntityListCachesForTests } from '../hooks/useEntityLists'
 import Media from './Media'
 
 function makeMedia(overrides: Partial<MediaModel> = {}): MediaModel {
@@ -31,6 +32,7 @@ function setApi(overrides: Record<string, unknown> = {}): void {
 }
 
 beforeEach(() => {
+  __resetEntityListCachesForTests()
   setApi()
 })
 
@@ -103,6 +105,67 @@ describe('Media', () => {
   })
 })
 
+describe('Media adjacent navigation', () => {
+  it('does not render the nav zones without an onNavigate callback', () => {
+    render(<Media {...makeMedia()} previousId="0" nextId="2" />)
+
+    expect(screen.queryByRole('button', { name: 'Previous image' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Next image' })).not.toBeInTheDocument()
+  })
+
+  it('only renders a side zone when the matching sibling id is present', () => {
+    const onNavigate = vi.fn()
+    render(<Media {...makeMedia()} previousId={null} nextId="2" onNavigate={onNavigate} />)
+
+    expect(screen.queryByRole('button', { name: 'Previous image' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Next image' })).toBeInTheDocument()
+  })
+
+  it('navigates to the previous/next id when the corresponding zone is clicked', async () => {
+    const user = userEvent.setup()
+    const onNavigate = vi.fn()
+    render(<Media {...makeMedia()} previousId="0" nextId="2" onNavigate={onNavigate} />)
+
+    await user.click(screen.getByRole('button', { name: 'Next image' }))
+    expect(onNavigate).toHaveBeenCalledWith('2')
+
+    await user.click(screen.getByRole('button', { name: 'Previous image' }))
+    expect(onNavigate).toHaveBeenCalledWith('0')
+  })
+
+  it('still opens the lightbox when clicking the image itself, not the side zones', async () => {
+    const user = userEvent.setup()
+    const onNavigate = vi.fn()
+    setApi({
+      system: {
+        showInFolder: vi.fn(),
+        copyLocationToClipboard: vi.fn().mockResolvedValue({ success: true, data: undefined })
+      }
+    })
+    render(<Media {...makeMedia()} previousId="0" nextId="2" onNavigate={onNavigate} />)
+
+    await user.click(screen.getByAltText('My picture'))
+
+    expect(screen.getByRole('button', { name: 'Copy location' })).toBeInTheDocument()
+    expect(onNavigate).not.toHaveBeenCalled()
+  })
+
+  it('does not render nav zones over a video', () => {
+    const onNavigate = vi.fn()
+    render(
+      <Media
+        {...makeMedia({ type: 'video', route: '/vid.mp4' })}
+        previousId="0"
+        nextId="2"
+        onNavigate={onNavigate}
+      />
+    )
+
+    expect(screen.queryByRole('button', { name: 'Previous image' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Next image' })).not.toBeInTheDocument()
+  })
+})
+
 describe('Media lightbox', () => {
   beforeEach(() => {
     setApi({
@@ -120,9 +183,9 @@ describe('Media lightbox', () => {
 
   it('opens on click and shows copy/open-in-folder actions', async () => {
     const user = userEvent.setup()
-    const { container } = render(<Media {...makeMedia({ route: '/pics/1.png' })} />)
+    render(<Media {...makeMedia({ route: '/pics/1.png' })} />)
 
-    await user.click(container.querySelector('.media-detail-media') as HTMLElement)
+    await user.click(screen.getByAltText('My picture'))
 
     expect(screen.getByRole('button', { name: 'Copy location' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Open in file explorer' })).toBeInTheDocument()
@@ -130,8 +193,8 @@ describe('Media lightbox', () => {
 
   it('asks the main process to copy the resolved file location to the clipboard', async () => {
     const user = userEvent.setup()
-    const { container } = render(<Media {...makeMedia({ route: '/pics/1.png' })} />)
-    await user.click(container.querySelector('.media-detail-media') as HTMLElement)
+    render(<Media {...makeMedia({ route: '/pics/1.png' })} />)
+    await user.click(screen.getByAltText('My picture'))
 
     await user.click(screen.getByRole('button', { name: 'Copy location' }))
 
@@ -142,8 +205,8 @@ describe('Media lightbox', () => {
 
   it('asks the main process to reveal the file in the file explorer', async () => {
     const user = userEvent.setup()
-    const { container } = render(<Media {...makeMedia({ route: '/pics/1.png' })} />)
-    await user.click(container.querySelector('.media-detail-media') as HTMLElement)
+    render(<Media {...makeMedia({ route: '/pics/1.png' })} />)
+    await user.click(screen.getByAltText('My picture'))
 
     await user.click(screen.getByRole('button', { name: 'Open in file explorer' }))
 
@@ -152,8 +215,8 @@ describe('Media lightbox', () => {
 
   it('closes when the close button is clicked', async () => {
     const user = userEvent.setup()
-    const { container } = render(<Media {...makeMedia()} />)
-    await user.click(container.querySelector('.media-detail-media') as HTMLElement)
+    render(<Media {...makeMedia()} />)
+    await user.click(screen.getByAltText('My picture'))
 
     await user.click(screen.getByRole('button', { name: 'Close' }))
 
@@ -162,8 +225,8 @@ describe('Media lightbox', () => {
 
   it('closes when Escape is pressed', async () => {
     const user = userEvent.setup()
-    const { container } = render(<Media {...makeMedia()} />)
-    await user.click(container.querySelector('.media-detail-media') as HTMLElement)
+    render(<Media {...makeMedia()} />)
+    await user.click(screen.getByAltText('My picture'))
 
     await user.keyboard('{Escape}')
 

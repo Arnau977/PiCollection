@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { X } from 'lucide-react'
 import { Autocomplete } from './Autocomplete'
 
@@ -38,11 +39,14 @@ export function MultiSelectAutocomplete<T>({
   getOptionMatchName,
   noneToggle
 }: MultiSelectAutocompleteProps<T>): JSX.Element {
-  const selectedOptions = options.filter((option) =>
-    selectedValues.includes(getOptionValue(option))
+  const selectedSet = useMemo(() => new Set(selectedValues), [selectedValues])
+  const selectedOptions = useMemo(
+    () => options.filter((option) => selectedSet.has(getOptionValue(option))),
+    [options, selectedSet, getOptionValue]
   )
-  const availableOptions = options.filter(
-    (option) => !selectedValues.includes(getOptionValue(option))
+  const availableOptions = useMemo(
+    () => options.filter((option) => !selectedSet.has(getOptionValue(option))),
+    [options, selectedSet, getOptionValue]
   )
 
   function handleSelect(option: T | null): void {

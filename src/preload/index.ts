@@ -35,12 +35,18 @@ import { IPC, type IpcResult } from '@shared/ipc/contracts'
 
 export const api = {
   media: {
-    getAll: (): Promise<IpcResult<MediaModel[]>> => ipcRenderer.invoke(IPC.media.getAll),
     getFiltered: (
       filters: MediaFilters,
       sorting?: Sorting
     ): Promise<IpcResult<MediaFilteredResult>> =>
       ipcRenderer.invoke(IPC.media.getFiltered, { filters, sorting }),
+    getOrderedIds: (filters: MediaFilters, sorting?: Sorting): Promise<IpcResult<string[]>> =>
+      ipcRenderer.invoke(IPC.media.getOrderedIds, { filters, sorting }),
+    getEntityThumbnails: (
+      kind: 'artist' | 'tag' | 'character' | 'series',
+      ids: string[]
+    ): Promise<IpcResult<{ entityId: string; route: string; type: string }[]>> =>
+      ipcRenderer.invoke(IPC.media.getEntityThumbnails, { kind, ids }),
     getById: (id: string): Promise<IpcResult<MediaModel | null>> =>
       ipcRenderer.invoke(IPC.media.getById, id),
     create: (input: MediaInput): Promise<IpcResult<MediaModel>> =>

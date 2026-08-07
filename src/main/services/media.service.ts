@@ -198,12 +198,6 @@ export const mediaService = {
     return { exactMatch: null, similar }
   },
 
-  async getAllMedia(): Promise<MediaModel[]> {
-    const db = getDb()
-    const rows = await mediaRepo.findMediaRows(db, {}, { prop: 'createdAt', desc: true })
-    return hydrateMedia(db, rows)
-  },
-
   async getMediaFiltered(filters: MediaFilters, sorting?: Sorting): Promise<MediaFilteredResult> {
     const db = getDb()
     const flatSeriesIds = filters.seriesGroups?.flat() ?? []
@@ -216,6 +210,16 @@ export const mediaService = {
     ])
     const items = await hydrateMedia(db, rows)
     return { items, total }
+  },
+
+  async getMediaOrderedIds(filters: MediaFilters, sorting?: Sorting): Promise<string[]> {
+    const db = getDb()
+    const flatSeriesIds = filters.seriesGroups?.flat() ?? []
+    const seriesClosures = flatSeriesIds.length
+      ? buildSeriesClosureMap(await seriesRepo.findSeriesHierarchy(db), flatSeriesIds)
+      : undefined
+    const rows = await mediaRepo.findMediaIds(db, filters, sorting, seriesClosures)
+    return rows.map((row) => row.id)
   },
 
   async getMediaById(id: string): Promise<MediaModel | null> {
@@ -292,5 +296,28 @@ export const mediaService = {
 
   async deleteMedia(id: string): Promise<void> {
     await mediaRepo.deleteMediaRow(getDb(), id)
+  },
+
+  async getEntityThumbnails(
+    kind: 'artist' | 'tag' | 'character' | 'series',
+    ids: string[]
+  ): Promise<{ entityId: string; route: string; type: string }[]> {
+    const db = getDb()
+    if (kind !== 'series' || ids.length === 0) {
+      return mediaRepo.findEntityThumbnails(db, kind, ids)
+    }
+
+    // Series are a tree, and `media_series` only stores exact links. Expand each
+    // requested id to its closure (itself + descendants) the same way
+    // getMediaFiltered does, so a parent whose media all sit under its children
+    // still gets a thumbnail instead of a placeholder next to a rolled-up count.
+    const closures = buildSeriesClosureMap(await seriesRepo.findSeriesHierarchy(db), ids)
+    const pairs = ids.flatMap((ancestorId) =>
+      (closures.get(ancestorId) ?? [ancestorId]).map((descendantId) => ({
+        descendantId,
+        ancestorId
+      }))
+    )
+    return mediaRepo.findSeriesThumbnailsByClosure(db, pairs)
   }
 }

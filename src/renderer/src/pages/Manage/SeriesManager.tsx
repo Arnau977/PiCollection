@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Trash2 } from 'lucide-react'
 import { useSeries } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
+import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
+import { fromCsv, toCsv } from '../../utils/csvList'
 import {
   loadManageSort,
   saveManageSort,
@@ -15,6 +17,7 @@ import {
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import { buildAncestorAwareSeriesTree, buildSeriesTree } from '../../utils/buildSeriesTree'
 import { formatCompactCount } from '../../utils/formatCompactCount'
+import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { SeriesModel } from '@shared/models'
 
 interface SeriesFormValues {
@@ -25,15 +28,8 @@ interface SeriesFormValues {
 
 const EMPTY_FORM: SeriesFormValues = { name: '', aliases: '', parentId: undefined }
 
-function toCsv(values: string[]): string {
-  return values.join(', ')
-}
-
-function fromCsv(value: string): string[] {
-  return value
-    .split(',')
-    .map((v) => v.trim())
-    .filter(Boolean)
+function getSeriesLabel(series: SeriesModel): string {
+  return series.name
 }
 
 export function SeriesManager(): JSX.Element {
@@ -43,6 +39,7 @@ export function SeriesManager(): JSX.Element {
   const [form, setForm] = useState<SeriesFormValues>(EMPTY_FORM)
   const [editing, setEditing] = useState<SeriesModel | null>(null)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 200)
   const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<ManageSort>(() => loadManageSort('series'))
 
@@ -51,20 +48,22 @@ export function SeriesManager(): JSX.Element {
     saveManageSort('series', next)
   }
 
-  const isSearching = search.trim().length > 0
-  const sortedSeries = sortManageEntities(seriesList, sort)
-  const visibleSeries = sortManageEntities(
-    filterByQuery(seriesList, search, (series) =>
+  // Sorts `seriesList` once, then filters the already-sorted array when searching (filtering
+  // preserves order, so there's no need to sort the filtered subset again).
+  const treeNodes = useMemo(() => {
+    const sortedSeries = sortManageEntities(seriesList, sort)
+    const isSearching = debouncedSearch.trim().length > 0
+    if (!isSearching) return buildSeriesTree(sortedSeries)
+    const visibleSeries = filterByQuery(sortedSeries, debouncedSearch, (series) =>
       [series.name, ...(series.aliases ?? [])].join(' ')
-    ),
-    sort
-  )
-  // While searching, still show each match's ancestor chain (pulled from the full sorted list)
-  // so the hierarchy reads the same way it does unfiltered - just restricted to matches plus the
-  // ancestors needed to place them.
-  const treeNodes = isSearching
-    ? buildAncestorAwareSeriesTree(visibleSeries, sortedSeries)
-    : buildSeriesTree(sortedSeries)
+    )
+    // While searching, still show each match's ancestor chain (pulled from the full sorted list)
+    // so the hierarchy reads the same way it does unfiltered - just restricted to matches plus the
+    // ancestors needed to place them.
+    return buildAncestorAwareSeriesTree(visibleSeries, sortedSeries)
+  }, [seriesList, debouncedSearch, sort])
+  const visibleSeriesIds = useMemo(() => treeNodes.map((node) => node.series.id), [treeNodes])
+  const thumbnails = useEntityThumbnails('series', visibleSeriesIds)
 
   // A series can't be its own parent; the backend also rejects deeper cycles (e.g. parenting to
   // one of its own descendants), so this is a best-effort narrowing rather than the source of truth.
@@ -130,7 +129,10 @@ export function SeriesManager(): JSX.Element {
             └
           </span>
         )}
-        <EntityThumbnail kind="series" id={series.id} />
+        <EntityThumbnail
+          route={thumbnails.get(series.id)?.route ?? null}
+          loading={!thumbnails.has(series.id)}
+        />
         <div className="manage-item-info">
           <span className="manage-item-name">{series.name}</span>
           {series.aliases && series.aliases.length > 0 && (
@@ -190,7 +192,7 @@ export function SeriesManager(): JSX.Element {
               name="series-parent"
               label={t('manage.parentSeries')}
               options={parentOptions}
-              getOptionLabel={(s) => s.name}
+              getOptionLabel={getSeriesLabel}
               getOptionValue={(s) => s.id}
               selectedKey={form.parentId ?? null}
               onSelect={(s) => setForm((prev) => ({ ...prev, parentId: s?.id }))}
@@ -231,7 +233,7 @@ export function SeriesManager(): JSX.Element {
             <p className="loading-state">{t('gallery.loading')}</p>
           ) : seriesList.length === 0 ? (
             <p className="manage-empty">{t('manage.empty')}</p>
-          ) : visibleSeries.length === 0 ? (
+          ) : treeNodes.length === 0 ? (
             <p className="manage-empty">{t('manage.noResults')}</p>
           ) : (
             <ul className="manage-list">

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown } from 'lucide-react'
-import type { MediaFilters, MediaSortableProp, Sorting } from '@shared/models'
+import type { ArtistModel, MediaFilters, MediaSortableProp, SeriesModel, Sorting, TagModel } from '@shared/models'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
 import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import { Autocomplete } from '../Autocomplete/Autocomplete'
@@ -23,6 +23,18 @@ function hasNonEmptyGroup(groups: string[][] | undefined): boolean {
 /** Drops the field entirely once every group is empty, keeping filters objects tidy. */
 function normalizeGroups(groups: string[][]): string[][] | undefined {
   return hasNonEmptyGroup(groups) ? groups : undefined
+}
+
+function getArtistLabel(artist: ArtistModel): string {
+  return artist.name
+}
+
+function getTagLabel(tag: TagModel): string {
+  return tag.name
+}
+
+function getSeriesLabel(series: SeriesModel): string {
+  return series.name
 }
 
 export function FilterBar({
@@ -161,7 +173,7 @@ export function FilterBar({
               name="artist-filter"
               label={t('filters.artist')}
               options={artists}
-              getOptionLabel={(artist) => artist.name}
+              getOptionLabel={getArtistLabel}
               getOptionValue={(artist) => artist.id}
               selectedKey={filters.artistId ?? null}
               onSelect={(artist) => onFiltersChange({ ...filters, artistId: artist?.id })}
@@ -175,7 +187,7 @@ export function FilterBar({
               onFiltersChange({ ...filters, tagGroups: normalizeGroups(tagGroups) })
             }
             options={tags}
-            getOptionLabel={(tag) => tag.name}
+            getOptionLabel={getTagLabel}
             getOptionValue={(tag) => tag.id}
           />
 
@@ -207,7 +219,7 @@ export function FilterBar({
               onFiltersChange({ ...filters, seriesGroups: normalizeGroups(seriesGroups) })
             }
             options={series}
-            getOptionLabel={(s) => s.name}
+            getOptionLabel={getSeriesLabel}
             getOptionValue={(s) => s.id}
             noneOption={{
               checked: filters.noSeries ?? false,

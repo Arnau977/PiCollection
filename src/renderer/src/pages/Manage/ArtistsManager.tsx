@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useArtists } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
+import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
 import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import { formatCompactCount } from '../../utils/formatCompactCount'
+import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { ArtistModel } from '@shared/models'
 
 export function ArtistsManager(): JSX.Element {
@@ -19,6 +21,7 @@ export function ArtistsManager(): JSX.Element {
   const [socialName, setSocialName] = useState('')
   const [socialUrl, setSocialUrl] = useState('')
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 200)
   const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<ManageSort>(() => loadManageSort('artists'))
 
@@ -27,7 +30,12 @@ export function ArtistsManager(): JSX.Element {
     saveManageSort('artists', next)
   }
 
-  const visibleArtists = sortManageEntities(filterByQuery(artists, search, (artist) => artist.name), sort)
+  const visibleArtists = useMemo(
+    () => sortManageEntities(filterByQuery(artists, debouncedSearch, (artist) => artist.name), sort),
+    [artists, debouncedSearch, sort]
+  )
+  const visibleArtistIds = useMemo(() => visibleArtists.map((artist) => artist.id), [visibleArtists])
+  const thumbnails = useEntityThumbnails('artist', visibleArtistIds)
   // Editing the same artist by id keeps the panel in sync as `refetch()` swaps
   // in fresh data (e.g. right after adding a social link).
   const editingArtist = editing ? (artists.find((a) => a.id === editing.id) ?? editing) : null
@@ -215,7 +223,10 @@ export function ArtistsManager(): JSX.Element {
                       : 'manage-list-item'
                   }
                 >
-                  <EntityThumbnail kind="artist" id={artist.id} />
+                  <EntityThumbnail
+                    route={thumbnails.get(artist.id)?.route ?? null}
+                    loading={!thumbnails.has(artist.id)}
+                  />
                   <span className="manage-item-name">{artist.name}</span>
                   <span className="manage-item-count">
                     {formatCompactCount(artist.mediaCount ?? 0)}

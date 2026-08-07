@@ -13,7 +13,7 @@ vi.mock('electron', () => ({
 const { initTestDbSingleton } = await import('../database/testHelpers')
 const { getDb } = await import('../database/connection')
 const mediaRepo = await import('../database/repositories/media.repository')
-const { writeSourceFolder } = await import('./sourceFolder')
+const { writeSourceFolder, resetSourceFolderCache } = await import('./sourceFolder')
 const { sourceFolderBrowserService } = await import('./sourceFolderBrowser.service')
 
 let cleanup: () => Promise<void>
@@ -22,6 +22,9 @@ let sourceDir = ''
 beforeEach(async () => {
   userDataDir = await fs.mkdtemp(join(tmpdir(), 'browser-userdata-'))
   sourceDir = await fs.mkdtemp(join(tmpdir(), 'browser-source-'))
+  // readSourceFolder is module-scope cached; reset so each test starts from
+  // its own fresh userData dir rather than an earlier test's cached value.
+  resetSourceFolderCache()
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
   writeSourceFolder(sourceDir)
@@ -107,7 +110,10 @@ describe('sourceFolderBrowserService.expandSelection', () => {
   it('resolves loose selected files to absolute routes', async () => {
     await fs.writeFile(join(sourceDir, 'a.png'), 'x')
 
-    const result = await sourceFolderBrowserService.expandSelection({ files: ['a.png'], folders: [] })
+    const result = await sourceFolderBrowserService.expandSelection({
+      files: ['a.png'],
+      folders: []
+    })
 
     expect(result).toEqual([{ route: join(sourceDir, 'a.png'), fileName: 'a.png', type: 'image' }])
   })
@@ -137,7 +143,9 @@ describe('sourceFolderBrowserService.expandSelection', () => {
 
     const result = await sourceFolderBrowserService.expandSelection({ files: [], folders: ['sub'] })
 
-    expect(result).toEqual([{ route: join(sourceDir, 'sub', 'b.png'), fileName: 'b.png', type: 'image' }])
+    expect(result).toEqual([
+      { route: join(sourceDir, 'sub', 'b.png'), fileName: 'b.png', type: 'image' }
+    ])
   })
 
   it('dedupes a file reachable both directly and via a selected ancestor folder', async () => {

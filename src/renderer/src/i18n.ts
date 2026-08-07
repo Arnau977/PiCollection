@@ -18,7 +18,7 @@ await i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    debug: true,
+    debug: import.meta.env.DEV,
     resources,
     fallbackLng: [LANGUAGES.ENGLISH, LANGUAGES.SPANISH],
     ns: [NAME_SPACE.COMMON],

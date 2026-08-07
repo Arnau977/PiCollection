@@ -11,10 +11,13 @@ vi.mock('electron', () => ({
   }
 }))
 
-const { readSauceNaoApiKey, writeSauceNaoApiKey } = await import('./sauceNaoSettings')
+const { readSauceNaoApiKey, writeSauceNaoApiKey, resetSauceNaoApiKeyCache } = await import(
+  './sauceNaoSettings'
+)
 
 beforeEach(async () => {
   userDataDir = await fsPromises.mkdtemp(join(tmpdir(), 'sauce-nao-settings-'))
+  resetSauceNaoApiKeyCache()
 })
 
 afterEach(async () => {

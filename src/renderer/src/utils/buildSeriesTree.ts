@@ -27,15 +27,21 @@ export function buildSeriesTree(series: SeriesModel[]): SeriesTreeNode[] {
     }
   }
 
-  function rolledUpCount(s: SeriesModel): number {
+  const rolledUpCounts = new Map<string, number>()
+  function computeRolledUpCount(s: SeriesModel): number {
+    const cached = rolledUpCounts.get(s.id)
+    if (cached !== undefined) return cached
     const own = s.mediaCount ?? 0
     const children = childrenByParent.get(s.id) ?? []
-    return own + children.reduce((sum, child) => sum + rolledUpCount(child), 0)
+    const total = own + children.reduce((sum, child) => sum + computeRolledUpCount(child), 0)
+    rolledUpCounts.set(s.id, total)
+    return total
   }
+  for (const s of series) computeRolledUpCount(s)
 
   const nodes: SeriesTreeNode[] = []
   function visit(s: SeriesModel, depth: number): void {
-    nodes.push({ series: s, depth, rolledUpCount: rolledUpCount(s) })
+    nodes.push({ series: s, depth, rolledUpCount: rolledUpCounts.get(s.id) ?? 0 })
     for (const child of childrenByParent.get(s.id) ?? []) {
       visit(child, depth + 1)
     }

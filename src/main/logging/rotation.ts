@@ -20,8 +20,9 @@ function rotatedLogFilePath(index: number): string {
 /**
  * If the current log file has reached the size limit, shifts every rotated
  * file up by one index (dropping the oldest) and starts a fresh app.log.
- * Called before every write so the log directory only ever holds up to
- * MAX_LOG_FILES files.
+ * Called periodically from the log-write buffer flush (roughly every
+ * ROTATION_CHECK_INTERVAL_BYTES of buffered output, not on every write) so
+ * the log directory only ever holds up to MAX_LOG_FILES files.
  */
 export function rotateIfNeeded(): void {
   mkdirSync(logsDir(), { recursive: true })

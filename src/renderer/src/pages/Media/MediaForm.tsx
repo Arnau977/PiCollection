@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ExternalLink, Plus, ScanSearch } from 'lucide-react'
-import type { CharacterModel, MediaDuplicateCheck, MediaInput, MediaModel } from '@shared/models'
+import type { ArtistModel, CharacterModel, MediaDuplicateCheck, MediaInput, MediaModel, SeriesModel, TagModel } from '@shared/models'
 import { deriveMediaName, detectMediaType } from '@shared/utils'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
@@ -68,6 +68,18 @@ const MISSING_CATEGORIES: { category: SuggestionCategory; labelKey: string }[] =
   { category: 'characters', labelKey: 'sauceNao.missingCharacters' },
   { category: 'series', labelKey: 'sauceNao.missingSeries' }
 ]
+
+function getArtistLabel(artist: ArtistModel): string {
+  return artist.name
+}
+
+function getTagLabel(tag: TagModel): string {
+  return tag.name
+}
+
+function getSeriesLabel(series: SeriesModel): string {
+  return series.name
+}
 
 export function MediaForm({
   media,
@@ -484,7 +496,7 @@ export function MediaForm({
           name="artist"
           label={t('filters.artist')}
           options={artists.data}
-          getOptionLabel={(artist) => artist.name}
+          getOptionLabel={getArtistLabel}
           getOptionValue={(artist) => artist.id}
           selectedKey={input.artistId ?? null}
           onSelect={(artist) => setInput((prev) => ({ ...prev, artistId: artist?.id }))}
@@ -494,7 +506,7 @@ export function MediaForm({
           name="tags"
           label={t('filters.tags')}
           options={tags.data}
-          getOptionLabel={(tag) => tag.name}
+          getOptionLabel={getTagLabel}
           getOptionValue={(tag) => tag.id}
           selectedValues={input.tagIds ?? []}
           onChange={(tagIds) => setInput((prev) => ({ ...prev, tagIds }))}
@@ -515,7 +527,7 @@ export function MediaForm({
           name="series"
           label={t('manage.series')}
           options={series.data}
-          getOptionLabel={(s) => s.name}
+          getOptionLabel={getSeriesLabel}
           getOptionValue={(s) => s.id}
           selectedValues={input.seriesIds ?? []}
           onChange={(seriesIds) => setInput((prev) => ({ ...prev, seriesIds }))}

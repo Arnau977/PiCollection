@@ -25,9 +25,28 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
-async function countMissing(rows: { route: string }[]): Promise<number> {
-  const flags = await Promise.all(rows.map((row) => fileExists(row.route)))
-  return flags.filter((exists) => !exists).length
+export const EXISTENCE_CHECK_CHUNK_SIZE = 64
+
+/**
+ * Runs `checkOne` over `paths` in bounded-size chunks instead of firing every
+ * check at once - a 50k-row library would otherwise queue 50,000 concurrent
+ * `fs.access` calls against libuv's 4-thread pool in one go. `checkOne`
+ * defaults to the real `fileExists` and is only ever overridden in tests,
+ * where it needs to be a controllable, countable stand-in.
+ */
+export async function checkExistenceChunked(
+  paths: string[],
+  checkOne: (path: string) => Promise<boolean> = fileExists
+): Promise<boolean[]> {
+  const flags: boolean[] = new Array(paths.length)
+  for (let i = 0; i < paths.length; i += EXISTENCE_CHECK_CHUNK_SIZE) {
+    const chunk = paths.slice(i, i + EXISTENCE_CHECK_CHUNK_SIZE)
+    const chunkFlags = await Promise.all(chunk.map((path) => checkOne(path)))
+    chunkFlags.forEach((flag, offset) => {
+      flags[i + offset] = flag
+    })
+  }
+  return flags
 }
 
 export const mediaMaintenanceService = {
@@ -35,8 +54,11 @@ export const mediaMaintenanceService = {
     const db = getDb()
     const sourceFolder = readSourceFolder()
     const rows = await mediaRepo.listMediaRoutesWithMeta(db)
-    const resolvedRows = rows.map((row) => ({ ...row, resolved: resolveRoute(row.route, sourceFolder) }))
-    const existsFlags = await Promise.all(resolvedRows.map((row) => fileExists(row.resolved)))
+    const resolvedRows = rows.map((row) => ({
+      ...row,
+      resolved: resolveRoute(row.route, sourceFolder)
+    }))
+    const existsFlags = await checkExistenceChunked(resolvedRows.map((row) => row.resolved))
     const missingRows = resolvedRows.filter((_, index) => !existsFlags[index])
 
     const missingItems: MissingFileItem[] = missingRows.slice(0, MAX_MISSING_ITEMS).map((row) => ({
@@ -64,8 +86,11 @@ export const mediaMaintenanceService = {
     const normalizedNewRoot = withTrailingSeparator(newRoot)
 
     const rows = await mediaRepo.listMediaRoutes(db)
-    const updates = rows
-      .map((row) => ({ id: row.id, resolved: resolveRoute(row.route, sourceFolder) }))
+    const resolvedRows = rows.map((row) => ({
+      id: row.id,
+      resolved: resolveRoute(row.route, sourceFolder)
+    }))
+    const updates = resolvedRows
       .filter((row) => isPathUnderRoot(row.resolved, normalizedOldRoot))
       .map((row) => {
         const newAbsolute = normalizedNewRoot + row.resolved.slice(normalizedOldRoot.length)
@@ -74,9 +99,16 @@ export const mediaMaintenanceService = {
 
     await mediaRepo.updateMediaRoutes(db, updates)
 
-    const afterRows = await mediaRepo.listMediaRoutes(db)
-    const afterResolved = afterRows.map((row) => ({ route: resolveRoute(row.route, sourceFolder) }))
-    return { updatedCount: updates.length, stillMissingCount: await countMissing(afterResolved) }
+    const updatesById = new Map(updates.map((update) => [update.id, update]))
+    const afterResolved = resolvedRows.map((row) => {
+      const update = updatesById.get(row.id)
+      return update ? resolveRoute(update.route, sourceFolder) : row.resolved
+    })
+    const stillMissingCount = (await checkExistenceChunked(afterResolved)).filter(
+      (exists) => !exists
+    ).length
+
+    return { updatedCount: updates.length, stillMissingCount }
   },
 
   async relinkOne(mediaId: string, newRoute: string): Promise<RelinkOneResult> {

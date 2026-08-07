@@ -1,3 +1,5 @@
 export * from './mediaUrl'
 export * from './detectMediaType'
 export * from './deriveMediaName'
+export * from './extractHighlights'
+export * from './normalizeReleaseNotes'

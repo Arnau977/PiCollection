@@ -37,6 +37,7 @@
     "checkingForUpdates": "Checking for updates...",
     "upToDate": "You're up to date.",
     "updateAvailable": "Version {{version}} is available.",
+    "whatsNew": "What's new",
     "downloadUpdate": "Download update",
     "downloadingUpdate": "Downloading update... {{percent}}%",
     "updateReady": "Version {{version}} is ready to install.",
@@ -165,7 +166,7 @@
     "nsfwBadge": "NSFW",
     "unknownArtist": "Unknown",
     "notFound": "Media not found",
-    "revealNsfw": "Click to reveal",
+    "revealNsfw": "Hover to reveal",
     "edit": "Edit",
     "aiGeneratedTitle": "Generated using AI",
     "aiGeneratedBadge": "AI",
@@ -174,7 +175,9 @@
     "copyMedia": "Copy image",
     "mediaCopied": "Copied!",
     "openInFolder": "Open in file explorer",
-    "closeLightbox": "Close"
+    "closeLightbox": "Close",
+    "previousImage": "Previous image",
+    "nextImage": "Next image"
   },
   "addMedia": {
     "title": "Add new media",
@@ -207,7 +210,6 @@
     "root": "Source folder",
     "loading": "Loading…",
     "empty": "This folder has no media files.",
-    "selectedCount": "{{count}} selected",
     "importSelected": "Import selected ({{count}})",
     "breadcrumbLabel": "Folder path",
     "retry": "Retry",

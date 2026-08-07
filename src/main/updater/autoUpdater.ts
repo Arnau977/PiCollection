@@ -2,10 +2,12 @@ import { app, type BrowserWindow } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { IPC } from '@shared/ipc/contracts'
 import type { UpdateChannel, UpdaterEvent } from '@shared/models'
+import { extractHighlights, normalizeReleaseNotes } from '@shared/utils'
 import { readUpdateChannel, writeUpdateChannel } from './updaterSettings'
 import { logInfo } from '../logging/logger'
 
 let updaterWindow: BrowserWindow | null = null
+let initialized = false
 
 function send(event: UpdaterEvent): void {
   if (updaterWindow && !updaterWindow.isDestroyed()) {
@@ -13,24 +15,42 @@ function send(event: UpdaterEvent): void {
   }
 }
 
+/** Re-points which window receives updater events - call whenever a new main window is created (e.g. macOS activate-triggered recreation), not just at startup. */
+export function setUpdaterWindow(window: BrowserWindow): void {
+  updaterWindow = window
+}
+
 function applyChannel(channel: UpdateChannel): void {
-  // electron-updater's GitHub provider reads a per-channel manifest
-  // (latest.yml for stable, beta.yml for beta) built from the version's
-  // semver prerelease tag (e.g. `1.2.0-beta.1`) - allowPrerelease has to
-  // agree with that or a stable-channel client would ignore beta releases.
+  // Every build publishes the same `latest*.yml` manifest - there is no
+  // separate beta manifest, and version numbers are always plain `X.Y.Z`
+  // with no prerelease suffix. What a channel can see is decided entirely by
+  // GitHub's own `prerelease` flag per release: `allowPrerelease` is the
+  // switch that lets the beta channel resolve releases still flagged as
+  // pre-release, while stable only ever resolves `/releases/latest`. The
+  // `channel` assignment is kept in sync with it for consistency, but with a
+  // single shared manifest it has no effect on its own. See docs/auto-update.md.
   autoUpdater.channel = channel === 'beta' ? 'beta' : 'latest'
   autoUpdater.allowPrerelease = channel === 'beta'
 }
 
 /** Wires electron-updater's events to the renderer and applies the saved channel. Call once, after the main window is created. */
 export function initAutoUpdater(window: BrowserWindow): void {
-  updaterWindow = window
+  setUpdaterWindow(window)
+  if (initialized) return
+  initialized = true
+
   autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = true
   applyChannel(readUpdateChannel())
 
   autoUpdater.on('checking-for-update', () => send({ type: 'checking' }))
-  autoUpdater.on('update-available', (info) => send({ type: 'available', version: info.version }))
+  autoUpdater.on('update-available', (info) =>
+    send({
+      type: 'available',
+      version: info.version,
+      highlights: extractHighlights(normalizeReleaseNotes(info.releaseNotes))
+    })
+  )
   autoUpdater.on('update-not-available', () => send({ type: 'not-available' }))
   autoUpdater.on('download-progress', (progress) =>
     send({ type: 'download-progress', percent: Math.round(progress.percent) })

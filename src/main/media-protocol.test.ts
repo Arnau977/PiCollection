@@ -27,13 +27,16 @@ vi.mock('electron', () => ({
 }))
 
 const { registerMediaProtocolHandler } = await import('./media-protocol')
-const { writeSourceFolder } = await import('./services/sourceFolder')
+const { writeSourceFolder, resetSourceFolderCache } = await import('./services/sourceFolder')
 
 let sourceDir = ''
 
 beforeEach(async () => {
   userDataDir = await fs.mkdtemp(join(tmpdir(), 'media-protocol-userdata-'))
   sourceDir = await fs.mkdtemp(join(tmpdir(), 'media-protocol-src-'))
+  // readSourceFolder is module-scope cached, so a value written by an earlier
+  // test would otherwise leak into this test's fresh userData dir.
+  resetSourceFolderCache()
   registerMediaProtocolHandler()
 })
 
@@ -95,9 +98,7 @@ describe('media protocol source folder resolution', () => {
     writeSourceFolder(sourceDir)
     await fs.writeFile(join(sourceDir, 'a.png'), 'hello')
 
-    const response = await protocolHandler!(
-      new Request(`app://thumb/${encodeURI('a.png')}`)
-    )
+    const response = await protocolHandler!(new Request(`app://thumb/${encodeURI('a.png')}`))
 
     expect(response.status).toBe(200)
     await response.arrayBuffer()

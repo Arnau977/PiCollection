@@ -1,5 +1,4 @@
 import { ipcMain } from 'electron'
-import { z } from 'zod'
 import { mediaService } from '../services/media.service'
 import { cacheThumbnailFromBuffer, THUMBNAIL_MAX_SIZE } from '../thumbnails/thumbnails'
 import { ipcHandler } from './helpers'
@@ -8,6 +7,7 @@ import {
   CacheThumbnailSchema,
   IPC,
   IdSchema,
+  MediaGetEntityThumbnailsSchema,
   MediaGetFilteredSchema,
   MediaInputSchema,
   MediaUpdateSchema,
@@ -16,13 +16,21 @@ import {
 
 export function registerMediaHandlers(): void {
   ipcMain.handle(
-    IPC.media.getAll,
-    ipcHandler(IPC.media.getAll, z.void(), () => mediaService.getAllMedia())
-  )
-  ipcMain.handle(
     IPC.media.getFiltered,
     ipcHandler(IPC.media.getFiltered, MediaGetFilteredSchema, ({ filters, sorting }) =>
       mediaService.getMediaFiltered(filters, sorting)
+    )
+  )
+  ipcMain.handle(
+    IPC.media.getOrderedIds,
+    ipcHandler(IPC.media.getOrderedIds, MediaGetFilteredSchema, ({ filters, sorting }) =>
+      mediaService.getMediaOrderedIds(filters, sorting)
+    )
+  )
+  ipcMain.handle(
+    IPC.media.getEntityThumbnails,
+    ipcHandler(IPC.media.getEntityThumbnails, MediaGetEntityThumbnailsSchema, ({ kind, ids }) =>
+      mediaService.getEntityThumbnails(kind, ids)
     )
   )
   ipcMain.handle(

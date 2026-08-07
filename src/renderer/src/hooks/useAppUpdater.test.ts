@@ -69,9 +69,13 @@ describe('useAppUpdater', () => {
 
     const { result } = renderHook(() => useAppUpdater())
 
-    act(() => emit({ type: 'available', version: '2.0.0' }))
+    act(() => emit({ type: 'available', version: '2.0.0', highlights: '- New thing' }))
 
-    expect(result.current.status).toEqual({ state: 'available', version: '2.0.0' })
+    expect(result.current.status).toEqual({
+      state: 'available',
+      version: '2.0.0',
+      highlights: '- New thing'
+    })
   })
 
   it('unsubscribes from updater events on unmount', () => {

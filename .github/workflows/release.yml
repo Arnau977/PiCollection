@@ -1,9 +1,9 @@
 name: Release
 
-# A tag push builds and publishes a GitHub Release for that version. A plain
-# tag (v1.2.0) publishes to the stable channel; a prerelease tag
-# (v1.2.0-beta.1) is published as a GitHub prerelease and picked up only by
-# clients on the beta channel - see docs/auto-update.md.
+# A tag push builds and publishes a GitHub Release for that version as a
+# pre-release by default (plain X.Y.Z versioning, no hyphen suffix ever).
+# Promotion to stable ("Latest") is a manual step done after verification:
+# gh release edit vX.Y.Z --prerelease=false --latest - see docs/auto-update.md.
 on:
   push:
     tags:
@@ -21,15 +21,6 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Determine prerelease flag from the tag
-        id: prerelease
-        run: |
-          if [[ "${{ github.ref_name }}" == *-* ]]; then
-            echo "value=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Create draft release with auto-generated notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -39,7 +30,15 @@ jobs:
             --title "PiCollection ${{ github.ref_name }}" \
             --generate-notes \
             --draft \
-            --prerelease=${{ steps.prerelease.outputs.value }}
+            --prerelease
+
+      - name: Prepend a Highlights placeholder for manual review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NOTES=$(gh release view "${{ github.ref_name }}" --repo "${{ github.repository }}" --json body -q .body)
+          { printf '## Highlights\n\n_Fill in 2-3 bullet points of user-facing changes before publishing._\n\n'; echo "$NOTES"; } > notes.md
+          gh release edit "${{ github.ref_name }}" --repo "${{ github.repository }}" --notes-file notes.md
 
   release:
     needs: create-release

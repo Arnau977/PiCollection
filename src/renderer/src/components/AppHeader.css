@@ -73,6 +73,23 @@
   flex-shrink: 0;
 }
 
+.app-sidebar-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.app-sidebar-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  box-shadow: var(--accent-glow-sm);
+}
+
 .app-sidebar-link:hover {
   color: var(--color-text);
   background: var(--color-surface-hover);

@@ -24,7 +24,7 @@ vi.mock('electron', () => ({
 
 const { initTestDbSingleton } = await import('../database/testHelpers')
 const mediaRepo = await import('../database/repositories/media.repository')
-const { writeSourceFolder } = await import('./sourceFolder')
+const { writeSourceFolder, resetSourceFolderCache } = await import('./sourceFolder')
 const { backfillMediaHashes } = await import('./mediaHashBackfill')
 
 /** Fake NativeImage returned by the shell thumbnail provider - always succeeds. */
@@ -67,6 +67,9 @@ function insertRow(
 beforeEach(async () => {
   sourceDir = await fs.mkdtemp(join(tmpdir(), 'backfill-src-'))
   userDataDir = await fs.mkdtemp(join(tmpdir(), 'backfill-cache-'))
+  // readSourceFolder is module-scope cached; reset so each test starts from
+  // its own fresh userData dir rather than an earlier test's cached value.
+  resetSourceFolderCache()
   createThumbnailFromPath.mockReset().mockResolvedValue(fakeThumbnail())
   // Always empty -> computePerceptualHash short-circuits to null; the
   // dHash math itself is already covered by mediaHash.test.ts.

@@ -3,15 +3,20 @@ import { app, BrowserWindow, dialog, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 import { initDb } from './database/connection'
-import { resolveElectronDbPath } from './database/electronDbPath'
+import { resolveElectronDbPath, resolveBackupsDir } from './database/electronDbPath'
 import { runMigrations } from './database/migrations/migrator'
+import {
+  hasPendingMigrations,
+  pruneSnapshots,
+  snapshotDatabase
+} from './database/migrations/preMigrationBackup'
 import { backfillMediaHashes } from './services/mediaHashBackfill'
 import { registerMediaProtocolHandler, registerMediaProtocolScheme } from './media-protocol'
 import { registerIpcHandlers } from './ipc/registerIpcHandlers'
 import { createWindowStateKeeper } from './window/windowState'
 import { MIN_WIDTH, MIN_HEIGHT } from './window/windowBounds'
-import { checkForUpdates, initAutoUpdater } from './updater/autoUpdater'
-import { logError, logInfo } from './logging/logger'
+import { checkForUpdates, initAutoUpdater, setUpdaterWindow } from './updater/autoUpdater'
+import { flushLogBuffer, logError, logInfo } from './logging/logger'
 
 registerMediaProtocolScheme()
 
@@ -23,6 +28,7 @@ registerMediaProtocolScheme()
 process.on('uncaughtException', (err) => {
   console.error('Uncaught exception', err)
   logError('process', 'Uncaught exception', err)
+  flushLogBuffer()
   dialog.showErrorBox(
     'Unexpected error',
     'PiCollection hit an unrecoverable error and needs to close.\n\n' +
@@ -40,8 +46,33 @@ process.on('unhandledRejection', (reason) => {
   logError('process', 'Unhandled rejection', reason)
 })
 
+/**
+ * Thrown by `setupDatabase()` when the pre-migration safety snapshot itself
+ * fails (disk full, permissions, antivirus lock) - as opposed to a failure
+ * in the migrations that snapshot exists to protect against. Kept as a
+ * distinct type (not just a distinct message) so the top-level error dialog
+ * can tell the two apart and avoid pointing the user at a backup folder that,
+ * in this case, was never populated.
+ */
+class SnapshotFailedError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'SnapshotFailedError'
+  }
+}
+
 /** Give the window a moment to finish loading before an update check starts competing for bandwidth. */
 const STARTUP_UPDATE_CHECK_DELAY_MS = 5000
+/** Also re-check periodically for sessions left running across days, not just at launch. */
+const DAILY_UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
+
+const APP_VERSION: string = require('../../package.json').version
+
+// Declared at module scope, assigned late in the whenReady handler: the
+// `before-quit` handler that clears it is registered before that assignment
+// runs, and at least one path (a database-initialization failure calling
+// app.quit()) fires `before-quit` while the timer has never been created.
+let dailyUpdateCheckTimer: NodeJS.Timeout | undefined
 
 function createWindow(): BrowserWindow {
   const windowState = createWindowStateKeeper()
@@ -63,6 +94,7 @@ function createWindow(): BrowserWindow {
   })
 
   windowState.register(mainWindow)
+  setUpdaterWindow(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -85,18 +117,39 @@ function createWindow(): BrowserWindow {
   }
 
   mainWindow.webContents.on('did-finish-load', () => {
-    // Create the browser window.
-    // let name = require('../../package.json').name
-    const version = require('../../package.json').version
-    const windowtitle = 'PiCollection' + ' - ' + version
-    mainWindow.setTitle(windowtitle)
+    mainWindow.setTitle(`PiCollection - ${APP_VERSION}`)
   })
 
   return mainWindow
 }
 
 const setupDatabase = async (): Promise<void> => {
-  const db = initDb(resolveElectronDbPath(), { verboseLogging: !app.isPackaged })
+  const dbPath = resolveElectronDbPath()
+  const db = initDb(dbPath, { verboseLogging: !app.isPackaged })
+
+  try {
+    if (await hasPendingMigrations(db)) {
+      const backupsDir = resolveBackupsDir()
+      await snapshotDatabase(dbPath, backupsDir)
+      await pruneSnapshots(backupsDir)
+      logInfo('lifecycle', 'Pre-migration snapshot created', { backupsDir })
+    }
+  } catch (err) {
+    logError('lifecycle', 'Pre-migration snapshot failed', err)
+    // Don't fall through to running migrations without a backup in place -
+    // that would defeat the whole point of snapshotting first. Thrown as a
+    // distinct error type so the top-level dialog below can tell this
+    // apart from a genuine migration failure and avoid claiming a snapshot
+    // exists when it never got created. Wrapping hasPendingMigrations too
+    // (not just the snapshot/prune calls) means any failure in deciding
+    // whether to snapshot also gets this accurate error, not the generic
+    // "database could not initialize" one.
+    throw new SnapshotFailedError(
+      'Could not create a safety backup before updating the database, so the update was ' +
+        'stopped before making any changes. Your data is untouched.'
+    )
+  }
+
   await runMigrations(db)
   console.info('Database ready')
   logInfo('lifecycle', 'Database ready')
@@ -109,7 +162,8 @@ app.whenReady().then(async () => {
   logInfo('lifecycle', 'App ready')
 
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.arnau977.picollection')
+  app.setName('PiCollection')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -118,16 +172,34 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  app.on('before-quit', () => {
+    // flushLogBuffer first: it is the call that must never be skipped (on the
+    // DB-failure quit path it carries the diagnostic for the crash currently
+    // happening). Clearing an unref'd interval during shutdown is comparatively
+    // unimportant, and the timer may not exist yet on that same path.
+    flushLogBuffer()
+    if (dailyUpdateCheckTimer) clearInterval(dailyUpdateCheckTimer)
+  })
+
   try {
     await setupDatabase()
   } catch (err) {
     console.error('Failed to initialize database', err)
     logError('lifecycle', 'Failed to initialize database', err)
-    dialog.showErrorBox(
-      'Database error',
-      'PiCollection could not initialize its local database and cannot continue.\n\n' +
-        (err instanceof Error ? err.message : String(err))
-    )
+    const detail = err instanceof Error ? err.message : String(err)
+    // A snapshot failure gets its own wording: the boilerplate below claims a
+    // pre-update snapshot may be sitting in the backups folder, which is
+    // false in exactly this case - the snapshot is the thing that failed.
+    const message =
+      err instanceof SnapshotFailedError
+        ? `PiCollection could not initialize its local database and cannot continue.\n\n${detail}`
+        : 'PiCollection could not initialize its local database and cannot continue.\n\n' +
+          'If this happened right after an update, a snapshot of your database from just ' +
+          'before the update may be available in:\n' +
+          resolveBackupsDir() +
+          '\n\n' +
+          detail
+    dialog.showErrorBox('Database error', message)
     app.quit()
     return
   }
@@ -150,6 +222,13 @@ app.whenReady().then(async () => {
   setTimeout(() => {
     checkForUpdates().catch((err) => console.info('Startup update check skipped:', err.message))
   }, STARTUP_UPDATE_CHECK_DELAY_MS)
+
+  // Catches updates published while the app stays open across multiple days -
+  // the startup check alone only covers the moment of launch.
+  dailyUpdateCheckTimer = setInterval(() => {
+    checkForUpdates().catch((err) => console.info('Daily update check skipped:', err.message))
+  }, DAILY_UPDATE_CHECK_INTERVAL_MS)
+  dailyUpdateCheckTimer.unref()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

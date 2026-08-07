@@ -6,6 +6,7 @@ import * as mediaRepo from './media.repository'
 import * as tagRepo from './tag.repository'
 import * as characterRepo from './character.repository'
 import * as seriesRepo from './series.repository'
+import * as artistRepo from './artist.repository'
 import type { DB } from '../schema'
 
 let db: Kysely<DB>
@@ -34,6 +35,25 @@ function insertMedia(name: string): ReturnType<typeof mediaRepo.insertMediaRow> 
     created_at: Date.now(),
     hash: null,
     phash: null
+  })
+}
+
+function baseMediaRow(
+  overrides: Partial<Parameters<typeof mediaRepo.insertMediaRow>[1]> = {}
+): ReturnType<typeof mediaRepo.insertMediaRow> {
+  return mediaRepo.insertMediaRow(db, {
+    id: randomUUID(),
+    name: 'm',
+    sfw: 1,
+    is_ai_generated: 0,
+    type: 'image',
+    route: '/m.png',
+    alias: null,
+    artist_id: null,
+    created_at: Date.now(),
+    hash: null,
+    phash: null,
+    ...overrides
   })
 }
 
@@ -463,5 +483,205 @@ describe('routesExist', () => {
     const result = await mediaRepo.routesExist(db, candidates)
 
     expect(result).toEqual(new Set(['/cat.png', '/dog.png']))
+  })
+})
+
+describe('findEntityThumbnails', () => {
+  it('returns one thumbnail per tag id, ignoring NSFW media', async () => {
+    const tagA = await tagRepo.insertTag(db, { id: 'ta', name: 'a', created_at: 1 })
+    const tagB = await tagRepo.insertTag(db, { id: 'tb', name: 'b', created_at: 1 })
+    const sfwMedia = await baseMediaRow({ id: 'm1', sfw: 1 })
+    const nsfwMedia = await baseMediaRow({ id: 'm2', route: '/m2', sfw: 0 })
+    await mediaRepo.setMediaTags(db, sfwMedia.id, [tagA.id])
+    await mediaRepo.setMediaTags(db, nsfwMedia.id, [tagB.id])
+
+    const result = await mediaRepo.findEntityThumbnails(db, 'tag', [tagA.id, tagB.id])
+
+    expect(result).toEqual([{ entityId: tagA.id, route: sfwMedia.route, type: sfwMedia.type }])
+  })
+
+  it('returns nothing for an empty id list without querying', async () => {
+    expect(await mediaRepo.findEntityThumbnails(db, 'artist', [])).toEqual([])
+  })
+
+  it('prefers a media item where the character appears alone', async () => {
+    const solo = await characterRepo.insertCharacter(db, {
+      id: 'c1',
+      name: 'Solo',
+      aliases_json: '[]',
+      created_at: 1
+    })
+    const other = await characterRepo.insertCharacter(db, {
+      id: 'c2',
+      name: 'Other',
+      aliases_json: '[]',
+      created_at: 1
+    })
+    const groupMedia = await baseMediaRow({ id: 'm1', route: '/group', sfw: 1 })
+    const soloMedia = await baseMediaRow({ id: 'm2', route: '/solo', sfw: 1 })
+    await mediaRepo.setMediaCharacters(db, groupMedia.id, [solo.id, other.id])
+    await mediaRepo.setMediaCharacters(db, soloMedia.id, [solo.id])
+
+    const result = await mediaRepo.findEntityThumbnails(db, 'character', [solo.id])
+
+    expect(result).toEqual([{ entityId: solo.id, route: '/solo', type: soloMedia.type }])
+  })
+
+  it('returns one thumbnail per artist id directly from media.artist_id', async () => {
+    const artist = await artistRepo.insertArtist(db, { id: 'a1', name: 'Artist', created_at: 1 })
+    const media = await baseMediaRow({ id: 'm1', sfw: 1, artist_id: artist.id })
+
+    const result = await mediaRepo.findEntityThumbnails(db, 'artist', [artist.id])
+
+    expect(result).toEqual([{ entityId: artist.id, route: media.route, type: media.type }])
+  })
+
+  it('omits an entity with no eligible SFW media entirely', async () => {
+    const tag = await tagRepo.insertTag(db, { id: 't1', name: 'a', created_at: 1 })
+    expect(await mediaRepo.findEntityThumbnails(db, 'tag', [tag.id])).toEqual([])
+  })
+})
+
+describe('findSeriesThumbnailsByClosure', () => {
+  /** parent -> child -> grandchild, plus an unrelated 'other' series. */
+  async function insertSeriesTree(): Promise<void> {
+    await seriesRepo.insertSeries(db, {
+      id: 'parent',
+      name: 'Parent',
+      aliases_json: '[]',
+      created_at: 1,
+      parent_id: null
+    })
+    await seriesRepo.insertSeries(db, {
+      id: 'child',
+      name: 'Child',
+      aliases_json: '[]',
+      created_at: 1,
+      parent_id: 'parent'
+    })
+    await seriesRepo.insertSeries(db, {
+      id: 'grandchild',
+      name: 'Grandchild',
+      aliases_json: '[]',
+      created_at: 1,
+      parent_id: 'child'
+    })
+    await seriesRepo.insertSeries(db, {
+      id: 'other',
+      name: 'Other',
+      aliases_json: '[]',
+      created_at: 1,
+      parent_id: null
+    })
+  }
+
+  it('returns nothing for an empty pair list without querying', async () => {
+    expect(await mediaRepo.findSeriesThumbnailsByClosure(db, [])).toEqual([])
+  })
+
+  it('gives a parent with no direct media a thumbnail from its child', async () => {
+    await insertSeriesTree()
+    const media = await baseMediaRow({ id: 'm1', route: '/child.png', sfw: 1 })
+    await mediaRepo.setMediaSeries(db, media.id, ['child'])
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' },
+      { descendantId: 'grandchild', ancestorId: 'parent' }
+    ])
+
+    expect(result).toEqual([{ entityId: 'parent', route: '/child.png', type: media.type }])
+  })
+
+  it('reaches a grandchild two levels down', async () => {
+    await insertSeriesTree()
+    const media = await baseMediaRow({ id: 'm1', route: '/grandchild.png', sfw: 1 })
+    await mediaRepo.setMediaSeries(db, media.id, ['grandchild'])
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' },
+      { descendantId: 'grandchild', ancestorId: 'parent' }
+    ])
+
+    expect(result).toEqual([{ entityId: 'parent', route: '/grandchild.png', type: media.type }])
+  })
+
+  it('omits a series whose whole closure has no media, without borrowing another series’ media', async () => {
+    await insertSeriesTree()
+    const media = await baseMediaRow({ id: 'm1', route: '/other.png', sfw: 1 })
+    await mediaRepo.setMediaSeries(db, media.id, ['other'])
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' },
+      { descendantId: 'grandchild', ancestorId: 'parent' }
+    ])
+
+    expect(result).toEqual([])
+  })
+
+  it('still ignores NSFW media anywhere in the closure', async () => {
+    await insertSeriesTree()
+    const nsfw = await baseMediaRow({ id: 'm1', route: '/nsfw.png', sfw: 0 })
+    await mediaRepo.setMediaSeries(db, nsfw.id, ['child'])
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' }
+    ])
+
+    expect(result).toEqual([])
+  })
+
+  it('resolves several requested ancestors independently in one query', async () => {
+    await insertSeriesTree()
+    const childMedia = await baseMediaRow({ id: 'm1', route: '/child.png', sfw: 1 })
+    const otherMedia = await baseMediaRow({ id: 'm2', route: '/other.png', sfw: 1 })
+    await mediaRepo.setMediaSeries(db, childMedia.id, ['child'])
+    await mediaRepo.setMediaSeries(db, otherMedia.id, ['other'])
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' },
+      { descendantId: 'grandchild', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'child' },
+      { descendantId: 'grandchild', ancestorId: 'child' },
+      { descendantId: 'other', ancestorId: 'other' }
+    ])
+
+    expect([...result].sort((a, b) => a.entityId.localeCompare(b.entityId))).toEqual([
+      { entityId: 'child', route: '/child.png', type: childMedia.type },
+      { entityId: 'other', route: '/other.png', type: otherMedia.type },
+      { entityId: 'parent', route: '/child.png', type: childMedia.type }
+    ])
+  })
+
+  it('handles far more pairs than SQLite allows terms in a compound SELECT', async () => {
+    // SQLITE_MAX_COMPOUND_SELECT is a hardcoded 500 in better-sqlite3's build,
+    // so the pairs table must not be a `SELECT ... UNION ALL` chain. 600 flat
+    // series is only ~600 series in a real library - well within reach.
+    const seriesCount = 600
+    for (let i = 0; i < seriesCount; i++) {
+      await seriesRepo.insertSeries(db, {
+        id: `s${i}`,
+        name: `Series ${i}`,
+        aliases_json: '[]',
+        created_at: 1,
+        parent_id: null
+      })
+    }
+    const media = await baseMediaRow({ id: 'm1', route: '/s42.png', sfw: 1 })
+    await mediaRepo.setMediaSeries(db, media.id, ['s42'])
+
+    const pairs = Array.from({ length: seriesCount }, (_, i) => ({
+      descendantId: `s${i}`,
+      ancestorId: `s${i}`
+    }))
+    expect(pairs.length).toBeGreaterThan(500)
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, pairs)
+
+    expect(result).toEqual([{ entityId: 's42', route: '/s42.png', type: media.type }])
   })
 })

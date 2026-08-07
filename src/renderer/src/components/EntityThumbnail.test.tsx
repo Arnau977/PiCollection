@@ -1,118 +1,45 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, waitFor } from '@testing-library/react'
+import { fireEvent, render } from '@testing-library/react'
 import { EntityThumbnail } from './EntityThumbnail'
 
-function setApi(getFiltered: ReturnType<typeof vi.fn>): void {
-  Object.defineProperty(window, 'api', {
-    value: { media: { getFiltered } },
-    writable: true,
-    configurable: true
-  })
-}
-
 describe('EntityThumbnail', () => {
-  it('renders a cached preview from a matching non-NSFW media item', async () => {
-    const getFiltered = vi.fn().mockResolvedValue({
-      success: true,
-      data: { items: [{ id: 'm1', route: '/pics/a.png', type: 'image' }], total: 1 }
-    })
-    setApi(getFiltered)
+  it('renders an image for a resolved route', () => {
+    const { container } = render(<EntityThumbnail route="/pics/a.png" loading={false} />)
 
-    const { container } = render(<EntityThumbnail kind="tag" id="t1" />)
-
-    await waitFor(() => expect(container.querySelector('img')).toBeInTheDocument())
     expect(container.querySelector('img')).toHaveAttribute(
       'src',
       expect.stringContaining('app://thumb/')
     )
-    expect(getFiltered).toHaveBeenCalledWith({ tagGroups: [['t1']], sfw: true })
   })
 
-  it('queries by seriesGroups for a series thumbnail', async () => {
-    const getFiltered = vi.fn().mockResolvedValue({
-      success: true,
-      data: { items: [{ id: 'm1', route: '/pics/a.png', type: 'image' }], total: 1 }
-    })
-    setApi(getFiltered)
+  it('shows a loading shimmer while loading is true, regardless of route', () => {
+    const { container } = render(<EntityThumbnail route={null} loading />)
 
-    const { container } = render(<EntityThumbnail kind="series" id="s1" />)
-
-    await waitFor(() => expect(container.querySelector('img')).toBeInTheDocument())
-    expect(getFiltered).toHaveBeenCalledWith({ seriesGroups: [['s1']], sfw: true })
-  })
-
-  it('uses a preview image for videos too instead of loading the video', async () => {
-    const getFiltered = vi.fn().mockResolvedValue({
-      success: true,
-      data: { items: [{ id: 'm1', route: '/vids/a.mp4', type: 'video' }], total: 1 }
-    })
-    setApi(getFiltered)
-
-    const { container } = render(<EntityThumbnail kind="character" id="c1" />)
-
-    await waitFor(() => expect(container.querySelector('img')).toBeInTheDocument())
-    expect(container.querySelector('video')).not.toBeInTheDocument()
-    expect(getFiltered).toHaveBeenCalledWith({ characterGroups: [['c1']], sfw: true })
-  })
-
-  it('excludes NSFW media from the pool, so an entity with only NSFW media shows a placeholder', async () => {
-    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
-    setApi(getFiltered)
-
-    const { container } = render(<EntityThumbnail kind="tag" id="t1" />)
-
-    await waitFor(() =>
-      expect(container.querySelector('.entity-thumb-placeholder')).toBeInTheDocument()
-    )
-    // The `sfw: true` filter is what keeps NSFW-only media out of the pool
-    // server-side - a blurred, zoomed-on-hover NSFW preview at this small
-    // size reads as a meaningless smudge rather than a useful preview.
-    expect(getFiltered).toHaveBeenCalledWith({ tagGroups: [['t1']], sfw: true })
-  })
-
-  it('shows a loading shimmer until the preview has decoded', async () => {
-    const getFiltered = vi.fn().mockResolvedValue({
-      success: true,
-      data: { items: [{ id: 'm1', route: '/pics/a.png', type: 'image' }], total: 1 }
-    })
-    setApi(getFiltered)
-
-    const { container } = render(<EntityThumbnail kind="tag" id="t1" />)
-
-    await waitFor(() => expect(container.querySelector('img')).toBeInTheDocument())
     expect(container.querySelector('.entity-thumb-loading')).toBeInTheDocument()
-
-    fireEvent.load(container.querySelector('img') as HTMLImageElement)
-
-    expect(container.querySelector('.entity-thumb-loading')).not.toBeInTheDocument()
+    expect(container.querySelector('.entity-thumb-placeholder')).not.toBeInTheDocument()
   })
 
-  it('shows a placeholder when the preview fails to load', async () => {
-    const getFiltered = vi.fn().mockResolvedValue({
-      success: true,
-      data: { items: [{ id: 'm1', route: '/vids/a.mp4', type: 'video' }], total: 1 }
-    })
-    setApi(getFiltered)
-
-    const { container } = render(<EntityThumbnail kind="tag" id="t1" />)
-    await waitFor(() => expect(container.querySelector('img')).toBeInTheDocument())
-
-    fireEvent.error(container.querySelector('img') as HTMLImageElement)
+  it('shows a placeholder when not loading and there is no route', () => {
+    const { container } = render(<EntityThumbnail route={null} loading={false} />)
 
     expect(container.querySelector('.entity-thumb-placeholder')).toBeInTheDocument()
   })
 
-  it('shows a placeholder when there is no matching media', async () => {
-    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
-    setApi(getFiltered)
+  it('shows a loading shimmer until the image has decoded', () => {
+    const { container } = render(<EntityThumbnail route="/pics/a.png" loading={false} />)
 
-    const { container } = render(<EntityThumbnail kind="artist" id="a1" />)
+    expect(container.querySelector('.entity-thumb-loading')).toBeInTheDocument()
+    fireEvent.load(container.querySelector('img') as HTMLImageElement)
+    expect(container.querySelector('.entity-thumb-loading')).not.toBeInTheDocument()
+  })
 
-    await waitFor(() =>
-      expect(container.querySelector('.entity-thumb-placeholder')).toBeInTheDocument()
-    )
-    expect(getFiltered).toHaveBeenCalledWith({ artistId: 'a1', sfw: true })
+  it('shows a placeholder when the image fails to load', () => {
+    const { container } = render(<EntityThumbnail route="/vids/a.mp4" loading={false} />)
+
+    fireEvent.error(container.querySelector('img') as HTMLImageElement)
+
+    expect(container.querySelector('.entity-thumb-placeholder')).toBeInTheDocument()
   })
 
   describe('hover-zoom origin', () => {
@@ -151,35 +78,18 @@ describe('EntityThumbnail', () => {
       } as DOMRect)
     }
 
-    it('grows from the top-left corner when there is room on every side', async () => {
+    it('grows from the top-left corner when there is room on every side', () => {
       mockRect({ top: 300, left: 300, right: 340, bottom: 340 })
-      const getFiltered = vi.fn().mockResolvedValue({
-        success: true,
-        data: { items: [{ id: 'm1', route: '/pics/a.png', type: 'image' }], total: 1 }
-      })
-      setApi(getFiltered)
-
-      const { container } = render(<EntityThumbnail kind="tag" id="t1" />)
-      await waitFor(() => expect(container.querySelector('img')).toBeInTheDocument())
+      const { container } = render(<EntityThumbnail route="/pics/a.png" loading={false} />)
 
       fireEvent.mouseEnter(container.querySelector('.entity-thumb') as HTMLElement)
 
       expect(container.querySelector('img')).toHaveStyle({ transformOrigin: 'left top' })
     })
 
-    it('flips to the bottom-right corner when the row is near the edge of the screen', async () => {
-      // 40px box near the bottom-right of a 1000x800 viewport - scaling 4.32x
-      // from top-left would need ~133px of room on the right/below, which
-      // isn't available here.
+    it('flips to the bottom-right corner when the row is near the edge of the screen', () => {
       mockRect({ top: 780, left: 980, right: 1000, bottom: 800 })
-      const getFiltered = vi.fn().mockResolvedValue({
-        success: true,
-        data: { items: [{ id: 'm1', route: '/pics/a.png', type: 'image' }], total: 1 }
-      })
-      setApi(getFiltered)
-
-      const { container } = render(<EntityThumbnail kind="tag" id="t1" />)
-      await waitFor(() => expect(container.querySelector('img')).toBeInTheDocument())
+      const { container } = render(<EntityThumbnail route="/pics/a.png" loading={false} />)
 
       fireEvent.mouseEnter(container.querySelector('.entity-thumb') as HTMLElement)
 

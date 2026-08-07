@@ -12,6 +12,28 @@ const CACHE_DIR = 'thumbnails'
 /** De-duplicates concurrent requests for the same thumbnail (a grid asks for many at once). */
 const inFlight = new Map<string, Promise<string | null>>()
 
+/** Caps simultaneous `generate()` calls so opening a folder with hundreds of
+ *  images doesn't stampede-launch every OS thumbnail/decode call at once. */
+export const THUMBNAIL_CONCURRENCY = 6
+
+let activeCount = 0
+const waiters: (() => void)[] = []
+
+async function acquireSlot(): Promise<void> {
+  if (activeCount < THUMBNAIL_CONCURRENCY) {
+    activeCount++
+    return
+  }
+  await new Promise<void>((resolve) => waiters.push(resolve))
+  activeCount++
+}
+
+function releaseSlot(): void {
+  activeCount--
+  const next = waiters.shift()
+  if (next) next()
+}
+
 function cacheDir(): string {
   return join(app.getPath('userData'), CACHE_DIR)
 }
@@ -74,6 +96,7 @@ async function generate(
   maxSize: number,
   targetPath: string
 ): Promise<string | null> {
+  await acquireSlot()
   try {
     const image = await loadThumbnailSource(filePath, maxSize)
     if (!image) return null
@@ -83,6 +106,8 @@ async function generate(
     return targetPath
   } catch {
     return null
+  } finally {
+    releaseSlot()
   }
 }
 

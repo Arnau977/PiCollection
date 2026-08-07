@@ -37,6 +37,7 @@
     "checkingForUpdates": "Buscando actualizaciones...",
     "upToDate": "Ya tienes la última versión.",
     "updateAvailable": "La versión {{version}} está disponible.",
+    "whatsNew": "Novedades",
     "downloadUpdate": "Descargar actualización",
     "downloadingUpdate": "Descargando actualización... {{percent}}%",
     "updateReady": "La versión {{version}} está lista para instalarse.",
@@ -165,7 +166,7 @@
     "nsfwBadge": "NSFW",
     "unknownArtist": "Desconocido",
     "notFound": "Media no encontrado",
-    "revealNsfw": "Clic para revelar",
+    "revealNsfw": "Pasa el cursor para revelar",
     "edit": "Editar",
     "aiGeneratedTitle": "Generado mediante IA",
     "aiGeneratedBadge": "IA",
@@ -174,7 +175,9 @@
     "copyMedia": "Copiar imagen",
     "mediaCopied": "¡Copiado!",
     "openInFolder": "Abrir en el explorador de archivos",
-    "closeLightbox": "Cerrar"
+    "closeLightbox": "Cerrar",
+    "previousImage": "Imagen anterior",
+    "nextImage": "Imagen siguiente"
   },
   "addMedia": {
     "title": "Añadir nuevo media",
@@ -207,8 +210,6 @@
     "root": "Carpeta origen",
     "loading": "Cargando…",
     "empty": "Esta carpeta no tiene archivos de media.",
-    "selectedCount_one": "{{count}} seleccionado",
-    "selectedCount_other": "{{count}} seleccionados",
     "importSelected": "Importar seleccionados ({{count}})",
     "breadcrumbLabel": "Ruta de carpeta",
     "retry": "Reintentar",

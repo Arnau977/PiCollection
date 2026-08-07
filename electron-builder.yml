@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: picollection
+appId: com.arnau977.picollection
+productName: PiCollection
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: picollection
+  executableName: PiCollection
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -35,7 +35,7 @@ linux:
   # artifact per major OS (Windows/macOS/Linux).
   target:
     - AppImage
-  maintainer: electronjs.org
+  maintainer: Arnau977
   category: Utility
 appImage:
   artifactName: ${name}-${version}.${ext}
@@ -44,7 +44,9 @@ publish:
   provider: github
   owner: Arnau977
   repo: PiCollection
-  # A prerelease version (e.g. 1.2.0-beta.1) is published as a GitHub
-  # prerelease and gets its own beta.yml manifest automatically; a plain
-  # version (1.2.0) publishes as a normal release with latest.yml. Both are
-  # read from the same repo, so no separate feed URL is needed per channel.
+  # Versions are always plain X.Y.Z, and every release publishes the same
+  # latest*.yml manifest - there is no separate beta manifest. Which channel
+  # can see a release is decided by GitHub's own "Pre-release" flag on it
+  # (set by release.yml, cleared manually to promote to stable), so both
+  # channels read the same repo and no per-channel feed URL is needed.
+  # See docs/auto-update.md.

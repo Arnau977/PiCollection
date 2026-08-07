@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { CharacterModel, SeriesModel } from '@shared/models'
 import { CharactersManager } from './CharactersManager'
@@ -38,7 +38,7 @@ function setApi(overrides: Record<string, unknown> = {}): void {
         create: vi.fn().mockResolvedValue({ success: true, data: { id: 's2', name: 'Show A' } })
       },
       media: {
-        getFiltered: vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+        getEntityThumbnails: vi.fn().mockResolvedValue({ success: true, data: [] })
       }
     },
     writable: true,
@@ -112,7 +112,7 @@ describe('CharactersManager', () => {
         character: { create: vi.fn().mockResolvedValue({ success: true, data: {} }) },
         series: { create: seriesCreate },
         media: {
-          getFiltered: vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+          getEntityThumbnails: vi.fn().mockResolvedValue({ success: true, data: [] })
         }
       },
       writable: true,
@@ -216,8 +216,10 @@ describe('CharactersManager', () => {
 
     await user.type(screen.getByRole('searchbox'), 'ali')
 
-    expect(screen.getByText('Alice')).toBeInTheDocument()
-    expect(screen.queryByText('Peter Pan')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBeInTheDocument()
+      expect(screen.queryByText('Peter Pan')).not.toBeInTheDocument()
+    })
   })
 
   it('persists the chosen sort order and re-applies it on next render', async () => {

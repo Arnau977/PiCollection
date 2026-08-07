@@ -47,7 +47,7 @@ beforeEach(() => {
       character: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
       series: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
       media: {
-        getFiltered: vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+        getEntityThumbnails: vi.fn().mockResolvedValue({ success: true, data: [] })
       }
     },
     writable: true,

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import i18n from 'i18next'
 import SettingsPage from './SettingsPage'
@@ -233,5 +233,64 @@ describe('SettingsPage', () => {
     await user.click(screen.getByRole('button', { name: 'Open logs folder' }))
 
     expect(window.api.logging.openFolder).toHaveBeenCalled()
+  })
+
+  it('shows highlights inline when an update becomes available', async () => {
+    let emit: (event: unknown) => void = () => {}
+    Object.defineProperty(window, 'api', {
+      value: {
+        ...window.api,
+        updater: {
+          ...window.api.updater,
+          onEvent: vi.fn((listener: (event: unknown) => void) => {
+            emit = listener
+            return () => {}
+          })
+        }
+      },
+      writable: true,
+      configurable: true
+    })
+
+    const user = userEvent.setup()
+    render(<SettingsPage />)
+    await openTab(user, 'Advanced')
+
+    act(() =>
+      emit({
+        type: 'available',
+        version: '2.0.0',
+        highlights: '- New series filters\n- Fixed duplicate detection'
+      })
+    )
+
+    expect(screen.getByText('New series filters')).toBeInTheDocument()
+    expect(screen.getByText('Fixed duplicate detection')).toBeInTheDocument()
+  })
+
+  it('shows no highlights block when the release has none', async () => {
+    let emit: (event: unknown) => void = () => {}
+    Object.defineProperty(window, 'api', {
+      value: {
+        ...window.api,
+        updater: {
+          ...window.api.updater,
+          onEvent: vi.fn((listener: (event: unknown) => void) => {
+            emit = listener
+            return () => {}
+          })
+        }
+      },
+      writable: true,
+      configurable: true
+    })
+
+    const user = userEvent.setup()
+    render(<SettingsPage />)
+    await openTab(user, 'Advanced')
+
+    act(() => emit({ type: 'available', version: '2.0.0', highlights: null }))
+
+    expect(screen.queryByText("What's new")).not.toBeInTheDocument()
   })
 })

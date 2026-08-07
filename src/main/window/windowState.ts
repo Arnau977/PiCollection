@@ -1,30 +1,18 @@
-import { app, screen, type BrowserWindow } from 'electron'
-import { readFileSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { screen, type BrowserWindow } from 'electron'
 import { DEFAULT_WINDOW_STATE, sanitizeWindowState, type SavedWindowState } from './windowBounds'
+import { createJsonSettingsFile } from '../services/jsonSettingsFile'
 
 const STATE_FILE = 'window-state.json'
 const SAVE_DEBOUNCE_MS = 400
 
-function stateFilePath(): string {
-  return join(app.getPath('userData'), STATE_FILE)
-}
+const settingsFile = createJsonSettingsFile<unknown>(STATE_FILE, (raw) => raw, null)
 
 function readSavedState(): unknown {
-  try {
-    return JSON.parse(readFileSync(stateFilePath(), 'utf-8'))
-  } catch {
-    // Missing or corrupted state is expected on first run - fall back to defaults.
-    return null
-  }
+  return settingsFile.read()
 }
 
 function writeState(state: SavedWindowState): void {
-  try {
-    writeFileSync(stateFilePath(), JSON.stringify(state), 'utf-8')
-  } catch (err) {
-    console.warn('Could not persist window state', err)
-  }
+  settingsFile.write(state)
 }
 
 export interface WindowStateKeeper {

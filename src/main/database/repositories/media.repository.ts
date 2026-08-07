@@ -1,4 +1,5 @@
 import type { Expression, ExpressionBuilder, Kysely, SelectQueryBuilder, SqlBool } from 'kysely'
+import { sql } from 'kysely'
 import type { DB, MediaTable } from '../schema'
 import type { MediaFilters, Sorting } from '@shared/models'
 import { extractAiToken, parseSearchQuery, type QueryNode } from '@shared/query/searchQuery'
@@ -210,6 +211,22 @@ export function findMediaRows(
     .orderBy(sortColumn, sorting?.desc ? 'desc' : 'asc')
     .limit(filters.limit ?? DEFAULT_LIMIT)
     .offset(filters.offset ?? 0)
+    .execute()
+}
+
+/** Same ordering/filtering as `findMediaRows`, but every matching id (no limit/offset) - used to
+ * work out a media item's previous/next siblings without paying for the full row hydration. */
+export function findMediaIds(
+  db: Kysely<DB>,
+  filters: MediaFilters,
+  sorting?: Sorting,
+  seriesClosures?: Map<string, string[]>
+): Promise<{ id: string }[]> {
+  const sortColumn = SORT_COLUMNS[sorting?.prop ?? 'createdAt'] ?? 'created_at'
+
+  return applyMediaFilters(db, filters, seriesClosures)
+    .select('media.id')
+    .orderBy(sortColumn, sorting?.desc ? 'desc' : 'asc')
     .execute()
 }
 
@@ -462,4 +479,136 @@ export async function findSeriesForMediaIds(
     map.set(row.mediaId, list)
   }
   return map
+}
+
+export interface EntityThumbnailRow {
+  entityId: string
+  route: string
+  type: string
+}
+
+const ENTITY_THUMBNAIL_JOIN: Record<
+  'tag' | 'character' | 'series',
+  {
+    table: 'media_tag' | 'media_character' | 'media_series'
+    column: 'tag_id' | 'character_id' | 'series_id'
+  }
+> = {
+  tag: { table: 'media_tag', column: 'tag_id' },
+  character: { table: 'media_character', column: 'character_id' },
+  series: { table: 'media_series', column: 'series_id' }
+}
+
+/**
+ * One SFW media thumbnail per requested entity id, chosen server-side so the
+ * caller never has to fetch (let alone hydrate) more than `ids.length` rows
+ * to render a grid of small previews. For `character`, prefers a media item
+ * where that character is the only one credited (a solo appearance reads as
+ * a more useful preview than one cropped out of a group shot) - implemented
+ * via a `RANDOM()`-ordered window function partitioned per entity, with a
+ * secondary sort key breaking ties toward solo appearances; expressed as raw
+ * SQL (via Kysely's `sql` tag) because "top-1-per-group with a per-kind
+ * tiebreak" isn't something the fluent query builder expresses cleanly, and
+ * the four kinds each need slightly different joins.
+ *
+ * The `series` branch matches the exact requested ids only. Callers that want
+ * a parent series to inherit a thumbnail from its descendants must use
+ * `findSeriesThumbnailsByClosure` instead - see `mediaService.getEntityThumbnails`.
+ */
+export async function findEntityThumbnails(
+  db: Kysely<DB>,
+  kind: 'artist' | 'tag' | 'character' | 'series',
+  ids: string[]
+): Promise<EntityThumbnailRow[]> {
+  if (ids.length === 0) return []
+
+  if (kind === 'artist') {
+    const result = await sql<EntityThumbnailRow>`
+      SELECT entity_id as entityId, route, type FROM (
+        SELECT
+          media.artist_id AS entity_id,
+          media.route AS route,
+          media.type AS type,
+          ROW_NUMBER() OVER (PARTITION BY media.artist_id ORDER BY RANDOM()) AS rn
+        FROM media
+        WHERE media.artist_id IN (${sql.join(ids)}) AND media.sfw = 1
+      ) WHERE rn = 1
+    `.execute(db)
+    return result.rows
+  }
+
+  const { table, column } = ENTITY_THUMBNAIL_JOIN[kind]
+  const soloTiebreak =
+    kind === 'character' ? sql`(CASE WHEN char_count.cnt = 1 THEN 0 ELSE 1 END), ` : sql``
+  const soloJoin =
+    kind === 'character'
+      ? sql`LEFT JOIN (SELECT media_id, COUNT(*) AS cnt FROM media_character GROUP BY media_id) char_count ON char_count.media_id = media.id`
+      : sql``
+
+  const result = await sql<EntityThumbnailRow>`
+    SELECT entity_id as entityId, route, type FROM (
+      SELECT
+        j.${sql.ref(column)} AS entity_id,
+        media.route AS route,
+        media.type AS type,
+        ROW_NUMBER() OVER (PARTITION BY j.${sql.ref(column)} ORDER BY ${soloTiebreak}RANDOM()) AS rn
+      FROM ${sql.table(table)} j
+      JOIN media ON media.id = j.media_id
+      ${soloJoin}
+      WHERE j.${sql.ref(column)} IN (${sql.join(ids)}) AND media.sfw = 1
+    ) WHERE rn = 1
+  `.execute(db)
+  return result.rows
+}
+
+/** A series id actually linked in `media_series`, paired with the requested ancestor it should count towards. */
+export interface SeriesClosurePair {
+  descendantId: string
+  ancestorId: string
+}
+
+/**
+ * Series thumbnails that honour the series tree: one SFW thumbnail per
+ * *requested ancestor*, drawn from media linked to any series in that
+ * ancestor's closure (itself plus every descendant). A parent series whose
+ * media all live under its children still gets a preview, matching the
+ * rolled-up counts the Manage list shows next to it.
+ *
+ * `media_series` only stores exact links, so the closure has to come from the
+ * caller: the (descendant, ancestor) pairs are inlined as a derived table and
+ * the window function partitions by `ancestor_id` rather than by the raw join
+ * column. The pairs go in as a `WITH closure(descendant_id, ancestor_id) AS
+ * (VALUES ...)` CTE - the CTE's column list is what names the otherwise
+ * anonymous `VALUES` columns so the join below can reference them. A chain of
+ * `SELECT ... UNION ALL` would name its columns too, but it is a compound
+ * SELECT and so capped at `SQLITE_MAX_COMPOUND_SELECT` (500, hardcoded in
+ * better-sqlite3's build): any library with more than ~500 closure pairs would
+ * fail outright. A `VALUES` list carries no such cap, leaving only the far
+ * roomier parameter limit (32766 host params, i.e. ~16k pairs).
+ */
+export async function findSeriesThumbnailsByClosure(
+  db: Kysely<DB>,
+  pairs: SeriesClosurePair[]
+): Promise<EntityThumbnailRow[]> {
+  // Also keeps the `VALUES` list below from degenerating into invalid SQL,
+  // since it needs at least one row.
+  if (pairs.length === 0) return []
+
+  const pairRows = sql.join(pairs.map((pair) => sql`(${pair.descendantId}, ${pair.ancestorId})`))
+
+  const result = await sql<EntityThumbnailRow>`
+    WITH closure(descendant_id, ancestor_id) AS (VALUES ${pairRows})
+    SELECT entity_id as entityId, route, type FROM (
+      SELECT
+        closure.ancestor_id AS entity_id,
+        media.route AS route,
+        media.type AS type,
+        ROW_NUMBER() OVER (PARTITION BY closure.ancestor_id ORDER BY RANDOM()) AS rn
+      FROM closure
+      JOIN media_series ms ON ms.series_id = closure.descendant_id
+      JOIN media ON media.id = ms.media_id
+      WHERE media.sfw = 1
+    ) WHERE rn = 1
+  `.execute(db)
+  return result.rows
 }

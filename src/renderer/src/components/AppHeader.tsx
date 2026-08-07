@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Home, Images, Database, Settings } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
+import { useAppUpdater } from '../hooks/useAppUpdater'
 import './AppHeader.css'
 
 function navLinkClassName({ isActive }: { isActive: boolean }): string {
@@ -10,6 +11,8 @@ function navLinkClassName({ isActive }: { isActive: boolean }): string {
 
 export function AppHeader(): JSX.Element {
   const { t } = useTranslation()
+  const { status } = useAppUpdater()
+  const updateReady = status.state === 'available' || status.state === 'downloaded'
 
   return (
     <aside className="app-sidebar">
@@ -34,7 +37,10 @@ export function AppHeader(): JSX.Element {
           <span className="app-sidebar-label">{t('nav.manage')}</span>
         </NavLink>
         <NavLink to={PATH.SETTINGS} className={navLinkClassName} title={t('nav.settings')}>
-          <Settings size={19} aria-hidden="true" />
+          <span className="app-sidebar-icon-wrap">
+            <Settings size={19} aria-hidden="true" />
+            {updateReady && <span className="app-sidebar-badge" aria-hidden="true" />}
+          </span>
           <span className="app-sidebar-label">{t('nav.settings')}</span>
         </NavLink>
       </nav>

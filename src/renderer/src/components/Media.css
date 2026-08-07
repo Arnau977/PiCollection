@@ -20,10 +20,15 @@
   align-items: center;
   justify-content: center;
   max-height: 78vh;
-  cursor: zoom-in;
+  position: relative;
   transition:
     box-shadow var(--transition-base),
     border-color var(--transition-base);
+}
+
+.media-detail-media img,
+.media-detail-media video {
+  cursor: zoom-in;
 }
 
 .media-detail-media:hover {
@@ -37,6 +42,57 @@
   max-height: 78vh;
   object-fit: contain;
   display: block;
+}
+
+.media-detail-nav {
+  align-items: center;
+  background: none;
+  border: none;
+  bottom: 0;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  padding: 0 var(--space-3);
+  position: absolute;
+  top: 0;
+  width: 25%;
+  z-index: 1;
+}
+
+.media-detail-nav-prev {
+  justify-content: flex-start;
+  left: 0;
+}
+
+.media-detail-nav-next {
+  justify-content: flex-end;
+  right: 0;
+}
+
+.media-detail-nav svg {
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: var(--radius-pill);
+  box-sizing: content-box;
+  opacity: 0.7;
+  padding: 8px;
+  transition:
+    opacity var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.media-detail-nav:hover svg {
+  background: rgba(0, 0, 0, 0.65);
+  opacity: 1;
+}
+
+.media-detail-nav:focus-visible {
+  outline: none;
+}
+
+.media-detail-nav:focus-visible svg {
+  opacity: 1;
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 
 .media-detail-info {

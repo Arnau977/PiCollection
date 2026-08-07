@@ -117,8 +117,8 @@ describe('mediaService.addMedia', () => {
 
   it('does not create a media row when relation validation fails (transaction not started)', async () => {
     await expect(mediaService.addMedia(baseInput({ tagIds: ['nonexistent-id'] }))).rejects.toThrow()
-    const all = await mediaService.getAllMedia()
-    expect(all).toHaveLength(0)
+    const all = await mediaService.getMediaFiltered({})
+    expect(all.items).toHaveLength(0)
   })
 })
 
@@ -234,5 +234,67 @@ describe('mediaService.getMediaFiltered', () => {
 
     expect(page.items).toHaveLength(2)
     expect(page.total).toBe(5)
+  })
+})
+
+describe('mediaService.getMediaOrderedIds', () => {
+  it('returns every matching id ordered by the given sort, ignoring limit/offset', async () => {
+    const first = await mediaService.addMedia(baseInput({ name: 'a', route: '/a.png' }))
+    const second = await mediaService.addMedia(baseInput({ name: 'b', route: '/b.png' }))
+    const third = await mediaService.addMedia(baseInput({ name: 'c', route: '/c.png' }))
+
+    const ids = await mediaService.getMediaOrderedIds({ limit: 1 }, { prop: 'name' })
+
+    expect(ids).toEqual([first.id, second.id, third.id])
+  })
+
+  it('applies filters the same way as getMediaFiltered', async () => {
+    const tagA = await tagService.createTag({ name: 'a' })
+    const tagged = await mediaService.addMedia(
+      baseInput({ name: 'tagged', route: '/tagged.png', tagIds: [tagA.id] })
+    )
+    await mediaService.addMedia(baseInput({ name: 'untagged', route: '/untagged.png' }))
+
+    const ids = await mediaService.getMediaOrderedIds({ tagGroups: [[tagA.id]] })
+
+    expect(ids).toEqual([tagged.id])
+  })
+})
+
+describe('mediaService.getEntityThumbnails', () => {
+  it('delegates to the repository and returns its rows', async () => {
+    const tag = await tagService.createTag({ name: 'a' })
+    const media = await mediaService.addMedia(baseInput({ name: 'm', route: '/m.png' }))
+    await mediaService.updateMedia(media.id, {
+      ...baseInput({ name: 'm', route: '/m.png' }),
+      tagIds: [tag.id]
+    })
+
+    const result = await mediaService.getEntityThumbnails('tag', [tag.id])
+
+    expect(result).toEqual([{ entityId: tag.id, route: '/m.png', type: 'image' }])
+  })
+
+  it('gives a parent series a thumbnail from media that only lives under a descendant', async () => {
+    const parent = await seriesService.createSeries({ name: 'Parent' })
+    const child = await seriesService.createSeries({ name: 'Child', parentId: parent.id })
+    const grandchild = await seriesService.createSeries({ name: 'Grandchild', parentId: child.id })
+    const media = await mediaService.addMedia(
+      baseInput({ name: 'deep', route: '/deep.png', seriesIds: [grandchild.id] })
+    )
+
+    const result = await mediaService.getEntityThumbnails('series', [parent.id])
+
+    expect(result).toEqual([{ entityId: parent.id, route: '/deep.png', type: media.type }])
+  })
+
+  it('returns nothing for a series with no media anywhere in its closure', async () => {
+    const empty = await seriesService.createSeries({ name: 'Empty' })
+    const other = await seriesService.createSeries({ name: 'Other' })
+    await mediaService.addMedia(
+      baseInput({ name: 'elsewhere', route: '/elsewhere.png', seriesIds: [other.id] })
+    )
+
+    expect(await mediaService.getEntityThumbnails('series', [empty.id])).toEqual([])
   })
 })

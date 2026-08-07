@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import type { MediaModel } from '@shared/models'
@@ -59,7 +59,10 @@ beforeEach(() => {
   refetchMock.mockClear()
   Object.defineProperty(window, 'api', {
     value: {
-      media: { update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }) },
+      media: {
+        update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
+        getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] })
+      },
       artist: { create: vi.fn() },
       tag: { create: vi.fn() },
       character: { create: vi.fn() },
@@ -120,6 +123,106 @@ describe('MediaPage back navigation', () => {
   })
 })
 
+function setOrderedIds(data: string[]): void {
+  Object.defineProperty(window, 'api', {
+    value: {
+      media: {
+        update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
+        getOrderedIds: vi.fn().mockResolvedValue({ success: true, data })
+      },
+      artist: { create: vi.fn() },
+      tag: { create: vi.fn() },
+      character: { create: vi.fn() },
+      series: { create: vi.fn() },
+      system: { showInFolder: vi.fn() },
+      sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) }
+    },
+    writable: true,
+    configurable: true
+  })
+}
+
+describe('MediaPage adjacent navigation', () => {
+  it('renders the image nav zones once the sibling ids resolve, and wires them to navigate', async () => {
+    const user = userEvent.setup()
+    renderMediaPage()
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Next image' })).toBeInTheDocument()
+    )
+    await user.click(screen.getByRole('button', { name: 'Next image' }))
+    expect(navigateMock).toHaveBeenCalledWith('/media/2')
+
+    navigateMock.mockClear()
+    await user.click(screen.getByRole('button', { name: 'Previous image' }))
+    expect(navigateMock).toHaveBeenCalledWith('/media/0')
+  })
+
+  it('omits the previous zone on the first item and the next zone on the last item', async () => {
+    setOrderedIds(['1', '2'])
+    const { unmount } = renderMediaPage()
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Next image' })).toBeInTheDocument()
+    )
+    expect(screen.queryByRole('button', { name: 'Previous image' })).not.toBeInTheDocument()
+    unmount()
+
+    setOrderedIds(['0', '1'])
+    renderMediaPage()
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Previous image' })).toBeInTheDocument()
+    )
+    expect(screen.queryByRole('button', { name: 'Next image' })).not.toBeInTheDocument()
+  })
+
+  it('navigates with the right/left arrow keys', async () => {
+    const user = userEvent.setup()
+    renderMediaPage()
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Next image' })).toBeInTheDocument()
+    )
+
+    await user.keyboard('{ArrowRight}')
+    expect(navigateMock).toHaveBeenCalledWith('/media/2')
+
+    navigateMock.mockClear()
+    await user.keyboard('{ArrowLeft}')
+    expect(navigateMock).toHaveBeenCalledWith('/media/0')
+  })
+
+  it('does not navigate on arrow keys while editing', async () => {
+    const user = userEvent.setup()
+    renderMediaPage()
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Next image' })).toBeInTheDocument()
+    )
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+    await user.keyboard('{ArrowRight}')
+
+    expect(navigateMock).not.toHaveBeenCalled()
+  })
+
+  it('does not navigate on arrow keys while typing in a text field', async () => {
+    const user = userEvent.setup()
+    renderMediaPage()
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Next image' })).toBeInTheDocument()
+    )
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    const nameInput = screen.getByDisplayValue('My picture')
+
+    await user.click(nameInput)
+    await user.keyboard('{ArrowRight}')
+
+    expect(navigateMock).not.toHaveBeenCalled()
+  })
+})
+
 describe('MediaPage file actions', () => {
   it('shows icon-only copy/open-in-folder actions on the detail view', () => {
     renderMediaPage()
@@ -146,7 +249,7 @@ describe('MediaPage lightbox', () => {
     const user = userEvent.setup()
     const { container } = renderMediaPage()
 
-    await user.click(container.querySelector('.media-detail-media') as HTMLElement)
+    await user.click(screen.getByAltText('My picture'))
     expect(container.querySelector('.lightbox-backdrop')).toBeInTheDocument()
 
     await user.click(container.querySelector('.lightbox-backdrop') as HTMLElement)
@@ -160,7 +263,7 @@ describe('MediaPage lightbox', () => {
     const user = userEvent.setup()
     const { container } = renderMediaPage()
 
-    await user.click(container.querySelector('.media-detail-media') as HTMLElement)
+    await user.click(screen.getByAltText('My picture'))
     await user.click(screen.getByRole('button', { name: 'Close' }))
 
     expect(container.querySelector('.lightbox-backdrop')).not.toBeInTheDocument()
@@ -203,7 +306,10 @@ describe('MediaPage editing', () => {
     const update = vi.fn().mockResolvedValue({ success: true, data: sampleMedia })
     Object.defineProperty(window, 'api', {
       value: {
-        media: { update },
+        media: {
+          update,
+          getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['1'] })
+        },
         artist: { create: vi.fn() },
         tag: { create: vi.fn() },
         character: { create: vi.fn() },

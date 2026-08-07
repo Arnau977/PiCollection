@@ -24,8 +24,10 @@ vi.mock('electron', () => ({
 
 const { initTestDbSingleton } = await import('../database/testHelpers')
 const { mediaService } = await import('./media.service')
-const { mediaMaintenanceService } = await import('./mediaMaintenance.service')
-const { writeSourceFolder } = await import('./sourceFolder')
+const { mediaMaintenanceService, checkExistenceChunked, EXISTENCE_CHECK_CHUNK_SIZE } = await import(
+  './mediaMaintenance.service'
+)
+const { writeSourceFolder, resetSourceFolderCache } = await import('./sourceFolder')
 
 let cleanup: () => Promise<void>
 let sourceDir = ''
@@ -33,6 +35,9 @@ let sourceDir = ''
 beforeEach(async () => {
   sourceDir = await fs.mkdtemp(join(tmpdir(), 'maintenance-test-'))
   userDataDir = await fs.mkdtemp(join(tmpdir(), 'maintenance-userdata-'))
+  // readSourceFolder is module-scope cached; reset so each test starts from
+  // its own fresh userData dir rather than an earlier test's cached value.
+  resetSourceFolderCache()
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
 })
@@ -52,6 +57,34 @@ function baseInput(route: string): Parameters<typeof mediaService.addMedia>[0] {
     isAiGenerated: false
   } as Parameters<typeof mediaService.addMedia>[0]
 }
+
+describe('checkExistenceChunked', () => {
+  it('never runs more than EXISTENCE_CHECK_CHUNK_SIZE checks concurrently', async () => {
+    let concurrent = 0
+    let maxConcurrent = 0
+    const checkOne = vi.fn(async () => {
+      concurrent++
+      maxConcurrent = Math.max(maxConcurrent, concurrent)
+      await new Promise((r) => setTimeout(r, 0))
+      concurrent--
+      return true
+    })
+    const paths = Array.from({ length: EXISTENCE_CHECK_CHUNK_SIZE * 3 }, (_, i) => `/fake/${i}`)
+
+    await checkExistenceChunked(paths, checkOne)
+
+    expect(maxConcurrent).toBeLessThanOrEqual(EXISTENCE_CHECK_CHUNK_SIZE)
+    expect(checkOne).toHaveBeenCalledTimes(paths.length)
+  })
+
+  it("preserves each path's existence result at its original index", async () => {
+    const checkOne = vi.fn(async (path: string) => path.endsWith('exists'))
+
+    const result = await checkExistenceChunked(['/a-exists', '/b-missing', '/c-exists'], checkOne)
+
+    expect(result).toEqual([true, false, true])
+  })
+})
 
 describe('mediaMaintenanceService.checkMissingFiles', () => {
   it('reports zero missing when every file exists', async () => {

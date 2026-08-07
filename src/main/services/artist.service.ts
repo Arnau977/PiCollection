@@ -4,7 +4,11 @@ import * as artistRepo from '../database/repositories/artist.repository'
 import type { ArtistInput, ArtistModel, SocialLinkInput } from '@shared/models'
 import type { ArtistSocialLinkTable, ArtistTable } from '../database/schema'
 
-function toModel(row: ArtistTable, links: ArtistSocialLinkTable[], mediaCount?: number): ArtistModel {
+function toModel(
+  row: ArtistTable,
+  links: ArtistSocialLinkTable[],
+  mediaCount?: number
+): ArtistModel {
   return {
     id: row.id,
     name: row.name,

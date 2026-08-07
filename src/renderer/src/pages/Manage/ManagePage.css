@@ -202,6 +202,11 @@
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   background: var(--color-background-mute);
+  /* Deliberately no `content-visibility: auto` here (unlike .media-card in
+     Gallery.css): it implies paint containment, which clips descendants to the
+     row's padding box - and EntityThumbnail's hover preview is designed to
+     scale up ~4.3x and overflow the 64px row into the surrounding space. The
+     containment win on short list rows isn't worth losing that. */
 }
 
 .manage-item-name {

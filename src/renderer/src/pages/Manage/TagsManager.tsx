@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { TagModel } from '@shared/models'
 import { useTags } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
+import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
 import {
   loadManageSort,
@@ -14,6 +15,7 @@ import {
 } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import { formatCompactCount } from '../../utils/formatCompactCount'
+import { useDebouncedValue } from '../../utils/useDebouncedValue'
 
 export function TagsManager(): JSX.Element {
   const { t } = useTranslation()
@@ -22,6 +24,7 @@ export function TagsManager(): JSX.Element {
   const [formName, setFormName] = useState('')
   const [editing, setEditing] = useState<TagModel | null>(null)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 200)
   const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<ManageSort>(() => loadManageSort('tags'))
 
@@ -30,10 +33,12 @@ export function TagsManager(): JSX.Element {
     saveManageSort('tags', next)
   }
 
-  const visibleTags = sortManageEntities(
-    filterByQuery(tags, search, (tag) => tag.name),
-    sort
+  const visibleTags = useMemo(
+    () => sortManageEntities(filterByQuery(tags, debouncedSearch, (tag) => tag.name), sort),
+    [tags, debouncedSearch, sort]
   )
+  const visibleTagIds = useMemo(() => visibleTags.map((tag) => tag.id), [visibleTags])
+  const thumbnails = useEntityThumbnails('tag', visibleTagIds)
 
   function startEdit(tag: TagModel): void {
     setEditing(tag)
@@ -137,7 +142,10 @@ export function TagsManager(): JSX.Element {
                       : 'manage-list-item'
                   }
                 >
-                  <EntityThumbnail kind="tag" id={tag.id} />
+                  <EntityThumbnail
+                    route={thumbnails.get(tag.id)?.route ?? null}
+                    loading={!thumbnails.has(tag.id)}
+                  />
                   <span className="manage-item-name">{tag.name}</span>
                   <span className="manage-item-count">
                     {formatCompactCount(tag.mediaCount ?? 0)}

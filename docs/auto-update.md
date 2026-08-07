@@ -10,8 +10,12 @@ publish installers.
 - The main process wires up `electron-updater` in
   [`src/main/updater/autoUpdater.ts`](../src/main/updater/autoUpdater.ts). A
   packaged app does a quiet check ~5s after launch (see
-  `STARTUP_UPDATE_CHECK_DELAY_MS` in `src/main/index.ts`), and the user can
-  trigger one manually from **Settings → Updates**.
+  `STARTUP_UPDATE_CHECK_DELAY_MS` in `src/main/index.ts`), repeats that check
+  once a day for sessions left running (`DAILY_UPDATE_CHECK_INTERVAL_MS`),
+  and the user can trigger one manually from **Settings → Updates**.
+- When an update is available or ready to install, the sidebar shows a small
+  badge next to Settings (`src/renderer/src/components/AppHeader.tsx`) so
+  it's noticeable without having to visit the Settings page first.
 - Downloading and installing are always explicit user actions
   (`autoDownload = false`) - a check only reports that an update exists; the
   user clicks "Download update", then "Restart and install" once it's ready.
@@ -27,36 +31,51 @@ publish installers.
 
 ## Channels
 
-- **stable** reads `latest.yml`/`latest-mac.yml`/`latest-linux.yml` from the
-  newest non-prerelease GitHub Release.
-- **beta** additionally reads `beta.yml` and allows prerelease versions
-  (`autoUpdater.allowPrerelease = true`).
+- **stable** only ever sees a release once its GitHub "Pre-release" flag has
+  been turned off (i.e. it's the repo's current "Latest" release).
+- **beta** additionally sees every release GitHub still has flagged as a
+  pre-release, in addition to the latest stable one.
 
-electron-builder derives which manifest a build belongs to from the
-package's semver **at build time** - no separate config per channel:
+Every build publishes the same `latest.yml`/`latest-mac.yml`/`latest-linux.yml`
+manifest regardless of channel - there's no separate beta manifest. Which
+releases a channel can see is controlled entirely by GitHub's own
+`prerelease` flag on each release, not by anything in the version number.
+Verified directly against `electron-updater`'s `GitHubProvider`: a
+stable-channel client resolves updates via GitHub's `/releases/latest` API
+(which only ever returns the newest non-prerelease release), and a
+beta-channel client picks the newest release in the feed regardless of its
+version format, then falls back to the shared `latest.yml` manifest.
 
-| `package.json` version | Tag to push | GitHub Release | Channel(s) that see it |
-|---|---|---|---|
-| `1.2.0` | `v1.2.0` | normal release | stable, beta |
-| `1.2.0-beta.1` | `v1.2.0-beta.1` | prerelease | beta only |
+| `package.json` version | Tag to push | Channel(s) that see it |
+|---|---|---|
+| `1.3.0` (any version) | `v1.3.0` | beta immediately; stable once promoted (see "Cutting a release" below) |
 
 ## Cutting a release
 
-1. Bump the version and commit:
-   - Stable: `npm version 1.2.0`
-   - Beta: `npm version 1.2.0-beta.1`
-2. Push the tag: `git push --follow-tags`
-3. `.github/workflows/release.yml` first creates a draft release for the tag
-   with a title (`PiCollection vX.Y.Z`) and auto-generated notes
-   (`gh release create --generate-notes`, listing commits since the last
-   tag), then builds Windows/macOS/Linux installers in parallel and uploads
-   them to that same release - all authenticated with the workflow's default
-   `GITHUB_TOKEN` (`permissions: contents: write`), no extra secret to
-   configure. The release is left as a draft so the notes can be reviewed/
-   edited before publishing.
-4. One Linux artifact only: AppImage (runs on any distro with no install
-   step, and is the one format electron-updater can actually auto-update -
-   see `electron-builder.yml`'s `linux.target`).
+1. Bump the version and commit: `npm version 1.3.0` (plain `X.Y.Z`, never a
+   `-beta.N` suffix - see below for what the digits mean).
+2. Push the tag: `git push --follow-tags`.
+3. `.github/workflows/release.yml` creates the release as a GitHub
+   **pre-release** by default (safe default - nothing reaches stable-channel
+   users by accident), builds Windows/macOS/Linux installers, and uploads
+   them to it.
+4. Before publishing, edit the draft release on GitHub and replace the
+   `## Highlights` placeholder with 2-3 bullet points of user-facing
+   changes.
+5. Once you've confirmed the build is good (beta users have it automatically,
+   since it's now a published pre-release), promote it to stable:
+   `gh release edit vX.Y.Z --prerelease=false --latest`. This one command is
+   the entire "promote to stable" step - no separate workflow.
+
+### Version numbers
+
+Plain `X.Y.Z`, always - no prerelease suffix, ever. `X` bumps for a major/
+breaking change. `Y` bumps for a normal release - new features and bug
+fixes bundled together, no distinction between them. `Z` bumps per cut
+within that `Y` line; it isn't a "beta counter", just an iteration number -
+whether a given `X.Y.Z` ends up promoted to stable or superseded by
+`X.Y.(Z+1)` while still in testing is entirely up to the GitHub Release flag
+in step 5 above, not anything encoded in the number itself.
 
 Neither platform's build is code-signed yet, so both trigger an OS warning
 on first run:

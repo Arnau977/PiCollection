@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { SeriesModel } from '@shared/models'
 import { SeriesManager } from './SeriesManager'
@@ -29,7 +29,7 @@ function setApi(overrides: Record<string, unknown> = {}): void {
         ...overrides
       },
       media: {
-        getFiltered: vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+        getEntityThumbnails: vi.fn().mockResolvedValue({ success: true, data: [] })
       }
     },
     writable: true,
@@ -200,8 +200,10 @@ describe('SeriesManager', () => {
 
     await user.type(screen.getByRole('searchbox'), 'wonder')
 
-    expect(screen.getByText('Wonderland')).toBeInTheDocument()
-    expect(screen.queryByText('Neverland')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Wonderland')).toBeInTheDocument()
+      expect(screen.queryByText('Neverland')).not.toBeInTheDocument()
+    })
   })
 
   it('persists the chosen sort order and re-applies it on next render', async () => {
@@ -276,7 +278,9 @@ describe('SeriesManager', () => {
 
     await user.type(screen.getByRole('searchbox'), 'Star Rail')
 
-    expect(screen.getByText('Honkai (series)')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Honkai (series)')).toBeInTheDocument()
+    })
     const childItem = screen.getByText('Honkai: Star Rail').closest('li')
     expect(childItem?.className).toContain('depth-1')
   })
