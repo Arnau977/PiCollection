@@ -292,6 +292,22 @@ export const mediaService = {
     kind: 'artist' | 'tag' | 'character' | 'series',
     ids: string[]
   ): Promise<{ entityId: string; route: string; type: string }[]> {
-    return mediaRepo.findEntityThumbnails(getDb(), kind, ids)
+    const db = getDb()
+    if (kind !== 'series' || ids.length === 0) {
+      return mediaRepo.findEntityThumbnails(db, kind, ids)
+    }
+
+    // Series are a tree, and `media_series` only stores exact links. Expand each
+    // requested id to its closure (itself + descendants) the same way
+    // getMediaFiltered does, so a parent whose media all sit under its children
+    // still gets a thumbnail instead of a placeholder next to a rolled-up count.
+    const closures = buildSeriesClosureMap(await seriesRepo.findSeriesHierarchy(db), ids)
+    const pairs = ids.flatMap((ancestorId) =>
+      (closures.get(ancestorId) ?? [ancestorId]).map((descendantId) => ({
+        descendantId,
+        ancestorId
+      }))
+    )
+    return mediaRepo.findSeriesThumbnailsByClosure(db, pairs)
   }
 }

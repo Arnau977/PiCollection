@@ -491,6 +491,10 @@ const ENTITY_THUMBNAIL_JOIN: Record<
  * SQL (via Kysely's `sql` tag) because "top-1-per-group with a per-kind
  * tiebreak" isn't something the fluent query builder expresses cleanly, and
  * the four kinds each need slightly different joins.
+ *
+ * The `series` branch matches the exact requested ids only. Callers that want
+ * a parent series to inherit a thumbnail from its descendants must use
+ * `findSeriesThumbnailsByClosure` instead - see `mediaService.getEntityThumbnails`.
  */
 export async function findEntityThumbnails(
   db: Kysely<DB>,
@@ -535,6 +539,55 @@ export async function findEntityThumbnails(
       JOIN media ON media.id = j.media_id
       ${soloJoin}
       WHERE j.${sql.ref(column)} IN (${sql.join(ids)}) AND media.sfw = 1
+    ) WHERE rn = 1
+  `.execute(db)
+  return result.rows
+}
+
+/** A series id actually linked in `media_series`, paired with the requested ancestor it should count towards. */
+export interface SeriesClosurePair {
+  descendantId: string
+  ancestorId: string
+}
+
+/**
+ * Series thumbnails that honour the series tree: one SFW thumbnail per
+ * *requested ancestor*, drawn from media linked to any series in that
+ * ancestor's closure (itself plus every descendant). A parent series whose
+ * media all live under its children still gets a preview, matching the
+ * rolled-up counts the Manage list shows next to it.
+ *
+ * `media_series` only stores exact links, so the closure has to come from the
+ * caller: the (descendant, ancestor) pairs are inlined as a derived table and
+ * the window function partitions by `ancestor_id` rather than by the raw join
+ * column. Written as `SELECT ... UNION ALL` rather than `VALUES (...)` because
+ * SQLite has no portable way to name the columns of a `VALUES` list.
+ */
+export async function findSeriesThumbnailsByClosure(
+  db: Kysely<DB>,
+  pairs: SeriesClosurePair[]
+): Promise<EntityThumbnailRow[]> {
+  if (pairs.length === 0) return []
+
+  const pairRows = sql.join(
+    pairs.map(
+      (pair) =>
+        sql`SELECT ${pair.descendantId} AS descendant_id, ${pair.ancestorId} AS ancestor_id`
+    ),
+    sql` UNION ALL `
+  )
+
+  const result = await sql<EntityThumbnailRow>`
+    SELECT entity_id as entityId, route, type FROM (
+      SELECT
+        closure.ancestor_id AS entity_id,
+        media.route AS route,
+        media.type AS type,
+        ROW_NUMBER() OVER (PARTITION BY closure.ancestor_id ORDER BY RANDOM()) AS rn
+      FROM (${pairRows}) closure
+      JOIN media_series ms ON ms.series_id = closure.descendant_id
+      JOIN media ON media.id = ms.media_id
+      WHERE media.sfw = 1
     ) WHERE rn = 1
   `.execute(db)
   return result.rows

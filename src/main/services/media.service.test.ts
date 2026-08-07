@@ -247,4 +247,27 @@ describe('mediaService.getEntityThumbnails', () => {
 
     expect(result).toEqual([{ entityId: tag.id, route: '/m.png', type: 'image' }])
   })
+
+  it('gives a parent series a thumbnail from media that only lives under a descendant', async () => {
+    const parent = await seriesService.createSeries({ name: 'Parent' })
+    const child = await seriesService.createSeries({ name: 'Child', parentId: parent.id })
+    const grandchild = await seriesService.createSeries({ name: 'Grandchild', parentId: child.id })
+    const media = await mediaService.addMedia(
+      baseInput({ name: 'deep', route: '/deep.png', seriesIds: [grandchild.id] })
+    )
+
+    const result = await mediaService.getEntityThumbnails('series', [parent.id])
+
+    expect(result).toEqual([{ entityId: parent.id, route: '/deep.png', type: media.type }])
+  })
+
+  it('returns nothing for a series with no media anywhere in its closure', async () => {
+    const empty = await seriesService.createSeries({ name: 'Empty' })
+    const other = await seriesService.createSeries({ name: 'Other' })
+    await mediaService.addMedia(
+      baseInput({ name: 'elsewhere', route: '/elsewhere.png', seriesIds: [other.id] })
+    )
+
+    expect(await mediaService.getEntityThumbnails('series', [empty.id])).toEqual([])
+  })
 })

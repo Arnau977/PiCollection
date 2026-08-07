@@ -541,3 +541,119 @@ describe('findEntityThumbnails', () => {
     expect(await mediaRepo.findEntityThumbnails(db, 'tag', [tag.id])).toEqual([])
   })
 })
+
+describe('findSeriesThumbnailsByClosure', () => {
+  /** parent -> child -> grandchild, plus an unrelated 'other' series. */
+  async function insertSeriesTree(): Promise<void> {
+    await seriesRepo.insertSeries(db, {
+      id: 'parent',
+      name: 'Parent',
+      aliases_json: '[]',
+      created_at: 1,
+      parent_id: null
+    })
+    await seriesRepo.insertSeries(db, {
+      id: 'child',
+      name: 'Child',
+      aliases_json: '[]',
+      created_at: 1,
+      parent_id: 'parent'
+    })
+    await seriesRepo.insertSeries(db, {
+      id: 'grandchild',
+      name: 'Grandchild',
+      aliases_json: '[]',
+      created_at: 1,
+      parent_id: 'child'
+    })
+    await seriesRepo.insertSeries(db, {
+      id: 'other',
+      name: 'Other',
+      aliases_json: '[]',
+      created_at: 1,
+      parent_id: null
+    })
+  }
+
+  it('returns nothing for an empty pair list without querying', async () => {
+    expect(await mediaRepo.findSeriesThumbnailsByClosure(db, [])).toEqual([])
+  })
+
+  it('gives a parent with no direct media a thumbnail from its child', async () => {
+    await insertSeriesTree()
+    const media = await baseMediaRow({ id: 'm1', route: '/child.png', sfw: 1 })
+    await mediaRepo.setMediaSeries(db, media.id, ['child'])
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' },
+      { descendantId: 'grandchild', ancestorId: 'parent' }
+    ])
+
+    expect(result).toEqual([{ entityId: 'parent', route: '/child.png', type: media.type }])
+  })
+
+  it('reaches a grandchild two levels down', async () => {
+    await insertSeriesTree()
+    const media = await baseMediaRow({ id: 'm1', route: '/grandchild.png', sfw: 1 })
+    await mediaRepo.setMediaSeries(db, media.id, ['grandchild'])
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' },
+      { descendantId: 'grandchild', ancestorId: 'parent' }
+    ])
+
+    expect(result).toEqual([{ entityId: 'parent', route: '/grandchild.png', type: media.type }])
+  })
+
+  it('omits a series whose whole closure has no media, without borrowing another series’ media', async () => {
+    await insertSeriesTree()
+    const media = await baseMediaRow({ id: 'm1', route: '/other.png', sfw: 1 })
+    await mediaRepo.setMediaSeries(db, media.id, ['other'])
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' },
+      { descendantId: 'grandchild', ancestorId: 'parent' }
+    ])
+
+    expect(result).toEqual([])
+  })
+
+  it('still ignores NSFW media anywhere in the closure', async () => {
+    await insertSeriesTree()
+    const nsfw = await baseMediaRow({ id: 'm1', route: '/nsfw.png', sfw: 0 })
+    await mediaRepo.setMediaSeries(db, nsfw.id, ['child'])
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' }
+    ])
+
+    expect(result).toEqual([])
+  })
+
+  it('resolves several requested ancestors independently in one query', async () => {
+    await insertSeriesTree()
+    const childMedia = await baseMediaRow({ id: 'm1', route: '/child.png', sfw: 1 })
+    const otherMedia = await baseMediaRow({ id: 'm2', route: '/other.png', sfw: 1 })
+    await mediaRepo.setMediaSeries(db, childMedia.id, ['child'])
+    await mediaRepo.setMediaSeries(db, otherMedia.id, ['other'])
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' },
+      { descendantId: 'grandchild', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'child' },
+      { descendantId: 'grandchild', ancestorId: 'child' },
+      { descendantId: 'other', ancestorId: 'other' }
+    ])
+
+    expect([...result].sort((a, b) => a.entityId.localeCompare(b.entityId))).toEqual([
+      { entityId: 'child', route: '/child.png', type: childMedia.type },
+      { entityId: 'other', route: '/other.png', type: otherMedia.type },
+      { entityId: 'parent', route: '/child.png', type: childMedia.type }
+    ])
+  })
+})
