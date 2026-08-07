@@ -68,6 +68,12 @@ const DAILY_UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
 
 const APP_VERSION: string = require('../../package.json').version
 
+// Declared at module scope, assigned late in the whenReady handler: the
+// `before-quit` handler that clears it is registered before that assignment
+// runs, and at least one path (a database-initialization failure calling
+// app.quit()) fires `before-quit` while the timer has never been created.
+let dailyUpdateCheckTimer: NodeJS.Timeout | undefined
+
 function createWindow(): BrowserWindow {
   const windowState = createWindowStateKeeper()
 
@@ -167,8 +173,12 @@ app.whenReady().then(async () => {
   })
 
   app.on('before-quit', () => {
-    clearInterval(dailyUpdateCheckTimer)
+    // flushLogBuffer first: it is the call that must never be skipped (on the
+    // DB-failure quit path it carries the diagnostic for the crash currently
+    // happening). Clearing an unref'd interval during shutdown is comparatively
+    // unimportant, and the timer may not exist yet on that same path.
     flushLogBuffer()
+    if (dailyUpdateCheckTimer) clearInterval(dailyUpdateCheckTimer)
   })
 
   try {
@@ -215,7 +225,7 @@ app.whenReady().then(async () => {
 
   // Catches updates published while the app stays open across multiple days -
   // the startup check alone only covers the moment of launch.
-  const dailyUpdateCheckTimer = setInterval(() => {
+  dailyUpdateCheckTimer = setInterval(() => {
     checkForUpdates().catch((err) => console.info('Daily update check skipped:', err.message))
   }, DAILY_UPDATE_CHECK_INTERVAL_MS)
   dailyUpdateCheckTimer.unref()
