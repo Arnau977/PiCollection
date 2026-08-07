@@ -15,7 +15,7 @@ import { registerMediaProtocolHandler, registerMediaProtocolScheme } from './med
 import { registerIpcHandlers } from './ipc/registerIpcHandlers'
 import { createWindowStateKeeper } from './window/windowState'
 import { MIN_WIDTH, MIN_HEIGHT } from './window/windowBounds'
-import { checkForUpdates, initAutoUpdater } from './updater/autoUpdater'
+import { checkForUpdates, initAutoUpdater, setUpdaterWindow } from './updater/autoUpdater'
 import { flushLogBuffer, logError, logInfo } from './logging/logger'
 
 registerMediaProtocolScheme()
@@ -66,6 +66,8 @@ const STARTUP_UPDATE_CHECK_DELAY_MS = 5000
 /** Also re-check periodically for sessions left running across days, not just at launch. */
 const DAILY_UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
 
+const APP_VERSION: string = require('../../package.json').version
+
 function createWindow(): BrowserWindow {
   const windowState = createWindowStateKeeper()
 
@@ -86,6 +88,7 @@ function createWindow(): BrowserWindow {
   })
 
   windowState.register(mainWindow)
+  setUpdaterWindow(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -108,11 +111,7 @@ function createWindow(): BrowserWindow {
   }
 
   mainWindow.webContents.on('did-finish-load', () => {
-    // Create the browser window.
-    // let name = require('../../package.json').name
-    const version = require('../../package.json').version
-    const windowtitle = 'PiCollection' + ' - ' + version
-    mainWindow.setTitle(windowtitle)
+    mainWindow.setTitle(`PiCollection - ${APP_VERSION}`)
   })
 
   return mainWindow
@@ -167,6 +166,7 @@ app.whenReady().then(async () => {
   })
 
   app.on('before-quit', () => {
+    clearInterval(dailyUpdateCheckTimer)
     flushLogBuffer()
   })
 
@@ -214,9 +214,10 @@ app.whenReady().then(async () => {
 
   // Catches updates published while the app stays open across multiple days -
   // the startup check alone only covers the moment of launch.
-  setInterval(() => {
+  const dailyUpdateCheckTimer = setInterval(() => {
     checkForUpdates().catch((err) => console.info('Daily update check skipped:', err.message))
   }, DAILY_UPDATE_CHECK_INTERVAL_MS)
+  dailyUpdateCheckTimer.unref()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

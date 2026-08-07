@@ -130,7 +130,6 @@ export const SeriesUpdateSchema = UpdateByIdSchema(SeriesInputSchema)
 
 export const IPC = {
   media: {
-    getAll: 'db:media:get-all',
     getFiltered: 'db:media:get-filtered',
     getEntityThumbnails: 'db:media:get-entity-thumbnails',
     getById: 'db:media:get-by-id',

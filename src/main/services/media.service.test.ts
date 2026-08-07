@@ -117,8 +117,8 @@ describe('mediaService.addMedia', () => {
 
   it('does not create a media row when relation validation fails (transaction not started)', async () => {
     await expect(mediaService.addMedia(baseInput({ tagIds: ['nonexistent-id'] }))).rejects.toThrow()
-    const all = await mediaService.getAllMedia()
-    expect(all).toHaveLength(0)
+    const all = await mediaService.getMediaFiltered({})
+    expect(all.items).toHaveLength(0)
   })
 })
 

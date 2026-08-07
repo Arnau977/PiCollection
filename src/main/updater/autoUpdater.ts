@@ -7,11 +7,17 @@ import { readUpdateChannel, writeUpdateChannel } from './updaterSettings'
 import { logInfo } from '../logging/logger'
 
 let updaterWindow: BrowserWindow | null = null
+let initialized = false
 
 function send(event: UpdaterEvent): void {
   if (updaterWindow && !updaterWindow.isDestroyed()) {
     updaterWindow.webContents.send(IPC.updater.event, event)
   }
+}
+
+/** Re-points which window receives updater events - call whenever a new main window is created (e.g. macOS activate-triggered recreation), not just at startup. */
+export function setUpdaterWindow(window: BrowserWindow): void {
+  updaterWindow = window
 }
 
 function applyChannel(channel: UpdateChannel): void {
@@ -25,7 +31,10 @@ function applyChannel(channel: UpdateChannel): void {
 
 /** Wires electron-updater's events to the renderer and applies the saved channel. Call once, after the main window is created. */
 export function initAutoUpdater(window: BrowserWindow): void {
-  updaterWindow = window
+  setUpdaterWindow(window)
+  if (initialized) return
+  initialized = true
+
   autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = true
   applyChannel(readUpdateChannel())

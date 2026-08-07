@@ -1,5 +1,4 @@
 import { ipcMain } from 'electron'
-import { z } from 'zod'
 import { mediaService } from '../services/media.service'
 import { cacheThumbnailFromBuffer, THUMBNAIL_MAX_SIZE } from '../thumbnails/thumbnails'
 import { ipcHandler } from './helpers'
@@ -16,10 +15,6 @@ import {
 } from '@shared/ipc/contracts'
 
 export function registerMediaHandlers(): void {
-  ipcMain.handle(
-    IPC.media.getAll,
-    ipcHandler(IPC.media.getAll, z.void(), () => mediaService.getAllMedia())
-  )
   ipcMain.handle(
     IPC.media.getFiltered,
     ipcHandler(IPC.media.getFiltered, MediaGetFilteredSchema, ({ filters, sorting }) =>

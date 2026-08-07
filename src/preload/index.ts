@@ -35,7 +35,6 @@ import { IPC, type IpcResult } from '@shared/ipc/contracts'
 
 export const api = {
   media: {
-    getAll: (): Promise<IpcResult<MediaModel[]>> => ipcRenderer.invoke(IPC.media.getAll),
     getFiltered: (
       filters: MediaFilters,
       sorting?: Sorting

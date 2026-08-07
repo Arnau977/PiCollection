@@ -198,12 +198,6 @@ export const mediaService = {
     return { exactMatch: null, similar }
   },
 
-  async getAllMedia(): Promise<MediaModel[]> {
-    const db = getDb()
-    const rows = await mediaRepo.findMediaRows(db, {}, { prop: 'createdAt', desc: true })
-    return hydrateMedia(db, rows)
-  },
-
   async getMediaFiltered(filters: MediaFilters, sorting?: Sorting): Promise<MediaFilteredResult> {
     const db = getDb()
     const flatSeriesIds = filters.seriesGroups?.flat() ?? []
