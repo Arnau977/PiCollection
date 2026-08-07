@@ -13,7 +13,7 @@ vi.mock('electron', () => ({
 const { initTestDbSingleton } = await import('../database/testHelpers')
 const { getDb } = await import('../database/connection')
 const mediaRepo = await import('../database/repositories/media.repository')
-const { writeSourceFolder } = await import('./sourceFolder')
+const { writeSourceFolder, resetSourceFolderCache } = await import('./sourceFolder')
 const { sourceFolderBrowserService } = await import('./sourceFolderBrowser.service')
 
 let cleanup: () => Promise<void>
@@ -22,6 +22,9 @@ let sourceDir = ''
 beforeEach(async () => {
   userDataDir = await fs.mkdtemp(join(tmpdir(), 'browser-userdata-'))
   sourceDir = await fs.mkdtemp(join(tmpdir(), 'browser-source-'))
+  // readSourceFolder is module-scope cached; reset so each test starts from
+  // its own fresh userData dir rather than an earlier test's cached value.
+  resetSourceFolderCache()
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
   writeSourceFolder(sourceDir)

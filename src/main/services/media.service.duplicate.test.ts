@@ -23,7 +23,7 @@ vi.mock('electron', () => ({
 
 const { initTestDbSingleton } = await import('../database/testHelpers')
 const { mediaService } = await import('./media.service')
-const { writeSourceFolder } = await import('./sourceFolder')
+const { writeSourceFolder, resetSourceFolderCache } = await import('./sourceFolder')
 
 let cleanup: () => Promise<void>
 let sourceDir = ''
@@ -31,6 +31,9 @@ let sourceDir = ''
 beforeEach(async () => {
   userDataDir = await fs.mkdtemp(join(tmpdir(), 'media-dup-userdata-'))
   sourceDir = await fs.mkdtemp(join(tmpdir(), 'media-dup-src-'))
+  // readSourceFolder is module-scope cached; reset so each test starts from
+  // its own fresh userData dir rather than an earlier test's cached value.
+  resetSourceFolderCache()
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
 })

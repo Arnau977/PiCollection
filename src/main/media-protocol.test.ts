@@ -27,13 +27,16 @@ vi.mock('electron', () => ({
 }))
 
 const { registerMediaProtocolHandler } = await import('./media-protocol')
-const { writeSourceFolder } = await import('./services/sourceFolder')
+const { writeSourceFolder, resetSourceFolderCache } = await import('./services/sourceFolder')
 
 let sourceDir = ''
 
 beforeEach(async () => {
   userDataDir = await fs.mkdtemp(join(tmpdir(), 'media-protocol-userdata-'))
   sourceDir = await fs.mkdtemp(join(tmpdir(), 'media-protocol-src-'))
+  // readSourceFolder is module-scope cached, so a value written by an earlier
+  // test would otherwise leak into this test's fresh userData dir.
+  resetSourceFolderCache()
   registerMediaProtocolHandler()
 })
 

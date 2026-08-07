@@ -27,7 +27,7 @@ const { mediaService } = await import('./media.service')
 const { mediaMaintenanceService, checkExistenceChunked, EXISTENCE_CHECK_CHUNK_SIZE } = await import(
   './mediaMaintenance.service'
 )
-const { writeSourceFolder } = await import('./sourceFolder')
+const { writeSourceFolder, resetSourceFolderCache } = await import('./sourceFolder')
 
 let cleanup: () => Promise<void>
 let sourceDir = ''
@@ -35,6 +35,9 @@ let sourceDir = ''
 beforeEach(async () => {
   sourceDir = await fs.mkdtemp(join(tmpdir(), 'maintenance-test-'))
   userDataDir = await fs.mkdtemp(join(tmpdir(), 'maintenance-userdata-'))
+  // readSourceFolder is module-scope cached; reset so each test starts from
+  // its own fresh userData dir rather than an earlier test's cached value.
+  resetSourceFolderCache()
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
 })
