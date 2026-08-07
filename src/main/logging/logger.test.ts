@@ -24,7 +24,7 @@ vi.mock('electron', () => ({
   }
 }))
 
-const { logInfo, logWarn, logError } = await import('./logger')
+const { logInfo, logWarn, logError, flushLogBuffer } = await import('./logger')
 const { writeLoggingEnabled, resetLoggingEnabledCache } = await import('./loggingSettings')
 const { currentLogFilePath } = await import('./rotation')
 
@@ -49,6 +49,7 @@ describe('logger', () => {
     writeLoggingEnabled(true)
 
     logInfo('test', 'hello', { foo: 'bar' })
+    flushLogBuffer()
 
     const content = readFileSync(currentLogFilePath(), 'utf-8')
     expect(content).toContain('[INFO] [test] hello')
@@ -59,6 +60,7 @@ describe('logger', () => {
     writeLoggingEnabled(true)
 
     logWarn('test', 'careful')
+    flushLogBuffer()
 
     const content = readFileSync(currentLogFilePath(), 'utf-8')
     expect(content).toContain('[WARN] [test] careful')
@@ -68,6 +70,7 @@ describe('logger', () => {
     writeLoggingEnabled(true)
 
     logError('test', 'boom', new Error('bad thing'))
+    flushLogBuffer()
 
     const content = readFileSync(currentLogFilePath(), 'utf-8')
     expect(content).toContain('[ERROR] [test] boom')
@@ -78,6 +81,7 @@ describe('logger', () => {
     writeLoggingEnabled(true)
 
     expect(() => logError('test', 'boom', 'a plain string reason')).not.toThrow()
+    flushLogBuffer()
 
     const content = readFileSync(currentLogFilePath(), 'utf-8')
     expect(content).toContain('a plain string reason')
@@ -90,5 +94,19 @@ describe('logger', () => {
     logError('test', 'four')
 
     expect(vi.mocked(readFileSync).mock.calls.length).toBeLessThanOrEqual(1)
+  })
+
+  it('buffers writes and flushes them together instead of writing on every call', () => {
+    writeLoggingEnabled(true)
+    logInfo('test', 'first message')
+    logInfo('test', 'second message')
+
+    expect(existsSync(currentLogFilePath())).toBe(false)
+
+    flushLogBuffer()
+
+    const content = readFileSync(currentLogFilePath(), 'utf-8')
+    expect(content).toContain('first message')
+    expect(content).toContain('second message')
   })
 })

@@ -16,7 +16,7 @@ import { registerIpcHandlers } from './ipc/registerIpcHandlers'
 import { createWindowStateKeeper } from './window/windowState'
 import { MIN_WIDTH, MIN_HEIGHT } from './window/windowBounds'
 import { checkForUpdates, initAutoUpdater } from './updater/autoUpdater'
-import { logError, logInfo } from './logging/logger'
+import { flushLogBuffer, logError, logInfo } from './logging/logger'
 
 registerMediaProtocolScheme()
 
@@ -28,6 +28,7 @@ registerMediaProtocolScheme()
 process.on('uncaughtException', (err) => {
   console.error('Uncaught exception', err)
   logError('process', 'Uncaught exception', err)
+  flushLogBuffer()
   dialog.showErrorBox(
     'Unexpected error',
     'PiCollection hit an unrecoverable error and needs to close.\n\n' +
@@ -163,6 +164,10 @@ app.whenReady().then(async () => {
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
+  })
+
+  app.on('before-quit', () => {
+    flushLogBuffer()
   })
 
   try {
