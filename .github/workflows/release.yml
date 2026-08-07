@@ -21,15 +21,6 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Determine prerelease flag from the tag
-        id: prerelease
-        run: |
-          if [[ "${{ github.ref_name }}" == *-* ]]; then
-            echo "value=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Create draft release with auto-generated notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -39,7 +30,7 @@ jobs:
             --title "PiCollection ${{ github.ref_name }}" \
             --generate-notes \
             --draft \
-            --prerelease=${{ steps.prerelease.outputs.value }}
+            --prerelease
 
       - name: Prepend a Highlights placeholder for manual review
         env:
