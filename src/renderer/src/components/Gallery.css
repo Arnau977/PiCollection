@@ -16,7 +16,7 @@
   text-decoration: none;
   color: var(--color-text);
   content-visibility: auto;
-  contain-intrinsic-size: 200px 260px;
+  contain-intrinsic-size: auto var(--gallery-card-height, 260px);
   transition:
     transform var(--transition-base),
     box-shadow var(--transition-base),

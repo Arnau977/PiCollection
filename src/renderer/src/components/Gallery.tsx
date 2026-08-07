@@ -36,10 +36,20 @@ export default function Gallery({
     )
   }
 
+  // Estimate card height based on density: thumb (aspect 1:1) + name label (~35-40px)
+  const DENSITY_CARD_HEIGHT: Record<GalleryDensity, string> = {
+    compact: '135px',
+    comfortable: '200px',
+    large: '280px'
+  }
+
   return (
     <ul
       className="gallery-grid"
-      style={{ '--gallery-thumb-min': DENSITY_THUMB_MIN[density] } as React.CSSProperties}
+      style={{
+        '--gallery-thumb-min': DENSITY_THUMB_MIN[density],
+        '--gallery-card-height': DENSITY_CARD_HEIGHT[density]
+      } as React.CSSProperties}
     >
       {media.map((item) => {
         const blurred = blurNsfw && !item.sfw
