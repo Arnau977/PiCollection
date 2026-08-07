@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useArtists } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
+import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
 import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
@@ -28,6 +29,8 @@ export function ArtistsManager(): JSX.Element {
   }
 
   const visibleArtists = sortManageEntities(filterByQuery(artists, search, (artist) => artist.name), sort)
+  const visibleArtistIds = useMemo(() => visibleArtists.map((artist) => artist.id), [visibleArtists])
+  const thumbnails = useEntityThumbnails('artist', visibleArtistIds)
   // Editing the same artist by id keeps the panel in sync as `refetch()` swaps
   // in fresh data (e.g. right after adding a social link).
   const editingArtist = editing ? (artists.find((a) => a.id === editing.id) ?? editing) : null
@@ -215,7 +218,10 @@ export function ArtistsManager(): JSX.Element {
                       : 'manage-list-item'
                   }
                 >
-                  <EntityThumbnail kind="artist" id={artist.id} />
+                  <EntityThumbnail
+                    route={thumbnails.get(artist.id)?.route ?? null}
+                    loading={!thumbnails.has(artist.id)}
+                  />
                   <span className="manage-item-name">{artist.name}</span>
                   <span className="manage-item-count">
                     {formatCompactCount(artist.mediaCount ?? 0)}

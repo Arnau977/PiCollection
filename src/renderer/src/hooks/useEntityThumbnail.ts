@@ -1,55 +1,47 @@
 import { useEffect, useState } from 'react'
-import type { MediaModel } from '@shared/models'
 
 export type EntityThumbnailKind = 'artist' | 'tag' | 'character' | 'series'
 
-interface EntityThumbnailState {
-  route: string | null
-  type: MediaModel['type'] | null
-  loading: boolean
+interface ThumbnailEntry {
+  route: string
+  // Matches the preload's `getEntityThumbnails` return shape, which declares this as a
+  // plain string rather than a narrowed media-type union.
+  type: string
 }
 
-const INITIAL_STATE: EntityThumbnailState = { route: null, type: null, loading: true }
-
 /**
- * NSFW media is never eligible for this preview: at the small, cropped size
- * these listings render at, a blurred-and-zoomed NSFW thumbnail reads as a
- * meaningless smudge rather than a useful preview. An entity with only NSFW
- * media falls back to the placeholder icon instead.
+ * One IPC round trip for every visible row's thumbnail, instead of one
+ * unbounded `media.getFiltered` per row - a Manage page calls this once with
+ * every currently-visible id and looks each row's thumbnail up in the
+ * returned map. Re-fetches whenever the id list changes (a Manage page's
+ * `ids` should be memoized by its caller so this doesn't refire on every
+ * unrelated render).
  */
-export function useEntityThumbnail(kind: EntityThumbnailKind, id: string): EntityThumbnailState {
-  const [state, setState] = useState<EntityThumbnailState>(INITIAL_STATE)
+export function useEntityThumbnails(
+  kind: EntityThumbnailKind,
+  ids: string[]
+): Map<string, ThumbnailEntry> {
+  const [entries, setEntries] = useState<Map<string, ThumbnailEntry>>(new Map())
 
   useEffect(() => {
     let cancelled = false
-    setState(INITIAL_STATE)
+    if (ids.length === 0) {
+      setEntries(new Map())
+      return
+    }
 
-    const filters =
-      kind === 'artist'
-        ? { artistId: id, sfw: true }
-        : kind === 'tag'
-          ? { tagGroups: [[id]], sfw: true }
-          : kind === 'character'
-            ? { characterGroups: [[id]], sfw: true }
-            : { seriesGroups: [[id]], sfw: true }
-
-    window.api.media.getFiltered(filters).then((result) => {
-      if (cancelled) return
-      if (!result.success || result.data.items.length === 0) {
-        setState({ route: null, type: null, loading: false })
-        return
-      }
-      const items = result.data.items
-      const solo = kind === 'character' ? items.filter((item) => item.characters?.length === 1) : []
-      const pool = solo.length > 0 ? solo : items
-      const pick = pool[Math.floor(Math.random() * pool.length)]
-      setState({ route: pick.route, type: pick.type, loading: false })
+    window.api.media.getEntityThumbnails(kind, ids).then((result) => {
+      if (cancelled || !result.success) return
+      setEntries(
+        new Map(result.data.map((row) => [row.entityId, { route: row.route, type: row.type }]))
+      )
     })
 
     return (): void => {
       cancelled = true
     }
-  }, [kind, id])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `ids` is compared by content, not identity; see call sites' useMemo
+  }, [kind, ids.join(',')])
 
-  return state
+  return entries
 }

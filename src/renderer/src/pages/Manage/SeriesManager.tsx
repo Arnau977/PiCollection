@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Trash2 } from 'lucide-react'
 import { useSeries } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
+import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
 import {
@@ -65,6 +66,8 @@ export function SeriesManager(): JSX.Element {
   const treeNodes = isSearching
     ? buildAncestorAwareSeriesTree(visibleSeries, sortedSeries)
     : buildSeriesTree(sortedSeries)
+  const visibleSeriesIds = useMemo(() => treeNodes.map((node) => node.series.id), [treeNodes])
+  const thumbnails = useEntityThumbnails('series', visibleSeriesIds)
 
   // A series can't be its own parent; the backend also rejects deeper cycles (e.g. parenting to
   // one of its own descendants), so this is a best-effort narrowing rather than the source of truth.
@@ -130,7 +133,10 @@ export function SeriesManager(): JSX.Element {
             └
           </span>
         )}
-        <EntityThumbnail kind="series" id={series.id} />
+        <EntityThumbnail
+          route={thumbnails.get(series.id)?.route ?? null}
+          loading={!thumbnails.has(series.id)}
+        />
         <div className="manage-item-info">
           <span className="manage-item-name">{series.name}</span>
           {series.aliases && series.aliases.length > 0 && (

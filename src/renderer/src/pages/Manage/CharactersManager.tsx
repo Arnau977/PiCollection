@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Trash2 } from 'lucide-react'
 import { useCharacters, useSeries } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
+import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { MultiSelectAutocomplete } from '../../components/Autocomplete/MultiSelectAutocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
 import {
@@ -59,6 +60,11 @@ export function CharactersManager(): JSX.Element {
     ? searchedCharacters.filter((character) => character.series.some((s) => s.id === seriesFilter))
     : searchedCharacters
   const visibleCharacters = sortManageEntities(seriesFilteredCharacters, sort)
+  const visibleCharacterIds = useMemo(
+    () => visibleCharacters.map((character) => character.id),
+    [visibleCharacters]
+  )
+  const thumbnails = useEntityThumbnails('character', visibleCharacterIds)
 
   function startEdit(character: CharacterModel): void {
     setEditing(character)
@@ -207,7 +213,10 @@ export function CharactersManager(): JSX.Element {
                       : 'manage-list-item'
                   }
                 >
-                  <EntityThumbnail kind="character" id={character.id} />
+                  <EntityThumbnail
+                    route={thumbnails.get(character.id)?.route ?? null}
+                    loading={!thumbnails.has(character.id)}
+                  />
                   <div className="manage-item-info">
                     <span className="manage-item-name">{character.name}</span>
                     {character.series.length > 0 && (

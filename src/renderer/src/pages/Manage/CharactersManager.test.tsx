@@ -38,7 +38,7 @@ function setApi(overrides: Record<string, unknown> = {}): void {
         create: vi.fn().mockResolvedValue({ success: true, data: { id: 's2', name: 'Show A' } })
       },
       media: {
-        getFiltered: vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+        getEntityThumbnails: vi.fn().mockResolvedValue({ success: true, data: [] })
       }
     },
     writable: true,
@@ -112,7 +112,7 @@ describe('CharactersManager', () => {
         character: { create: vi.fn().mockResolvedValue({ success: true, data: {} }) },
         series: { create: seriesCreate },
         media: {
-          getFiltered: vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+          getEntityThumbnails: vi.fn().mockResolvedValue({ success: true, data: [] })
         }
       },
       writable: true,

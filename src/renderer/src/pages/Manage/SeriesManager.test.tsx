@@ -29,7 +29,7 @@ function setApi(overrides: Record<string, unknown> = {}): void {
         ...overrides
       },
       media: {
-        getFiltered: vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+        getEntityThumbnails: vi.fn().mockResolvedValue({ success: true, data: [] })
       }
     },
     writable: true,

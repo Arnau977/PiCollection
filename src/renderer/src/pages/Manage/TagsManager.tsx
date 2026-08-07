@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { TagModel } from '@shared/models'
 import { useTags } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
+import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
 import {
   loadManageSort,
@@ -34,6 +35,8 @@ export function TagsManager(): JSX.Element {
     filterByQuery(tags, search, (tag) => tag.name),
     sort
   )
+  const visibleTagIds = useMemo(() => visibleTags.map((tag) => tag.id), [visibleTags])
+  const thumbnails = useEntityThumbnails('tag', visibleTagIds)
 
   function startEdit(tag: TagModel): void {
     setEditing(tag)
@@ -137,7 +140,10 @@ export function TagsManager(): JSX.Element {
                       : 'manage-list-item'
                   }
                 >
-                  <EntityThumbnail kind="tag" id={tag.id} />
+                  <EntityThumbnail
+                    route={thumbnails.get(tag.id)?.route ?? null}
+                    loading={!thumbnails.has(tag.id)}
+                  />
                   <span className="manage-item-name">{tag.name}</span>
                   <span className="manage-item-count">
                     {formatCompactCount(tag.mediaCount ?? 0)}

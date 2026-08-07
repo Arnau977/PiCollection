@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { ImageOff } from 'lucide-react'
 import { toThumbUrl } from '@shared/utils/mediaUrl'
-import { useEntityThumbnail, type EntityThumbnailKind } from '../hooks/useEntityThumbnail'
 import './EntityThumbnail.css'
 
 interface EntityThumbnailProps {
-  kind: EntityThumbnailKind
-  id: string
+  route: string | null
+  loading: boolean
 }
 
 /** Must match the `scale()` in EntityThumbnail.css's `:hover` rule. */
@@ -30,8 +29,7 @@ function pickZoomOrigin(rect: DOMRect): ZoomOrigin {
   }
 }
 
-export function EntityThumbnail({ kind, id }: EntityThumbnailProps): JSX.Element {
-  const { route, loading } = useEntityThumbnail(kind, id)
+export function EntityThumbnail({ route, loading }: EntityThumbnailProps): JSX.Element {
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
   const [origin, setOrigin] = useState<ZoomOrigin>({ x: 'left', y: 'top' })
