@@ -57,8 +57,11 @@
 }
 
 .folder-browser-tile.is-selected {
+  background: var(--color-surface-hover);
   border-color: var(--accent);
-  box-shadow: var(--accent-glow-sm);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    var(--accent-glow-sm);
 }
 
 .folder-browser-tile:disabled {
@@ -94,6 +97,21 @@
 .folder-browser-tile-thumb .media-thumb {
   inset: 0;
   position: absolute;
+}
+
+.folder-browser-tile-selected-badge {
+  align-items: center;
+  background: var(--accent);
+  border-radius: 999px;
+  box-shadow: var(--accent-glow-sm);
+  color: #fff;
+  display: flex;
+  height: 22px;
+  justify-content: center;
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 22px;
 }
 
 .folder-browser-tile-badge {

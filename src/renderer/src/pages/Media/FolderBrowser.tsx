@@ -179,6 +179,11 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
               >
                 <span className="folder-browser-tile-thumb">
                   <Folder size={32} aria-hidden="true" />
+                  {selectedFolders.has(folder.relativePath) && (
+                    <span className="folder-browser-tile-selected-badge">
+                      <Check size={14} aria-hidden="true" />
+                    </span>
+                  )}
                 </span>
                 <span className="folder-browser-tile-name">{folder.name}</span>
               </button>
@@ -213,6 +218,11 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                         <span className="folder-browser-tile-badge">
                           <Check size={12} aria-hidden="true" />
                           {t('folderBrowser.cataloged')}
+                        </span>
+                      )}
+                      {selectedFiles.has(file.relativePath) && (
+                        <span className="folder-browser-tile-selected-badge">
+                          <Check size={14} aria-hidden="true" />
                         </span>
                       )}
                     </span>
