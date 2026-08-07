@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { MediaModel } from '@shared/models'
+import { __resetEntityListCachesForTests } from '../hooks/useEntityLists'
 import Media from './Media'
 
 function makeMedia(overrides: Partial<MediaModel> = {}): MediaModel {
@@ -31,6 +32,7 @@ function setApi(overrides: Record<string, unknown> = {}): void {
 }
 
 beforeEach(() => {
+  __resetEntityListCachesForTests()
   setApi()
 })
 
