@@ -156,7 +156,8 @@ app.whenReady().then(async () => {
   logInfo('lifecycle', 'App ready')
 
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.arnau977.picollection')
+  app.setName('PiCollection')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

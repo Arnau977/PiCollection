@@ -1,10 +1,10 @@
 {
   "name": "picollection",
   "version": "1.1.0-beta.2",
-  "description": "An Electron application with React and TypeScript",
+  "description": "A local-first desktop gallery for images, GIFs and videos",
   "main": "./out/main/index.js",
   "author": "Arnau977",
-  "homepage": "https://electron-vite.org",
+  "homepage": "https://github.com/Arnau977/PiCollection",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
