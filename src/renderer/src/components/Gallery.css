@@ -46,7 +46,9 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 300ms ease;
+  transition:
+    transform 300ms ease,
+    filter 300ms ease;
 }
 
 .media-card:hover .thumb-wrap img,
@@ -58,6 +60,16 @@
 .media-card .thumb-wrap.nsfw-blur video {
   filter: blur(18px);
   transform: scale(1.1);
+}
+
+/* Hovering (or focusing, for keyboard users) the card lifts the blur in place
+   instead of requiring a click-through to the detail page to see it. */
+.media-card:hover .thumb-wrap.nsfw-blur img,
+.media-card:hover .thumb-wrap.nsfw-blur video,
+.media-card:focus-visible .thumb-wrap.nsfw-blur img,
+.media-card:focus-visible .thumb-wrap.nsfw-blur video {
+  filter: none;
+  transform: scale(1.06);
 }
 
 .nsfw-blur-overlay {
@@ -75,7 +87,14 @@
   font-weight: 700;
   color: #fff;
   background: rgba(0, 0, 0, 0.35);
+  opacity: 1;
   pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.media-card:hover .nsfw-blur-overlay,
+.media-card:focus-visible .nsfw-blur-overlay {
+  opacity: 0;
 }
 
 .media-card .media-card-name {

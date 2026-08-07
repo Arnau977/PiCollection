@@ -237,6 +237,30 @@ describe('mediaService.getMediaFiltered', () => {
   })
 })
 
+describe('mediaService.getMediaOrderedIds', () => {
+  it('returns every matching id ordered by the given sort, ignoring limit/offset', async () => {
+    const first = await mediaService.addMedia(baseInput({ name: 'a', route: '/a.png' }))
+    const second = await mediaService.addMedia(baseInput({ name: 'b', route: '/b.png' }))
+    const third = await mediaService.addMedia(baseInput({ name: 'c', route: '/c.png' }))
+
+    const ids = await mediaService.getMediaOrderedIds({ limit: 1 }, { prop: 'name' })
+
+    expect(ids).toEqual([first.id, second.id, third.id])
+  })
+
+  it('applies filters the same way as getMediaFiltered', async () => {
+    const tagA = await tagService.createTag({ name: 'a' })
+    const tagged = await mediaService.addMedia(
+      baseInput({ name: 'tagged', route: '/tagged.png', tagIds: [tagA.id] })
+    )
+    await mediaService.addMedia(baseInput({ name: 'untagged', route: '/untagged.png' }))
+
+    const ids = await mediaService.getMediaOrderedIds({ tagGroups: [[tagA.id]] })
+
+    expect(ids).toEqual([tagged.id])
+  })
+})
+
 describe('mediaService.getEntityThumbnails', () => {
   it('delegates to the repository and returns its rows', async () => {
     const tag = await tagService.createTag({ name: 'a' })

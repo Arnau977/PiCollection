@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
@@ -7,6 +7,14 @@ import { useSeries } from '../hooks/useEntityLists'
 import { buildAncestorAwareSeriesTree } from '../utils/buildSeriesTree'
 import { Lightbox } from './Lightbox/Lightbox'
 import './Media.css'
+
+interface MediaProps extends MediaModel {
+  /** Sibling ids in the current gallery order, for the left/right click zones. Omitted (or both
+   * null) outside the detail page - e.g. nothing renders the zones without navigation to do. */
+  previousId?: string | null
+  nextId?: string | null
+  onNavigate?: (id: string) => void
+}
 
 export default function Media({
   tags = [],
@@ -17,22 +25,52 @@ export default function Media({
   series = [],
   type,
   artist,
-  route
-}: MediaModel): JSX.Element {
+  route,
+  previousId = null,
+  nextId = null,
+  onNavigate
+}: MediaProps): JSX.Element {
   const { t } = useTranslation()
   const mediaUrl = toMediaUrl(route)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const { data: allSeries } = useSeries()
   const seriesTree = buildAncestorAwareSeriesTree(series, allSeries)
+  // Video already owns its own click surface (native transport controls), so the
+  // prev/next zones only overlay stills - a video keeps the old open-lightbox-anywhere behavior.
+  const showNavZones = onNavigate && type !== 'video'
 
   return (
     <div className="media-detail">
-      <div className="media-detail-media" onClick={() => setLightboxOpen(true)}>
-        {(type === 'image' || type === 'gif') && <img src={mediaUrl} alt={name} />}
+      <div className="media-detail-media">
+        {(type === 'image' || type === 'gif') && (
+          <img src={mediaUrl} alt={name} onClick={() => setLightboxOpen(true)} />
+        )}
         {type === 'video' && (
-          <video controls src={mediaUrl}>
+          <video controls src={mediaUrl} onClick={() => setLightboxOpen(true)}>
             Your browser does not support the video tag.
           </video>
+        )}
+        {showNavZones && previousId && (
+          <button
+            type="button"
+            className="media-detail-nav media-detail-nav-prev"
+            aria-label={t('media.previousImage')}
+            title={t('media.previousImage')}
+            onClick={() => onNavigate(previousId)}
+          >
+            <ChevronLeft size={22} />
+          </button>
+        )}
+        {showNavZones && nextId && (
+          <button
+            type="button"
+            className="media-detail-nav media-detail-nav-next"
+            aria-label={t('media.nextImage')}
+            title={t('media.nextImage')}
+            onClick={() => onNavigate(nextId)}
+          >
+            <ChevronRight size={22} />
+          </button>
         )}
       </div>
 

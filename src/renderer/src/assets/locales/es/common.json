@@ -166,7 +166,7 @@
     "nsfwBadge": "NSFW",
     "unknownArtist": "Desconocido",
     "notFound": "Media no encontrado",
-    "revealNsfw": "Clic para revelar",
+    "revealNsfw": "Pasa el cursor para revelar",
     "edit": "Editar",
     "aiGeneratedTitle": "Generado mediante IA",
     "aiGeneratedBadge": "IA",
@@ -175,7 +175,9 @@
     "copyMedia": "Copiar imagen",
     "mediaCopied": "¡Copiado!",
     "openInFolder": "Abrir en el explorador de archivos",
-    "closeLightbox": "Cerrar"
+    "closeLightbox": "Cerrar",
+    "previousImage": "Imagen anterior",
+    "nextImage": "Imagen siguiente"
   },
   "addMedia": {
     "title": "Añadir nuevo media",

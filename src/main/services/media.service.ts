@@ -212,6 +212,16 @@ export const mediaService = {
     return { items, total }
   },
 
+  async getMediaOrderedIds(filters: MediaFilters, sorting?: Sorting): Promise<string[]> {
+    const db = getDb()
+    const flatSeriesIds = filters.seriesGroups?.flat() ?? []
+    const seriesClosures = flatSeriesIds.length
+      ? buildSeriesClosureMap(await seriesRepo.findSeriesHierarchy(db), flatSeriesIds)
+      : undefined
+    const rows = await mediaRepo.findMediaIds(db, filters, sorting, seriesClosures)
+    return rows.map((row) => row.id)
+  },
+
   async getMediaById(id: string): Promise<MediaModel | null> {
     return getMediaModelById(getDb(), id)
   },

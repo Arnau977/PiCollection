@@ -22,6 +22,12 @@ export function registerMediaHandlers(): void {
     )
   )
   ipcMain.handle(
+    IPC.media.getOrderedIds,
+    ipcHandler(IPC.media.getOrderedIds, MediaGetFilteredSchema, ({ filters, sorting }) =>
+      mediaService.getMediaOrderedIds(filters, sorting)
+    )
+  )
+  ipcMain.handle(
     IPC.media.getEntityThumbnails,
     ipcHandler(IPC.media.getEntityThumbnails, MediaGetEntityThumbnailsSchema, ({ kind, ids }) =>
       mediaService.getEntityThumbnails(kind, ids)

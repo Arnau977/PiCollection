@@ -40,6 +40,8 @@ export const api = {
       sorting?: Sorting
     ): Promise<IpcResult<MediaFilteredResult>> =>
       ipcRenderer.invoke(IPC.media.getFiltered, { filters, sorting }),
+    getOrderedIds: (filters: MediaFilters, sorting?: Sorting): Promise<IpcResult<string[]>> =>
+      ipcRenderer.invoke(IPC.media.getOrderedIds, { filters, sorting }),
     getEntityThumbnails: (
       kind: 'artist' | 'tag' | 'character' | 'series',
       ids: string[]

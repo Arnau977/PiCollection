@@ -325,6 +325,52 @@ describe('media.repository isAiGenerated filter', () => {
   })
 })
 
+describe('media.repository findMediaIds', () => {
+  it('returns ids in the same order as findMediaRows', async () => {
+    const first = await insertMedia('first')
+    const second = await insertMedia('second')
+    const third = await insertMedia('third')
+
+    const rows = await mediaRepo.findMediaRows(db, {}, { prop: 'name' })
+    const ids = await mediaRepo.findMediaIds(db, {}, { prop: 'name' })
+
+    expect(ids.map((row) => row.id)).toEqual(rows.map((row) => row.id))
+    expect(ids.map((row) => row.id)).toEqual([first.id, second.id, third.id])
+  })
+
+  it('ignores limit/offset and returns every matching id', async () => {
+    await insertMedia('a')
+    await insertMedia('b')
+    await insertMedia('c')
+
+    const ids = await mediaRepo.findMediaIds(db, { limit: 1, offset: 1 }, { prop: 'name' })
+
+    expect(ids).toHaveLength(3)
+  })
+
+  it('applies the same filters as findMediaRows', async () => {
+    const image = await insertMedia('image')
+    const video = await mediaRepo.insertMediaRow(db, {
+      id: randomUUID(),
+      name: 'video',
+      sfw: 1,
+      is_ai_generated: 0,
+      type: 'video',
+      route: '/v.mp4',
+      alias: null,
+      artist_id: null,
+      created_at: Date.now(),
+      hash: null,
+      phash: null
+    })
+
+    const ids = await mediaRepo.findMediaIds(db, { type: 'video' })
+
+    expect(ids.map((row) => row.id)).toEqual([video.id])
+    expect(ids.map((row) => row.id)).not.toContain(image.id)
+  })
+})
+
 describe('media.repository noCharacter / noSeries filters', () => {
   it('filters to media with no character linked via noCharacter', async () => {
     const character = await insertCharacter('Ishtar')

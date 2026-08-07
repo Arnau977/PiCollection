@@ -214,6 +214,22 @@ export function findMediaRows(
     .execute()
 }
 
+/** Same ordering/filtering as `findMediaRows`, but every matching id (no limit/offset) - used to
+ * work out a media item's previous/next siblings without paying for the full row hydration. */
+export function findMediaIds(
+  db: Kysely<DB>,
+  filters: MediaFilters,
+  sorting?: Sorting,
+  seriesClosures?: Map<string, string[]>
+): Promise<{ id: string }[]> {
+  const sortColumn = SORT_COLUMNS[sorting?.prop ?? 'createdAt'] ?? 'created_at'
+
+  return applyMediaFilters(db, filters, seriesClosures)
+    .select('media.id')
+    .orderBy(sortColumn, sorting?.desc ? 'desc' : 'asc')
+    .execute()
+}
+
 export async function countMediaRows(
   db: Kysely<DB>,
   filters: MediaFilters,

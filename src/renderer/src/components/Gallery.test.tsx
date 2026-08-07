@@ -101,7 +101,7 @@ describe('Gallery', () => {
     )
 
     expect(container.querySelector('.thumb-wrap.nsfw-blur')).not.toBeNull()
-    expect(screen.getByText('Click to reveal')).toBeInTheDocument()
+    expect(screen.getByText('Hover to reveal')).toBeInTheDocument()
   })
 
   it('does not blur SFW thumbnails even when blurNsfw is enabled', () => {

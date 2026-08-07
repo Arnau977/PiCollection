@@ -131,6 +131,7 @@ export const SeriesUpdateSchema = UpdateByIdSchema(SeriesInputSchema)
 export const IPC = {
   media: {
     getFiltered: 'db:media:get-filtered',
+    getOrderedIds: 'db:media:get-ordered-ids',
     getEntityThumbnails: 'db:media:get-entity-thumbnails',
     getById: 'db:media:get-by-id',
     create: 'db:media:create',
