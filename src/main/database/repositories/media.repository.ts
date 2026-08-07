@@ -560,31 +560,34 @@ export interface SeriesClosurePair {
  * `media_series` only stores exact links, so the closure has to come from the
  * caller: the (descendant, ancestor) pairs are inlined as a derived table and
  * the window function partitions by `ancestor_id` rather than by the raw join
- * column. Written as `SELECT ... UNION ALL` rather than `VALUES (...)` because
- * SQLite has no portable way to name the columns of a `VALUES` list.
+ * column. The pairs go in as a `WITH closure(descendant_id, ancestor_id) AS
+ * (VALUES ...)` CTE - the CTE's column list is what names the otherwise
+ * anonymous `VALUES` columns so the join below can reference them. A chain of
+ * `SELECT ... UNION ALL` would name its columns too, but it is a compound
+ * SELECT and so capped at `SQLITE_MAX_COMPOUND_SELECT` (500, hardcoded in
+ * better-sqlite3's build): any library with more than ~500 closure pairs would
+ * fail outright. A `VALUES` list carries no such cap, leaving only the far
+ * roomier parameter limit (32766 host params, i.e. ~16k pairs).
  */
 export async function findSeriesThumbnailsByClosure(
   db: Kysely<DB>,
   pairs: SeriesClosurePair[]
 ): Promise<EntityThumbnailRow[]> {
+  // Also keeps the `VALUES` list below from degenerating into invalid SQL,
+  // since it needs at least one row.
   if (pairs.length === 0) return []
 
-  const pairRows = sql.join(
-    pairs.map(
-      (pair) =>
-        sql`SELECT ${pair.descendantId} AS descendant_id, ${pair.ancestorId} AS ancestor_id`
-    ),
-    sql` UNION ALL `
-  )
+  const pairRows = sql.join(pairs.map((pair) => sql`(${pair.descendantId}, ${pair.ancestorId})`))
 
   const result = await sql<EntityThumbnailRow>`
+    WITH closure(descendant_id, ancestor_id) AS (VALUES ${pairRows})
     SELECT entity_id as entityId, route, type FROM (
       SELECT
         closure.ancestor_id AS entity_id,
         media.route AS route,
         media.type AS type,
         ROW_NUMBER() OVER (PARTITION BY closure.ancestor_id ORDER BY RANDOM()) AS rn
-      FROM (${pairRows}) closure
+      FROM closure
       JOIN media_series ms ON ms.series_id = closure.descendant_id
       JOIN media ON media.id = ms.media_id
       WHERE media.sfw = 1

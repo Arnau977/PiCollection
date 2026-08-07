@@ -656,4 +656,32 @@ describe('findSeriesThumbnailsByClosure', () => {
       { entityId: 'parent', route: '/child.png', type: childMedia.type }
     ])
   })
+
+  it('handles far more pairs than SQLite allows terms in a compound SELECT', async () => {
+    // SQLITE_MAX_COMPOUND_SELECT is a hardcoded 500 in better-sqlite3's build,
+    // so the pairs table must not be a `SELECT ... UNION ALL` chain. 600 flat
+    // series is only ~600 series in a real library - well within reach.
+    const seriesCount = 600
+    for (let i = 0; i < seriesCount; i++) {
+      await seriesRepo.insertSeries(db, {
+        id: `s${i}`,
+        name: `Series ${i}`,
+        aliases_json: '[]',
+        created_at: 1,
+        parent_id: null
+      })
+    }
+    const media = await baseMediaRow({ id: 'm1', route: '/s42.png', sfw: 1 })
+    await mediaRepo.setMediaSeries(db, media.id, ['s42'])
+
+    const pairs = Array.from({ length: seriesCount }, (_, i) => ({
+      descendantId: `s${i}`,
+      ancestorId: `s${i}`
+    }))
+    expect(pairs.length).toBeGreaterThan(500)
+
+    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, pairs)
+
+    expect(result).toEqual([{ entityId: 's42', route: '/s42.png', type: media.type }])
+  })
 })
