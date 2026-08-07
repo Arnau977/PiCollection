@@ -1,9 +1,9 @@
 name: Release
 
-# A tag push builds and publishes a GitHub Release for that version. A plain
-# tag (v1.2.0) publishes to the stable channel; a prerelease tag
-# (v1.2.0-beta.1) is published as a GitHub prerelease and picked up only by
-# clients on the beta channel - see docs/auto-update.md.
+# A tag push builds and publishes a GitHub Release for that version as a
+# pre-release by default (plain X.Y.Z versioning, no hyphen suffix ever).
+# Promotion to stable ("Latest") is a manual step done after verification:
+# gh release edit vX.Y.Z --prerelease=false --latest - see docs/auto-update.md.
 on:
   push:
     tags:
