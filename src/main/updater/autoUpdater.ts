@@ -21,10 +21,14 @@ export function setUpdaterWindow(window: BrowserWindow): void {
 }
 
 function applyChannel(channel: UpdateChannel): void {
-  // electron-updater's GitHub provider reads a per-channel manifest
-  // (latest.yml for stable, beta.yml for beta) built from the version's
-  // semver prerelease tag (e.g. `1.2.0-beta.1`) - allowPrerelease has to
-  // agree with that or a stable-channel client would ignore beta releases.
+  // Every build publishes the same `latest*.yml` manifest - there is no
+  // separate beta manifest, and version numbers are always plain `X.Y.Z`
+  // with no prerelease suffix. What a channel can see is decided entirely by
+  // GitHub's own `prerelease` flag per release: `allowPrerelease` is the
+  // switch that lets the beta channel resolve releases still flagged as
+  // pre-release, while stable only ever resolves `/releases/latest`. The
+  // `channel` assignment is kept in sync with it for consistency, but with a
+  // single shared manifest it has no effect on its own. See docs/auto-update.md.
   autoUpdater.channel = channel === 'beta' ? 'beta' : 'latest'
   autoUpdater.allowPrerelease = channel === 'beta'
 }
