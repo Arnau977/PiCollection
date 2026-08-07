@@ -2,6 +2,18 @@
   margin-top: var(--space-5);
 }
 
+/* Bounds the page to the viewport when the folder grid is showing, so the
+   "Import selected" bar stays visible without scrolling (same pattern as
+   .gallery-page/.manage-page - see FolderBrowser.css for the inner scroll
+   region this pairs with). */
+.add-media-page.is-folder-browsing {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
 .add-media-tabs {
   display: inline-flex;
   gap: var(--space-1);

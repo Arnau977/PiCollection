@@ -210,8 +210,6 @@
     "root": "Carpeta origen",
     "loading": "Cargando…",
     "empty": "Esta carpeta no tiene archivos de media.",
-    "selectedCount_one": "{{count}} seleccionado",
-    "selectedCount_other": "{{count}} seleccionados",
     "importSelected": "Importar seleccionados ({{count}})",
     "breadcrumbLabel": "Ruta de carpeta",
     "retry": "Reintentar",

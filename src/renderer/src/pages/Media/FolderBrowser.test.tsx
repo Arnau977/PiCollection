@@ -38,7 +38,10 @@ describe('FolderBrowser', () => {
     })
     browse.mockResolvedValueOnce({
       success: true,
-      data: { folders: [], files: [{ name: 'b.png', relativePath: 'Genshin/b.png', type: 'image', cataloged: false }] }
+      data: {
+        folders: [],
+        files: [{ name: 'b.png', relativePath: 'Genshin/b.png', type: 'image', cataloged: false }]
+      }
     })
 
     render(<FolderBrowser onStartImport={vi.fn()} />)
@@ -53,7 +56,10 @@ describe('FolderBrowser', () => {
   it('a single click selects a file, and Import selected fires onStartImport with it', async () => {
     browse.mockResolvedValue({
       success: true,
-      data: { folders: [], files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false }] }
+      data: {
+        folders: [],
+        files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false }]
+      }
     })
     const onStartImport = vi.fn()
 
@@ -86,7 +92,10 @@ describe('FolderBrowser', () => {
   it('disables a cataloged file so it cannot be selected', async () => {
     browse.mockResolvedValue({
       success: true,
-      data: { folders: [], files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: true }] }
+      data: {
+        folders: [],
+        files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: true }]
+      }
     })
 
     render(<FolderBrowser onStartImport={vi.fn()} />)
@@ -96,7 +105,10 @@ describe('FolderBrowser', () => {
   })
 
   it('shows an error message when browse fails', async () => {
-    browse.mockResolvedValue({ success: false, error: { code: 'INTERNAL', message: 'Folder is gone' } })
+    browse.mockResolvedValue({
+      success: false,
+      error: { code: 'INTERNAL', message: 'Folder is gone' }
+    })
 
     render(<FolderBrowser onStartImport={vi.fn()} />)
 
@@ -112,10 +124,16 @@ describe('FolderBrowser', () => {
   })
 
   it('retries the same folder when Retry is clicked after a browse error', async () => {
-    browse.mockResolvedValueOnce({ success: false, error: { code: 'INTERNAL', message: 'Folder is gone' } })
+    browse.mockResolvedValueOnce({
+      success: false,
+      error: { code: 'INTERNAL', message: 'Folder is gone' }
+    })
     browse.mockResolvedValueOnce({
       success: true,
-      data: { folders: [], files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false }] }
+      data: {
+        folders: [],
+        files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false }]
+      }
     })
 
     render(<FolderBrowser onStartImport={vi.fn()} />)
@@ -129,7 +147,7 @@ describe('FolderBrowser', () => {
     expect(browse).toHaveBeenNthCalledWith(2, '')
   })
 
-  it('paginates the file grid and does not paginate folders', async () => {
+  it('paginates the file grid and only shows folders on the first page', async () => {
     const files = Array.from({ length: 130 }, (_, i) => ({
       name: `file-${i}.png`,
       relativePath: `file-${i}.png`,
@@ -144,13 +162,14 @@ describe('FolderBrowser', () => {
     render(<FolderBrowser onStartImport={vi.fn()} />)
 
     await screen.findByText('file-0.png')
-    expect(screen.getAllByText(/^file-\d+\.png$/)).toHaveLength(60)
+    expect(screen.getAllByText(/^file-\d+\.png$/)).toHaveLength(40)
     expect(screen.getByText('sub')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
-    expect(await screen.findByText('file-60.png')).toBeInTheDocument()
+    expect(await screen.findByText('file-40.png')).toBeInTheDocument()
     expect(screen.queryByText('file-0.png')).not.toBeInTheDocument()
+    expect(screen.queryByText('sub')).not.toBeInTheDocument()
   })
 
   it('resets to page 1 when navigating into a different folder', async () => {
@@ -167,11 +186,11 @@ describe('FolderBrowser', () => {
 
     await screen.findByText('file-0.png')
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
-    expect(await screen.findByText('file-60.png')).toBeInTheDocument()
+    expect(await screen.findByText('file-40.png')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Source folder' }))
 
     expect(browse).toHaveBeenLastCalledWith('')
-    expect(screen.queryByText('file-60.png')).not.toBeInTheDocument()
+    expect(screen.queryByText('file-40.png')).not.toBeInTheDocument()
   })
 })

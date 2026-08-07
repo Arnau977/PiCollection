@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Check, Folder } from 'lucide-react'
+import { Check, ChevronRight, Folder } from 'lucide-react'
 import type { SourceFolderBrowseFile, SourceFolderBrowseResult } from '@shared/models'
 import { toThumbUrl } from '@shared/utils/mediaUrl'
 import { MediaThumb } from '../../components/MediaThumb/MediaThumb'
@@ -27,7 +27,7 @@ interface PreviewState {
 const PREVIEW_SIZE = 320
 const PREVIEW_MARGIN = 12
 const PREVIEW_DELAY_MS = 150
-const FILES_PER_PAGE = 60
+const FILES_PER_PAGE = 40
 
 /** Keeps the enlarged preview clear of the viewport edges: flips to the tile's
  * left when there's no room on the right, and clamps vertically instead of
@@ -134,107 +134,116 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
     <>
       <div className="folder-browser">
         <nav className="folder-browser-breadcrumb" aria-label={t('folderBrowser.breadcrumbLabel')}>
-          <button type="button" className="folder-browser-crumb" onClick={() => navigateTo('')}>
+          <Folder size={15} className="folder-browser-breadcrumb-icon" aria-hidden="true" />
+          <button
+            type="button"
+            className={`folder-browser-crumb${breadcrumbSegments.length === 0 ? ' is-current' : ''}`}
+            onClick={() => navigateTo('')}
+          >
             {t('folderBrowser.root')}
           </button>
           {breadcrumbSegments.map((segment, index) => {
             const pathUpToHere = breadcrumbSegments.slice(0, index + 1).join('/')
+            const isCurrent = index === breadcrumbSegments.length - 1
             return (
-              <span key={pathUpToHere}>
-                {' / '}
+              <Fragment key={pathUpToHere}>
+                <ChevronRight size={14} className="folder-browser-crumb-sep" aria-hidden="true" />
                 <button
                   type="button"
-                  className="folder-browser-crumb"
+                  className={`folder-browser-crumb${isCurrent ? ' is-current' : ''}`}
                   onClick={() => navigateTo(pathUpToHere)}
                 >
                   {segment}
                 </button>
-              </span>
+              </Fragment>
             )
           })}
         </nav>
 
-        {state.kind === 'loading' && (
-          <p className="folder-browser-status">{t('folderBrowser.loading')}</p>
-        )}
-        {state.kind === 'error' && (
-          <div className="folder-browser-error">
-            <p role="alert">{state.message}</p>
-            <button type="button" className="btn" onClick={retry}>
-              {t('folderBrowser.retry')}
-            </button>
-          </div>
-        )}
-
-        {state.kind === 'loaded' && (
-          <div className="folder-browser-grid">
-            {state.result.folders.map((folder) => (
-              <button
-                key={folder.relativePath}
-                type="button"
-                title={folder.name}
-                className={`folder-browser-tile${selectedFolders.has(folder.relativePath) ? ' is-selected' : ''}`}
-                onClick={() => toggleFolder(folder.relativePath)}
-                onDoubleClick={() => navigateTo(folder.relativePath)}
-              >
-                <span className="folder-browser-tile-thumb">
-                  <Folder size={32} aria-hidden="true" />
-                  {selectedFolders.has(folder.relativePath) && (
-                    <span className="folder-browser-tile-selected-badge">
-                      <Check size={14} aria-hidden="true" />
-                    </span>
-                  )}
-                </span>
-                <span className="folder-browser-tile-name">{folder.name}</span>
+        <div className="folder-browser-scroll">
+          {state.kind === 'loading' && (
+            <p className="folder-browser-status">{t('folderBrowser.loading')}</p>
+          )}
+          {state.kind === 'error' && (
+            <div className="folder-browser-error">
+              <p role="alert">{state.message}</p>
+              <button type="button" className="btn" onClick={retry}>
+                {t('folderBrowser.retry')}
               </button>
-            ))}
-            {state.result.files
-              .slice(filePage * FILES_PER_PAGE, (filePage + 1) * FILES_PER_PAGE)
-              .map((file) => (
-                // Hover detection lives on this wrapper, not the button: disabled
-                // buttons (cataloged files) don't dispatch mouse events, and the
-                // preview should still work for them.
-                <div
-                  key={file.relativePath}
-                  className="folder-browser-tile-wrap"
-                  onMouseEnter={(e) => {
-                    // The wrapper is `display: contents` (no box of its own, so no
-                    // rect) - the button underneath is the real anchor.
-                    const button = e.currentTarget.querySelector('button')
-                    if (button) startPreview(file, button)
-                  }}
-                  onMouseLeave={endPreview}
-                >
+            </div>
+          )}
+
+          {state.kind === 'loaded' && (
+            <div className="folder-browser-grid">
+              {filePage === 0 &&
+                state.result.folders.map((folder) => (
                   <button
+                    key={folder.relativePath}
                     type="button"
-                    title={file.name}
-                    className={`folder-browser-tile${selectedFiles.has(file.relativePath) ? ' is-selected' : ''}${file.cataloged ? ' is-cataloged' : ''}`}
-                    onClick={() => toggleFile(file.relativePath)}
-                    disabled={file.cataloged}
+                    title={folder.name}
+                    className={`folder-browser-tile${selectedFolders.has(folder.relativePath) ? ' is-selected' : ''}`}
+                    onClick={() => toggleFolder(folder.relativePath)}
+                    onDoubleClick={() => navigateTo(folder.relativePath)}
                   >
                     <span className="folder-browser-tile-thumb">
-                      <MediaThumb type={file.type} route={file.relativePath} alt={file.name} />
-                      {file.cataloged && (
-                        <span className="folder-browser-tile-badge">
-                          <Check size={12} aria-hidden="true" />
-                          {t('folderBrowser.cataloged')}
-                        </span>
-                      )}
-                      {selectedFiles.has(file.relativePath) && (
+                      <Folder size={32} aria-hidden="true" />
+                      {selectedFolders.has(folder.relativePath) && (
                         <span className="folder-browser-tile-selected-badge">
                           <Check size={14} aria-hidden="true" />
                         </span>
                       )}
                     </span>
-                    <span className="folder-browser-tile-name">{file.name}</span>
+                    <span className="folder-browser-tile-name">{folder.name}</span>
                   </button>
-                </div>
-              ))}
-            {state.result.folders.length === 0 && state.result.files.length === 0 && (
-              <p className="folder-browser-status">{t('folderBrowser.empty')}</p>
-            )}
-          </div>
-        )}
+                ))}
+              {state.result.files
+                .slice(filePage * FILES_PER_PAGE, (filePage + 1) * FILES_PER_PAGE)
+                .map((file) => (
+                  // Hover detection lives on this wrapper, not the button: disabled
+                  // buttons (cataloged files) don't dispatch mouse events, and the
+                  // preview should still work for them.
+                  <div
+                    key={file.relativePath}
+                    className="folder-browser-tile-wrap"
+                    onMouseEnter={(e) => {
+                      // The wrapper is `display: contents` (no box of its own, so no
+                      // rect) - the button underneath is the real anchor.
+                      const button = e.currentTarget.querySelector('button')
+                      if (button) startPreview(file, button)
+                    }}
+                    onMouseLeave={endPreview}
+                  >
+                    <button
+                      type="button"
+                      title={file.name}
+                      className={`folder-browser-tile${selectedFiles.has(file.relativePath) ? ' is-selected' : ''}${file.cataloged ? ' is-cataloged' : ''}`}
+                      onClick={() => toggleFile(file.relativePath)}
+                      disabled={file.cataloged}
+                    >
+                      <span className="folder-browser-tile-thumb">
+                        <MediaThumb type={file.type} route={file.relativePath} alt={file.name} />
+                        {file.cataloged && (
+                          <span className="folder-browser-tile-badge">
+                            <Check size={12} aria-hidden="true" />
+                            {t('folderBrowser.cataloged')}
+                          </span>
+                        )}
+                        {selectedFiles.has(file.relativePath) && (
+                          <span className="folder-browser-tile-selected-badge">
+                            <Check size={14} aria-hidden="true" />
+                          </span>
+                        )}
+                      </span>
+                      <span className="folder-browser-tile-name">{file.name}</span>
+                    </button>
+                  </div>
+                ))}
+              {state.result.folders.length === 0 && state.result.files.length === 0 && (
+                <p className="folder-browser-status">{t('folderBrowser.empty')}</p>
+              )}
+            </div>
+          )}
+        </div>
 
         {state.kind === 'loaded' && state.result.files.length > FILES_PER_PAGE && (
           <div className="folder-browser-pagination">
@@ -247,9 +256,6 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
         )}
 
         <div className="folder-browser-actions">
-          <span className="folder-browser-actions-count">
-            {t('folderBrowser.selectedCount', { count: selectedCount })}
-          </span>
           <button
             type="button"
             className="btn btn-primary"

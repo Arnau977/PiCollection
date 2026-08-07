@@ -210,7 +210,6 @@
     "root": "Source folder",
     "loading": "Loading…",
     "empty": "This folder has no media files.",
-    "selectedCount": "{{count}} selected",
     "importSelected": "Import selected ({{count}})",
     "breadcrumbLabel": "Folder path",
     "retry": "Retry",

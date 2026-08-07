@@ -14,9 +14,10 @@ export default function AddMediaPage(): JSX.Element {
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('single')
   const [sourceFolder, setSourceFolder] = useState<string | null>(null)
-  const [importSelection, setImportSelection] = useState<{ files: string[]; folders: string[] } | null>(
-    null
-  )
+  const [importSelection, setImportSelection] = useState<{
+    files: string[]
+    folders: string[]
+  } | null>(null)
 
   useEffect(() => {
     window.api.sourceFolder.get().then((result) => {
@@ -28,8 +29,10 @@ export default function AddMediaPage(): JSX.Element {
     navigate(PATH.GALLERY)
   }
 
+  const showFolderBrowser = tab === 'folder' && sourceFolder && importSelection === null
+
   return (
-    <div className="page add-media-page">
+    <div className={`page add-media-page${showFolderBrowser ? ' is-folder-browsing' : ''}`}>
       <h1>{t('addMedia.title')}</h1>
 
       <div className="add-media-tabs" role="tablist">
@@ -71,9 +74,7 @@ export default function AddMediaPage(): JSX.Element {
         </p>
       )}
 
-      {tab === 'folder' && sourceFolder && importSelection === null && (
-        <FolderBrowser onStartImport={setImportSelection} />
-      )}
+      {showFolderBrowser && <FolderBrowser onStartImport={setImportSelection} />}
 
       {tab === 'folder' && sourceFolder && importSelection !== null && (
         <ImportQueue
