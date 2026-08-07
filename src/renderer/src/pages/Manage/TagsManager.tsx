@@ -15,6 +15,7 @@ import {
 } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import { formatCompactCount } from '../../utils/formatCompactCount'
+import { useDebouncedValue } from '../../utils/useDebouncedValue'
 
 export function TagsManager(): JSX.Element {
   const { t } = useTranslation()
@@ -23,6 +24,7 @@ export function TagsManager(): JSX.Element {
   const [formName, setFormName] = useState('')
   const [editing, setEditing] = useState<TagModel | null>(null)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 200)
   const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<ManageSort>(() => loadManageSort('tags'))
 
@@ -31,9 +33,9 @@ export function TagsManager(): JSX.Element {
     saveManageSort('tags', next)
   }
 
-  const visibleTags = sortManageEntities(
-    filterByQuery(tags, search, (tag) => tag.name),
-    sort
+  const visibleTags = useMemo(
+    () => sortManageEntities(filterByQuery(tags, debouncedSearch, (tag) => tag.name), sort),
+    [tags, debouncedSearch, sort]
   )
   const visibleTagIds = useMemo(() => visibleTags.map((tag) => tag.id), [visibleTags])
   const thumbnails = useEntityThumbnails('tag', visibleTagIds)

@@ -17,6 +17,7 @@ import {
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import { buildAncestorAwareSeriesTree, buildSeriesTree } from '../../utils/buildSeriesTree'
 import { formatCompactCount } from '../../utils/formatCompactCount'
+import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { SeriesModel } from '@shared/models'
 
 interface SeriesFormValues {
@@ -38,6 +39,7 @@ export function SeriesManager(): JSX.Element {
   const [form, setForm] = useState<SeriesFormValues>(EMPTY_FORM)
   const [editing, setEditing] = useState<SeriesModel | null>(null)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 200)
   const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<ManageSort>(() => loadManageSort('series'))
 
@@ -46,20 +48,20 @@ export function SeriesManager(): JSX.Element {
     saveManageSort('series', next)
   }
 
-  const isSearching = search.trim().length > 0
-  const sortedSeries = sortManageEntities(seriesList, sort)
-  const visibleSeries = sortManageEntities(
-    filterByQuery(seriesList, search, (series) =>
+  // Sorts `seriesList` once, then filters the already-sorted array when searching (filtering
+  // preserves order, so there's no need to sort the filtered subset again).
+  const treeNodes = useMemo(() => {
+    const sortedSeries = sortManageEntities(seriesList, sort)
+    const isSearching = debouncedSearch.trim().length > 0
+    if (!isSearching) return buildSeriesTree(sortedSeries)
+    const visibleSeries = filterByQuery(sortedSeries, debouncedSearch, (series) =>
       [series.name, ...(series.aliases ?? [])].join(' ')
-    ),
-    sort
-  )
-  // While searching, still show each match's ancestor chain (pulled from the full sorted list)
-  // so the hierarchy reads the same way it does unfiltered - just restricted to matches plus the
-  // ancestors needed to place them.
-  const treeNodes = isSearching
-    ? buildAncestorAwareSeriesTree(visibleSeries, sortedSeries)
-    : buildSeriesTree(sortedSeries)
+    )
+    // While searching, still show each match's ancestor chain (pulled from the full sorted list)
+    // so the hierarchy reads the same way it does unfiltered - just restricted to matches plus the
+    // ancestors needed to place them.
+    return buildAncestorAwareSeriesTree(visibleSeries, sortedSeries)
+  }, [seriesList, debouncedSearch, sort])
   const visibleSeriesIds = useMemo(() => treeNodes.map((node) => node.series.id), [treeNodes])
   const thumbnails = useEntityThumbnails('series', visibleSeriesIds)
 
@@ -231,7 +233,7 @@ export function SeriesManager(): JSX.Element {
             <p className="loading-state">{t('gallery.loading')}</p>
           ) : seriesList.length === 0 ? (
             <p className="manage-empty">{t('manage.empty')}</p>
-          ) : visibleSeries.length === 0 ? (
+          ) : treeNodes.length === 0 ? (
             <p className="manage-empty">{t('manage.noResults')}</p>
           ) : (
             <ul className="manage-list">

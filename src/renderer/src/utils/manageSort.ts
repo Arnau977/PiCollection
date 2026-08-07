@@ -13,7 +13,7 @@ export function sortManageEntities<T extends { name: string; createdAt?: number 
   sort: ManageSort
 ): T[] {
   const factor = sort.desc ? -1 : 1
-  return [...items].sort((a, b) => {
+  return items.toSorted((a, b) => {
     if (sort.prop === 'createdAt') return ((a.createdAt ?? 0) - (b.createdAt ?? 0)) * factor
     return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }) * factor
   })

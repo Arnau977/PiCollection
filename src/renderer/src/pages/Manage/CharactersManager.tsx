@@ -16,6 +16,7 @@ import {
 } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import { formatCompactCount } from '../../utils/formatCompactCount'
+import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { CharacterModel, SeriesModel } from '@shared/models'
 
 interface CharacterFormValues {
@@ -38,6 +39,7 @@ export function CharactersManager(): JSX.Element {
   const [form, setForm] = useState<CharacterFormValues>(EMPTY_FORM)
   const [editing, setEditing] = useState<CharacterModel | null>(null)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 200)
   const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<ManageSort>(() => loadManageSort('characters'))
   const [seriesFilter, setSeriesFilter] = useState<string>('')
@@ -47,13 +49,17 @@ export function CharactersManager(): JSX.Element {
     saveManageSort('characters', next)
   }
 
-  const searchedCharacters = filterByQuery(characters, search, (character) =>
-    [character.name, ...(character.aliases ?? [])].join(' ')
-  )
-  const seriesFilteredCharacters = seriesFilter
-    ? searchedCharacters.filter((character) => character.series.some((s) => s.id === seriesFilter))
-    : searchedCharacters
-  const visibleCharacters = sortManageEntities(seriesFilteredCharacters, sort)
+  const visibleCharacters = useMemo(() => {
+    const searchedCharacters = filterByQuery(characters, debouncedSearch, (character) =>
+      [character.name, ...(character.aliases ?? [])].join(' ')
+    )
+    const seriesFilteredCharacters = seriesFilter
+      ? searchedCharacters.filter((character) =>
+          character.series.some((s) => s.id === seriesFilter)
+        )
+      : searchedCharacters
+    return sortManageEntities(seriesFilteredCharacters, sort)
+  }, [characters, debouncedSearch, seriesFilter, sort])
   const visibleCharacterIds = useMemo(
     () => visibleCharacters.map((character) => character.id),
     [visibleCharacters]

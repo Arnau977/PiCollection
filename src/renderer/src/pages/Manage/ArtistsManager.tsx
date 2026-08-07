@@ -9,6 +9,7 @@ import { filterByQuery } from '../../utils/filterByQuery'
 import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import { formatCompactCount } from '../../utils/formatCompactCount'
+import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { ArtistModel } from '@shared/models'
 
 export function ArtistsManager(): JSX.Element {
@@ -20,6 +21,7 @@ export function ArtistsManager(): JSX.Element {
   const [socialName, setSocialName] = useState('')
   const [socialUrl, setSocialUrl] = useState('')
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 200)
   const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<ManageSort>(() => loadManageSort('artists'))
 
@@ -28,7 +30,10 @@ export function ArtistsManager(): JSX.Element {
     saveManageSort('artists', next)
   }
 
-  const visibleArtists = sortManageEntities(filterByQuery(artists, search, (artist) => artist.name), sort)
+  const visibleArtists = useMemo(
+    () => sortManageEntities(filterByQuery(artists, debouncedSearch, (artist) => artist.name), sort),
+    [artists, debouncedSearch, sort]
+  )
   const visibleArtistIds = useMemo(() => visibleArtists.map((artist) => artist.id), [visibleArtists])
   const thumbnails = useEntityThumbnails('artist', visibleArtistIds)
   // Editing the same artist by id keeps the panel in sync as `refetch()` swaps

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ArtistModel } from '@shared/models'
 import { ArtistsManager } from './ArtistsManager'
@@ -203,8 +203,10 @@ describe('ArtistsManager', () => {
 
     await user.type(screen.getByRole('searchbox'), 'jane')
 
-    expect(screen.getByText('Jane Doe')).toBeInTheDocument()
-    expect(screen.queryByText('John Smith')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Jane Doe')).toBeInTheDocument()
+      expect(screen.queryByText('John Smith')).not.toBeInTheDocument()
+    })
   })
 
   it('persists the chosen sort order and re-applies it on next render', async () => {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { TagModel } from '@shared/models'
 import { TagsManager } from './TagsManager'
@@ -184,8 +184,10 @@ describe('TagsManager', () => {
 
     await user.type(screen.getByRole('searchbox'), 'land')
 
-    expect(screen.getByText('landscape')).toBeInTheDocument()
-    expect(screen.queryByText('portrait')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('landscape')).toBeInTheDocument()
+      expect(screen.queryByText('portrait')).not.toBeInTheDocument()
+    })
   })
 
   it('shows a no-results message when the search matches nothing', async () => {
@@ -194,7 +196,9 @@ describe('TagsManager', () => {
 
     await user.type(screen.getByRole('searchbox'), 'nonexistent')
 
-    expect(screen.getByText('No matches for your search.')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('No matches for your search.')).toBeInTheDocument()
+    })
   })
 
   it('persists the chosen sort order and re-applies it on next render', async () => {
