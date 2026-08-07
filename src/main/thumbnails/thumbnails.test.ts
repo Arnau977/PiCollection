@@ -243,10 +243,12 @@ describe('resolveThumbnail', () => {
 
     let concurrent = 0
     let maxConcurrent = 0
+    let dispatched = 0
     const releases: (() => void)[] = []
     createThumbnailFromPath.mockImplementation(
       () =>
         new Promise((resolve) => {
+          dispatched++
           concurrent++
           maxConcurrent = Math.max(maxConcurrent, concurrent)
           releases.push(() => {
@@ -257,16 +259,21 @@ describe('resolveThumbnail', () => {
     )
 
     const requests = Promise.all(files.map((file) => resolveThumbnail(file)))
-    // Let every microtask queued so far run, so every request that's going
-    // to start has started, before any of them are released.
-    await new Promise((r) => setTimeout(r, 0))
 
-    expect(maxConcurrent).toBeLessThanOrEqual(THUMBNAIL_CONCURRENCY)
-
-    while (releases.length > 0) {
-      releases.shift()?.()
+    // resolveThumbnail does real (unmocked) fs.stat/fs.access work before the
+    // semaphore-gated generate() call, so requests can dribble in over
+    // several event-loop ticks under load rather than all landing within one
+    // - keep draining releases and waiting until every request has actually
+    // reached the mock and been released, instead of assuming a single tick
+    // is enough (which is flaky on a loaded CI runner and can leave requests
+    // permanently unresolved, hanging the test past its timeout).
+    while (dispatched < files.length || concurrent > 0) {
+      while (releases.length > 0) releases.shift()?.()
       await new Promise((r) => setTimeout(r, 0))
     }
+
+    expect(maxConcurrent).toBeLessThanOrEqual(THUMBNAIL_CONCURRENCY)
+    expect(dispatched).toBe(files.length)
     await requests
   })
 })
