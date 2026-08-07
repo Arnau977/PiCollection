@@ -15,7 +15,7 @@ import {
 } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import { formatCompactCount } from '../../utils/formatCompactCount'
-import type { CharacterModel } from '@shared/models'
+import type { CharacterModel, SeriesModel } from '@shared/models'
 
 interface CharacterFormValues {
   name: string
@@ -24,6 +24,10 @@ interface CharacterFormValues {
 }
 
 const EMPTY_FORM: CharacterFormValues = { name: '', seriesIds: [], aliases: '' }
+
+function getSeriesLabel(series: SeriesModel): string {
+  return series.name
+}
 
 function toCsv(values: string[]): string {
   return values.join(', ')
@@ -137,7 +141,7 @@ export function CharactersManager(): JSX.Element {
             name="character-series"
             label={t('manage.series')}
             options={series.data}
-            getOptionLabel={(s) => s.name}
+            getOptionLabel={getSeriesLabel}
             getOptionValue={(s) => s.id}
             selectedValues={form.seriesIds}
             onChange={(seriesIds) => setForm((prev) => ({ ...prev, seriesIds }))}

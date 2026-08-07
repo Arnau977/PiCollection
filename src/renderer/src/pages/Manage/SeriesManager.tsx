@@ -26,6 +26,10 @@ interface SeriesFormValues {
 
 const EMPTY_FORM: SeriesFormValues = { name: '', aliases: '', parentId: undefined }
 
+function getSeriesLabel(series: SeriesModel): string {
+  return series.name
+}
+
 function toCsv(values: string[]): string {
   return values.join(', ')
 }
@@ -196,7 +200,7 @@ export function SeriesManager(): JSX.Element {
               name="series-parent"
               label={t('manage.parentSeries')}
               options={parentOptions}
-              getOptionLabel={(s) => s.name}
+              getOptionLabel={getSeriesLabel}
               getOptionValue={(s) => s.id}
               selectedKey={form.parentId ?? null}
               onSelect={(s) => setForm((prev) => ({ ...prev, parentId: s?.id }))}
