@@ -1,4 +1,5 @@
 import type { Expression, ExpressionBuilder, Kysely, SelectQueryBuilder, SqlBool } from 'kysely'
+import { sql } from 'kysely'
 import type { DB, MediaTable } from '../schema'
 import type { MediaFilters, Sorting } from '@shared/models'
 import { extractAiToken, parseSearchQuery, type QueryNode } from '@shared/query/searchQuery'
@@ -462,4 +463,79 @@ export async function findSeriesForMediaIds(
     map.set(row.mediaId, list)
   }
   return map
+}
+
+export interface EntityThumbnailRow {
+  entityId: string
+  route: string
+  type: string
+}
+
+const ENTITY_THUMBNAIL_JOIN: Record<
+  'tag' | 'character' | 'series',
+  { table: 'media_tag' | 'media_character' | 'media_series'; column: 'tag_id' | 'character_id' | 'series_id' }
+> = {
+  tag: { table: 'media_tag', column: 'tag_id' },
+  character: { table: 'media_character', column: 'character_id' },
+  series: { table: 'media_series', column: 'series_id' }
+}
+
+/**
+ * One SFW media thumbnail per requested entity id, chosen server-side so the
+ * caller never has to fetch (let alone hydrate) more than `ids.length` rows
+ * to render a grid of small previews. For `character`, prefers a media item
+ * where that character is the only one credited (a solo appearance reads as
+ * a more useful preview than one cropped out of a group shot) - implemented
+ * via a `RANDOM()`-ordered window function partitioned per entity, with a
+ * secondary sort key breaking ties toward solo appearances; expressed as raw
+ * SQL (via Kysely's `sql` tag) because "top-1-per-group with a per-kind
+ * tiebreak" isn't something the fluent query builder expresses cleanly, and
+ * the four kinds each need slightly different joins.
+ */
+export async function findEntityThumbnails(
+  db: Kysely<DB>,
+  kind: 'artist' | 'tag' | 'character' | 'series',
+  ids: string[]
+): Promise<EntityThumbnailRow[]> {
+  if (ids.length === 0) return []
+
+  if (kind === 'artist') {
+    const result = await sql<EntityThumbnailRow>`
+      SELECT entity_id as entityId, route, type FROM (
+        SELECT
+          media.artist_id AS entity_id,
+          media.route AS route,
+          media.type AS type,
+          ROW_NUMBER() OVER (PARTITION BY media.artist_id ORDER BY RANDOM()) AS rn
+        FROM media
+        WHERE media.artist_id IN (${sql.join(ids)}) AND media.sfw = 1
+      ) WHERE rn = 1
+    `.execute(db)
+    return result.rows
+  }
+
+  const { table, column } = ENTITY_THUMBNAIL_JOIN[kind]
+  const soloTiebreak =
+    kind === 'character'
+      ? sql`(CASE WHEN char_count.cnt = 1 THEN 0 ELSE 1 END), `
+      : sql``
+  const soloJoin =
+    kind === 'character'
+      ? sql`LEFT JOIN (SELECT media_id, COUNT(*) AS cnt FROM media_character GROUP BY media_id) char_count ON char_count.media_id = media.id`
+      : sql``
+
+  const result = await sql<EntityThumbnailRow>`
+    SELECT entity_id as entityId, route, type FROM (
+      SELECT
+        j.${sql.ref(column)} AS entity_id,
+        media.route AS route,
+        media.type AS type,
+        ROW_NUMBER() OVER (PARTITION BY j.${sql.ref(column)} ORDER BY ${soloTiebreak}RANDOM()) AS rn
+      FROM ${sql.table(table)} j
+      JOIN media ON media.id = j.media_id
+      ${soloJoin}
+      WHERE j.${sql.ref(column)} IN (${sql.join(ids)}) AND media.sfw = 1
+    ) WHERE rn = 1
+  `.execute(db)
+  return result.rows
 }

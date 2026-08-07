@@ -8,6 +8,7 @@ import {
   CacheThumbnailSchema,
   IPC,
   IdSchema,
+  MediaGetEntityThumbnailsSchema,
   MediaGetFilteredSchema,
   MediaInputSchema,
   MediaUpdateSchema,
@@ -23,6 +24,12 @@ export function registerMediaHandlers(): void {
     IPC.media.getFiltered,
     ipcHandler(IPC.media.getFiltered, MediaGetFilteredSchema, ({ filters, sorting }) =>
       mediaService.getMediaFiltered(filters, sorting)
+    )
+  )
+  ipcMain.handle(
+    IPC.media.getEntityThumbnails,
+    ipcHandler(IPC.media.getEntityThumbnails, MediaGetEntityThumbnailsSchema, ({ kind, ids }) =>
+      mediaService.getEntityThumbnails(kind, ids)
     )
   )
   ipcMain.handle(

@@ -6,6 +6,7 @@ import * as mediaRepo from './media.repository'
 import * as tagRepo from './tag.repository'
 import * as characterRepo from './character.repository'
 import * as seriesRepo from './series.repository'
+import * as artistRepo from './artist.repository'
 import type { DB } from '../schema'
 
 let db: Kysely<DB>
@@ -34,6 +35,25 @@ function insertMedia(name: string): ReturnType<typeof mediaRepo.insertMediaRow> 
     created_at: Date.now(),
     hash: null,
     phash: null
+  })
+}
+
+function baseMediaRow(
+  overrides: Partial<Parameters<typeof mediaRepo.insertMediaRow>[1]> = {}
+): ReturnType<typeof mediaRepo.insertMediaRow> {
+  return mediaRepo.insertMediaRow(db, {
+    id: randomUUID(),
+    name: 'm',
+    sfw: 1,
+    is_ai_generated: 0,
+    type: 'image',
+    route: '/m.png',
+    alias: null,
+    artist_id: null,
+    created_at: Date.now(),
+    hash: null,
+    phash: null,
+    ...overrides
   })
 }
 
@@ -463,5 +483,61 @@ describe('routesExist', () => {
     const result = await mediaRepo.routesExist(db, candidates)
 
     expect(result).toEqual(new Set(['/cat.png', '/dog.png']))
+  })
+})
+
+describe('findEntityThumbnails', () => {
+  it('returns one thumbnail per tag id, ignoring NSFW media', async () => {
+    const tagA = await tagRepo.insertTag(db, { id: 'ta', name: 'a', created_at: 1 })
+    const tagB = await tagRepo.insertTag(db, { id: 'tb', name: 'b', created_at: 1 })
+    const sfwMedia = await baseMediaRow({ id: 'm1', sfw: 1 })
+    const nsfwMedia = await baseMediaRow({ id: 'm2', route: '/m2', sfw: 0 })
+    await mediaRepo.setMediaTags(db, sfwMedia.id, [tagA.id])
+    await mediaRepo.setMediaTags(db, nsfwMedia.id, [tagB.id])
+
+    const result = await mediaRepo.findEntityThumbnails(db, 'tag', [tagA.id, tagB.id])
+
+    expect(result).toEqual([{ entityId: tagA.id, route: sfwMedia.route, type: sfwMedia.type }])
+  })
+
+  it('returns nothing for an empty id list without querying', async () => {
+    expect(await mediaRepo.findEntityThumbnails(db, 'artist', [])).toEqual([])
+  })
+
+  it('prefers a media item where the character appears alone', async () => {
+    const solo = await characterRepo.insertCharacter(db, {
+      id: 'c1',
+      name: 'Solo',
+      aliases_json: '[]',
+      created_at: 1
+    })
+    const other = await characterRepo.insertCharacter(db, {
+      id: 'c2',
+      name: 'Other',
+      aliases_json: '[]',
+      created_at: 1
+    })
+    const groupMedia = await baseMediaRow({ id: 'm1', route: '/group', sfw: 1 })
+    const soloMedia = await baseMediaRow({ id: 'm2', route: '/solo', sfw: 1 })
+    await mediaRepo.setMediaCharacters(db, groupMedia.id, [solo.id, other.id])
+    await mediaRepo.setMediaCharacters(db, soloMedia.id, [solo.id])
+
+    const result = await mediaRepo.findEntityThumbnails(db, 'character', [solo.id])
+
+    expect(result).toEqual([{ entityId: solo.id, route: '/solo', type: soloMedia.type }])
+  })
+
+  it('returns one thumbnail per artist id directly from media.artist_id', async () => {
+    const artist = await artistRepo.insertArtist(db, { id: 'a1', name: 'Artist', created_at: 1 })
+    const media = await baseMediaRow({ id: 'm1', sfw: 1, artist_id: artist.id })
+
+    const result = await mediaRepo.findEntityThumbnails(db, 'artist', [artist.id])
+
+    expect(result).toEqual([{ entityId: artist.id, route: media.route, type: media.type }])
+  })
+
+  it('omits an entity with no eligible SFW media entirely', async () => {
+    const tag = await tagRepo.insertTag(db, { id: 't1', name: 'a', created_at: 1 })
+    expect(await mediaRepo.findEntityThumbnails(db, 'tag', [tag.id])).toEqual([])
   })
 })

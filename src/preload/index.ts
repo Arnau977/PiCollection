@@ -41,6 +41,11 @@ export const api = {
       sorting?: Sorting
     ): Promise<IpcResult<MediaFilteredResult>> =>
       ipcRenderer.invoke(IPC.media.getFiltered, { filters, sorting }),
+    getEntityThumbnails: (
+      kind: 'artist' | 'tag' | 'character' | 'series',
+      ids: string[]
+    ): Promise<IpcResult<{ entityId: string; route: string; type: string }[]>> =>
+      ipcRenderer.invoke(IPC.media.getEntityThumbnails, { kind, ids }),
     getById: (id: string): Promise<IpcResult<MediaModel | null>> =>
       ipcRenderer.invoke(IPC.media.getById, id),
     create: (input: MediaInput): Promise<IpcResult<MediaModel>> =>

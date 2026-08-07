@@ -236,3 +236,15 @@ describe('mediaService.getMediaFiltered', () => {
     expect(page.total).toBe(5)
   })
 })
+
+describe('mediaService.getEntityThumbnails', () => {
+  it('delegates to the repository and returns its rows', async () => {
+    const tag = await tagService.createTag({ name: 'a' })
+    const media = await mediaService.addMedia(baseInput({ name: 'm', route: '/m.png' }))
+    await mediaService.updateMedia(media.id, { ...baseInput({ name: 'm', route: '/m.png' }), tagIds: [tag.id] })
+
+    const result = await mediaService.getEntityThumbnails('tag', [tag.id])
+
+    expect(result).toEqual([{ entityId: tag.id, route: '/m.png', type: 'image' }])
+  })
+})

@@ -93,6 +93,11 @@ export const MediaGetFilteredSchema = z.object({
   sorting: SortingSchema.optional()
 })
 
+export const MediaGetEntityThumbnailsSchema = z.object({
+  kind: z.enum(['artist', 'tag', 'character', 'series']),
+  ids: z.array(z.string().min(1))
+})
+
 export const BackupExportSchema = z.object({ gallerySettings: z.unknown() })
 export const RelinkMissingFilesSchema = z.object({
   oldRoot: z.string().min(1),
@@ -127,6 +132,7 @@ export const IPC = {
   media: {
     getAll: 'db:media:get-all',
     getFiltered: 'db:media:get-filtered',
+    getEntityThumbnails: 'db:media:get-entity-thumbnails',
     getById: 'db:media:get-by-id',
     create: 'db:media:create',
     update: 'db:media:update',

@@ -292,5 +292,12 @@ export const mediaService = {
 
   async deleteMedia(id: string): Promise<void> {
     await mediaRepo.deleteMediaRow(getDb(), id)
+  },
+
+  async getEntityThumbnails(
+    kind: 'artist' | 'tag' | 'character' | 'series',
+    ids: string[]
+  ): Promise<{ entityId: string; route: string; type: string }[]> {
+    return mediaRepo.findEntityThumbnails(getDb(), kind, ids)
   }
 }
