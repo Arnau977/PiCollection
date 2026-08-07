@@ -7,6 +7,7 @@ import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { MultiSelectAutocomplete } from '../../components/Autocomplete/MultiSelectAutocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
+import { fromCsv, toCsv } from '../../utils/csvList'
 import {
   loadManageSort,
   saveManageSort,
@@ -27,17 +28,6 @@ const EMPTY_FORM: CharacterFormValues = { name: '', seriesIds: [], aliases: '' }
 
 function getSeriesLabel(series: SeriesModel): string {
   return series.name
-}
-
-function toCsv(values: string[]): string {
-  return values.join(', ')
-}
-
-function fromCsv(value: string): string[] {
-  return value
-    .split(',')
-    .map((v) => v.trim())
-    .filter(Boolean)
 }
 
 export function CharactersManager(): JSX.Element {
