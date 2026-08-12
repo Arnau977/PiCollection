@@ -29,7 +29,7 @@ beforeEach(() => {
 })
 
 describe('AppHeader', () => {
-  it('links to the home, gallery, metadata and settings routes', () => {
+  it('links to the home, gallery, pending, metadata and settings routes', () => {
     render(
       <MemoryRouter>
         <AppHeader />
@@ -38,6 +38,7 @@ describe('AppHeader', () => {
 
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Gallery' })).toHaveAttribute('href', '/gallery')
+    expect(screen.getByRole('link', { name: 'Pending' })).toHaveAttribute('href', '/pending')
     expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings')
     expect(screen.getByRole('link', { name: 'Metadata' })).toHaveAttribute('href', '/manage')
   })

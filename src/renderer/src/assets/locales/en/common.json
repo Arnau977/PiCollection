@@ -5,6 +5,7 @@
   "nav": {
     "home": "Home",
     "gallery": "Gallery",
+    "pending": "Pending",
     "settings": "Settings",
     "manage": "Metadata"
   },

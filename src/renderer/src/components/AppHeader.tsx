@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Home, Images, Database, Settings } from 'lucide-react'
+import { Home, Images, Inbox, Database, Settings } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import { useAppUpdater } from '../hooks/useAppUpdater'
 import './AppHeader.css'
@@ -31,6 +31,10 @@ export function AppHeader(): JSX.Element {
         <NavLink to={PATH.GALLERY} className={navLinkClassName} title={t('nav.gallery')}>
           <Images size={19} aria-hidden="true" />
           <span className="app-sidebar-label">{t('nav.gallery')}</span>
+        </NavLink>
+        <NavLink to={PATH.PENDING} className={navLinkClassName} title={t('nav.pending')}>
+          <Inbox size={19} aria-hidden="true" />
+          <span className="app-sidebar-label">{t('nav.pending')}</span>
         </NavLink>
         <NavLink to={PATH.MANAGE} className={navLinkClassName} title={t('nav.manage')}>
           <Database size={19} aria-hidden="true" />
