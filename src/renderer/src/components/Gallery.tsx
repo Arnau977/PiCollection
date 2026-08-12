@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Check } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import type { MediaModel } from '@shared/models'
 import type { GalleryDensity } from '../utils/gallerySettings'
@@ -17,13 +18,17 @@ interface GalleryProps {
   blurNsfw?: boolean
   hideNames?: boolean
   density?: GalleryDensity
+  selectedIds?: Set<string>
+  onToggleSelect?: (id: string) => void
 }
 
 export default function Gallery({
   media,
   blurNsfw = false,
   hideNames = false,
-  density = 'comfortable'
+  density = 'comfortable',
+  selectedIds,
+  onToggleSelect
 }: GalleryProps): JSX.Element {
   const { t } = useTranslation()
 
@@ -43,9 +48,11 @@ export default function Gallery({
     large: '280px'
   }
 
+  const hasSelection = (selectedIds?.size ?? 0) > 0
+
   return (
     <ul
-      className="gallery-grid"
+      className={hasSelection ? 'gallery-grid has-selection' : 'gallery-grid'}
       style={{
         '--gallery-thumb-min': DENSITY_THUMB_MIN[density],
         '--gallery-card-height': DENSITY_CARD_HEIGHT[density]
@@ -53,8 +60,27 @@ export default function Gallery({
     >
       {media.map((item) => {
         const blurred = blurNsfw && !item.sfw
+        const isSelected = selectedIds?.has(item.id) ?? false
         return (
-          <li key={item.id}>
+          <li key={item.id} className="gallery-tile">
+            {onToggleSelect && (
+              <button
+                type="button"
+                className={isSelected ? 'gallery-tile-select is-selected' : 'gallery-tile-select'}
+                aria-pressed={isSelected}
+                aria-label={
+                  isSelected
+                    ? t('gallery.deselectItem', { name: item.name })
+                    : t('gallery.selectItem', { name: item.name })
+                }
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleSelect(item.id)
+                }}
+              >
+                {isSelected && <Check size={14} aria-hidden="true" />}
+              </button>
+            )}
             <Link to={PATH.MEDIA.replace(':id', item.id)} className="media-card">
               <div className={blurred ? 'thumb-wrap nsfw-blur' : 'thumb-wrap'}>
                 <MediaThumb type={item.type} route={item.route} alt={item.name} />

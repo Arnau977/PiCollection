@@ -112,6 +112,8 @@
     "backToGallery": "Volver a la galería",
     "filtersActive": "Hay filtros ocultando media",
     "clearFilters": "Limpiar filtros",
+    "selectItem": "Seleccionar {{name}}",
+    "deselectItem": "Deseleccionar {{name}}",
     "pagination": {
       "previous": "Anterior",
       "next": "Siguiente",

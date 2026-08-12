@@ -112,6 +112,8 @@
     "backToGallery": "Back to gallery",
     "filtersActive": "Filters are hiding some media",
     "clearFilters": "Clear filters",
+    "selectItem": "Select {{name}}",
+    "deselectItem": "Deselect {{name}}",
     "pagination": {
       "previous": "Previous",
       "next": "Next",
