@@ -169,6 +169,8 @@
     "notFound": "Media not found",
     "revealNsfw": "Hover to reveal",
     "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Delete this media? This cannot be undone.",
     "aiGeneratedTitle": "Generated using AI",
     "aiGeneratedBadge": "AI",
     "copyLocation": "Copy location",
