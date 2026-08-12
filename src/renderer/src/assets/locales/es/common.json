@@ -285,6 +285,10 @@
     "viewTree": "Árbol",
     "viewFlat": "Plana"
   },
+  "pending": {
+    "allCaughtUp": "¡Todo al día!",
+    "allCaughtUpHint": "No hay ningún media pendiente de etiquetar."
+  },
   "mediaThumb": {
     "missingFile": "Archivo no encontrado"
   },

@@ -285,6 +285,10 @@
     "viewTree": "Tree",
     "viewFlat": "Flat"
   },
+  "pending": {
+    "allCaughtUp": "You're all caught up!",
+    "allCaughtUpHint": "No media is currently waiting on tagging."
+  },
   "mediaThumb": {
     "missingFile": "File not found"
   },
