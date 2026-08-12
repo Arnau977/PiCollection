@@ -122,6 +122,39 @@ describe('mediaService.addMedia', () => {
   })
 })
 
+describe('mediaService pendingTagging', () => {
+  it('defaults pendingTagging to false when addMedia is not given one', async () => {
+    const created = await mediaService.addMedia(baseInput())
+    expect(created.pendingTagging).toBe(false)
+  })
+
+  it('respects pendingTagging: true passed to addMedia', async () => {
+    const created = await mediaService.addMedia(baseInput({ pendingTagging: true }))
+    expect(created.pendingTagging).toBe(true)
+  })
+
+  it('never changes pendingTagging on updateMedia, even when the caller passes one', async () => {
+    const created = await mediaService.addMedia(baseInput({ pendingTagging: true }))
+
+    const updated = await mediaService.updateMedia(
+      created.id,
+      baseInput({ pendingTagging: false, name: 'Renamed' })
+    )
+
+    expect(updated.pendingTagging).toBe(true)
+  })
+
+  it('clearPendingTagging sets pendingTagging to false and returns the refreshed model', async () => {
+    const created = await mediaService.addMedia(baseInput({ pendingTagging: true }))
+
+    const cleared = await mediaService.clearPendingTagging(created.id)
+
+    expect(cleared.pendingTagging).toBe(false)
+    const refetched = await mediaService.getMediaById(created.id)
+    expect(refetched?.pendingTagging).toBe(false)
+  })
+})
+
 describe('mediaService.getMediaById / updateMedia / deleteMedia', () => {
   it('returns null for an id that does not exist', async () => {
     const result = await mediaService.getMediaById('nonexistent-id')
