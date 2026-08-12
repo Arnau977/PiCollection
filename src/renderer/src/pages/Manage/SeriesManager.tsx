@@ -10,12 +10,19 @@ import { filterByQuery } from '../../utils/filterByQuery'
 import { fromCsv, toCsv } from '../../utils/csvList'
 import {
   loadManageSort,
+  loadManageViewMode,
   saveManageSort,
+  saveManageViewMode,
   sortManageEntities,
-  type ManageSort
+  type ManageSort,
+  type ManageViewMode
 } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
-import { buildAncestorAwareEntityTree, buildEntityTree } from '../../utils/buildEntityTree'
+import {
+  buildAncestorAwareEntityTree,
+  buildEntityTree,
+  computeRolledUpCounts
+} from '../../utils/buildEntityTree'
 import { formatCompactCount } from '../../utils/formatCompactCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { SeriesModel } from '@shared/models'
@@ -48,10 +55,34 @@ export function SeriesManager(): JSX.Element {
     saveManageSort('series', next)
   }
 
+  const [viewMode, setViewMode] = useState<ManageViewMode>(() => loadManageViewMode('series'))
+
+  function updateViewMode(next: ManageViewMode): void {
+    setViewMode(next)
+    saveManageViewMode('series', next)
+  }
+
   // Sorts `seriesList` once, then filters the already-sorted array when searching (filtering
   // preserves order, so there's no need to sort the filtered subset again).
   const treeNodes = useMemo(() => {
-    const sortedSeries = sortManageEntities(seriesList, sort)
+    if (viewMode === 'flat') {
+      const sortedSeries = sortManageEntities(seriesList, sort)
+      const visibleSeries =
+        debouncedSearch.trim().length > 0
+          ? filterByQuery(sortedSeries, debouncedSearch, (series) =>
+              [series.name, ...(series.aliases ?? [])].join(' ')
+            )
+          : sortedSeries
+      return visibleSeries.map((series) => ({
+        entity: series,
+        depth: 0,
+        rolledUpCount: series.mediaCount ?? 0
+      }))
+    }
+
+    const rolledUpCounts = computeRolledUpCounts(seriesList)
+    const getCount = (series: SeriesModel): number => rolledUpCounts.get(series.id) ?? 0
+    const sortedSeries = sortManageEntities(seriesList, sort, getCount)
     const isSearching = debouncedSearch.trim().length > 0
     if (!isSearching) return buildEntityTree(sortedSeries)
     const visibleSeries = filterByQuery(sortedSeries, debouncedSearch, (series) =>
@@ -61,7 +92,7 @@ export function SeriesManager(): JSX.Element {
     // so the hierarchy reads the same way it does unfiltered - just restricted to matches plus the
     // ancestors needed to place them.
     return buildAncestorAwareEntityTree(visibleSeries, sortedSeries)
-  }, [seriesList, debouncedSearch, sort])
+  }, [seriesList, debouncedSearch, sort, viewMode])
   const visibleSeriesIds = useMemo(() => treeNodes.map((node) => node.entity.id), [treeNodes])
   const thumbnails = useEntityThumbnails('series', visibleSeriesIds)
 
@@ -225,7 +256,12 @@ export function SeriesManager(): JSX.Element {
         />
 
         <div className="manage-sort-row">
-          <ManageSortControl sort={sort} onChange={updateSort} />
+          <ManageSortControl
+            sort={sort}
+            onChange={updateSort}
+            viewMode={viewMode}
+            onViewModeChange={updateViewMode}
+          />
         </div>
 
         <div className="manage-list-scroll">

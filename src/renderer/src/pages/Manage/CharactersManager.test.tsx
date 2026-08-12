@@ -334,4 +334,115 @@ describe('CharactersManager', () => {
     const childItem = screen.getByText('Alice (Alt)').closest('li')
     expect(childItem?.className).toContain('depth-1')
   })
+
+  it('defaults to tree view: a child character is indented under its parent', () => {
+    window.localStorage.clear()
+    charactersData = [
+      { id: 'c1', name: 'Alice', series: [], aliases: [], createdAt: 1700000000000, mediaCount: 2 },
+      {
+        id: 'c2',
+        name: 'Alice (child form)',
+        series: [],
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 'c1',
+        mediaCount: 5
+      }
+    ]
+    render(<CharactersManager />)
+
+    const childItem = screen.getByText('Alice (child form)').closest('li')
+    expect(childItem?.className).toContain('depth-1')
+  })
+
+  it('switching to flat view shows every character at zero indentation with its own mediaCount, not rolled-up', async () => {
+    const user = userEvent.setup()
+    charactersData = [
+      { id: 'c1', name: 'Alice', series: [], aliases: [], createdAt: 1700000000000, mediaCount: 2 },
+      {
+        id: 'c2',
+        name: 'Alice (child form)',
+        series: [],
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 'c1',
+        mediaCount: 5
+      }
+    ]
+    render(<CharactersManager />)
+
+    await user.click(screen.getByRole('button', { name: 'Flat' }))
+
+    const parentItem = screen.getByText('Alice').closest('li')
+    const childItem = screen.getByText('Alice (child form)').closest('li')
+    expect(parentItem?.className).toContain('depth-0')
+    expect(childItem?.className).toContain('depth-0')
+    expect(parentItem).toHaveTextContent('2') // own count, not the rolled-up 7
+    expect(childItem).toHaveTextContent('5')
+  })
+
+  it('sorting by count in tree view orders roots by rolled-up total', async () => {
+    const user = userEvent.setup()
+    window.localStorage.clear()
+    charactersData = [
+      {
+        id: 'c1',
+        name: 'Big Parent',
+        series: [],
+        aliases: [],
+        createdAt: 1700000000000,
+        mediaCount: 1
+      },
+      {
+        id: 'c2',
+        name: 'Big Parent Child',
+        series: [],
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 'c1',
+        mediaCount: 10
+      },
+      {
+        id: 'c3',
+        name: 'Small Root',
+        series: [],
+        aliases: [],
+        createdAt: 1700000002000,
+        mediaCount: 2
+      }
+    ]
+    render(<CharactersManager />)
+
+    await user.selectOptions(screen.getByLabelText('Sort by'), 'count')
+
+    const names = screen
+      .getAllByRole('listitem')
+      .map((li) => li.querySelector('.manage-item-name')?.textContent)
+    expect(names).toEqual(['Small Root', 'Big Parent', 'Big Parent Child'])
+  })
+
+  it('persists the chosen view mode and re-applies it on next render', async () => {
+    const user = userEvent.setup()
+    window.localStorage.clear()
+    charactersData = [
+      { id: 'c1', name: 'Alice', series: [], aliases: [], createdAt: 1700000000000, mediaCount: 2 },
+      {
+        id: 'c2',
+        name: 'Alice (child form)',
+        series: [],
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 'c1',
+        mediaCount: 5
+      }
+    ]
+    const { unmount } = render(<CharactersManager />)
+
+    await user.click(screen.getByRole('button', { name: 'Flat' }))
+    unmount()
+    render(<CharactersManager />)
+
+    const childItem = screen.getByText('Alice (child form)').closest('li')
+    expect(childItem?.className).toContain('depth-0')
+  })
 })

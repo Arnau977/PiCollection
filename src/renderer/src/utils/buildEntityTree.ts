@@ -12,7 +12,9 @@ type Hierarchical = { id: string; parentId?: string | null; mediaCount?: number 
  * Sibling order follows the input array's order; a parentId pointing outside the given list
  * (or missing) is treated as a root, so partial/filtered lists degrade gracefully.
  */
-export function buildEntityTree<T extends Hierarchical>(entities: T[]): EntityTreeNode<T>[] {
+function groupByParent<T extends Hierarchical>(
+  entities: T[]
+): { byId: Map<string, T>; childrenByParent: Map<string, T[]>; roots: T[] } {
   const byId = new Map(entities.map((e) => [e.id, e]))
   const childrenByParent = new Map<string, T[]>()
   const roots: T[] = []
@@ -27,7 +29,19 @@ export function buildEntityTree<T extends Hierarchical>(entities: T[]): EntityTr
     }
   }
 
+  return { byId, childrenByParent, roots }
+}
+
+/**
+ * Maps each entity's `id` to its own `mediaCount` plus every descendant's -
+ * the same per-node total `buildEntityTree`'s `rolledUpCount` already
+ * carries, exposed standalone so callers can sort by it *before* building
+ * the tree (see `manageSort.ts`'s `getCount` accessor).
+ */
+export function computeRolledUpCounts<T extends Hierarchical>(entities: T[]): Map<string, number> {
+  const { childrenByParent } = groupByParent(entities)
   const rolledUpCounts = new Map<string, number>()
+
   function computeRolledUpCount(entity: T): number {
     const cached = rolledUpCounts.get(entity.id)
     if (cached !== undefined) return cached
@@ -38,6 +52,13 @@ export function buildEntityTree<T extends Hierarchical>(entities: T[]): EntityTr
     return total
   }
   for (const entity of entities) computeRolledUpCount(entity)
+
+  return rolledUpCounts
+}
+
+export function buildEntityTree<T extends Hierarchical>(entities: T[]): EntityTreeNode<T>[] {
+  const { childrenByParent, roots } = groupByParent(entities)
+  const rolledUpCounts = computeRolledUpCounts(entities)
 
   const nodes: EntityTreeNode<T>[] = []
   function visit(entity: T, depth: number): void {

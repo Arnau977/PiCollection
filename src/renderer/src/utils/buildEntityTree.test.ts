@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildAncestorAwareEntityTree, buildEntityTree } from './buildEntityTree'
+import { buildAncestorAwareEntityTree, buildEntityTree, computeRolledUpCounts } from './buildEntityTree'
 import type { SeriesModel } from '@shared/models'
 
 function series(id: string, parentId: string | null, mediaCount = 0): SeriesModel {
@@ -63,6 +63,25 @@ describe('buildEntityTree', () => {
     const nodes = buildEntityTree([{ id: 'a', name: 'a', parentId: null }])
 
     expect(nodes[0].rolledUpCount).toBe(0)
+  })
+})
+
+describe('computeRolledUpCounts', () => {
+  it('matches the rolledUpCount buildEntityTree already produces, for a parent/child fixture', () => {
+    const grandparent = series('grandparent', null, 1)
+    const parent = series('parent', 'grandparent', 2)
+    const child = series('child', 'parent', 4)
+
+    const counts = computeRolledUpCounts([grandparent, parent, child])
+
+    expect(counts.get('grandparent')).toBe(7)
+    expect(counts.get('parent')).toBe(6)
+    expect(counts.get('child')).toBe(4)
+  })
+
+  it('defaults a missing mediaCount to 0', () => {
+    const counts = computeRolledUpCounts([{ id: 'a', name: 'a', parentId: null }])
+    expect(counts.get('a')).toBe(0)
   })
 })
 

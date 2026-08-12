@@ -11,12 +11,19 @@ import { filterByQuery } from '../../utils/filterByQuery'
 import { fromCsv, toCsv } from '../../utils/csvList'
 import {
   loadManageSort,
+  loadManageViewMode,
   saveManageSort,
+  saveManageViewMode,
   sortManageEntities,
-  type ManageSort
+  type ManageSort,
+  type ManageViewMode
 } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
-import { buildAncestorAwareEntityTree, buildEntityTree } from '../../utils/buildEntityTree'
+import {
+  buildAncestorAwareEntityTree,
+  buildEntityTree,
+  computeRolledUpCounts
+} from '../../utils/buildEntityTree'
 import { formatCompactCount } from '../../utils/formatCompactCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { CharacterModel, SeriesModel } from '@shared/models'
@@ -56,6 +63,13 @@ export function CharactersManager(): JSX.Element {
     saveManageSort('characters', next)
   }
 
+  const [viewMode, setViewMode] = useState<ManageViewMode>(() => loadManageViewMode('characters'))
+
+  function updateViewMode(next: ManageViewMode): void {
+    setViewMode(next)
+    saveManageViewMode('characters', next)
+  }
+
   const treeNodes = useMemo(() => {
     const searchedCharacters = filterByQuery(characters, debouncedSearch, (character) =>
       [character.name, ...(character.aliases ?? [])].join(' ')
@@ -65,11 +79,22 @@ export function CharactersManager(): JSX.Element {
           character.series.some((s) => s.id === seriesFilter)
         )
       : searchedCharacters
-    const sortedCharacters = sortManageEntities(seriesFilteredCharacters, sort)
+
+    if (viewMode === 'flat') {
+      return sortManageEntities(seriesFilteredCharacters, sort).map((character) => ({
+        entity: character,
+        depth: 0,
+        rolledUpCount: character.mediaCount ?? 0
+      }))
+    }
+
+    const rolledUpCounts = computeRolledUpCounts(characters)
+    const getCount = (character: CharacterModel): number => rolledUpCounts.get(character.id) ?? 0
+    const sortedCharacters = sortManageEntities(seriesFilteredCharacters, sort, getCount)
     const isFiltering = debouncedSearch.trim().length > 0 || seriesFilter.length > 0
-    if (!isFiltering) return buildEntityTree(sortManageEntities(characters, sort))
-    return buildAncestorAwareEntityTree(sortedCharacters, sortManageEntities(characters, sort))
-  }, [characters, debouncedSearch, seriesFilter, sort])
+    if (!isFiltering) return buildEntityTree(sortManageEntities(characters, sort, getCount))
+    return buildAncestorAwareEntityTree(sortedCharacters, sortManageEntities(characters, sort, getCount))
+  }, [characters, debouncedSearch, seriesFilter, sort, viewMode])
   const visibleCharacterIds = useMemo(() => treeNodes.map((node) => node.entity.id), [treeNodes])
   const thumbnails = useEntityThumbnails('character', visibleCharacterIds)
 
@@ -207,7 +232,12 @@ export function CharactersManager(): JSX.Element {
         />
 
         <div className="manage-sort-row">
-          <ManageSortControl sort={sort} onChange={updateSort} />
+          <ManageSortControl
+            sort={sort}
+            onChange={updateSort}
+            viewMode={viewMode}
+            onViewModeChange={updateViewMode}
+          />
           <label className="filter-field">
             <span className="filter-label">{t('manage.series')}</span>
             <select value={seriesFilter} onChange={(e) => setSeriesFilter(e.target.value)}>

@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach } from 'vitest'
-import { loadManageSort, saveManageSort, sortManageEntities } from './manageSort'
+import {
+  loadManageSort,
+  loadManageViewMode,
+  saveManageSort,
+  saveManageViewMode,
+  sortManageEntities
+} from './manageSort'
 
 interface Item {
   name: string
@@ -40,6 +46,46 @@ describe('sortManageEntities', () => {
     expect(items).toEqual(copy)
   })
 
+  it('sorts by count ascending using mediaCount by default', () => {
+    const withCounts = [
+      { name: 'a', mediaCount: 5 },
+      { name: 'b', mediaCount: 1 },
+      { name: 'c', mediaCount: 3 }
+    ]
+    const result = sortManageEntities(withCounts, { prop: 'count', desc: false })
+    expect(result.map((i) => i.name)).toEqual(['b', 'c', 'a'])
+  })
+
+  it('sorts by count descending', () => {
+    const withCounts = [
+      { name: 'a', mediaCount: 5 },
+      { name: 'b', mediaCount: 1 },
+      { name: 'c', mediaCount: 3 }
+    ]
+    const result = sortManageEntities(withCounts, { prop: 'count', desc: true })
+    expect(result.map((i) => i.name)).toEqual(['a', 'c', 'b'])
+  })
+
+  it('treats a missing mediaCount as 0 when sorting by count', () => {
+    const mixed = [{ name: 'a', mediaCount: 2 }, { name: 'b' }]
+    const result = sortManageEntities(mixed, { prop: 'count', desc: false })
+    expect(result.map((i) => i.name)).toEqual(['b', 'a'])
+  })
+
+  it('uses a custom getCount accessor when provided, ignoring mediaCount', () => {
+    const items = [
+      { name: 'a', mediaCount: 1 },
+      { name: 'b', mediaCount: 99 }
+    ]
+    const rolledUp = new Map([['a', 50], ['b', 2]])
+    const result = sortManageEntities(
+      items,
+      { prop: 'count', desc: false },
+      (i) => rolledUp.get(i.name) ?? 0
+    )
+    expect(result.map((i) => i.name)).toEqual(['b', 'a'])
+  })
+
   it('treats a missing createdAt as 0 when sorting by date', () => {
     const withMissing: Item[] = [{ name: 'a', createdAt: 50 }, { name: 'b' }]
     const result = sortManageEntities(withMissing, { prop: 'createdAt', desc: false })
@@ -72,5 +118,27 @@ describe('manage sort persistence', () => {
     window.localStorage.setItem('picollection:manage-sort', 'null')
     expect(loadManageSort('artists')).toEqual({ prop: 'name', desc: false })
     expect(() => saveManageSort('artists', { prop: 'createdAt', desc: true })).not.toThrow()
+  })
+})
+
+describe('manage view mode persistence', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  it('defaults to tree when nothing is stored', () => {
+    expect(loadManageViewMode('series')).toBe('tree')
+  })
+
+  it('persists and reloads a view mode per entity kind', () => {
+    saveManageViewMode('series', 'flat')
+
+    expect(loadManageViewMode('series')).toBe('flat')
+    expect(loadManageViewMode('characters')).toBe('tree')
+  })
+
+  it('falls back to tree when the stored value is corrupted JSON', () => {
+    window.localStorage.setItem('picollection:manage-view-mode', 'not-json')
+    expect(loadManageViewMode('series')).toBe('tree')
   })
 })
