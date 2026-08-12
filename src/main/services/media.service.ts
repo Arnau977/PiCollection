@@ -204,9 +204,13 @@ export const mediaService = {
     const seriesClosures = flatSeriesIds.length
       ? buildClosureMap(await seriesRepo.findSeriesHierarchy(db), flatSeriesIds)
       : undefined
+    const flatCharacterIds = filters.characterGroups?.flat() ?? []
+    const characterClosures = flatCharacterIds.length
+      ? buildClosureMap(await characterRepo.findCharacterHierarchy(db), flatCharacterIds)
+      : undefined
     const [rows, total] = await Promise.all([
-      mediaRepo.findMediaRows(db, filters, sorting, seriesClosures),
-      mediaRepo.countMediaRows(db, filters, seriesClosures)
+      mediaRepo.findMediaRows(db, filters, sorting, seriesClosures, characterClosures),
+      mediaRepo.countMediaRows(db, filters, seriesClosures, characterClosures)
     ])
     const items = await hydrateMedia(db, rows)
     return { items, total }
@@ -218,7 +222,11 @@ export const mediaService = {
     const seriesClosures = flatSeriesIds.length
       ? buildClosureMap(await seriesRepo.findSeriesHierarchy(db), flatSeriesIds)
       : undefined
-    const rows = await mediaRepo.findMediaIds(db, filters, sorting, seriesClosures)
+    const flatCharacterIds = filters.characterGroups?.flat() ?? []
+    const characterClosures = flatCharacterIds.length
+      ? buildClosureMap(await characterRepo.findCharacterHierarchy(db), flatCharacterIds)
+      : undefined
+    const rows = await mediaRepo.findMediaIds(db, filters, sorting, seriesClosures, characterClosures)
     return rows.map((row) => row.id)
   },
 

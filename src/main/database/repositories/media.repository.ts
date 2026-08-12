@@ -53,19 +53,21 @@ function applyGroupedFilter<O>(
 
 /**
  * Same OR-of-AND-groups shape as `applyGroupedFilter`, but each id inside a group first expands
- * to its series-hierarchy closure (itself + descendants) via `seriesClosures` before being
- * ANDed - so "media must match series A AND series B" really means "must be in A's closure AND
- * in B's closure", not just carry exactly those two ids.
+ * to its hierarchy closure (itself + descendants) via `closures` before being ANDed - so "media
+ * must match series/character A AND B" really means "must be in A's closure AND in B's closure",
+ * not just carry exactly those two ids. Used for both `seriesGroups` and `characterGroups`.
  */
-function applySeriesGroupedFilter<O>(
+function applyClosureGroupedFilter<O>(
   qb: SelectQueryBuilder<DB, 'media', O>,
   db: Kysely<DB>,
+  table: 'media_series' | 'media_character',
+  column: 'series_id' | 'character_id',
   groups: string[][] | undefined,
-  seriesClosures?: Map<string, string[]>
+  closures?: Map<string, string[]>
 ): SelectQueryBuilder<DB, 'media', O> {
   const nonEmptyGroups = (groups ?? []).filter((group) => group.length > 0)
   if (!nonEmptyGroups.length) return qb
-  const closureFor = (id: string): string[] => seriesClosures?.get(id) ?? [id]
+  const closureFor = (id: string): string[] => closures?.get(id) ?? [id]
 
   return qb.where((eb) =>
     eb.or(
@@ -75,10 +77,7 @@ function applySeriesGroupedFilter<O>(
             eb(
               'media.id',
               'in',
-              db
-                .selectFrom('media_series')
-                .select('media_id')
-                .where('series_id', 'in', closureFor(id))
+              db.selectFrom(table).select('media_id').where(column, 'in', closureFor(id))
             )
           )
         )
@@ -157,7 +156,8 @@ function compileQueryNode(
 function applyMediaFilters(
   db: Kysely<DB>,
   filters: MediaFilters,
-  seriesClosures?: Map<string, string[]>
+  seriesClosures?: Map<string, string[]>,
+  characterClosures?: Map<string, string[]>
 ) {
   let qb = db.selectFrom('media')
 
@@ -183,13 +183,20 @@ function applyMediaFilters(
   }
 
   qb = applyGroupedFilter(qb, db, 'media_tag', 'tag_id', filters.tagGroups)
-  qb = applyGroupedFilter(qb, db, 'media_character', 'character_id', filters.characterGroups)
+  qb = applyClosureGroupedFilter(
+    qb,
+    db,
+    'media_character',
+    'character_id',
+    filters.characterGroups,
+    characterClosures
+  )
 
   if (filters.noCharacter) {
     qb = qb.where('media.id', 'not in', db.selectFrom('media_character').select('media_id'))
   }
 
-  qb = applySeriesGroupedFilter(qb, db, filters.seriesGroups, seriesClosures)
+  qb = applyClosureGroupedFilter(qb, db, 'media_series', 'series_id', filters.seriesGroups, seriesClosures)
 
   if (filters.noSeries) {
     qb = qb.where('media.id', 'not in', db.selectFrom('media_series').select('media_id'))
@@ -202,11 +209,12 @@ export function findMediaRows(
   db: Kysely<DB>,
   filters: MediaFilters,
   sorting?: Sorting,
-  seriesClosures?: Map<string, string[]>
+  seriesClosures?: Map<string, string[]>,
+  characterClosures?: Map<string, string[]>
 ): Promise<MediaTable[]> {
   const sortColumn = SORT_COLUMNS[sorting?.prop ?? 'createdAt'] ?? 'created_at'
 
-  return applyMediaFilters(db, filters, seriesClosures)
+  return applyMediaFilters(db, filters, seriesClosures, characterClosures)
     .selectAll('media')
     .orderBy(sortColumn, sorting?.desc ? 'desc' : 'asc')
     .limit(filters.limit ?? DEFAULT_LIMIT)
@@ -220,11 +228,12 @@ export function findMediaIds(
   db: Kysely<DB>,
   filters: MediaFilters,
   sorting?: Sorting,
-  seriesClosures?: Map<string, string[]>
+  seriesClosures?: Map<string, string[]>,
+  characterClosures?: Map<string, string[]>
 ): Promise<{ id: string }[]> {
   const sortColumn = SORT_COLUMNS[sorting?.prop ?? 'createdAt'] ?? 'created_at'
 
-  return applyMediaFilters(db, filters, seriesClosures)
+  return applyMediaFilters(db, filters, seriesClosures, characterClosures)
     .select('media.id')
     .orderBy(sortColumn, sorting?.desc ? 'desc' : 'asc')
     .execute()
@@ -233,9 +242,10 @@ export function findMediaIds(
 export async function countMediaRows(
   db: Kysely<DB>,
   filters: MediaFilters,
-  seriesClosures?: Map<string, string[]>
+  seriesClosures?: Map<string, string[]>,
+  characterClosures?: Map<string, string[]>
 ): Promise<number> {
-  const result = await applyMediaFilters(db, filters, seriesClosures)
+  const result = await applyMediaFilters(db, filters, seriesClosures, characterClosures)
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .executeTakeFirstOrThrow()
   return Number(result.count)

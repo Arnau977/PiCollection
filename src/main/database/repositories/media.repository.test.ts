@@ -380,6 +380,39 @@ describe('media.repository series hierarchy filtering (seriesClosures)', () => {
   })
 })
 
+describe('media.repository character hierarchy filtering (characterClosures)', () => {
+  it('expands a parent character filter to also match media tagged only with a descendant', async () => {
+    const parent = await characterRepo.insertCharacter(db, {
+      id: randomUUID(),
+      name: 'parent',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const child = await characterRepo.insertCharacter(db, {
+      id: randomUUID(),
+      name: 'child',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: parent.id
+    })
+    const onlyChild = await insertMedia('onlyChild')
+    await insertMedia('unrelated')
+    await mediaRepo.setMediaCharacters(db, onlyChild.id, [child.id])
+
+    const characterClosures = new Map([[parent.id, [parent.id, child.id]]])
+    const result = await mediaRepo.findMediaRows(
+      db,
+      { characterGroups: [[parent.id]] },
+      undefined,
+      undefined,
+      characterClosures
+    )
+
+    expect(result.map((r) => r.name)).toEqual(['onlyChild'])
+  })
+})
+
 describe('media.repository free-text/sfw/type filtering', () => {
   it('filters by free-text query, sfw and type', async () => {
     await mediaRepo.insertMediaRow(db, {
