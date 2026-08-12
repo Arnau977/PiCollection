@@ -46,6 +46,12 @@ vi.mock('../../hooks/useEntityLists', () => ({
   useSeries: () => ({ data: [], loading: false, error: null, refetch: vi.fn() })
 }))
 
+const confirmMock = vi.fn().mockResolvedValue(true)
+
+vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => confirmMock
+}))
+
 function renderMediaPage() {
   return render(
     <MemoryRouter>
@@ -57,11 +63,14 @@ function renderMediaPage() {
 beforeEach(() => {
   navigateMock.mockClear()
   refetchMock.mockClear()
+  confirmMock.mockClear()
+  confirmMock.mockResolvedValue(true)
   Object.defineProperty(window, 'api', {
     value: {
       media: {
         update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
-        getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] })
+        getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
+        delete: vi.fn().mockResolvedValue({ success: true, data: undefined })
       },
       artist: { create: vi.fn() },
       tag: { create: vi.fn() },
@@ -128,7 +137,8 @@ function setOrderedIds(data: string[]): void {
     value: {
       media: {
         update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
-        getOrderedIds: vi.fn().mockResolvedValue({ success: true, data })
+        getOrderedIds: vi.fn().mockResolvedValue({ success: true, data }),
+        delete: vi.fn().mockResolvedValue({ success: true, data: undefined })
       },
       artist: { create: vi.fn() },
       tag: { create: vi.fn() },
@@ -344,5 +354,65 @@ describe('MediaPage editing', () => {
 
     expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
+  })
+})
+
+describe('MediaPage delete', () => {
+  it('deletes on confirm and navigates to the gallery', async () => {
+    const deleteFn = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    Object.defineProperty(window, 'api', {
+      value: {
+        media: {
+          update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
+          getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
+          delete: deleteFn
+        },
+        artist: { create: vi.fn() },
+        tag: { create: vi.fn() },
+        character: { create: vi.fn() },
+        series: { create: vi.fn() },
+        system: { showInFolder: vi.fn() },
+        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) }
+      },
+      writable: true,
+      configurable: true
+    })
+    const user = userEvent.setup()
+    renderMediaPage()
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(confirmMock).toHaveBeenCalledWith(expect.objectContaining({ danger: true }))
+    await waitFor(() => expect(deleteFn).toHaveBeenCalledWith('1'))
+    expect(navigateMock).toHaveBeenCalledWith('/gallery')
+  })
+
+  it('does not delete or navigate when the confirm dialog is dismissed', async () => {
+    confirmMock.mockResolvedValueOnce(false)
+    const deleteFn = vi.fn()
+    Object.defineProperty(window, 'api', {
+      value: {
+        media: {
+          update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
+          getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
+          delete: deleteFn
+        },
+        artist: { create: vi.fn() },
+        tag: { create: vi.fn() },
+        character: { create: vi.fn() },
+        series: { create: vi.fn() },
+        system: { showInFolder: vi.fn() },
+        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) }
+      },
+      writable: true,
+      configurable: true
+    })
+    const user = userEvent.setup()
+    renderMediaPage()
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(deleteFn).not.toHaveBeenCalled()
+    expect(navigateMock).not.toHaveBeenCalled()
   })
 })

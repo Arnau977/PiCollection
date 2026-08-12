@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
@@ -7,6 +7,7 @@ import type { MediaFilters } from '@shared/models'
 import Gallery from '../../components/Gallery'
 import { FilterBar } from '../../components/FilterBar/FilterBar'
 import { GalleryToolbar } from '../../components/GalleryToolbar/GalleryToolbar'
+import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { useGallerySession } from '../../hooks/useGallerySession'
@@ -25,13 +26,20 @@ const GalleryPage: React.FC = () => {
     page: 0
   }))
   const navigate = useNavigate()
+  const confirm = useConfirm()
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const pageSize = defaults.pageSize
   const effectiveFilters = useMemo(
     () => ({ ...filters, limit: pageSize, offset: page * pageSize }),
     [filters, page, pageSize]
   )
-  const { data: media, total, loading, error } = useMediaQuery(effectiveFilters, sorting)
+  const { data: media, total, loading, error, refetch } = useMediaQuery(effectiveFilters, sorting)
+
+  // Selected ids may no longer be relevant once the filtered/sorted set changes.
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [filters, sorting])
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const filtersActive = hasActiveFilters(filters)
@@ -43,6 +51,34 @@ const GalleryPage: React.FC = () => {
 
   function handleDensityChange(density: GalleryDensity): void {
     setDefaults({ ...defaults, density })
+  }
+
+  function toggleSelect(id: string): void {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function selectAllOnPage(): void {
+    setSelectedIds((prev) => new Set([...prev, ...media.map((item) => item.id)]))
+  }
+
+  function clearSelection(): void {
+    setSelectedIds(new Set())
+  }
+
+  async function handleDeleteSelected(): Promise<void> {
+    const ok = await confirm({
+      message: t('gallery.confirmDeleteSelected', { count: selectedIds.size }),
+      danger: true
+    })
+    if (!ok) return
+    await Promise.all([...selectedIds].map((id) => window.api.media.delete(id)))
+    clearSelection()
+    refetch()
   }
 
   return (
@@ -97,9 +133,28 @@ const GalleryPage: React.FC = () => {
             blurNsfw={defaults.blurNsfw}
             hideNames={defaults.hideNames}
             density={defaults.density}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
           />
         )}
       </div>
+
+      {selectedIds.size > 0 && (
+        <div className="gallery-bulk-bar">
+          <span className="gallery-bulk-count">
+            {t('gallery.selectedCount', { count: selectedIds.size })}
+          </span>
+          <button type="button" className="btn" onClick={selectAllOnPage}>
+            {t('gallery.selectAllOnPage')}
+          </button>
+          <button type="button" className="btn" onClick={clearSelection}>
+            {t('gallery.clearSelection')}
+          </button>
+          <button type="button" className="btn btn-danger" onClick={handleDeleteSelected}>
+            {t('gallery.deleteSelected')}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -78,4 +78,21 @@ describe('useMediaQuery', () => {
     await waitFor(() => expect(getFiltered).toHaveBeenCalledTimes(2))
     expect(getFiltered).toHaveBeenLastCalledWith({ query: 'b' }, undefined)
   })
+
+  it('refetch() re-runs the query with the same filters/sorting', async () => {
+    const getFiltered = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { items: media, total: 1 } })
+    setApi({ media: { getFiltered } })
+
+    const stableFilters = { query: 'a' }
+    const { result } = renderHook(() => useMediaQuery(stableFilters))
+
+    await waitFor(() => expect(getFiltered).toHaveBeenCalledTimes(1))
+
+    result.current.refetch()
+
+    await waitFor(() => expect(getFiltered).toHaveBeenCalledTimes(2))
+    expect(getFiltered).toHaveBeenLastCalledWith(stableFilters, undefined)
+  })
 })

@@ -106,7 +106,14 @@ code {
 }
 
 .btn-danger:hover:not(:disabled) {
-  filter: brightness(1.08);
+  /* `.btn:hover` and this rule are equal specificity, and `.btn:hover` sets
+     `background`/`border-color` - without redeclaring them here too, hover
+     falls back to the generic surface-hover color instead of staying red,
+     leaving this button's near-black text (set for contrast against red)
+     nearly invisible against that dark background. */
+  background: var(--color-danger);
+  border-color: transparent;
+  filter: brightness(1.1);
 }
 
 /* ---------- Form fields ---------- */

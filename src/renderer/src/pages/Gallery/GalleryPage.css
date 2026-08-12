@@ -48,3 +48,21 @@
      and glow, which would otherwise crowd the toolbar right above it. */
   padding-top: var(--space-2);
 }
+
+.gallery-bulk-bar {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+  /* `.gallery-page` zeroes its own bottom padding (the scroll region above
+     owns that), so this bar - sitting below the scroll region - needs its
+     own, same reasoning as `.media-page-scroll-region`'s bottom padding. */
+  padding-bottom: var(--space-4);
+}
+
+.gallery-bulk-count {
+  color: var(--color-text-muted);
+  margin-right: auto;
+}

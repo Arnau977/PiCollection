@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import type { MediaModel } from '@shared/models'
 import Gallery from './Gallery'
@@ -186,5 +187,50 @@ describe('Gallery', () => {
 
     const grid = container.querySelector('.gallery-grid') as HTMLElement
     expect(grid.style.getPropertyValue('--gallery-thumb-min')).toBe('240px')
+  })
+
+  it('does not render selection checkboxes when onToggleSelect is not provided', () => {
+    render(
+      <MemoryRouter>
+        <Gallery media={[makeMedia({ id: 'abc-123' })]} />
+      </MemoryRouter>
+    )
+
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+
+  it('toggles selection via the checkbox without navigating', async () => {
+    const user = userEvent.setup()
+    const onToggleSelect = vi.fn()
+    render(
+      <MemoryRouter>
+        <Gallery
+          media={[makeMedia({ id: 'abc-123', name: 'A' })]}
+          selectedIds={new Set()}
+          onToggleSelect={onToggleSelect}
+        />
+      </MemoryRouter>
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Select A' }))
+
+    expect(onToggleSelect).toHaveBeenCalledWith('abc-123')
+  })
+
+  it('marks a selected item as pressed, with a deselect label', () => {
+    render(
+      <MemoryRouter>
+        <Gallery
+          media={[makeMedia({ id: 'abc-123', name: 'A' })]}
+          selectedIds={new Set(['abc-123'])}
+          onToggleSelect={vi.fn()}
+        />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('button', { name: 'Deselect A' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
   })
 })
