@@ -61,9 +61,12 @@ export default function AddMediaPage(): JSX.Element {
       </div>
 
       {tab === 'single' && (
+        // replace: true - without it, this push leaves the Add Media entry in
+        // history, so MediaPage's "Back to gallery" (navigate(-1)) would land
+        // back here instead of wherever the user opened Add Media from.
         <MediaForm
           onCancel={goToGallery}
-          onSaved={(created) => navigate(PATH.MEDIA.replace(':id', created.id))}
+          onSaved={(created) => navigate(PATH.MEDIA.replace(':id', created.id), { replace: true })}
         />
       )}
 
@@ -80,7 +83,9 @@ export default function AddMediaPage(): JSX.Element {
         <ImportQueue
           selection={importSelection}
           onClose={goToGallery}
-          onLastSaved={(created) => navigate(PATH.MEDIA.replace(':id', created.id))}
+          onLastSaved={(created) =>
+            navigate(PATH.MEDIA.replace(':id', created.id), { replace: true })
+          }
         />
       )}
     </div>

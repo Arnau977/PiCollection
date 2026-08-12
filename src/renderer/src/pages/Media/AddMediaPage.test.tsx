@@ -149,7 +149,9 @@ describe('AddMediaPage', () => {
     await vi.waitFor(() =>
       expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'sunset' }))
     )
-    await vi.waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/media/m1'))
+    await vi.waitFor(() =>
+      expect(navigateMock).toHaveBeenCalledWith('/media/m1', { replace: true })
+    )
   })
 
   it('shows a preview of the selected file', async () => {
