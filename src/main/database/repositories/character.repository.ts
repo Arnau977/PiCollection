@@ -14,6 +14,13 @@ export function findCharactersByIds(db: Kysely<DB>, ids: string[]): Promise<Char
   return db.selectFrom('character').selectAll().where('id', 'in', ids).execute()
 }
 
+export async function findCharacterHierarchy(
+  db: Kysely<DB>
+): Promise<{ id: string; parentId: string | null }[]> {
+  const rows = await db.selectFrom('character').select(['id', 'parent_id']).execute()
+  return rows.map((row) => ({ id: row.id, parentId: row.parent_id }))
+}
+
 export function insertCharacter(
   db: Kysely<DB>,
   character: CharacterTable

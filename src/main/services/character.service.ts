@@ -3,6 +3,8 @@ import type { Kysely } from 'kysely'
 import { getDb } from '../database/connection'
 import * as characterRepo from '../database/repositories/character.repository'
 import * as seriesRepo from '../database/repositories/series.repository'
+import { wouldCreateCycle } from '../database/repositories/entityHierarchy'
+import { AppError } from '../errors'
 import type { CharacterInput, CharacterModel, SeriesModel } from '@shared/models'
 import type { CharacterTable, DB } from '../database/schema'
 
@@ -26,7 +28,8 @@ async function hydrateCharacters(
       name: row.name,
       series,
       aliases: JSON.parse(row.aliases_json),
-      createdAt: row.created_at
+      createdAt: row.created_at,
+      parentId: row.parent_id
     }
   })
 }
@@ -70,7 +73,7 @@ export const characterService = {
         name: input.name,
         aliases_json: JSON.stringify(input.aliases ?? []),
         created_at: Date.now(),
-        parent_id: null
+        parent_id: input.parentId ?? null
       })
       if (input.seriesIds?.length) {
         await characterRepo.setCharacterSeries(trx, id, input.seriesIds)
@@ -85,11 +88,18 @@ export const characterService = {
   async updateCharacter(id: string, input: CharacterInput): Promise<CharacterModel> {
     const db = getDb()
     await assertSeriesExist(db, input.seriesIds ?? [])
+    if (input.parentId) {
+      const hierarchy = await characterRepo.findCharacterHierarchy(db)
+      if (wouldCreateCycle(hierarchy, id, input.parentId)) {
+        throw new AppError('INVALID_PARENT', 'That character cannot be its own ancestor (cycle).')
+      }
+    }
 
     await db.transaction().execute(async (trx) => {
       await characterRepo.updateCharacter(trx, id, {
         name: input.name,
-        aliases_json: JSON.stringify(input.aliases ?? [])
+        aliases_json: JSON.stringify(input.aliases ?? []),
+        parent_id: input.parentId ?? null
       })
       await characterRepo.setCharacterSeries(trx, id, input.seriesIds ?? [])
     })
