@@ -16,6 +16,7 @@ export interface MediaModel {
   tags?: TagModel[]
   characters?: CharacterModel[]
   series?: SeriesModel[]
+  pendingTagging: boolean
 }
 
 export interface MediaFilters {
@@ -35,6 +36,7 @@ export interface MediaFilters {
   seriesGroups?: string[][]
   /** Media with no series linked at all. Mutually exclusive with `seriesGroups` in the UI. */
   noSeries?: boolean
+  pendingTagging?: boolean
   limit?: number
   offset?: number
 }
@@ -68,4 +70,5 @@ export interface MediaInput {
   tagIds?: string[]
   characterIds?: string[]
   seriesIds?: string[]
+  pendingTagging?: boolean
 }

@@ -15,6 +15,7 @@ export const MediaFiltersSchema = z.object({
   seriesGroups: z.array(z.array(z.string())).optional(),
   noSeries: z.boolean().optional(),
   isAiGenerated: z.boolean().optional(),
+  pendingTagging: z.boolean().optional(),
   limit: z.number().int().positive().max(500).optional(),
   offset: z.number().int().nonnegative().optional()
 })
@@ -34,7 +35,8 @@ export const MediaInputSchema = z.object({
   artistId: z.string().optional(),
   tagIds: z.array(z.string()).optional(),
   characterIds: z.array(z.string()).optional(),
-  seriesIds: z.array(z.string()).optional()
+  seriesIds: z.array(z.string()).optional(),
+  pendingTagging: z.boolean().optional()
 })
 
 export const IdSchema = z.string().min(1)
@@ -137,6 +139,7 @@ export const IPC = {
     getById: 'db:media:get-by-id',
     create: 'db:media:create',
     update: 'db:media:update',
+    clearPendingTagging: 'db:media:clear-pending-tagging',
     delete: 'db:media:delete',
     cacheThumbnail: 'db:media:cache-thumbnail',
     checkDuplicate: 'db:media:check-duplicate'

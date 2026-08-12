@@ -161,7 +161,8 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
       createdAt: Date.now(),
       tags: [],
       characters: [],
-      series: []
+      series: [],
+      pendingTagging: false
     }
     const { container } = renderForm({ media })
 
