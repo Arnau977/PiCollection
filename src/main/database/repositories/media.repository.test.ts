@@ -757,3 +757,117 @@ describe('findEntityThumbnailsByClosure (character)', () => {
     expect(result).toEqual([{ entityId: 'parent', route: '/child.png', type: media.type }])
   })
 })
+
+describe('media.repository bulk association add/remove', () => {
+  it('addMediaTagsBulk adds a tag to every given media id without touching their other tags', async () => {
+    const tagA = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagA',
+      created_at: Date.now()
+    })
+    const tagB = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagB',
+      created_at: Date.now()
+    })
+    const mediaA = await insertMedia('a')
+    const mediaB = await insertMedia('b')
+    await mediaRepo.setMediaTags(db, mediaA.id, [tagB.id])
+
+    await mediaRepo.addMediaTagsBulk(db, [mediaA.id, mediaB.id], [tagA.id])
+
+    const tagsByMedia = await mediaRepo.findTagsForMediaIds(db, [mediaA.id, mediaB.id])
+    expect(
+      tagsByMedia
+        .get(mediaA.id)
+        ?.map((t) => t.id)
+        .sort()
+    ).toEqual([tagA.id, tagB.id].sort())
+    expect(tagsByMedia.get(mediaB.id)?.map((t) => t.id)).toEqual([tagA.id])
+  })
+
+  it('addMediaTagsBulk is a no-op, not an error, for a media/tag pair that already exists', async () => {
+    const tag = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagA',
+      created_at: Date.now()
+    })
+    const media = await insertMedia('a')
+    await mediaRepo.setMediaTags(db, media.id, [tag.id])
+
+    await expect(mediaRepo.addMediaTagsBulk(db, [media.id], [tag.id])).resolves.not.toThrow()
+
+    const tagsByMedia = await mediaRepo.findTagsForMediaIds(db, [media.id])
+    expect(tagsByMedia.get(media.id)?.map((t) => t.id)).toEqual([tag.id])
+  })
+
+  it('removeMediaTagsBulk removes only the targeted tag from every given media id', async () => {
+    const tagA = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagA',
+      created_at: Date.now()
+    })
+    const tagB = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagB',
+      created_at: Date.now()
+    })
+    const media = await insertMedia('a')
+    await mediaRepo.setMediaTags(db, media.id, [tagA.id, tagB.id])
+
+    await mediaRepo.removeMediaTagsBulk(db, [media.id], [tagA.id])
+
+    const tagsByMedia = await mediaRepo.findTagsForMediaIds(db, [media.id])
+    expect(tagsByMedia.get(media.id)?.map((t) => t.id)).toEqual([tagB.id])
+  })
+
+  it('addMediaCharactersBulk and removeMediaCharactersBulk follow the same add/remove pattern', async () => {
+    const charA = await characterRepo.insertCharacter(db, {
+      id: randomUUID(),
+      name: 'charA',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const charB = await characterRepo.insertCharacter(db, {
+      id: randomUUID(),
+      name: 'charB',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const media = await insertMedia('a')
+    await mediaRepo.setMediaCharacters(db, media.id, [charA.id])
+
+    await mediaRepo.addMediaCharactersBulk(db, [media.id], [charB.id])
+    await mediaRepo.removeMediaCharactersBulk(db, [media.id], [charA.id])
+
+    const charactersByMedia = await mediaRepo.findCharactersForMediaIds(db, [media.id])
+    expect(charactersByMedia.get(media.id)?.map((c) => c.id)).toEqual([charB.id])
+  })
+
+  it('addMediaSeriesBulk and removeMediaSeriesBulk follow the same add/remove pattern', async () => {
+    const seriesA = await seriesRepo.insertSeries(db, {
+      id: randomUUID(),
+      name: 'seriesA',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const seriesB = await seriesRepo.insertSeries(db, {
+      id: randomUUID(),
+      name: 'seriesB',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const media = await insertMedia('a')
+    await mediaRepo.setMediaSeries(db, media.id, [seriesA.id])
+
+    await mediaRepo.addMediaSeriesBulk(db, [media.id], [seriesB.id])
+    await mediaRepo.removeMediaSeriesBulk(db, [media.id], [seriesA.id])
+
+    const seriesByMedia = await mediaRepo.findSeriesForMediaIds(db, [media.id])
+    expect(seriesByMedia.get(media.id)?.map((s) => s.id)).toEqual([seriesB.id])
+  })
+})
