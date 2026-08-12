@@ -61,7 +61,7 @@ describe('sourceFolderBrowserService.browse', () => {
 
     const result = await sourceFolderBrowserService.browse('')
 
-    expect(result.folders).toEqual([{ name: 'sub', relativePath: 'sub' }])
+    expect(result.folders).toEqual([{ name: 'sub', relativePath: 'sub', fileCount: 0 }])
     expect(result.files).toEqual([
       { name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false }
     ])
@@ -104,6 +104,34 @@ describe('sourceFolderBrowserService.browse', () => {
     await expect(sourceFolderBrowserService.browse('')).rejects.toThrow(
       'No source folder is configured.'
     )
+  })
+
+  it('computes a recursive file count for a folder, including nested subfolders and excluding unsupported files', async () => {
+    await fs.mkdir(join(sourceDir, 'sub', 'deep'), { recursive: true })
+    await fs.writeFile(join(sourceDir, 'sub', 'a.png'), 'x')
+    await fs.writeFile(join(sourceDir, 'sub', 'deep', 'b.mp4'), 'x')
+    await fs.writeFile(join(sourceDir, 'sub', 'skip.txt'), 'x')
+
+    const result = await sourceFolderBrowserService.browse('')
+
+    expect(result.folders).toEqual([{ name: 'sub', relativePath: 'sub', fileCount: 2 }])
+  })
+
+  it('falls back to a 0 count for a folder whose recursive listing fails, without failing the whole browse() call', async () => {
+    await fs.mkdir(join(sourceDir, 'broken'))
+    const originalReaddir = fs.readdir.bind(fs)
+    const spy = vi.spyOn(fs, 'readdir').mockImplementation(((path: string, opts: unknown) => {
+      const isRecursiveCall = typeof opts === 'object' && opts !== null && 'recursive' in opts
+      if (typeof path === 'string' && path.includes('broken') && isRecursiveCall) {
+        return Promise.reject(new Error('EACCES: permission denied'))
+      }
+      return originalReaddir(path, opts as never)
+    }) as typeof fs.readdir)
+
+    const result = await sourceFolderBrowserService.browse('')
+
+    expect(result.folders).toEqual([{ name: 'broken', relativePath: 'broken', fileCount: 0 }])
+    spy.mockRestore()
   })
 })
 

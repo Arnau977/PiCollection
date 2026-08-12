@@ -68,19 +68,39 @@ async function collectFilesRecursively(absoluteDir: string): Promise<FileCandida
   return results
 }
 
+// A single native recursive readdir call, rather than collectFilesRecursively's
+// manual per-directory walk - cheap enough to run for every folder tile shown
+// in the browser. A failure anywhere in the subtree (e.g. a permission-denied
+// nested folder) shouldn't take down the whole browse() listing.
+async function countMediaFilesRecursively(absoluteDir: string): Promise<number> {
+  try {
+    const entries = await fs.readdir(absoluteDir, { recursive: true, withFileTypes: true })
+    return entries.filter((entry) => entry.isFile() && typeForExtension(entry.name) !== null).length
+  } catch {
+    return 0
+  }
+}
+
 export const sourceFolderBrowserService = {
   async browse(relativePath: string): Promise<SourceFolderBrowseResult> {
     const sourceFolder = requireSourceFolder()
     const absoluteDir = resolveWithinSourceFolder(relativePath, sourceFolder)
     const entries = await fs.readdir(absoluteDir, { withFileTypes: true })
 
-    const folders = entries
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => ({
-        name: entry.name,
-        relativePath: relativizeRoute(join(absoluteDir, entry.name), sourceFolder)
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name))
+    const folders = (
+      await Promise.all(
+        entries
+          .filter((entry) => entry.isDirectory())
+          .map(async (entry) => {
+            const folderAbsolutePath = join(absoluteDir, entry.name)
+            return {
+              name: entry.name,
+              relativePath: relativizeRoute(folderAbsolutePath, sourceFolder),
+              fileCount: await countMediaFilesRecursively(folderAbsolutePath)
+            }
+          })
+      )
+    ).sort((a, b) => a.name.localeCompare(b.name))
 
     const fileCandidates = entries
       .filter((entry) => entry.isFile())
