@@ -12,7 +12,8 @@ const media: MediaModel[] = [
     route: '/a.png',
     sfw: true,
     isAiGenerated: false,
-    createdAt: 1
+    createdAt: 1,
+    pendingTagging: false
   }
 ]
 

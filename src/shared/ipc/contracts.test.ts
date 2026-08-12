@@ -13,4 +13,8 @@ describe('MediaFiltersSchema', () => {
       noSeries: true
     })
   })
+
+  it('keeps pendingTagging through parsing instead of stripping it as an unknown key', () => {
+    expect(MediaFiltersSchema.parse({ pendingTagging: true })).toEqual({ pendingTagging: true })
+  })
 })

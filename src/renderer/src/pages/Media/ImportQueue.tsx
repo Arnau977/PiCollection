@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { ExpandedMediaFile, MediaModel } from '@shared/models'
 import { deriveMediaName } from '@shared/utils'
 import { MediaForm } from './MediaForm'
+import { ImportQueueExitDialog } from './ImportQueueExitDialog'
 
 interface ImportQueueProps {
   selection: { files: string[]; folders: string[] }
@@ -18,6 +19,7 @@ type QueueState =
 export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProps): JSX.Element | null {
   const { t } = useTranslation()
   const [state, setState] = useState<QueueState>({ kind: 'loading' })
+  const [showExitDialog, setShowExitDialog] = useState(false)
 
   useEffect((): (() => void) => {
     let cancelled = false
@@ -53,6 +55,7 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
   }
 
   const current = items[index]
+  const remaining = items.length - index
 
   function advance(): void {
     if (index + 1 >= items.length) {
@@ -70,13 +73,53 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
     setState({ kind: 'ready', items, index: index + 1 })
   }
 
+  function handleCloseClick(): void {
+    if (remaining > 0) {
+      setShowExitDialog(true)
+      return
+    }
+    onClose()
+  }
+
+  async function handleAddRemainingToPending(): Promise<void> {
+    setShowExitDialog(false)
+    await Promise.all(
+      items.slice(index).map((file) =>
+        window.api.media.create({
+          name: deriveMediaName(file.fileName),
+          type: file.type,
+          route: file.route,
+          sfw: true,
+          isAiGenerated: false,
+          pendingTagging: true
+        })
+      )
+    )
+    onClose()
+  }
+
+  function handleDiscard(): void {
+    setShowExitDialog(false)
+    onClose()
+  }
+
   return (
-    <MediaForm
-      key={current.route}
-      initialFile={{ route: current.route, name: deriveMediaName(current.fileName), type: current.type }}
-      queueInfo={{ current: index + 1, total: items.length, onSkip: advance }}
-      onCancel={onClose}
-      onSaved={handleSaved}
-    />
+    <>
+      <MediaForm
+        key={current.route}
+        initialFile={{ route: current.route, name: deriveMediaName(current.fileName), type: current.type }}
+        queueInfo={{ current: index + 1, total: items.length, onSkip: advance }}
+        onCancel={handleCloseClick}
+        onSaved={handleSaved}
+      />
+      {showExitDialog && (
+        <ImportQueueExitDialog
+          remaining={remaining}
+          onAddToPending={handleAddRemainingToPending}
+          onDiscard={handleDiscard}
+          onKeepEditing={() => setShowExitDialog(false)}
+        />
+      )}
+    </>
   )
 }

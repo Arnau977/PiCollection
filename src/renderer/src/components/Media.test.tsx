@@ -15,6 +15,7 @@ function makeMedia(overrides: Partial<MediaModel> = {}): MediaModel {
     sfw: true,
     isAiGenerated: false,
     createdAt: Date.now(),
+    pendingTagging: false,
     ...overrides
   }
 }

@@ -34,7 +34,8 @@ function insertMedia(name: string, artistId: string | null = null): Promise<{ id
     artist_id: artistId,
     created_at: Date.now(),
     hash: null,
-    phash: null
+    phash: null,
+    pending_tagging: 0
   })
 }
 
@@ -221,7 +222,8 @@ describe('media.repository free-text query', () => {
       artist_id: null,
       created_at: Date.now(),
       hash: null,
-      phash: null
+      phash: null,
+      pending_tagging: 0
     })
     await mediaRepo.setMediaTags(db, video.id, [tag.id])
 
@@ -260,7 +262,8 @@ function insertAiMedia(name: string): Promise<{ id: string }> {
     artist_id: null,
     created_at: Date.now(),
     hash: null,
-    phash: null
+    phash: null,
+    pending_tagging: 0
   })
 }
 
@@ -318,7 +321,8 @@ describe('media.repository isAiGenerated filter', () => {
       artist_id: null,
       created_at: Date.now(),
       hash: null,
-      phash: null
+      phash: null,
+      pending_tagging: 0
     })
 
     const rows = await mediaRepo.findMediaRows(db, { query: 'landscape ai' })
@@ -362,7 +366,8 @@ describe('media.repository findMediaIds', () => {
       artist_id: null,
       created_at: Date.now(),
       hash: null,
-      phash: null
+      phash: null,
+      pending_tagging: 0
     })
 
     const ids = await mediaRepo.findMediaIds(db, { type: 'video' })
@@ -428,5 +433,25 @@ describe('media.repository noCharacter / noSeries filters', () => {
       characterGroups: [[character.id]]
     })
     expect(rows).toEqual([])
+  })
+})
+
+describe('media.repository pendingTagging filter', () => {
+  it('filters to only media flagged pending when pendingTagging is true', async () => {
+    const pending = await insertMedia('pending')
+    await insertMedia('notPending')
+    await db.updateTable('media').set({ pending_tagging: 1 }).where('id', '=', pending.id).execute()
+
+    const rows = await mediaRepo.findMediaRows(db, { pendingTagging: true })
+    expect(rows.map((r) => r.name)).toEqual(['pending'])
+  })
+
+  it('filters to only non-pending media when pendingTagging is false', async () => {
+    const pending = await insertMedia('pending')
+    await insertMedia('notPending')
+    await db.updateTable('media').set({ pending_tagging: 1 }).where('id', '=', pending.id).execute()
+
+    const rows = await mediaRepo.findMediaRows(db, { pendingTagging: false })
+    expect(rows.map((r) => r.name)).toEqual(['notPending'])
   })
 })

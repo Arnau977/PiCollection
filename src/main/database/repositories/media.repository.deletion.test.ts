@@ -39,7 +39,8 @@ describe('foreign key delete behavior', () => {
       artist_id: artist.id,
       created_at: Date.now(),
       hash: null,
-      phash: null
+      phash: null,
+      pending_tagging: 0
     })
 
     await artistRepo.deleteArtist(db, artist.id)
@@ -66,7 +67,8 @@ describe('foreign key delete behavior', () => {
       artist_id: null,
       created_at: Date.now(),
       hash: null,
-      phash: null
+      phash: null,
+      pending_tagging: 0
     })
     await mediaRepo.setMediaTags(db, media.id, [tag.id])
 
@@ -97,7 +99,8 @@ describe('foreign key delete behavior', () => {
       artist_id: null,
       created_at: Date.now(),
       hash: null,
-      phash: null
+      phash: null,
+      pending_tagging: 0
     })
     await mediaRepo.setMediaCharacters(db, media.id, [character.id])
 
@@ -133,7 +136,8 @@ describe('foreign key delete behavior', () => {
       artist_id: null,
       created_at: Date.now(),
       hash: null,
-      phash: null
+      phash: null,
+      pending_tagging: 0
     })
     await mediaRepo.setMediaTags(db, media.id, [tag.id])
     await mediaRepo.setMediaCharacters(db, media.id, [character.id])

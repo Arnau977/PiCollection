@@ -13,7 +13,8 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
       create: vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } }),
       checkDuplicate: vi
         .fn()
-        .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } })
+        .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } }),
+      clearPendingTagging: vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
     },
     artist: { create: vi.fn() },
     tag: { create: vi.fn(), getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
@@ -32,10 +33,11 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
 }
 
 let charactersData: CharacterModel[] = []
+let tagsData: { id: string; name: string }[] = []
 
 vi.mock('../../hooks/useEntityLists', () => ({
   useArtists: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
-  useTags: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
+  useTags: () => ({ data: tagsData, loading: false, error: null, refetch: vi.fn() }),
   useCharacters: () => ({ data: charactersData, loading: false, error: null, refetch: vi.fn() }),
   useSeries: () => ({ data: [], loading: false, error: null, refetch: vi.fn() })
 }))
@@ -54,6 +56,7 @@ function renderForm(props: Partial<ComponentProps<typeof MediaForm>> = {}) {
 beforeEach(() => {
   setApi()
   charactersData = []
+  tagsData = []
 })
 
 describe('MediaForm initialFile', () => {
@@ -123,6 +126,143 @@ describe('MediaForm queueInfo', () => {
     await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' })))
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalled())
   })
+
+  it('shows a Send to pending button only during queue creation (not on edit)', async () => {
+    renderForm({
+      initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
+      queueInfo: { current: 1, total: 3, onSkip: vi.fn() }
+    })
+
+    expect(screen.getByRole('button', { name: 'Send to pending' })).toBeInTheDocument()
+  })
+
+  it('does not show Send to pending when editing an existing media, even with queueInfo', async () => {
+    renderForm({
+      media: {
+        id: 'm1',
+        name: 'Existing',
+        type: 'image',
+        route: '/pics/a.png',
+        sfw: true,
+        isAiGenerated: false,
+        createdAt: Date.now(),
+        pendingTagging: false
+      },
+      queueInfo: { current: 1, total: 3, onSkip: vi.fn() }
+    })
+
+    expect(screen.queryByRole('button', { name: 'Send to pending' })).not.toBeInTheDocument()
+  })
+
+  it('creates with pendingTagging: true and advances the queue when Send to pending is clicked', async () => {
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({ media: { create: mediaCreate } })
+    const { onSaved } = renderForm({
+      initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
+      queueInfo: { current: 1, total: 3, onSkip: vi.fn() }
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send to pending' }))
+
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a', pendingTagging: true }))
+    )
+    await vi.waitFor(() => expect(onSaved).toHaveBeenCalledWith({ id: 'm1' }))
+  })
+})
+
+describe('MediaForm onMarkResolved', () => {
+  const pendingMedia = {
+    id: 'm1',
+    name: 'Existing',
+    type: 'image' as const,
+    route: '/pics/a.png',
+    sfw: true,
+    isAiGenerated: false,
+    createdAt: Date.now(),
+    pendingTagging: true
+  }
+
+  it('shows Mark resolved when editing pending media with the callback provided', () => {
+    renderForm({ media: pendingMedia, onMarkResolved: vi.fn() })
+
+    expect(screen.getByRole('button', { name: 'Mark resolved' })).toBeInTheDocument()
+  })
+
+  it('does not show Mark resolved when the media is not pending', () => {
+    renderForm({ media: { ...pendingMedia, pendingTagging: false }, onMarkResolved: vi.fn() })
+
+    expect(screen.queryByRole('button', { name: 'Mark resolved' })).not.toBeInTheDocument()
+  })
+
+  it('does not show Mark resolved when no onMarkResolved callback is provided', () => {
+    renderForm({ media: pendingMedia })
+
+    expect(screen.queryByRole('button', { name: 'Mark resolved' })).not.toBeInTheDocument()
+  })
+
+  it('calls onMarkResolved without submitting the form', async () => {
+    const mediaUpdate = vi.fn()
+    setApi({ media: { update: mediaUpdate } })
+    const onMarkResolved = vi.fn()
+    renderForm({ media: pendingMedia, onMarkResolved })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mark resolved' }))
+
+    await vi.waitFor(() => expect(onMarkResolved).toHaveBeenCalledTimes(1))
+    expect(mediaUpdate).not.toHaveBeenCalled()
+  })
+})
+
+describe('MediaForm remount on media change', () => {
+  it('discards the previous item\'s loaded fields (e.g. tags) when re-keyed for a different media item', () => {
+    const mediaA = {
+      id: 'a',
+      name: 'First picture',
+      type: 'image' as const,
+      route: '/pics/a.png',
+      sfw: true,
+      isAiGenerated: false,
+      createdAt: Date.now(),
+      tags: [{ id: 't1', name: 'first-tag' }],
+      pendingTagging: true
+    }
+    const mediaB = {
+      id: 'b',
+      name: 'Second picture',
+      type: 'image' as const,
+      route: '/pics/b.png',
+      sfw: true,
+      isAiGenerated: false,
+      createdAt: Date.now(),
+      tags: [],
+      pendingTagging: true
+    }
+
+    tagsData = [{ id: 't1', name: 'first-tag' }]
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <MediaForm key={mediaA.id} media={mediaA} onCancel={vi.fn()} onSaved={vi.fn()} />
+      </MemoryRouter>
+    )
+    expect(screen.getByDisplayValue('First picture')).toBeInTheDocument()
+    expect(screen.getByText('first-tag')).toBeInTheDocument()
+
+    // Simulates what MediaPage does: it stays mounted across a pending-queue
+    // hop (React Router doesn't remount on a param-only change), and relies
+    // on MediaForm's `key` to force a fresh instance instead of carrying the
+    // previous item's loaded input state into the next one.
+    rerender(
+      <MemoryRouter>
+        <MediaForm key={mediaB.id} media={mediaB} onCancel={vi.fn()} onSaved={vi.fn()} />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByDisplayValue('Second picture')).toBeInTheDocument()
+    expect(screen.queryByDisplayValue('First picture')).not.toBeInTheDocument()
+    expect(screen.queryByText('first-tag')).not.toBeInTheDocument()
+  })
 })
 
 describe('MediaForm character picker', () => {
@@ -161,7 +301,8 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
       createdAt: Date.now(),
       tags: [],
       characters: [],
-      series: []
+      series: [],
+      pendingTagging: false
     }
     const { container } = renderForm({ media })
 

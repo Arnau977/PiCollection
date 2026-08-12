@@ -48,6 +48,10 @@ export function registerMediaHandlers(): void {
     )
   )
   ipcMain.handle(
+    IPC.media.clearPendingTagging,
+    ipcHandler(IPC.media.clearPendingTagging, IdSchema, (id) => mediaService.clearPendingTagging(id))
+  )
+  ipcMain.handle(
     IPC.media.delete,
     ipcHandler(IPC.media.delete, IdSchema, (id) => mediaService.deleteMedia(id))
   )

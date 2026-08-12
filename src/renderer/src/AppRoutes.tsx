@@ -4,6 +4,7 @@ import GalleryPage from './pages/Gallery/GalleryPage'
 import { PATH } from './app.routes.const'
 import MediaPage from './pages/Media/MediaPage'
 import AddMediaPage from './pages/Media/AddMediaPage'
+import PendingEntryPage from './pages/Pending/PendingEntryPage'
 import SettingsPage from './pages/Settings/SettingsPage'
 import ManagePage from './pages/Manage/ManagePage'
 import NotFoundPage from './pages/NotFound/NotFoundPage'
@@ -20,6 +21,7 @@ export default function AppRoutes(): JSX.Element {
             <Route path={PATH.GALLERY} element={<GalleryPage />} />
             <Route path={PATH.MEDIA} element={<MediaPage />} />
             <Route path={PATH.ADD_MEDIA} element={<AddMediaPage />} />
+            <Route path={PATH.PENDING} element={<PendingEntryPage />} />
             <Route path={PATH.SETTINGS} element={<SettingsPage />} />
             <Route path={PATH.MANAGE} element={<ManagePage />} />
             <Route path="*" element={<NotFoundPage />} />

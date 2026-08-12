@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
+import type { MediaFilters, Sorting } from '@shared/models'
 import Media from '../../components/Media'
 import { MediaFileActions } from '../../components/MediaFileActions/MediaFileActions'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
@@ -14,14 +15,24 @@ import './MediaPage.css'
 const CLICK_THROUGH_SELECTOR = '.media-detail-media, .media-detail-info, .media-page-actions'
 const TEXT_INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
+const PENDING_QUEUE_OVERRIDE: { filters: MediaFilters; sorting: Sorting } = {
+  filters: { pendingTagging: true },
+  sorting: { prop: 'createdAt', desc: false }
+}
+
 const MediaPage: React.FC = () => {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
+  const pendingQueue = Boolean((location.state as { pendingQueue?: boolean } | null)?.pendingQueue)
   const { data: media, loading, error, refetch } = useMediaById(id)
-  const { previousId, nextId } = useAdjacentMedia(id)
+  const { previousId, nextId, index, total } = useAdjacentMedia(
+    id,
+    pendingQueue ? PENDING_QUEUE_OVERRIDE : undefined
+  )
   const navigate = useNavigate()
   const confirm = useConfirm()
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(() => pendingQueue)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const scrollRegionRef = useRef<HTMLDivElement>(null)
   const savedScrollTop = useRef(0)
@@ -57,9 +68,45 @@ const MediaPage: React.FC = () => {
     }
   }
 
+  // Hopping between media items always replaces the current history entry
+  // instead of pushing a new one - otherwise flipping through several images
+  // (arrow keys, prev/next zones, or the pending queue's Skip/Save & next)
+  // pushes one entry per hop, and "Back to gallery" (navigate(-1)) would only
+  // undo a single hop instead of returning to wherever the browsing session
+  // actually started (Gallery, the pending entry point, etc).
   function goToMedia(nextMediaId: string): void {
-    navigate(PATH.MEDIA.replace(':id', nextMediaId))
+    const path = PATH.MEDIA.replace(':id', nextMediaId)
+    if (pendingQueue) {
+      navigate(path, { state: { pendingQueue: true }, replace: true })
+    } else {
+      navigate(path, { replace: true })
+    }
   }
+
+  // Shared "what's next" routing for every way of moving past the current
+  // pending item: marking it resolved, saving it (Save & next), or skipping
+  // it outright - all three want the same target (next pending item, or the
+  // gallery once the queue is exhausted) regardless of which one triggered it.
+  function advanceQueue(): void {
+    if (pendingQueue && nextId) {
+      goToMedia(nextId)
+    } else if (pendingQueue) {
+      navigate(PATH.GALLERY)
+    } else {
+      refetch()
+    }
+  }
+
+  async function handleMarkResolved(): Promise<void> {
+    if (!media) return
+    const result = await window.api.media.clearPendingTagging(media.id)
+    if (result.success) advanceQueue()
+  }
+
+  const queueInfo =
+    pendingQueue && index !== null && total !== null
+      ? { current: index + 1, total, onSkip: advanceQueue }
+      : undefined
 
   useEffect(() => {
     if (isEditing) return
@@ -119,6 +166,11 @@ const MediaPage: React.FC = () => {
             <Pencil size={16} />
             {t('media.edit')}
           </button>
+          {media.pendingTagging && (
+            <button type="button" className="btn" onClick={handleMarkResolved}>
+              {t('media.markResolved')}
+            </button>
+          )}
           <button type="button" className="btn btn-danger" onClick={() => handleDelete(media.id)}>
             <Trash2 size={16} />
             {t('media.delete')}
@@ -134,12 +186,19 @@ const MediaPage: React.FC = () => {
       <div className="media-page-scroll-region" ref={scrollRegionRef}>
         {isEditing ? (
           <MediaForm
+            key={media.id}
             media={media}
+            queueInfo={queueInfo}
             onCancel={() => setIsEditing(false)}
             onSaved={() => {
-              setIsEditing(false)
-              refetch()
+              if (pendingQueue) {
+                advanceQueue()
+              } else {
+                setIsEditing(false)
+                refetch()
+              }
             }}
+            onMarkResolved={advanceQueue}
           />
         ) : (
           <Media {...media} previousId={previousId} nextId={nextId} onNavigate={goToMedia} />

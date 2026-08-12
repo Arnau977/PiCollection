@@ -5,6 +5,7 @@
   "nav": {
     "home": "Inicio",
     "gallery": "Galería",
+    "pending": "Pendientes",
     "settings": "Ajustes",
     "manage": "Metadatos"
   },
@@ -177,6 +178,7 @@
     "revealNsfw": "Pasa el cursor para revelar",
     "edit": "Editar",
     "delete": "Eliminar",
+    "markResolved": "Dar por válido",
     "confirmDelete": "¿Eliminar este archivo? Esta acción no se puede deshacer.",
     "aiGeneratedTitle": "Generado mediante IA",
     "aiGeneratedBadge": "IA",
@@ -216,7 +218,13 @@
     "progress": "Archivo {{current}} de {{total}}",
     "saveAndNext": "Guardar y siguiente",
     "skip": "Saltar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "sendToPending": "Enviar a pendientes",
+    "exitDialogTitle": "Quedan archivos por importar",
+    "exitDialogMessage": "{{count}} archivo(s) no se han añadido todavía. ¿Qué quieres hacer con ellos?",
+    "exitDialogAddToPending": "Añadir el resto a pendientes",
+    "exitDialogDiscard": "Descartar",
+    "exitDialogKeepEditing": "Seguir editando"
   },
   "folderBrowser": {
     "root": "Carpeta origen",
@@ -277,6 +285,10 @@
     "sortCount": "Cantidad",
     "viewTree": "Árbol",
     "viewFlat": "Plana"
+  },
+  "pending": {
+    "allCaughtUp": "¡Todo al día!",
+    "allCaughtUpHint": "No hay ningún media pendiente de etiquetar."
   },
   "mediaThumb": {
     "missingFile": "Archivo no encontrado"

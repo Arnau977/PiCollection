@@ -13,7 +13,8 @@ function makeMedia(count: number): MediaModel[] {
     route: `/pic-${i}.png`,
     sfw: true,
     isAiGenerated: false,
-    createdAt: i
+    createdAt: i,
+    pendingTagging: false
   }))
 }
 

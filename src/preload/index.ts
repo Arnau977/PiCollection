@@ -53,6 +53,8 @@ export const api = {
       ipcRenderer.invoke(IPC.media.create, input),
     update: (id: string, input: MediaInput): Promise<IpcResult<MediaModel>> =>
       ipcRenderer.invoke(IPC.media.update, { id, input }),
+    clearPendingTagging: (id: string): Promise<IpcResult<MediaModel>> =>
+      ipcRenderer.invoke(IPC.media.clearPendingTagging, id),
     delete: (id: string): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.media.delete, id),
     cacheThumbnail: (route: string, png: Uint8Array): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.media.cacheThumbnail, { route, png }),

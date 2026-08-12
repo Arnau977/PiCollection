@@ -5,6 +5,7 @@
   "nav": {
     "home": "Home",
     "gallery": "Gallery",
+    "pending": "Pending",
     "settings": "Settings",
     "manage": "Metadata"
   },
@@ -177,6 +178,7 @@
     "revealNsfw": "Hover to reveal",
     "edit": "Edit",
     "delete": "Delete",
+    "markResolved": "Mark resolved",
     "confirmDelete": "Delete this media? This cannot be undone.",
     "aiGeneratedTitle": "Generated using AI",
     "aiGeneratedBadge": "AI",
@@ -216,7 +218,13 @@
     "progress": "File {{current}} of {{total}}",
     "saveAndNext": "Save & next",
     "skip": "Skip",
-    "close": "Close"
+    "close": "Close",
+    "sendToPending": "Send to pending",
+    "exitDialogTitle": "Files left to import",
+    "exitDialogMessage": "{{count}} file(s) haven't been added yet. What would you like to do with them?",
+    "exitDialogAddToPending": "Add remaining to Pending",
+    "exitDialogDiscard": "Discard",
+    "exitDialogKeepEditing": "Keep editing"
   },
   "folderBrowser": {
     "root": "Source folder",
@@ -277,6 +285,10 @@
     "sortCount": "Count",
     "viewTree": "Tree",
     "viewFlat": "Flat"
+  },
+  "pending": {
+    "allCaughtUp": "You're all caught up!",
+    "allCaughtUpHint": "No media is currently waiting on tagging."
   },
   "mediaThumb": {
     "missingFile": "File not found"

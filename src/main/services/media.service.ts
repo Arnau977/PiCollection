@@ -100,7 +100,8 @@ async function hydrateMedia(db: Kysely<DB>, rows: MediaTable[]): Promise<MediaMo
       artist,
       tags,
       characters,
-      series
+      series,
+      pendingTagging: row.pending_tagging === 1
     }
   })
 }
@@ -264,7 +265,8 @@ export const mediaService = {
         artist_id: input.artistId ?? null,
         created_at: Date.now(),
         hash,
-        phash
+        phash,
+        pending_tagging: input.pendingTagging ? 1 : 0
       })
       if (input.tagIds?.length) await mediaRepo.setMediaTags(trx, id, input.tagIds)
       if (input.characterIds?.length)
@@ -304,6 +306,14 @@ export const mediaService = {
 
   async deleteMedia(id: string): Promise<void> {
     await mediaRepo.deleteMediaRow(getDb(), id)
+  },
+
+  async clearPendingTagging(id: string): Promise<MediaModel> {
+    const db = getDb()
+    await mediaRepo.updateMediaRow(db, id, { pending_tagging: 0 })
+    const updated = await getMediaModelById(db, id)
+    if (!updated) throw new Error('Failed to load updated media')
+    return updated
   },
 
   async getEntityThumbnails(

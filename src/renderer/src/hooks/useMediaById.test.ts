@@ -11,7 +11,8 @@ const sampleMedia: MediaModel = {
   route: '/a.png',
   sfw: true,
   isAiGenerated: false,
-  createdAt: 1
+  createdAt: 1,
+  pendingTagging: false
 }
 
 function setApi(api: unknown): void {

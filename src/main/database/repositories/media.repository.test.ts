@@ -34,7 +34,8 @@ function insertMedia(name: string): ReturnType<typeof mediaRepo.insertMediaRow> 
     artist_id: null,
     created_at: Date.now(),
     hash: null,
-    phash: null
+    phash: null,
+    pending_tagging: 0
   })
 }
 
@@ -53,6 +54,7 @@ function baseMediaRow(
     created_at: Date.now(),
     hash: null,
     phash: null,
+    pending_tagging: 0,
     ...overrides
   })
 }
@@ -426,7 +428,8 @@ describe('media.repository free-text/sfw/type filtering', () => {
       artist_id: null,
       created_at: Date.now(),
       hash: null,
-      phash: null
+      phash: null,
+      pending_tagging: 0
     })
     await mediaRepo.insertMediaRow(db, {
       id: randomUUID(),
@@ -439,7 +442,8 @@ describe('media.repository free-text/sfw/type filtering', () => {
       artist_id: null,
       created_at: Date.now(),
       hash: null,
-      phash: null
+      phash: null,
+      pending_tagging: 0
     })
 
     const byName = await mediaRepo.findMediaRows(db, { query: 'sunset' })
