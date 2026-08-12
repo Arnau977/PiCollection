@@ -7,6 +7,7 @@ import type { MediaFilters } from '@shared/models'
 import Gallery from '../../components/Gallery'
 import { FilterBar } from '../../components/FilterBar/FilterBar'
 import { GalleryToolbar } from '../../components/GalleryToolbar/GalleryToolbar'
+import { BatchEditDialog, type BatchEditSelections } from './BatchEditDialog'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
@@ -28,6 +29,7 @@ const GalleryPage: React.FC = () => {
   const navigate = useNavigate()
   const confirm = useConfirm()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [showBatchEdit, setShowBatchEdit] = useState(false)
 
   const pageSize = defaults.pageSize
   const effectiveFilters = useMemo(
@@ -77,6 +79,16 @@ const GalleryPage: React.FC = () => {
     })
     if (!ok) return
     await Promise.all([...selectedIds].map((id) => window.api.media.delete(id)))
+    clearSelection()
+    refetch()
+  }
+
+  async function handleBatchEditApply(selections: BatchEditSelections): Promise<void> {
+    await window.api.media.batchUpdateAssociations({
+      mediaIds: [...selectedIds],
+      ...selections
+    })
+    setShowBatchEdit(false)
     clearSelection()
     refetch()
   }
@@ -150,10 +162,21 @@ const GalleryPage: React.FC = () => {
           <button type="button" className="btn" onClick={clearSelection}>
             {t('gallery.clearSelection')}
           </button>
+          <button type="button" className="btn" onClick={() => setShowBatchEdit(true)}>
+            {t('gallery.editMetadata')}
+          </button>
           <button type="button" className="btn btn-danger" onClick={handleDeleteSelected}>
             {t('gallery.deleteSelected')}
           </button>
         </div>
+      )}
+
+      {showBatchEdit && (
+        <BatchEditDialog
+          count={selectedIds.size}
+          onApply={handleBatchEditApply}
+          onCancel={() => setShowBatchEdit(false)}
+        />
       )}
     </div>
   )

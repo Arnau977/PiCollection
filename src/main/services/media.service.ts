@@ -18,6 +18,7 @@ import { readSourceFolder, relativizeRoute } from './sourceFolder'
 import type {
   ArtistModel,
   CharacterModel,
+  MediaBatchUpdateAssociationsInput,
   MediaDuplicateCheck,
   MediaFilteredResult,
   MediaFilters,
@@ -302,6 +303,18 @@ export const mediaService = {
     const updated = await getMediaModelById(db, id)
     if (!updated) throw new Error('Failed to load updated media')
     return updated
+  },
+
+  async batchUpdateAssociations(input: MediaBatchUpdateAssociationsInput): Promise<void> {
+    const db = getDb()
+    await db.transaction().execute(async (trx) => {
+      await mediaRepo.addMediaTagsBulk(trx, input.mediaIds, input.addTagIds)
+      await mediaRepo.removeMediaTagsBulk(trx, input.mediaIds, input.removeTagIds)
+      await mediaRepo.addMediaCharactersBulk(trx, input.mediaIds, input.addCharacterIds)
+      await mediaRepo.removeMediaCharactersBulk(trx, input.mediaIds, input.removeCharacterIds)
+      await mediaRepo.addMediaSeriesBulk(trx, input.mediaIds, input.addSeriesIds)
+      await mediaRepo.removeMediaSeriesBulk(trx, input.mediaIds, input.removeSeriesIds)
+    })
   },
 
   async deleteMedia(id: string): Promise<void> {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MediaFiltersSchema } from './contracts'
+import { MediaBatchUpdateAssociationsSchema, MediaFiltersSchema } from './contracts'
 
 describe('MediaFiltersSchema', () => {
   it('keeps isAiGenerated through parsing instead of stripping it as an unknown key', () => {
@@ -16,5 +16,33 @@ describe('MediaFiltersSchema', () => {
 
   it('keeps pendingTagging through parsing instead of stripping it as an unknown key', () => {
     expect(MediaFiltersSchema.parse({ pendingTagging: true })).toEqual({ pendingTagging: true })
+  })
+})
+
+describe('MediaBatchUpdateAssociationsSchema', () => {
+  it('accepts a payload with at least one add/remove selection, defaulting the rest to empty arrays', () => {
+    const result = MediaBatchUpdateAssociationsSchema.parse({
+      mediaIds: ['m1'],
+      addTagIds: ['t1']
+    })
+    expect(result).toEqual({
+      mediaIds: ['m1'],
+      addTagIds: ['t1'],
+      removeTagIds: [],
+      addCharacterIds: [],
+      removeCharacterIds: [],
+      addSeriesIds: [],
+      removeSeriesIds: []
+    })
+  })
+
+  it('rejects a payload where every add/remove list is empty', () => {
+    expect(() => MediaBatchUpdateAssociationsSchema.parse({ mediaIds: ['m1'] })).toThrow()
+  })
+
+  it('rejects a payload with no media ids', () => {
+    expect(() =>
+      MediaBatchUpdateAssociationsSchema.parse({ mediaIds: [], addTagIds: ['t1'] })
+    ).toThrow()
   })
 })

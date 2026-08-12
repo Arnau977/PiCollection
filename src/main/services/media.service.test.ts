@@ -331,3 +331,56 @@ describe('mediaService.getEntityThumbnails', () => {
     expect(await mediaService.getEntityThumbnails('series', [empty.id])).toEqual([])
   })
 })
+
+describe('mediaService.batchUpdateAssociations', () => {
+  it('adds and removes tags, characters and series for multiple media in one call', async () => {
+    const tagKeep = await tagService.createTag({ name: 'keep' })
+    const tagAdd = await tagService.createTag({ name: 'add' })
+    const tagRemove = await tagService.createTag({ name: 'remove' })
+    const character = await characterService.createCharacter({ name: 'Hero' })
+    const series = await seriesService.createSeries({ name: 'Some Series' })
+
+    const mediaA = await mediaService.addMedia(baseInput({ tagIds: [tagKeep.id, tagRemove.id] }))
+    const mediaB = await mediaService.addMedia(baseInput({ route: '/b.png' }))
+
+    await mediaService.batchUpdateAssociations({
+      mediaIds: [mediaA.id, mediaB.id],
+      addTagIds: [tagAdd.id],
+      removeTagIds: [tagRemove.id],
+      addCharacterIds: [character.id],
+      removeCharacterIds: [],
+      addSeriesIds: [series.id],
+      removeSeriesIds: []
+    })
+
+    const reloadedA = await mediaService.getMediaById(mediaA.id)
+    const reloadedB = await mediaService.getMediaById(mediaB.id)
+
+    expect(reloadedA?.tags?.map((t) => t.id).sort()).toEqual([tagAdd.id, tagKeep.id].sort())
+    expect(reloadedB?.tags?.map((t) => t.id)).toEqual([tagAdd.id])
+    expect(reloadedA?.characters?.map((c) => c.id)).toEqual([character.id])
+    expect(reloadedB?.characters?.map((c) => c.id)).toEqual([character.id])
+    expect(reloadedA?.series?.map((s) => s.id)).toEqual([series.id])
+    expect(reloadedB?.series?.map((s) => s.id)).toEqual([series.id])
+  })
+
+  it('rolls back every section if one step fails, applying nothing', async () => {
+    const tag = await tagService.createTag({ name: 'sunset' })
+    const media = await mediaService.addMedia(baseInput())
+
+    await expect(
+      mediaService.batchUpdateAssociations({
+        mediaIds: [media.id],
+        addTagIds: [tag.id],
+        removeTagIds: [],
+        addCharacterIds: ['does-not-exist'],
+        removeCharacterIds: [],
+        addSeriesIds: [],
+        removeSeriesIds: []
+      })
+    ).rejects.toThrow()
+
+    const reloaded = await mediaService.getMediaById(media.id)
+    expect(reloaded?.tags).toEqual([])
+  })
+})

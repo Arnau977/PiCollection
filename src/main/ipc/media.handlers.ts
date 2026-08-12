@@ -7,6 +7,7 @@ import {
   CacheThumbnailSchema,
   IPC,
   IdSchema,
+  MediaBatchUpdateAssociationsSchema,
   MediaGetEntityThumbnailsSchema,
   MediaGetFilteredSchema,
   MediaInputSchema,
@@ -45,6 +46,12 @@ export function registerMediaHandlers(): void {
     IPC.media.update,
     ipcHandler(IPC.media.update, MediaUpdateSchema, ({ id, input }) =>
       mediaService.updateMedia(id, input)
+    )
+  )
+  ipcMain.handle(
+    IPC.media.batchUpdateAssociations,
+    ipcHandler(IPC.media.batchUpdateAssociations, MediaBatchUpdateAssociationsSchema, (input) =>
+      mediaService.batchUpdateAssociations(input)
     )
   )
   ipcMain.handle(

@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import type { MediaModel } from '@shared/models'
+import type { CharacterModel, MediaModel, SeriesModel, TagModel } from '@shared/models'
 import GalleryPage from './GalleryPage'
 import { resetGallerySession } from '../../hooks/useGallerySession'
 
@@ -17,9 +17,22 @@ vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
   useConfirm: () => confirmMock
 }))
 
+let tagsData: TagModel[] = []
+let charactersData: CharacterModel[] = []
+let seriesData: SeriesModel[] = []
+
+vi.mock('../../hooks/useEntityLists', () => ({
+  useTags: () => ({ data: tagsData, loading: false, error: null, refetch: vi.fn() }),
+  useCharacters: () => ({ data: charactersData, loading: false, error: null, refetch: vi.fn() }),
+  useSeries: () => ({ data: seriesData, loading: false, error: null, refetch: vi.fn() })
+}))
+
 beforeEach(() => {
   // Filters persist in module scope across navigations, so each test starts fresh.
   resetGallerySession()
+  tagsData = []
+  charactersData = []
+  seriesData = []
 })
 
 function makeMedia(count: number): MediaModel[] {
@@ -437,5 +450,103 @@ describe('GalleryPage batch selection and delete', () => {
     await user.click(screen.getByRole('button', { name: 'Delete selected' }))
 
     expect(deleteFn).not.toHaveBeenCalled()
+  })
+})
+
+describe('GalleryPage batch metadata edit', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  function setApiWithBatchEdit(
+    getFiltered: ReturnType<typeof vi.fn>,
+    batchUpdateAssociations: ReturnType<typeof vi.fn>
+  ): void {
+    Object.defineProperty(window, 'api', {
+      value: { media: { getFiltered, batchUpdateAssociations } },
+      writable: true,
+      configurable: true
+    })
+  }
+
+  it('opens the batch edit dialog from the bulk bar, showing the selected count', async () => {
+    const user = userEvent.setup()
+    setApiWithBatchEdit(
+      vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }),
+      vi.fn()
+    )
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Select media-0' }))
+    await user.click(screen.getByRole('button', { name: 'Edit metadata' }))
+
+    expect(screen.getByText('Edit metadata for 1 items')).toBeInTheDocument()
+  })
+
+  it('applies the batch edit for every selected id, then clears selection and refetches', async () => {
+    tagsData = [{ id: 't1', name: 'sunset', createdAt: 1 }]
+    const user = userEvent.setup()
+    const getFiltered = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } })
+    const batchUpdateAssociations = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    setApiWithBatchEdit(getFiltered, batchUpdateAssociations)
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Select media-0' }))
+    await user.click(screen.getByRole('button', { name: 'Select media-1' }))
+    await user.click(screen.getByRole('button', { name: 'Edit metadata' }))
+
+    await user.type(screen.getByRole('combobox', { name: /^Add tags/ }), 'sunset')
+    await user.click(await screen.findByRole('option', { name: 'sunset' }))
+    await user.keyboard('{Escape}')
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    await waitFor(() =>
+      expect(batchUpdateAssociations).toHaveBeenCalledWith({
+        mediaIds: ['0', '1'],
+        addTagIds: ['t1'],
+        removeTagIds: [],
+        addCharacterIds: [],
+        removeCharacterIds: [],
+        addSeriesIds: [],
+        removeSeriesIds: []
+      })
+    )
+    await waitFor(() => expect(screen.queryByText('2 selected')).not.toBeInTheDocument())
+    await waitFor(() => expect(getFiltered).toHaveBeenCalledTimes(2))
+  })
+
+  it('closes the dialog without applying when Cancel is clicked', async () => {
+    const user = userEvent.setup()
+    const batchUpdateAssociations = vi.fn()
+    setApiWithBatchEdit(
+      vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }),
+      batchUpdateAssociations
+    )
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Select media-0' }))
+    await user.click(screen.getByRole('button', { name: 'Edit metadata' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByText('Edit metadata for 1 items')).not.toBeInTheDocument()
+    expect(batchUpdateAssociations).not.toHaveBeenCalled()
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
   })
 })

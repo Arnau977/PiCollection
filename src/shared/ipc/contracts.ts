@@ -39,6 +39,29 @@ export const MediaInputSchema = z.object({
   pendingTagging: z.boolean().optional()
 })
 
+export const MediaBatchUpdateAssociationsSchema = z
+  .object({
+    mediaIds: z.array(z.string().min(1)).min(1),
+    addTagIds: z.array(z.string().min(1)).default([]),
+    removeTagIds: z.array(z.string().min(1)).default([]),
+    addCharacterIds: z.array(z.string().min(1)).default([]),
+    removeCharacterIds: z.array(z.string().min(1)).default([]),
+    addSeriesIds: z.array(z.string().min(1)).default([]),
+    removeSeriesIds: z.array(z.string().min(1)).default([])
+  })
+  .refine(
+    (data) =>
+      [
+        data.addTagIds,
+        data.removeTagIds,
+        data.addCharacterIds,
+        data.removeCharacterIds,
+        data.addSeriesIds,
+        data.removeSeriesIds
+      ].some((list) => list.length > 0),
+    { message: 'At least one add or remove selection is required.' }
+  )
+
 export const IdSchema = z.string().min(1)
 
 export const RouteSchema = z.object({ route: z.string().min(1) })
@@ -139,6 +162,7 @@ export const IPC = {
     getById: 'db:media:get-by-id',
     create: 'db:media:create',
     update: 'db:media:update',
+    batchUpdateAssociations: 'db:media:batch-update-associations',
     clearPendingTagging: 'db:media:clear-pending-tagging',
     delete: 'db:media:delete',
     cacheThumbnail: 'db:media:cache-thumbnail',

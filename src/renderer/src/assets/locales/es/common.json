@@ -119,6 +119,7 @@
     "selectAllOnPage": "Seleccionar todo en esta página",
     "clearSelection": "Deseleccionar todo",
     "deleteSelected": "Eliminar seleccionados",
+    "editMetadata": "Editar metadatos",
     "confirmDeleteSelected": "¿Eliminar {{count}} archivos seleccionados? Esta acción no se puede deshacer.",
     "pagination": {
       "previous": "Anterior",
@@ -134,6 +135,17 @@
     "pageSize": {
       "label": "Por página"
     }
+  },
+  "batchEdit": {
+    "title": "Editar metadatos de {{count}} elementos",
+    "addTags": "Añadir etiquetas",
+    "removeTags": "Quitar etiquetas",
+    "addCharacters": "Añadir personajes",
+    "removeCharacters": "Quitar personajes",
+    "addSeries": "Añadir series",
+    "removeSeries": "Quitar series",
+    "apply": "Aplicar",
+    "cancel": "Cancelar"
   },
   "filters": {
     "name": "Nombre",

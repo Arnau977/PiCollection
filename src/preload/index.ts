@@ -8,6 +8,7 @@ import type {
   CharacterInput,
   CharacterModel,
   ExpandedMediaFile,
+  MediaBatchUpdateAssociationsInput,
   MediaDuplicateCheck,
   MediaFilteredResult,
   MediaFilters,
@@ -53,6 +54,8 @@ export const api = {
       ipcRenderer.invoke(IPC.media.create, input),
     update: (id: string, input: MediaInput): Promise<IpcResult<MediaModel>> =>
       ipcRenderer.invoke(IPC.media.update, { id, input }),
+    batchUpdateAssociations: (input: MediaBatchUpdateAssociationsInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.media.batchUpdateAssociations, input),
     clearPendingTagging: (id: string): Promise<IpcResult<MediaModel>> =>
       ipcRenderer.invoke(IPC.media.clearPendingTagging, id),
     delete: (id: string): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.media.delete, id),

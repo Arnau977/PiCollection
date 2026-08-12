@@ -353,6 +353,93 @@ export async function setMediaSeries(
   }
 }
 
+export async function addMediaTagsBulk(
+  db: Kysely<DB>,
+  mediaIds: string[],
+  tagIds: string[]
+): Promise<void> {
+  if (!mediaIds.length || !tagIds.length) return
+  const rows = mediaIds.flatMap((mediaId) =>
+    tagIds.map((tagId) => ({ media_id: mediaId, tag_id: tagId }))
+  )
+  await db
+    .insertInto('media_tag')
+    .values(rows)
+    .onConflict((oc) => oc.doNothing())
+    .execute()
+}
+
+export async function removeMediaTagsBulk(
+  db: Kysely<DB>,
+  mediaIds: string[],
+  tagIds: string[]
+): Promise<void> {
+  if (!mediaIds.length || !tagIds.length) return
+  await db
+    .deleteFrom('media_tag')
+    .where('media_id', 'in', mediaIds)
+    .where('tag_id', 'in', tagIds)
+    .execute()
+}
+
+export async function addMediaCharactersBulk(
+  db: Kysely<DB>,
+  mediaIds: string[],
+  characterIds: string[]
+): Promise<void> {
+  if (!mediaIds.length || !characterIds.length) return
+  const rows = mediaIds.flatMap((mediaId) =>
+    characterIds.map((characterId) => ({ media_id: mediaId, character_id: characterId }))
+  )
+  await db
+    .insertInto('media_character')
+    .values(rows)
+    .onConflict((oc) => oc.doNothing())
+    .execute()
+}
+
+export async function removeMediaCharactersBulk(
+  db: Kysely<DB>,
+  mediaIds: string[],
+  characterIds: string[]
+): Promise<void> {
+  if (!mediaIds.length || !characterIds.length) return
+  await db
+    .deleteFrom('media_character')
+    .where('media_id', 'in', mediaIds)
+    .where('character_id', 'in', characterIds)
+    .execute()
+}
+
+export async function addMediaSeriesBulk(
+  db: Kysely<DB>,
+  mediaIds: string[],
+  seriesIds: string[]
+): Promise<void> {
+  if (!mediaIds.length || !seriesIds.length) return
+  const rows = mediaIds.flatMap((mediaId) =>
+    seriesIds.map((seriesId) => ({ media_id: mediaId, series_id: seriesId }))
+  )
+  await db
+    .insertInto('media_series')
+    .values(rows)
+    .onConflict((oc) => oc.doNothing())
+    .execute()
+}
+
+export async function removeMediaSeriesBulk(
+  db: Kysely<DB>,
+  mediaIds: string[],
+  seriesIds: string[]
+): Promise<void> {
+  if (!mediaIds.length || !seriesIds.length) return
+  await db
+    .deleteFrom('media_series')
+    .where('media_id', 'in', mediaIds)
+    .where('series_id', 'in', seriesIds)
+    .execute()
+}
+
 export function listMediaRoutes(db: Kysely<DB>): Promise<{ id: string; route: string }[]> {
   return db.selectFrom('media').select(['id', 'route']).execute()
 }
