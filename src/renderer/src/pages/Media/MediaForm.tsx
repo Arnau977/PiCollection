@@ -35,6 +35,7 @@ interface MediaFormProps {
   queueInfo?: QueueInfo
   onCancel: () => void
   onSaved: (media: MediaModel) => void
+  onMarkResolved?: () => void
 }
 
 function toInput(media?: MediaModel, initialFile?: InitialFile): MediaInput {
@@ -76,7 +77,8 @@ export function MediaForm({
   initialFile,
   queueInfo,
   onCancel,
-  onSaved
+  onSaved,
+  onMarkResolved
 }: MediaFormProps): JSX.Element {
   const { t } = useTranslation()
   const isEditing = Boolean(media)
@@ -368,37 +370,46 @@ export function MediaForm({
     return new Map(entries)
   }
 
+  async function resolveInputForSave(overrides?: Partial<MediaInput>): Promise<{
+    resolvedInput: MediaInput
+    resolvedSeriesIds: string[]
+    resolvedCharacterIds: string[]
+  }> {
+    const [seriesIdMap, tagIdMap, resolvedArtistId] = await Promise.all([
+      resolvePendingSeriesIds(),
+      resolvePendingTagIds(),
+      resolvePendingArtistId()
+    ])
+    const characterIdMap = await resolvePendingCharacterIds(seriesIdMap)
+
+    const resolvedSeriesIds = (input.seriesIds ?? []).map((id) => seriesIdMap.get(id) ?? id)
+    const resolvedCharacterIds = (input.characterIds ?? []).map((id) => characterIdMap.get(id) ?? id)
+    const resolvedInput: MediaInput = {
+      ...input,
+      ...overrides,
+      artistId: resolvedArtistId,
+      tagIds: (input.tagIds ?? []).map((id) => tagIdMap.get(id) ?? id),
+      characterIds: resolvedCharacterIds,
+      seriesIds: resolvedSeriesIds
+    }
+    return { resolvedInput, resolvedSeriesIds, resolvedCharacterIds }
+  }
+
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault()
     if (duplicateCheck?.exactMatch) return
     setError(null)
     setSaving(true)
 
-    let resolvedInput: MediaInput
-    let resolvedSeriesIds: string[]
-    let resolvedCharacterIds: string[]
+    let resolution: Awaited<ReturnType<typeof resolveInputForSave>>
     try {
-      const [seriesIdMap, tagIdMap, resolvedArtistId] = await Promise.all([
-        resolvePendingSeriesIds(),
-        resolvePendingTagIds(),
-        resolvePendingArtistId()
-      ])
-      const characterIdMap = await resolvePendingCharacterIds(seriesIdMap)
-
-      resolvedSeriesIds = (input.seriesIds ?? []).map((id) => seriesIdMap.get(id) ?? id)
-      resolvedCharacterIds = (input.characterIds ?? []).map((id) => characterIdMap.get(id) ?? id)
-      resolvedInput = {
-        ...input,
-        artistId: resolvedArtistId,
-        tagIds: (input.tagIds ?? []).map((id) => tagIdMap.get(id) ?? id),
-        characterIds: resolvedCharacterIds,
-        seriesIds: resolvedSeriesIds
-      }
+      resolution = await resolveInputForSave()
     } catch (err) {
       setSaving(false)
       setError(err instanceof Error ? err.message : 'Failed to save')
       return
     }
+    const { resolvedInput, resolvedSeriesIds, resolvedCharacterIds } = resolution
 
     const result = media
       ? await window.api.media.update(media.id, resolvedInput)
@@ -416,6 +427,41 @@ export function MediaForm({
     }
   }
 
+  async function handleSendToPending(): Promise<void> {
+    if (duplicateCheck?.exactMatch) return
+    setError(null)
+    setSaving(true)
+
+    let resolution: Awaited<ReturnType<typeof resolveInputForSave>>
+    try {
+      resolution = await resolveInputForSave({ pendingTagging: true })
+    } catch (err) {
+      setSaving(false)
+      setError(err instanceof Error ? err.message : 'Failed to save')
+      return
+    }
+    const { resolvedInput, resolvedSeriesIds, resolvedCharacterIds } = resolution
+
+    const result = await window.api.media.create(resolvedInput)
+    setSaving(false)
+    if (result.success) {
+      if (pendingTags.length > 0) tags.refetch()
+      if (pendingArtists.length > 0) artists.refetch()
+      if (pendingSeries.length > 0) series.refetch()
+      if (pendingCharacters.length > 0) characters.refetch()
+      await linkCharactersToSoleSeries(resolvedSeriesIds, resolvedCharacterIds)
+      onSaved(result.data)
+    } else {
+      setError(result.error.message)
+    }
+  }
+
+  async function handleMarkResolved(): Promise<void> {
+    if (!media || !onMarkResolved) return
+    const result = await window.api.media.clearPendingTagging(media.id)
+    if (result.success) onMarkResolved()
+  }
+
   return (
     <div className="media-form">
       <div className="media-page-actions">
@@ -423,6 +469,11 @@ export function MediaForm({
           <ArrowLeft size={16} />
           {queueInfo ? t('importQueue.close') : t('manage.cancel')}
         </button>
+        {media?.pendingTagging && onMarkResolved && (
+          <button type="button" className="btn" onClick={handleMarkResolved}>
+            {t('media.markResolved')}
+          </button>
+        )}
       </div>
 
       <form className="media-form-card card" onSubmit={handleSubmit}>
@@ -677,6 +728,11 @@ export function MediaForm({
           {queueInfo && (
             <button type="button" className="btn" onClick={queueInfo.onSkip}>
               {t('importQueue.skip')}
+            </button>
+          )}
+          {queueInfo && !media && (
+            <button type="button" className="btn" onClick={handleSendToPending} disabled={saving}>
+              {t('importQueue.sendToPending')}
             </button>
           )}
         </div>

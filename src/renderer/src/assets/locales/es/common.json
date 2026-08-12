@@ -177,6 +177,7 @@
     "revealNsfw": "Pasa el cursor para revelar",
     "edit": "Editar",
     "delete": "Eliminar",
+    "markResolved": "Dar por válido",
     "confirmDelete": "¿Eliminar este archivo? Esta acción no se puede deshacer.",
     "aiGeneratedTitle": "Generado mediante IA",
     "aiGeneratedBadge": "IA",
@@ -216,7 +217,8 @@
     "progress": "Archivo {{current}} de {{total}}",
     "saveAndNext": "Guardar y siguiente",
     "skip": "Saltar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "sendToPending": "Enviar a pendientes"
   },
   "folderBrowser": {
     "root": "Carpeta origen",

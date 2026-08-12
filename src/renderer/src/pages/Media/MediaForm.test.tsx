@@ -13,7 +13,8 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
       create: vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } }),
       checkDuplicate: vi
         .fn()
-        .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } })
+        .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } }),
+      clearPendingTagging: vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
     },
     artist: { create: vi.fn() },
     tag: { create: vi.fn(), getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
@@ -122,6 +123,92 @@ describe('MediaForm queueInfo', () => {
 
     await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' })))
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalled())
+  })
+
+  it('shows a Send to pending button only during queue creation (not on edit)', async () => {
+    renderForm({
+      initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
+      queueInfo: { current: 1, total: 3, onSkip: vi.fn() }
+    })
+
+    expect(screen.getByRole('button', { name: 'Send to pending' })).toBeInTheDocument()
+  })
+
+  it('does not show Send to pending when editing an existing media, even with queueInfo', async () => {
+    renderForm({
+      media: {
+        id: 'm1',
+        name: 'Existing',
+        type: 'image',
+        route: '/pics/a.png',
+        sfw: true,
+        isAiGenerated: false,
+        createdAt: Date.now(),
+        pendingTagging: false
+      },
+      queueInfo: { current: 1, total: 3, onSkip: vi.fn() }
+    })
+
+    expect(screen.queryByRole('button', { name: 'Send to pending' })).not.toBeInTheDocument()
+  })
+
+  it('creates with pendingTagging: true and advances the queue when Send to pending is clicked', async () => {
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({ media: { create: mediaCreate } })
+    const { onSaved } = renderForm({
+      initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
+      queueInfo: { current: 1, total: 3, onSkip: vi.fn() }
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send to pending' }))
+
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a', pendingTagging: true }))
+    )
+    await vi.waitFor(() => expect(onSaved).toHaveBeenCalledWith({ id: 'm1' }))
+  })
+})
+
+describe('MediaForm onMarkResolved', () => {
+  const pendingMedia = {
+    id: 'm1',
+    name: 'Existing',
+    type: 'image' as const,
+    route: '/pics/a.png',
+    sfw: true,
+    isAiGenerated: false,
+    createdAt: Date.now(),
+    pendingTagging: true
+  }
+
+  it('shows Mark resolved when editing pending media with the callback provided', () => {
+    renderForm({ media: pendingMedia, onMarkResolved: vi.fn() })
+
+    expect(screen.getByRole('button', { name: 'Mark resolved' })).toBeInTheDocument()
+  })
+
+  it('does not show Mark resolved when the media is not pending', () => {
+    renderForm({ media: { ...pendingMedia, pendingTagging: false }, onMarkResolved: vi.fn() })
+
+    expect(screen.queryByRole('button', { name: 'Mark resolved' })).not.toBeInTheDocument()
+  })
+
+  it('does not show Mark resolved when no onMarkResolved callback is provided', () => {
+    renderForm({ media: pendingMedia })
+
+    expect(screen.queryByRole('button', { name: 'Mark resolved' })).not.toBeInTheDocument()
+  })
+
+  it('calls onMarkResolved without submitting the form', async () => {
+    const mediaUpdate = vi.fn()
+    setApi({ media: { update: mediaUpdate } })
+    const onMarkResolved = vi.fn()
+    renderForm({ media: pendingMedia, onMarkResolved })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mark resolved' }))
+
+    await vi.waitFor(() => expect(onMarkResolved).toHaveBeenCalledTimes(1))
+    expect(mediaUpdate).not.toHaveBeenCalled()
   })
 })
 

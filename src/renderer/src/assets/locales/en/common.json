@@ -177,6 +177,7 @@
     "revealNsfw": "Hover to reveal",
     "edit": "Edit",
     "delete": "Delete",
+    "markResolved": "Mark resolved",
     "confirmDelete": "Delete this media? This cannot be undone.",
     "aiGeneratedTitle": "Generated using AI",
     "aiGeneratedBadge": "AI",
@@ -216,7 +217,8 @@
     "progress": "File {{current}} of {{total}}",
     "saveAndNext": "Save & next",
     "skip": "Skip",
-    "close": "Close"
+    "close": "Close",
+    "sendToPending": "Send to pending"
   },
   "folderBrowser": {
     "root": "Source folder",
