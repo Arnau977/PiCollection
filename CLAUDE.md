@@ -60,6 +60,17 @@ the task, not a follow-up:
   functional behavior consistent across pages (spacing, empty/error/loading
   states, button placement, pagination behavior, etc.).
 
+## Working style
+
+- Use tokens/context economically: don't re-read files already seen in the
+  conversation, don't restate things already established, keep exploration
+  and responses tight.
+- Write fewer tests: cover the real behavior/edge cases without piling on
+  redundant or low-value cases. This is about how many tests get written,
+  not about skipping test runs - still run the full suite before anything
+  high-stakes (a release, pushing to an open PR).
+- Don't spawn subagents - do the work directly in this session.
+
 ## Architecture
 
 Full details, plus two fully worked examples (adding a field to `Media`,

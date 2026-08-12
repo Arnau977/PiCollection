@@ -1,0 +1,37 @@
+.media-hover-preview-trigger {
+  cursor: default;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--color-text-faint);
+}
+
+.media-hover-preview-card {
+  position: fixed;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--border-color-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+}
+
+.media-hover-preview-thumb {
+  height: 140px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.media-hover-preview-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.media-hover-preview-tags {
+  max-height: 90px;
+  overflow-y: auto;
+}

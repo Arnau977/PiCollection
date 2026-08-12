@@ -26,8 +26,7 @@
     border-color var(--transition-base);
 }
 
-.media-detail-media img,
-.media-detail-media video {
+.media-detail-media img {
   cursor: zoom-in;
 }
 
@@ -67,6 +66,18 @@
 .media-detail-nav-next {
   justify-content: flex-end;
   right: 0;
+}
+
+/* A video's native transport controls (play, volume, fullscreen) live under
+   this same strip, so the strip itself must not intercept clicks - only the
+   visible arrow icon, which sits well clear of the bottom controls bar, is
+   click-through-blocking. */
+.media-detail-nav-video {
+  pointer-events: none;
+}
+
+.media-detail-nav-video svg {
+  pointer-events: auto;
 }
 
 .media-detail-nav svg {

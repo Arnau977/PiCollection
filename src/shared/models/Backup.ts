@@ -1,5 +1,6 @@
 export interface BackupExportResult {
   cancelled: boolean
+  filePath?: string
 }
 
 export interface BackupImportResult {

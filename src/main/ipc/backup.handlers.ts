@@ -20,7 +20,7 @@ export function registerBackupHandlers(): void {
         if (result.canceled || !result.filePath) return { cancelled: true }
 
         await createBackupZip(result.filePath, gallerySettings)
-        return { cancelled: false }
+        return { cancelled: false, filePath: result.filePath }
       }
     )
   )

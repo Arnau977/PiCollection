@@ -13,6 +13,16 @@ export function registerSystemHandlers(): void {
     })
   )
 
+  // Unlike `showInFolder`, the path here is already absolute (e.g. a backup
+  // file the user just chose a save location for) - it isn't resolved
+  // against the library's source folder.
+  ipcMain.handle(
+    IPC.system.showPathInFolder,
+    ipcHandler(IPC.system.showPathInFolder, z.string().min(1), async (path) => {
+      shell.showItemInFolder(path)
+    })
+  )
+
   ipcMain.handle(
     IPC.system.copyImageToClipboard,
     ipcHandler(IPC.system.copyImageToClipboard, z.string().min(1), async (route) => {
