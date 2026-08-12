@@ -166,11 +166,11 @@ describe('MediaPage adjacent navigation', () => {
       expect(screen.getByRole('button', { name: 'Next image' })).toBeInTheDocument()
     )
     await user.click(screen.getByRole('button', { name: 'Next image' }))
-    expect(navigateMock).toHaveBeenCalledWith('/media/2')
+    expect(navigateMock).toHaveBeenCalledWith('/media/2', { replace: true })
 
     navigateMock.mockClear()
     await user.click(screen.getByRole('button', { name: 'Previous image' }))
-    expect(navigateMock).toHaveBeenCalledWith('/media/0')
+    expect(navigateMock).toHaveBeenCalledWith('/media/0', { replace: true })
   })
 
   it('omits the previous zone on the first item and the next zone on the last item', async () => {
@@ -200,11 +200,11 @@ describe('MediaPage adjacent navigation', () => {
     )
 
     await user.keyboard('{ArrowRight}')
-    expect(navigateMock).toHaveBeenCalledWith('/media/2')
+    expect(navigateMock).toHaveBeenCalledWith('/media/2', { replace: true })
 
     navigateMock.mockClear()
     await user.keyboard('{ArrowLeft}')
-    expect(navigateMock).toHaveBeenCalledWith('/media/0')
+    expect(navigateMock).toHaveBeenCalledWith('/media/0', { replace: true })
   })
 
   it('does not navigate on arrow keys while editing', async () => {
@@ -476,7 +476,7 @@ describe('MediaPage pending queue', () => {
     await user.click(screen.getByRole('button', { name: 'Skip' }))
 
     expect(update).not.toHaveBeenCalled()
-    expect(navigateMock).toHaveBeenCalledWith('/media/2', { state: { pendingQueue: true } })
+    expect(navigateMock).toHaveBeenCalledWith('/media/2', { state: { pendingQueue: true }, replace: true })
   })
 
   it('stays in read mode when arriving without pendingQueue state', () => {
@@ -556,7 +556,7 @@ describe('MediaPage pending queue', () => {
     await user.click(screen.getByRole('button', { name: 'Save & next' }))
 
     await waitFor(() => expect(update).toHaveBeenCalledWith('1', expect.objectContaining({ name: 'My picture' })))
-    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/media/2', { state: { pendingQueue: true } }))
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/media/2', { state: { pendingQueue: true }, replace: true }))
   })
 })
 
@@ -648,6 +648,6 @@ describe('MediaPage mark resolved', () => {
     await screen.findByRole('button', { name: 'Save' })
     await user.click(screen.getByRole('button', { name: 'Mark resolved' }))
 
-    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/media/2', { state: { pendingQueue: true } }))
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/media/2', { state: { pendingQueue: true }, replace: true }))
   })
 })

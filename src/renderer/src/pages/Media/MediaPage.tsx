@@ -68,12 +68,18 @@ const MediaPage: React.FC = () => {
     }
   }
 
+  // Hopping between media items always replaces the current history entry
+  // instead of pushing a new one - otherwise flipping through several images
+  // (arrow keys, prev/next zones, or the pending queue's Skip/Save & next)
+  // pushes one entry per hop, and "Back to gallery" (navigate(-1)) would only
+  // undo a single hop instead of returning to wherever the browsing session
+  // actually started (Gallery, the pending entry point, etc).
   function goToMedia(nextMediaId: string): void {
     const path = PATH.MEDIA.replace(':id', nextMediaId)
     if (pendingQueue) {
-      navigate(path, { state: { pendingQueue: true } })
+      navigate(path, { state: { pendingQueue: true }, replace: true })
     } else {
-      navigate(path)
+      navigate(path, { replace: true })
     }
   }
 
