@@ -435,3 +435,23 @@ describe('media.repository noCharacter / noSeries filters', () => {
     expect(rows).toEqual([])
   })
 })
+
+describe('media.repository pendingTagging filter', () => {
+  it('filters to only media flagged pending when pendingTagging is true', async () => {
+    const pending = await insertMedia('pending')
+    await insertMedia('notPending')
+    await db.updateTable('media').set({ pending_tagging: 1 }).where('id', '=', pending.id).execute()
+
+    const rows = await mediaRepo.findMediaRows(db, { pendingTagging: true })
+    expect(rows.map((r) => r.name)).toEqual(['pending'])
+  })
+
+  it('filters to only non-pending media when pendingTagging is false', async () => {
+    const pending = await insertMedia('pending')
+    await insertMedia('notPending')
+    await db.updateTable('media').set({ pending_tagging: 1 }).where('id', '=', pending.id).execute()
+
+    const rows = await mediaRepo.findMediaRows(db, { pendingTagging: false })
+    expect(rows.map((r) => r.name)).toEqual(['notPending'])
+  })
+})

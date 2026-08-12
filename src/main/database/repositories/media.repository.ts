@@ -202,6 +202,10 @@ function applyMediaFilters(
     qb = qb.where('media.id', 'not in', db.selectFrom('media_series').select('media_id'))
   }
 
+  if (filters.pendingTagging !== undefined) {
+    qb = qb.where('media.pending_tagging', '=', filters.pendingTagging ? 1 : 0)
+  }
+
   return qb
 }
 
