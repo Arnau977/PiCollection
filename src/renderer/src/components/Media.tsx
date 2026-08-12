@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, ShieldAlert, ShieldCheck, Sparkles } from 'l
 import { useTranslation } from 'react-i18next'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
-import { useSeries } from '../hooks/useEntityLists'
+import { useCharacters, useSeries } from '../hooks/useEntityLists'
 import { buildAncestorAwareEntityTree } from '../utils/buildEntityTree'
 import { Lightbox } from './Lightbox/Lightbox'
 import './Media.css'
@@ -34,7 +34,9 @@ export default function Media({
   const mediaUrl = toMediaUrl(route)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const { data: allSeries } = useSeries()
+  const { data: allCharacters } = useCharacters()
   const seriesTree = buildAncestorAwareEntityTree(series, allSeries)
+  const charactersTree = buildAncestorAwareEntityTree(characters, allCharacters)
   const showNavZones = Boolean(onNavigate)
 
   return (
@@ -142,9 +144,18 @@ export default function Media({
           <div className="media-detail-section">
             <h2>{t('filters.characters')}</h2>
             <ul className="media-detail-list media-detail-list-characters">
-              {characters.map((character) => (
-                <li key={character.id} className="media-detail-name-character">
-                  {character.name}
+              {charactersTree.map((node) => (
+                <li
+                  key={node.entity.id}
+                  className="media-detail-name-character"
+                  style={node.depth > 0 ? { marginLeft: node.depth * 16 } : undefined}
+                >
+                  {node.depth > 0 && (
+                    <span className="media-detail-tree-connector" aria-hidden="true">
+                      └
+                    </span>
+                  )}
+                  {node.entity.name}
                 </li>
               ))}
             </ul>
