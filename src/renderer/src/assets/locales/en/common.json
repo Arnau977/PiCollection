@@ -218,7 +218,12 @@
     "saveAndNext": "Save & next",
     "skip": "Skip",
     "close": "Close",
-    "sendToPending": "Send to pending"
+    "sendToPending": "Send to pending",
+    "exitDialogTitle": "Files left to import",
+    "exitDialogMessage": "{{count}} file(s) haven't been added yet. What would you like to do with them?",
+    "exitDialogAddToPending": "Add remaining to Pending",
+    "exitDialogDiscard": "Discard",
+    "exitDialogKeepEditing": "Keep editing"
   },
   "folderBrowser": {
     "root": "Source folder",

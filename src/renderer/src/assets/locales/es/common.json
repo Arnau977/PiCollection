@@ -218,7 +218,12 @@
     "saveAndNext": "Guardar y siguiente",
     "skip": "Saltar",
     "close": "Cerrar",
-    "sendToPending": "Enviar a pendientes"
+    "sendToPending": "Enviar a pendientes",
+    "exitDialogTitle": "Quedan archivos por importar",
+    "exitDialogMessage": "{{count}} archivo(s) no se han añadido todavía. ¿Qué quieres hacer con ellos?",
+    "exitDialogAddToPending": "Añadir el resto a pendientes",
+    "exitDialogDiscard": "Descartar",
+    "exitDialogKeepEditing": "Seguir editando"
   },
   "folderBrowser": {
     "root": "Carpeta origen",
