@@ -27,6 +27,15 @@ describe('useAdjacentMedia', () => {
     expect(result.current.nextId).toBe('c')
   })
 
+  it('resolves index and total alongside previous/next', async () => {
+    const { result } = renderHook(() => useAdjacentMedia('b'))
+
+    await waitFor(() => expect(result.current.total).not.toBeNull())
+
+    expect(result.current.index).toBe(1)
+    expect(result.current.total).toBe(3)
+  })
+
   it('has no previous id for the first item and no next id for the last', async () => {
     const first = renderHook(() => useAdjacentMedia('a'))
     await waitFor(() => expect(first.result.current.nextId).not.toBeNull())
@@ -50,7 +59,7 @@ describe('useAdjacentMedia', () => {
   it('returns null for both ids when there is no id', () => {
     const { result } = renderHook(() => useAdjacentMedia(undefined))
 
-    expect(result.current).toEqual({ previousId: null, nextId: null })
+    expect(result.current).toEqual({ previousId: null, nextId: null, index: null, total: null })
   })
 
   it('reuses the persisted gallery session filters/sorting', async () => {
@@ -105,6 +114,6 @@ describe('useAdjacentMedia', () => {
     const { result } = renderHook(() => useAdjacentMedia('a'))
 
     await waitFor(() => expect(window.api.media.getOrderedIds).toHaveBeenCalled())
-    expect(result.current).toEqual({ previousId: null, nextId: null })
+    expect(result.current).toEqual({ previousId: null, nextId: null, index: null, total: null })
   })
 })

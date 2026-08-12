@@ -6,6 +6,10 @@ import type { MediaFilters, Sorting } from '@shared/models'
 interface AdjacentMedia {
   previousId: string | null
   nextId: string | null
+  /** 0-based position of `id` within the ordered list, or null while loading/unresolved. */
+  index: number | null
+  /** Size of the ordered list, or null while loading/unresolved. */
+  total: number | null
 }
 
 interface AdjacentMediaOverride {
@@ -13,7 +17,7 @@ interface AdjacentMediaOverride {
   sorting: Sorting
 }
 
-const EMPTY: AdjacentMedia = { previousId: null, nextId: null }
+const EMPTY: AdjacentMedia = { previousId: null, nextId: null, index: null, total: null }
 
 /**
  * Previous/next sibling ids for the media detail page. By default, reuses
@@ -66,7 +70,9 @@ export function useAdjacentMedia(
         }
         setState({
           previousId: index > 0 ? result.data[index - 1] : null,
-          nextId: index < result.data.length - 1 ? result.data[index + 1] : null
+          nextId: index < result.data.length - 1 ? result.data[index + 1] : null,
+          index,
+          total: result.data.length
         })
       })
       .catch(() => {

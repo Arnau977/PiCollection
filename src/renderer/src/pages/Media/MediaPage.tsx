@@ -26,7 +26,10 @@ const MediaPage: React.FC = () => {
   const location = useLocation()
   const pendingQueue = Boolean((location.state as { pendingQueue?: boolean } | null)?.pendingQueue)
   const { data: media, loading, error, refetch } = useMediaById(id)
-  const { previousId, nextId } = useAdjacentMedia(id, pendingQueue ? PENDING_QUEUE_OVERRIDE : undefined)
+  const { previousId, nextId, index, total } = useAdjacentMedia(
+    id,
+    pendingQueue ? PENDING_QUEUE_OVERRIDE : undefined
+  )
   const navigate = useNavigate()
   const confirm = useConfirm()
   const [isEditing, setIsEditing] = useState(() => pendingQueue)
@@ -74,7 +77,11 @@ const MediaPage: React.FC = () => {
     }
   }
 
-  function advanceAfterResolve(): void {
+  // Shared "what's next" routing for every way of moving past the current
+  // pending item: marking it resolved, saving it (Save & next), or skipping
+  // it outright - all three want the same target (next pending item, or the
+  // gallery once the queue is exhausted) regardless of which one triggered it.
+  function advanceQueue(): void {
     if (pendingQueue && nextId) {
       goToMedia(nextId)
     } else if (pendingQueue) {
@@ -87,8 +94,13 @@ const MediaPage: React.FC = () => {
   async function handleMarkResolved(): Promise<void> {
     if (!media) return
     const result = await window.api.media.clearPendingTagging(media.id)
-    if (result.success) advanceAfterResolve()
+    if (result.success) advanceQueue()
   }
+
+  const queueInfo =
+    pendingQueue && index !== null && total !== null
+      ? { current: index + 1, total, onSkip: advanceQueue }
+      : undefined
 
   useEffect(() => {
     if (isEditing) return
@@ -169,12 +181,17 @@ const MediaPage: React.FC = () => {
         {isEditing ? (
           <MediaForm
             media={media}
+            queueInfo={queueInfo}
             onCancel={() => setIsEditing(false)}
             onSaved={() => {
-              setIsEditing(false)
-              refetch()
+              if (pendingQueue) {
+                advanceQueue()
+              } else {
+                setIsEditing(false)
+                refetch()
+              }
             }}
-            onMarkResolved={advanceAfterResolve}
+            onMarkResolved={advanceQueue}
           />
         ) : (
           <Media {...media} previousId={previousId} nextId={nextId} onNavigate={goToMedia} />
