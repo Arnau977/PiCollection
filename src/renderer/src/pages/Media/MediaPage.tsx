@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
+import type { MediaFilters, Sorting } from '@shared/models'
 import Media from '../../components/Media'
 import { MediaFileActions } from '../../components/MediaFileActions/MediaFileActions'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
@@ -14,14 +15,21 @@ import './MediaPage.css'
 const CLICK_THROUGH_SELECTOR = '.media-detail-media, .media-detail-info, .media-page-actions'
 const TEXT_INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
+const PENDING_QUEUE_OVERRIDE: { filters: MediaFilters; sorting: Sorting } = {
+  filters: { pendingTagging: true },
+  sorting: { prop: 'createdAt', desc: false }
+}
+
 const MediaPage: React.FC = () => {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
+  const pendingQueue = Boolean((location.state as { pendingQueue?: boolean } | null)?.pendingQueue)
   const { data: media, loading, error, refetch } = useMediaById(id)
-  const { previousId, nextId } = useAdjacentMedia(id)
+  const { previousId, nextId } = useAdjacentMedia(id, pendingQueue ? PENDING_QUEUE_OVERRIDE : undefined)
   const navigate = useNavigate()
   const confirm = useConfirm()
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(() => pendingQueue)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const scrollRegionRef = useRef<HTMLDivElement>(null)
   const savedScrollTop = useRef(0)
@@ -58,7 +66,28 @@ const MediaPage: React.FC = () => {
   }
 
   function goToMedia(nextMediaId: string): void {
-    navigate(PATH.MEDIA.replace(':id', nextMediaId))
+    const path = PATH.MEDIA.replace(':id', nextMediaId)
+    if (pendingQueue) {
+      navigate(path, { state: { pendingQueue: true } })
+    } else {
+      navigate(path)
+    }
+  }
+
+  function advanceAfterResolve(): void {
+    if (pendingQueue && nextId) {
+      goToMedia(nextId)
+    } else if (pendingQueue) {
+      navigate(PATH.GALLERY)
+    } else {
+      refetch()
+    }
+  }
+
+  async function handleMarkResolved(): Promise<void> {
+    if (!media) return
+    const result = await window.api.media.clearPendingTagging(media.id)
+    if (result.success) advanceAfterResolve()
   }
 
   useEffect(() => {
@@ -119,6 +148,11 @@ const MediaPage: React.FC = () => {
             <Pencil size={16} />
             {t('media.edit')}
           </button>
+          {media.pendingTagging && (
+            <button type="button" className="btn" onClick={handleMarkResolved}>
+              {t('media.markResolved')}
+            </button>
+          )}
           <button type="button" className="btn btn-danger" onClick={() => handleDelete(media.id)}>
             <Trash2 size={16} />
             {t('media.delete')}
@@ -140,6 +174,7 @@ const MediaPage: React.FC = () => {
               setIsEditing(false)
               refetch()
             }}
+            onMarkResolved={advanceAfterResolve}
           />
         ) : (
           <Media {...media} previousId={previousId} nextId={nextId} onNavigate={goToMedia} />
