@@ -13,6 +13,7 @@ import { useSauceNaoApiKey } from '../../hooks/useSauceNaoApiKey'
 import { useSauceNaoSuggestions, type SuggestionCategory } from '../../hooks/useSauceNaoSuggestions'
 import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import { withImpliedSeries } from '../../utils/withImpliedSeries'
+import { resolvePendingId } from './resolvePendingId'
 import './MediaForm.css'
 
 interface InitialFile {
@@ -250,12 +251,14 @@ export function MediaForm({
    * of whether the characters/series were picked manually or via a
    * suggestion.
    */
-  async function linkCharactersToSoleSeries(): Promise<void> {
-    const seriesIds = input.seriesIds ?? []
+  async function linkCharactersToSoleSeries(
+    seriesIds: string[],
+    characterIds: string[]
+  ): Promise<void> {
     if (seriesIds.length !== 1) return
     const [soleSeriesId] = seriesIds
 
-    const toUpdate = (input.characterIds ?? [])
+    const toUpdate = characterIds
       .map((id) => characters.data.find((character) => character.id === id))
       .filter(
         (character): character is CharacterModel =>
@@ -275,17 +278,137 @@ export function MediaForm({
     characters.refetch()
   }
 
+  async function resolvePendingTagIds(): Promise<Map<string, string>> {
+    const toResolve = pendingTags.filter((draft) => (input.tagIds ?? []).includes(draft.id))
+    if (toResolve.length === 0) return new Map()
+
+    const freshResult = await window.api.tag.getAll()
+    const freshTags = freshResult.success ? freshResult.data : tags.data
+
+    const entries = await Promise.all(
+      toResolve.map(
+        async (draft) =>
+          [
+            draft.id,
+            await resolvePendingId(draft.id, pendingTags, freshTags, (name) =>
+              window.api.tag.create({ name })
+            )
+          ] as const
+      )
+    )
+    return new Map(entries)
+  }
+
+  async function resolvePendingSeriesIds(): Promise<Map<string, string>> {
+    const referenced = new Set([
+      ...(input.seriesIds ?? []),
+      ...pendingCharacters.flatMap((c) => pendingCharacterSeriesIds.current.get(c.id) ?? [])
+    ])
+    const toResolve = pendingSeries.filter((draft) => referenced.has(draft.id))
+    if (toResolve.length === 0) return new Map()
+
+    const freshResult = await window.api.series.getAll()
+    const freshSeries = freshResult.success ? freshResult.data : series.data
+
+    const entries = await Promise.all(
+      toResolve.map(
+        async (draft) =>
+          [
+            draft.id,
+            await resolvePendingId(draft.id, pendingSeries, freshSeries, (name) =>
+              window.api.series.create({ name })
+            )
+          ] as const
+      )
+    )
+    return new Map(entries)
+  }
+
+  async function resolvePendingArtistId(): Promise<string | undefined> {
+    const draft = pendingArtists.find((p) => p.id === input.artistId)
+    if (!draft) return input.artistId
+
+    const freshResult = await window.api.artist.getAll()
+    const freshArtists = freshResult.success ? freshResult.data : artists.data
+    const match = freshArtists.find((a) => a.name.toLowerCase() === draft.name.toLowerCase())
+    if (match) return match.id
+
+    const result = await window.api.artist.create({ name: draft.name })
+    if (!result.success) throw new Error(result.error.message)
+    const social = pendingArtistSocials.current.get(draft.id)
+    if (social) await window.api.artist.addSocialLink(result.data.id, social)
+    return result.data.id
+  }
+
+  async function resolvePendingCharacterIds(
+    seriesIdMap: Map<string, string>
+  ): Promise<Map<string, string>> {
+    const toResolve = pendingCharacters.filter((draft) =>
+      (input.characterIds ?? []).includes(draft.id)
+    )
+    if (toResolve.length === 0) return new Map()
+
+    const freshResult = await window.api.character.getAll()
+    const freshCharacters = freshResult.success ? freshResult.data : characters.data
+
+    const entries = await Promise.all(
+      toResolve.map(async (draft) => {
+        const match = freshCharacters.find((c) => c.name.toLowerCase() === draft.name.toLowerCase())
+        if (match) return [draft.id, match.id] as const
+
+        const seriesIds = (pendingCharacterSeriesIds.current.get(draft.id) ?? []).map(
+          (id) => seriesIdMap.get(id) ?? id
+        )
+        const result = await window.api.character.create({ name: draft.name, seriesIds })
+        if (!result.success) throw new Error(result.error.message)
+        return [draft.id, result.data.id] as const
+      })
+    )
+    return new Map(entries)
+  }
+
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault()
     if (duplicateCheck?.exactMatch) return
     setError(null)
     setSaving(true)
+
+    let resolvedInput: MediaInput
+    let resolvedSeriesIds: string[]
+    let resolvedCharacterIds: string[]
+    try {
+      const [seriesIdMap, tagIdMap, resolvedArtistId] = await Promise.all([
+        resolvePendingSeriesIds(),
+        resolvePendingTagIds(),
+        resolvePendingArtistId()
+      ])
+      const characterIdMap = await resolvePendingCharacterIds(seriesIdMap)
+
+      resolvedSeriesIds = (input.seriesIds ?? []).map((id) => seriesIdMap.get(id) ?? id)
+      resolvedCharacterIds = (input.characterIds ?? []).map((id) => characterIdMap.get(id) ?? id)
+      resolvedInput = {
+        ...input,
+        artistId: resolvedArtistId,
+        tagIds: (input.tagIds ?? []).map((id) => tagIdMap.get(id) ?? id),
+        characterIds: resolvedCharacterIds,
+        seriesIds: resolvedSeriesIds
+      }
+    } catch (err) {
+      setSaving(false)
+      setError(err instanceof Error ? err.message : 'Failed to save')
+      return
+    }
+
     const result = media
-      ? await window.api.media.update(media.id, input)
-      : await window.api.media.create(input)
+      ? await window.api.media.update(media.id, resolvedInput)
+      : await window.api.media.create(resolvedInput)
     setSaving(false)
     if (result.success) {
-      await linkCharactersToSoleSeries()
+      if (pendingTags.length > 0) tags.refetch()
+      if (pendingArtists.length > 0) artists.refetch()
+      if (pendingSeries.length > 0) series.refetch()
+      if (pendingCharacters.length > 0) characters.refetch()
+      await linkCharactersToSoleSeries(resolvedSeriesIds, resolvedCharacterIds)
       onSaved(result.data)
     } else {
       setError(result.error.message)
