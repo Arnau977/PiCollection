@@ -304,4 +304,98 @@ describe('SeriesManager', () => {
     expect(parentItem).toHaveTextContent('7')
     expect(childItem?.className).toContain('depth-1')
   })
+
+  it('defaults to tree view: a child series is indented under its parent', () => {
+    window.localStorage.clear()
+    seriesData = [
+      { id: 's1', name: 'Wonderland', aliases: [], createdAt: 1700000000000, mediaCount: 2 },
+      {
+        id: 's2',
+        name: 'Alice in Wonderland (1951)',
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 's1',
+        mediaCount: 5
+      }
+    ]
+    render(<SeriesManager />)
+
+    const childItem = screen.getByText('Alice in Wonderland (1951)').closest('li')
+    expect(childItem?.className).toContain('depth-1')
+  })
+
+  it('switching to flat view shows every series at zero indentation with its own mediaCount, not rolled-up', async () => {
+    const user = userEvent.setup()
+    seriesData = [
+      { id: 's1', name: 'Wonderland', aliases: [], createdAt: 1700000000000, mediaCount: 2 },
+      {
+        id: 's2',
+        name: 'Alice in Wonderland (1951)',
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 's1',
+        mediaCount: 5
+      }
+    ]
+    render(<SeriesManager />)
+
+    await user.click(screen.getByRole('button', { name: 'Flat' }))
+
+    const parentItem = screen.getByText('Wonderland').closest('li')
+    const childItem = screen.getByText('Alice in Wonderland (1951)').closest('li')
+    expect(parentItem?.className).toContain('depth-0')
+    expect(childItem?.className).toContain('depth-0')
+    expect(parentItem).toHaveTextContent('2') // own count, not the rolled-up 7
+    expect(childItem).toHaveTextContent('5')
+  })
+
+  it('sorting by count in tree view orders roots by rolled-up total', async () => {
+    const user = userEvent.setup()
+    window.localStorage.clear()
+    seriesData = [
+      { id: 's1', name: 'Big Parent', aliases: [], createdAt: 1700000000000, mediaCount: 1 },
+      {
+        id: 's2',
+        name: 'Big Parent Child',
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 's1',
+        mediaCount: 10
+      },
+      { id: 's3', name: 'Small Root', aliases: [], createdAt: 1700000002000, mediaCount: 2 }
+    ]
+    render(<SeriesManager />)
+
+    await user.selectOptions(screen.getByLabelText('Sort by'), 'count')
+
+    const names = screen
+      .getAllByRole('listitem')
+      .map((li) => li.querySelector('.manage-item-name')?.textContent)
+    // ascending count: Small Root (2) before Big Parent (rolled-up 11, with its child right after)
+    expect(names).toEqual(['Small Root', 'Big Parent', 'Big Parent Child'])
+  })
+
+  it('persists the chosen view mode and re-applies it on next render', async () => {
+    const user = userEvent.setup()
+    window.localStorage.clear()
+    seriesData = [
+      { id: 's1', name: 'Wonderland', aliases: [], createdAt: 1700000000000, mediaCount: 2 },
+      {
+        id: 's2',
+        name: 'Alice in Wonderland (1951)',
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 's1',
+        mediaCount: 5
+      }
+    ]
+    const { unmount } = render(<SeriesManager />)
+
+    await user.click(screen.getByRole('button', { name: 'Flat' }))
+    unmount()
+    render(<SeriesManager />)
+
+    const childItem = screen.getByText('Alice in Wonderland (1951)').closest('li')
+    expect(childItem?.className).toContain('depth-0')
+  })
 })
