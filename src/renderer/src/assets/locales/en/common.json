@@ -114,6 +114,11 @@
     "clearFilters": "Clear filters",
     "selectItem": "Select {{name}}",
     "deselectItem": "Deselect {{name}}",
+    "selectedCount": "{{count}} selected",
+    "selectAllOnPage": "Select all on this page",
+    "clearSelection": "Clear selection",
+    "deleteSelected": "Delete selected",
+    "confirmDeleteSelected": "Delete {{count}} selected media? This cannot be undone.",
     "pagination": {
       "previous": "Previous",
       "next": "Next",

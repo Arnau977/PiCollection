@@ -11,6 +11,12 @@ vi.mock('../../components/FilterBar/FilterBar', () => ({
   FilterBar: () => null
 }))
 
+const confirmMock = vi.fn().mockResolvedValue(true)
+
+vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => confirmMock
+}))
+
 beforeEach(() => {
   // Filters persist in module scope across navigations, so each test starts fresh.
   resetGallerySession()
@@ -307,5 +313,128 @@ describe('GalleryPage toolbar', () => {
     expect(
       JSON.parse(window.localStorage.getItem('picollection:gallery-defaults') ?? '{}').density
     ).toBe('large')
+  })
+})
+
+describe('GalleryPage batch selection and delete', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    confirmMock.mockReset()
+    confirmMock.mockResolvedValue(true)
+  })
+
+  function setApiWithDelete(
+    getFiltered: ReturnType<typeof vi.fn>,
+    deleteFn: ReturnType<typeof vi.fn>
+  ): void {
+    Object.defineProperty(window, 'api', {
+      value: { media: { getFiltered, delete: deleteFn } },
+      writable: true,
+      configurable: true
+    })
+  }
+
+  it('shows the bulk action bar with a count once an item is selected', async () => {
+    const user = userEvent.setup()
+    setApiWithDelete(
+      vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }),
+      vi.fn()
+    )
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Select media-0' }))
+
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
+  })
+
+  it('"select all on this page" selects every currently loaded item', async () => {
+    const user = userEvent.setup()
+    setApiWithDelete(
+      vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }),
+      vi.fn()
+    )
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await screen.findByRole('button', { name: 'Select media-0' })
+    await user.click(screen.getByRole('button', { name: 'Select media-0' }))
+    await user.click(screen.getByRole('button', { name: 'Select all on this page' }))
+
+    expect(screen.getByText('3 selected')).toBeInTheDocument()
+  })
+
+  it('clears the selection', async () => {
+    const user = userEvent.setup()
+    setApiWithDelete(
+      vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }),
+      vi.fn()
+    )
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Select media-0' }))
+    await user.click(screen.getByRole('button', { name: 'Clear selection' }))
+
+    expect(screen.queryByText('1 selected')).not.toBeInTheDocument()
+  })
+
+  it('deletes every selected item on confirm, then clears the selection and refetches', async () => {
+    const user = userEvent.setup()
+    const getFiltered = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } })
+    const deleteFn = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    setApiWithDelete(getFiltered, deleteFn)
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Select media-0' }))
+    await user.click(screen.getByRole('button', { name: 'Select media-1' }))
+    await user.click(screen.getByRole('button', { name: 'Delete selected' }))
+
+    expect(confirmMock).toHaveBeenCalledWith(expect.objectContaining({ danger: true }))
+    await waitFor(() => expect(deleteFn).toHaveBeenCalledTimes(2))
+    expect(deleteFn).toHaveBeenCalledWith('0')
+    expect(deleteFn).toHaveBeenCalledWith('1')
+    await waitFor(() => expect(screen.queryByText('2 selected')).not.toBeInTheDocument())
+    await waitFor(() => expect(getFiltered).toHaveBeenCalledTimes(2))
+  })
+
+  it('does not delete anything when the confirm dialog is dismissed', async () => {
+    confirmMock.mockResolvedValueOnce(false)
+    const user = userEvent.setup()
+    const deleteFn = vi.fn()
+    setApiWithDelete(
+      vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }),
+      deleteFn
+    )
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Select media-0' }))
+    await user.click(screen.getByRole('button', { name: 'Delete selected' }))
+
+    expect(deleteFn).not.toHaveBeenCalled()
   })
 })

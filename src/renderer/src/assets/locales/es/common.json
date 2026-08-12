@@ -114,6 +114,11 @@
     "clearFilters": "Limpiar filtros",
     "selectItem": "Seleccionar {{name}}",
     "deselectItem": "Deseleccionar {{name}}",
+    "selectedCount": "{{count}} seleccionados",
+    "selectAllOnPage": "Seleccionar todo en esta página",
+    "clearSelection": "Deseleccionar todo",
+    "deleteSelected": "Eliminar seleccionados",
+    "confirmDeleteSelected": "¿Eliminar {{count}} archivos seleccionados? Esta acción no se puede deshacer.",
     "pagination": {
       "previous": "Anterior",
       "next": "Siguiente",
