@@ -74,6 +74,25 @@ describe('useAdjacentMedia', () => {
     expect(getOrderedIds).toHaveBeenCalledWith({}, { prop: 'createdAt', desc: true })
   })
 
+  it('uses the override filters/sorting instead of the gallery session when provided', async () => {
+    writeGallerySession({ filters: { sfw: true }, sorting: { prop: 'name' }, page: 0 })
+    const getOrderedIds = vi.fn().mockResolvedValue({ success: true, data: ['a'] })
+    setApi({ media: { getOrderedIds } })
+
+    renderHook(() =>
+      useAdjacentMedia('a', {
+        filters: { pendingTagging: true },
+        sorting: { prop: 'createdAt', desc: false }
+      })
+    )
+
+    await waitFor(() => expect(getOrderedIds).toHaveBeenCalled())
+    expect(getOrderedIds).toHaveBeenCalledWith(
+      { pendingTagging: true },
+      { prop: 'createdAt', desc: false }
+    )
+  })
+
   it('resolves to null/null when the IPC call fails', async () => {
     setApi({
       media: {
