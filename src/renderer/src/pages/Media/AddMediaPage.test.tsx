@@ -246,6 +246,22 @@ describe('AddMediaPage', () => {
     expect(await screen.findByText('Alice (new)')).toBeInTheDocument()
   })
 
+  it('defers artist creation: "Create" only stages a pending artist locally', async () => {
+    const user = userEvent.setup()
+    const artistCreate = vi.fn()
+    setApi({ artist: { create: artistCreate } })
+    renderPage()
+
+    const [artistInput] = screen.getAllByRole('combobox')
+    await user.type(artistInput, 'Aardman')
+
+    await user.click(await screen.findByText('Create "Aardman"'))
+
+    expect(artistCreate).not.toHaveBeenCalled()
+    expect(refetchArtists).not.toHaveBeenCalled()
+    expect(artistInput).toHaveValue('Aardman (new)')
+  })
+
   it('auto-selects the series of a character that belongs to exactly one', async () => {
     seriesData = [{ id: 's1', name: 'Wonderland' }]
     charactersData = [{ id: 'c1', name: 'Alice', series: [{ id: 's1', name: 'Wonderland' }] }]

@@ -69,10 +69,6 @@ const MISSING_CATEGORIES: { category: SuggestionCategory; labelKey: string }[] =
   { category: 'series', labelKey: 'sauceNao.missingSeries' }
 ]
 
-function getArtistLabel(artist: ArtistModel): string {
-  return artist.name
-}
-
 export function MediaForm({
   media,
   initialFile,
@@ -94,7 +90,9 @@ export function MediaForm({
   const [pendingTags, setPendingTags] = useState<TagModel[]>([])
   const [pendingSeries, setPendingSeries] = useState<SeriesModel[]>([])
   const [pendingCharacters, setPendingCharacters] = useState<CharacterModel[]>([])
+  const [pendingArtists, setPendingArtists] = useState<ArtistModel[]>([])
   const pendingCharacterSeriesIds = useRef(new Map<string, string[]>())
+  const pendingArtistSocials = useRef(new Map<string, { name: string; url: string }>())
   const hasSauceNaoApiKey = useSauceNaoApiKey()
 
   useEffect((): (() => void) | void => {
@@ -159,18 +157,11 @@ export function MediaForm({
     setInput((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
   }
 
-  async function handleCreateArtist(
-    name: string,
-    social?: { name: string; url: string }
-  ): Promise<void> {
-    const result = await window.api.artist.create({ name })
-    if (result.success) {
-      artists.refetch()
-      setInput((prev) => ({ ...prev, artistId: result.data.id }))
-      if (social) await window.api.artist.addSocialLink(result.data.id, social)
-    } else {
-      setError(result.error.message)
-    }
+  function handleCreateArtist(name: string, social?: { name: string; url: string }): void {
+    const draft: ArtistModel = { id: crypto.randomUUID(), name }
+    setPendingArtists((prev) => [...prev, draft])
+    if (social) pendingArtistSocials.current.set(draft.id, social)
+    setInput((prev) => ({ ...prev, artistId: draft.id }))
   }
 
   function handleCreateTag(name: string): void {
@@ -242,7 +233,7 @@ export function MediaForm({
         artist?.name === name && artist.socialUrl
           ? { name: artist.socialLabel ?? 'Link', url: artist.socialUrl }
           : undefined
-      await handleCreateArtist(name, social)
+      handleCreateArtist(name, social)
     } else if (category === 'tags') handleCreateTag(name)
     else if (category === 'characters') {
       const seriesIds = await resolveSeriesIdsForNewCharacter()
@@ -479,8 +470,13 @@ export function MediaForm({
         <Autocomplete
           name="artist"
           label={t('filters.artist')}
-          options={artists.data}
-          getOptionLabel={getArtistLabel}
+          options={[...artists.data, ...pendingArtists]}
+          getOptionLabel={(artist) =>
+            pendingArtists.some((p) => p.id === artist.id)
+              ? t('autocomplete.pendingLabel', { name: artist.name })
+              : artist.name
+          }
+          getOptionMatchName={(artist) => artist.name}
           getOptionValue={(artist) => artist.id}
           selectedKey={input.artistId ?? null}
           onSelect={(artist) => setInput((prev) => ({ ...prev, artistId: artist?.id }))}
