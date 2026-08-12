@@ -582,7 +582,7 @@ describe('findEntityThumbnails', () => {
   })
 })
 
-describe('findSeriesThumbnailsByClosure', () => {
+describe('findEntityThumbnailsByClosure (series)', () => {
   /** parent -> child -> grandchild, plus an unrelated 'other' series. */
   async function insertSeriesTree(): Promise<void> {
     await seriesRepo.insertSeries(db, {
