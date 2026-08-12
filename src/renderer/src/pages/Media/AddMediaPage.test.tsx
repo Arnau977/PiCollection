@@ -50,14 +50,16 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
     },
     artist: {
       create: vi.fn(),
+      getAll: vi.fn().mockResolvedValue({ success: true, data: [] }),
       addSocialLink: vi.fn().mockResolvedValue({ success: true, data: {} })
     },
-    tag: { create: vi.fn() },
+    tag: { create: vi.fn(), getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
     character: {
       create: vi.fn(),
+      getAll: vi.fn().mockResolvedValue({ success: true, data: [] }),
       update: vi.fn().mockResolvedValue({ success: true, data: {} })
     },
-    series: { create: vi.fn() },
+    series: { create: vi.fn(), getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
     sauceNao: {
       lookup: vi.fn(),
       getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
@@ -144,7 +146,9 @@ describe('AddMediaPage', () => {
     const form = container.querySelector('form') as HTMLFormElement
     fireEvent.submit(form)
 
-    expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'sunset' }))
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'sunset' }))
+    )
     await vi.waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/media/m1'))
   })
 
@@ -174,18 +178,15 @@ describe('AddMediaPage', () => {
     const form = container.querySelector('form') as HTMLFormElement
     fireEvent.submit(form)
 
-    expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ isAiGenerated: true }))
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ isAiGenerated: true }))
+    )
   })
 
-  it('shows a "Create" option when typing a tag name that does not exist, and creates it', async () => {
+  it('defers tag creation: "Create" only stages a pending tag locally, it does not call the API', async () => {
     const user = userEvent.setup()
-    const tagCreate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: { id: 't1', name: 'landscape' } })
+    const tagCreate = vi.fn()
     setApi({ tag: { create: tagCreate } })
-    refetchTags.mockImplementation(() => {
-      tagsData = [{ id: 't1', name: 'landscape' }]
-    })
     renderPage()
 
     const [, tagsInput] = screen.getAllByRole('combobox')
@@ -194,9 +195,77 @@ describe('AddMediaPage', () => {
     const createOption = await screen.findByText('Create "landscape"')
     await user.click(createOption)
 
-    expect(tagCreate).toHaveBeenCalledWith({ name: 'landscape' })
-    expect(refetchTags).toHaveBeenCalled()
-    expect(await screen.findByText('landscape')).toBeInTheDocument()
+    expect(tagCreate).not.toHaveBeenCalled()
+    expect(refetchTags).not.toHaveBeenCalled()
+    expect(await screen.findByText('landscape (new)')).toBeInTheDocument()
+  })
+
+  it('re-selecting a removed pending tag reuses the same draft instead of duplicating it', async () => {
+    const user = userEvent.setup()
+    const tagCreate = vi.fn()
+    setApi({ tag: { create: tagCreate } })
+    renderPage()
+
+    const [, tagsInput] = screen.getAllByRole('combobox')
+    await user.type(tagsInput, 'landscape')
+    await user.click(await screen.findByText('Create "landscape"'))
+
+    await user.click(screen.getByRole('button', { name: 'Quitar landscape (new)' }))
+    await user.type(tagsInput, 'landscape')
+
+    expect(screen.queryByText('Create "landscape"')).not.toBeInTheDocument()
+    await user.click(await screen.findByRole('option', { name: 'landscape (new)' }))
+
+    expect(screen.getByText('landscape (new)')).toBeInTheDocument()
+    expect(tagCreate).not.toHaveBeenCalled()
+  })
+
+  it('defers series creation: "Create" only stages a pending series locally', async () => {
+    const user = userEvent.setup()
+    const seriesCreate = vi.fn()
+    setApi({ series: { create: seriesCreate } })
+    renderPage()
+
+    const [, , , seriesInput] = screen.getAllByRole('combobox')
+    await user.type(seriesInput, 'Neverland')
+
+    await user.click(await screen.findByText('Create "Neverland"'))
+
+    expect(seriesCreate).not.toHaveBeenCalled()
+    expect(refetchSeries).not.toHaveBeenCalled()
+    expect(await screen.findByText('Neverland (new)')).toBeInTheDocument()
+  })
+
+  it('defers character creation: "Create" only stages a pending character locally', async () => {
+    const user = userEvent.setup()
+    const characterCreate = vi.fn()
+    setApi({ character: { create: characterCreate } })
+    renderPage()
+
+    const [, , charactersInput] = screen.getAllByRole('combobox')
+    await user.type(charactersInput, 'Alice')
+
+    await user.click(await screen.findByText('Create "Alice"'))
+
+    expect(characterCreate).not.toHaveBeenCalled()
+    expect(refetchCharacters).not.toHaveBeenCalled()
+    expect(await screen.findByText('Alice (new)')).toBeInTheDocument()
+  })
+
+  it('defers artist creation: "Create" only stages a pending artist locally', async () => {
+    const user = userEvent.setup()
+    const artistCreate = vi.fn()
+    setApi({ artist: { create: artistCreate } })
+    renderPage()
+
+    const [artistInput] = screen.getAllByRole('combobox')
+    await user.type(artistInput, 'Aardman')
+
+    await user.click(await screen.findByText('Create "Aardman"'))
+
+    expect(artistCreate).not.toHaveBeenCalled()
+    expect(refetchArtists).not.toHaveBeenCalled()
+    expect(artistInput).toHaveValue('Aardman (new)')
   })
 
   it('auto-selects the series of a character that belongs to exactly one', async () => {
@@ -277,6 +346,144 @@ describe('AddMediaPage', () => {
       await screen.findByRole('option', { name: 'Ishtar (Fate/Grand Order)' })
     ).toBeInTheDocument()
   })
+
+  it('resolves a pending tag on save: creates it and passes the real id to media.create', async () => {
+    const user = userEvent.setup()
+    const tagCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 't1', name: 'landscape' } })
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({ tag: { create: tagCreate }, media: { create: mediaCreate } })
+    const { container } = renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('sunset.png'))
+
+    const [, tagsInput] = screen.getAllByRole('combobox')
+    await user.type(tagsInput, 'landscape')
+    await user.click(await screen.findByText('Create "landscape"'))
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+
+    await vi.waitFor(() => expect(tagCreate).toHaveBeenCalledWith({ name: 'landscape' }))
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ tagIds: ['t1'] }))
+    )
+    expect(refetchTags).toHaveBeenCalled()
+  })
+
+  it('reuses an existing tag found at save time instead of creating a duplicate', async () => {
+    const user = userEvent.setup()
+    const tagCreate = vi.fn()
+    const tagGetAll = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: [{ id: 'existing-1', name: 'landscape' }] })
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({ tag: { create: tagCreate, getAll: tagGetAll }, media: { create: mediaCreate } })
+    const { container } = renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('sunset.png'))
+
+    const [, tagsInput] = screen.getAllByRole('combobox')
+    await user.type(tagsInput, 'landscape')
+    await user.click(await screen.findByText('Create "landscape"'))
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ tagIds: ['existing-1'] }))
+    )
+    expect(tagCreate).not.toHaveBeenCalled()
+  })
+
+  it('resolves a pending character with an implied still-pending series to real ids on save', async () => {
+    const lookup = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        match: {
+          similarity: 90,
+          indexName: 'Danbooru',
+          sourceUrl: 'https://danbooru.donmai.us/posts/1',
+          artist: null,
+          characters: [{ name: 'Alice' }],
+          series: [{ name: 'Wonderland' }],
+          seriesHints: [],
+          tags: []
+        },
+        remaining: { short: 5, long: 90 }
+      }
+    })
+    const seriesCreate = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { id: 's-real', name: 'Wonderland' } })
+    const characterCreate = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { id: 'c-real', name: 'Alice', series: [] } })
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({
+      sauceNao: { lookup },
+      series: { create: seriesCreate },
+      character: { create: characterCreate },
+      media: { create: mediaCreate }
+    })
+    const user = userEvent.setup()
+    const { container } = renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('alice.png'))
+    await user.click(screen.getByRole('button', { name: 'Suggest tags' }))
+
+    const addChip = await screen.findByRole('button', { name: 'Alice' })
+    await user.click(addChip)
+    await screen.findByText('Wonderland (new)')
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+
+    await vi.waitFor(() => expect(seriesCreate).toHaveBeenCalledWith({ name: 'Wonderland' }))
+    await vi.waitFor(() =>
+      expect(characterCreate).toHaveBeenCalledWith({ name: 'Alice', seriesIds: ['s-real'] })
+    )
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ characterIds: ['c-real'], seriesIds: ['s-real'] })
+      )
+    )
+  })
+
+  it('does not attach the pending social link when the artist resolves via an existing match', async () => {
+    const user = userEvent.setup()
+    const artistCreate = vi.fn()
+    const addSocialLink = vi.fn()
+    const artistGetAll = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: [{ id: 'existing-artist', name: 'Kyoto Animation' }] })
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({
+      artist: { create: artistCreate, getAll: artistGetAll, addSocialLink },
+      media: { create: mediaCreate }
+    })
+    const { container } = renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('scene.png'))
+
+    const [artistInput] = screen.getAllByRole('combobox')
+    await user.type(artistInput, 'Kyoto Animation')
+    await user.click(await screen.findByText('Create "Kyoto Animation"'))
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ artistId: 'existing-artist' })
+      )
+    )
+    expect(artistCreate).not.toHaveBeenCalled()
+    expect(addSocialLink).not.toHaveBeenCalled()
+  })
 })
 
 describe('AddMediaPage duplicate detection', () => {
@@ -328,7 +535,7 @@ describe('AddMediaPage duplicate detection', () => {
 
     const form = container.querySelector('form') as HTMLFormElement
     fireEvent.submit(form)
-    expect(mediaCreate).toHaveBeenCalled()
+    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalled())
   })
 })
 
@@ -383,7 +590,7 @@ describe('AddMediaPage SauceNAO suggestions', () => {
     expect(await screen.findByText('Alice')).toBeInTheDocument()
   })
 
-  it('creates and adds a suggested character that is not yet in the library', async () => {
+  it('stages (does not immediately create) a suggested character that is not yet in the library', async () => {
     const lookup = vi.fn().mockResolvedValue({
       success: true,
       data: {
@@ -400,9 +607,7 @@ describe('AddMediaPage SauceNAO suggestions', () => {
         remaining: { short: 5, long: 90 }
       }
     })
-    const characterCreate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: { id: 'c9', name: 'New Character' } })
+    const characterCreate = vi.fn()
     setApi({ sauceNao: { lookup }, character: { create: characterCreate } })
     const user = userEvent.setup()
     renderPage()
@@ -414,11 +619,12 @@ describe('AddMediaPage SauceNAO suggestions', () => {
     const addChip = await screen.findByRole('button', { name: /New Character/ })
     await user.click(addChip)
 
-    expect(characterCreate).toHaveBeenCalledWith({ name: 'New Character', seriesIds: [] })
-    expect(refetchCharacters).toHaveBeenCalled()
+    expect(characterCreate).not.toHaveBeenCalled()
+    expect(refetchCharacters).not.toHaveBeenCalled()
+    expect(await screen.findByText('New Character (new)')).toBeInTheDocument()
   })
 
-  it('capitalizes a suggested character name and auto-links the sole suggested series', async () => {
+  it('capitalizes a suggested character name and stages the sole suggested series as pending, linked locally', async () => {
     const lookup = vi.fn().mockResolvedValue({
       success: true,
       data: {
@@ -435,12 +641,8 @@ describe('AddMediaPage SauceNAO suggestions', () => {
         remaining: { short: 5, long: 90 }
       }
     })
-    const characterCreate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: { id: 'c9', name: 'New character' } })
-    const seriesCreate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: { id: 's9', name: 'New series' } })
+    const characterCreate = vi.fn()
+    const seriesCreate = vi.fn()
     setApi({
       sauceNao: { lookup },
       character: { create: characterCreate },
@@ -456,8 +658,9 @@ describe('AddMediaPage SauceNAO suggestions', () => {
     const addChip = await screen.findByRole('button', { name: 'New character' })
     await user.click(addChip)
 
-    await vi.waitFor(() => expect(seriesCreate).toHaveBeenCalledWith({ name: 'New series' }))
-    expect(characterCreate).toHaveBeenCalledWith({ name: 'New character', seriesIds: ['s9'] })
+    expect(seriesCreate).not.toHaveBeenCalled()
+    expect(characterCreate).not.toHaveBeenCalled()
+    expect(await screen.findByText('New series (new)')).toBeInTheDocument()
   })
 
   it('does not guess a series link when more than one series is suggested', async () => {
@@ -477,9 +680,7 @@ describe('AddMediaPage SauceNAO suggestions', () => {
         remaining: { short: 5, long: 90 }
       }
     })
-    const characterCreate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: { id: 'c9', name: 'New character' } })
+    const characterCreate = vi.fn()
     const seriesCreate = vi.fn()
     setApi({
       sauceNao: { lookup },
@@ -496,8 +697,8 @@ describe('AddMediaPage SauceNAO suggestions', () => {
     const addChip = await screen.findByRole('button', { name: 'New character' })
     await user.click(addChip)
 
-    await vi.waitFor(() => expect(characterCreate).toHaveBeenCalled())
-    expect(characterCreate).toHaveBeenCalledWith({ name: 'New character', seriesIds: [] })
+    expect(await screen.findByText('New character (new)')).toBeInTheDocument()
+    expect(characterCreate).not.toHaveBeenCalled()
     expect(seriesCreate).not.toHaveBeenCalled()
   })
 

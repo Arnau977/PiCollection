@@ -16,7 +16,7 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
         .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } })
     },
     artist: { create: vi.fn() },
-    tag: { create: vi.fn() },
+    tag: { create: vi.fn(), getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
     character: { create: vi.fn() },
     series: { create: vi.fn() },
     sauceNao: {
@@ -139,5 +139,45 @@ describe('MediaForm character picker', () => {
     expect(
       await screen.findByRole('option', { name: 'Ishtar (Fate/Grand Order)' })
     ).toBeInTheDocument()
+  })
+})
+
+describe('MediaForm deferred entity creation (edit mode)', () => {
+  it('defers tag creation while editing existing media, and resolves it on save', async () => {
+    const tagCreate = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { id: 't-real', name: 'landscape' } })
+    const mediaUpdate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({ tag: { create: tagCreate }, media: { update: mediaUpdate } })
+    const user = userEvent.setup()
+
+    const media = {
+      id: 'm1',
+      name: 'sunset',
+      type: 'image' as const,
+      route: '/pics/sunset.png',
+      sfw: true,
+      isAiGenerated: false,
+      createdAt: Date.now(),
+      tags: [],
+      characters: [],
+      series: []
+    }
+    const { container } = renderForm({ media })
+
+    const [, tagsInput] = screen.getAllByRole('combobox')
+    await user.type(tagsInput, 'landscape')
+    await user.click(await screen.findByText('Create "landscape"'))
+
+    expect(tagCreate).not.toHaveBeenCalled()
+    expect(await screen.findByText('landscape (new)')).toBeInTheDocument()
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+
+    await vi.waitFor(() => expect(tagCreate).toHaveBeenCalledWith({ name: 'landscape' }))
+    await vi.waitFor(() =>
+      expect(mediaUpdate).toHaveBeenCalledWith('m1', expect.objectContaining({ tagIds: ['t-real'] }))
+    )
   })
 })
