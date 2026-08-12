@@ -311,21 +311,25 @@ export const mediaService = {
     ids: string[]
   ): Promise<{ entityId: string; route: string; type: string }[]> {
     const db = getDb()
-    if (kind !== 'series' || ids.length === 0) {
+    if ((kind !== 'series' && kind !== 'character') || ids.length === 0) {
       return mediaRepo.findEntityThumbnails(db, kind, ids)
     }
 
-    // Series are a tree, and `media_series` only stores exact links. Expand each
-    // requested id to its closure (itself + descendants) the same way
-    // getMediaFiltered does, so a parent whose media all sit under its children
-    // still gets a thumbnail instead of a placeholder next to a rolled-up count.
-    const closures = buildClosureMap(await seriesRepo.findSeriesHierarchy(db), ids)
+    // Series and characters are both trees, and their junction tables only store exact links.
+    // Expand each requested id to its closure (itself + descendants) the same way
+    // getMediaFiltered does, so a parent whose media all sit under its children still gets a
+    // thumbnail instead of a placeholder next to a rolled-up count.
+    const hierarchy =
+      kind === 'series'
+        ? await seriesRepo.findSeriesHierarchy(db)
+        : await characterRepo.findCharacterHierarchy(db)
+    const closures = buildClosureMap(hierarchy, ids)
     const pairs = ids.flatMap((ancestorId) =>
       (closures.get(ancestorId) ?? [ancestorId]).map((descendantId) => ({
         descendantId,
         ancestorId
       }))
     )
-    return mediaRepo.findSeriesThumbnailsByClosure(db, pairs)
+    return mediaRepo.findEntityThumbnailsByClosure(db, kind, pairs)
   }
 }

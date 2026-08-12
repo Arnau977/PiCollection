@@ -616,7 +616,7 @@ describe('findSeriesThumbnailsByClosure', () => {
   }
 
   it('returns nothing for an empty pair list without querying', async () => {
-    expect(await mediaRepo.findSeriesThumbnailsByClosure(db, [])).toEqual([])
+    expect(await mediaRepo.findEntityThumbnailsByClosure(db, 'series', [])).toEqual([])
   })
 
   it('gives a parent with no direct media a thumbnail from its child', async () => {
@@ -624,7 +624,7 @@ describe('findSeriesThumbnailsByClosure', () => {
     const media = await baseMediaRow({ id: 'm1', route: '/child.png', sfw: 1 })
     await mediaRepo.setMediaSeries(db, media.id, ['child'])
 
-    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+    const result = await mediaRepo.findEntityThumbnailsByClosure(db, 'series', [
       { descendantId: 'parent', ancestorId: 'parent' },
       { descendantId: 'child', ancestorId: 'parent' },
       { descendantId: 'grandchild', ancestorId: 'parent' }
@@ -638,7 +638,7 @@ describe('findSeriesThumbnailsByClosure', () => {
     const media = await baseMediaRow({ id: 'm1', route: '/grandchild.png', sfw: 1 })
     await mediaRepo.setMediaSeries(db, media.id, ['grandchild'])
 
-    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+    const result = await mediaRepo.findEntityThumbnailsByClosure(db, 'series', [
       { descendantId: 'parent', ancestorId: 'parent' },
       { descendantId: 'child', ancestorId: 'parent' },
       { descendantId: 'grandchild', ancestorId: 'parent' }
@@ -652,7 +652,7 @@ describe('findSeriesThumbnailsByClosure', () => {
     const media = await baseMediaRow({ id: 'm1', route: '/other.png', sfw: 1 })
     await mediaRepo.setMediaSeries(db, media.id, ['other'])
 
-    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+    const result = await mediaRepo.findEntityThumbnailsByClosure(db, 'series', [
       { descendantId: 'parent', ancestorId: 'parent' },
       { descendantId: 'child', ancestorId: 'parent' },
       { descendantId: 'grandchild', ancestorId: 'parent' }
@@ -666,7 +666,7 @@ describe('findSeriesThumbnailsByClosure', () => {
     const nsfw = await baseMediaRow({ id: 'm1', route: '/nsfw.png', sfw: 0 })
     await mediaRepo.setMediaSeries(db, nsfw.id, ['child'])
 
-    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+    const result = await mediaRepo.findEntityThumbnailsByClosure(db, 'series', [
       { descendantId: 'parent', ancestorId: 'parent' },
       { descendantId: 'child', ancestorId: 'parent' }
     ])
@@ -681,7 +681,7 @@ describe('findSeriesThumbnailsByClosure', () => {
     await mediaRepo.setMediaSeries(db, childMedia.id, ['child'])
     await mediaRepo.setMediaSeries(db, otherMedia.id, ['other'])
 
-    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, [
+    const result = await mediaRepo.findEntityThumbnailsByClosure(db, 'series', [
       { descendantId: 'parent', ancestorId: 'parent' },
       { descendantId: 'child', ancestorId: 'parent' },
       { descendantId: 'grandchild', ancestorId: 'parent' },
@@ -720,8 +720,36 @@ describe('findSeriesThumbnailsByClosure', () => {
     }))
     expect(pairs.length).toBeGreaterThan(500)
 
-    const result = await mediaRepo.findSeriesThumbnailsByClosure(db, pairs)
+    const result = await mediaRepo.findEntityThumbnailsByClosure(db, 'series', pairs)
 
     expect(result).toEqual([{ entityId: 's42', route: '/s42.png', type: media.type }])
+  })
+})
+
+describe('findEntityThumbnailsByClosure (character)', () => {
+  it('gives a parent character with no direct media a thumbnail from its child', async () => {
+    await characterRepo.insertCharacter(db, {
+      id: 'parent',
+      name: 'Parent',
+      aliases_json: '[]',
+      created_at: 1,
+      parent_id: null
+    })
+    await characterRepo.insertCharacter(db, {
+      id: 'child',
+      name: 'Child',
+      aliases_json: '[]',
+      created_at: 1,
+      parent_id: 'parent'
+    })
+    const media = await baseMediaRow({ id: 'm1', route: '/child.png', sfw: 1 })
+    await mediaRepo.setMediaCharacters(db, media.id, ['child'])
+
+    const result = await mediaRepo.findEntityThumbnailsByClosure(db, 'character', [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' }
+    ])
+
+    expect(result).toEqual([{ entityId: 'parent', route: '/child.png', type: media.type }])
   })
 })
