@@ -72,3 +72,13 @@ export interface MediaInput {
   seriesIds?: string[]
   pendingTagging?: boolean
 }
+
+export interface MediaBatchUpdateAssociationsInput {
+  mediaIds: string[]
+  addTagIds: string[]
+  removeTagIds: string[]
+  addCharacterIds: string[]
+  removeCharacterIds: string[]
+  addSeriesIds: string[]
+  removeSeriesIds: string[]
+}
