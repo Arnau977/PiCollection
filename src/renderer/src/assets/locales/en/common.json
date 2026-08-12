@@ -57,6 +57,7 @@
     "backupExport": "Export...",
     "backupImport": "Import...",
     "backupExported": "Backup exported.",
+    "backupOpenFolder": "Open folder",
     "backupImportConfirm": "This replaces your entire library and settings with the imported backup. Continue?",
     "backupImportedNeedsRestart": "Backup imported. Restart the app to finish.",
     "backupRestartNow": "Restart now",
@@ -192,7 +193,8 @@
     "successTitle": "Media added successfully",
     "duplicateExact": "This file is already in the library as \"{{name}}\".",
     "duplicateSimilar": "This looks similar to media already in the library:",
-    "duplicateSimilarMatch": "{{distance}}/64 difference"
+    "duplicateSimilarMatch": "{{distance}}/64 difference",
+    "duplicatePreviewLabel": "Preview \"{{name}}\""
   },
   "autocomplete": {
     "noResults": "No results",
@@ -283,5 +285,10 @@
     "missingSeries": "New series",
     "noApiKeyHint": "Tag suggestions need a free SauceNAO API key.",
     "noApiKeyHintLink": "Add one in Settings"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "hint": "There's nothing here. The link may be broken or the page may have moved.",
+    "backHome": "Back to home"
   }
 }

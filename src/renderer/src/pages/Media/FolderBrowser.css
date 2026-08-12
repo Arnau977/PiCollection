@@ -17,6 +17,11 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* Without this, the `.is-selected` tile's outer box-shadow ring gets
+     clipped flush against this container's edges for tiles in the first row
+     or the first/last column. */
+  padding: 4px;
+  margin: -4px;
 }
 
 .folder-browser-breadcrumb {

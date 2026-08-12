@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Pencil } from 'lucide-react'
@@ -20,9 +20,27 @@ const MediaPage: React.FC = () => {
   const { previousId, nextId } = useAdjacentMedia(id)
   const navigate = useNavigate()
   const [isEditing, setIsEditing] = useState(false)
+  const scrollRegionRef = useRef<HTMLDivElement>(null)
+  const savedScrollTop = useRef(0)
 
-  function goToGallery(): void {
-    navigate(PATH.GALLERY)
+  // Entering edit mode swaps in much shorter form content, which clamps the
+  // scroll region back to 0 - restore the view's scroll position once we're
+  // back so saving/cancelling an edit doesn't dump the user at the top.
+  useLayoutEffect(() => {
+    if (!isEditing && scrollRegionRef.current) {
+      scrollRegionRef.current.scrollTop = savedScrollTop.current
+    }
+  }, [isEditing])
+
+  function startEditing(): void {
+    savedScrollTop.current = scrollRegionRef.current?.scrollTop ?? 0
+    setIsEditing(true)
+  }
+
+  function goBack(): void {
+    // A deep link or direct navigation leaves no in-app history to return to.
+    if (window.history.length > 1) navigate(-1)
+    else navigate(PATH.GALLERY)
   }
 
   function goToMedia(nextMediaId: string): void {
@@ -48,7 +66,7 @@ const MediaPage: React.FC = () => {
   function handleBackgroundClick(e: React.MouseEvent<HTMLDivElement>): void {
     const target = e.target as HTMLElement
     if (target.closest(CLICK_THROUGH_SELECTOR)) return
-    goToGallery()
+    goBack()
   }
 
   if (loading) {
@@ -75,35 +93,35 @@ const MediaPage: React.FC = () => {
     )
   }
 
-  if (isEditing) {
-    return (
-      <div className="page media-page">
-        <MediaForm
-          media={media}
-          onCancel={() => setIsEditing(false)}
-          onSaved={() => {
-            setIsEditing(false)
-            refetch()
-          }}
-        />
-      </div>
-    )
-  }
-
   return (
-    <div className="page media-page" onClick={handleBackgroundClick}>
-      <div className="media-page-actions">
-        <button type="button" className="btn media-page-back" onClick={goToGallery}>
-          <ArrowLeft size={16} />
-          {t('gallery.backToGallery')}
-        </button>
-        <button type="button" className="btn" onClick={() => setIsEditing(true)}>
-          <Pencil size={16} />
-          {t('media.edit')}
-        </button>
-        <MediaFileActions route={media.route} type={media.type} />
+    <div className="page media-page" onClick={isEditing ? undefined : handleBackgroundClick}>
+      {!isEditing && (
+        <div className="media-page-actions">
+          <button type="button" className="btn media-page-back" onClick={goBack}>
+            <ArrowLeft size={16} />
+            {t('gallery.backToGallery')}
+          </button>
+          <button type="button" className="btn" onClick={startEditing}>
+            <Pencil size={16} />
+            {t('media.edit')}
+          </button>
+          <MediaFileActions route={media.route} type={media.type} />
+        </div>
+      )}
+      <div className="media-page-scroll-region" ref={scrollRegionRef}>
+        {isEditing ? (
+          <MediaForm
+            media={media}
+            onCancel={() => setIsEditing(false)}
+            onSaved={() => {
+              setIsEditing(false)
+              refetch()
+            }}
+          />
+        ) : (
+          <Media {...media} previousId={previousId} nextId={nextId} onNavigate={goToMedia} />
+        )}
       </div>
-      <Media {...media} previousId={previousId} nextId={nextId} onNavigate={goToMedia} />
     </div>
   )
 }

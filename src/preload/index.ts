@@ -104,6 +104,8 @@ export const api = {
   system: {
     showInFolder: (route: string): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.system.showInFolder, route),
+    showPathInFolder: (path: string): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.system.showPathInFolder, path),
     copyImageToClipboard: (route: string): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.system.copyImageToClipboard, route),
     copyLocationToClipboard: (route: string): Promise<IpcResult<void>> =>

@@ -83,6 +83,9 @@ describe('FolderBrowser', () => {
 
     const folderTile = await screen.findByText('Genshin')
     fireEvent.click(folderTile)
+    // Selecting a folder is deferred briefly so a following double-click can
+    // cancel it instead of flashing the selected state before navigating away.
+    await new Promise((resolve) => setTimeout(resolve, 250))
     fireEvent.click(screen.getByRole('button', { name: /Import selected/ }))
 
     expect(onStartImport).toHaveBeenCalledWith({ files: [], folders: ['Genshin'] })
