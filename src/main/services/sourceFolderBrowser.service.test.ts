@@ -117,6 +117,17 @@ describe('sourceFolderBrowserService.browse', () => {
     expect(result.folders).toEqual([{ name: 'sub', relativePath: 'sub', fileCount: 2 }])
   })
 
+  it('excludes already-cataloged files from a folder recursive count', async () => {
+    await fs.mkdir(join(sourceDir, 'sub'))
+    await fs.writeFile(join(sourceDir, 'sub', 'a.png'), 'x')
+    await fs.writeFile(join(sourceDir, 'sub', 'b.png'), 'x')
+    await insertRow(join('sub', 'a.png'))
+
+    const result = await sourceFolderBrowserService.browse('')
+
+    expect(result.folders).toEqual([{ name: 'sub', relativePath: 'sub', fileCount: 1 }])
+  })
+
   it('falls back to a 0 count for a folder whose recursive listing fails, without failing the whole browse() call', async () => {
     await fs.mkdir(join(sourceDir, 'broken'))
     const originalReaddir = fs.readdir.bind(fs)
