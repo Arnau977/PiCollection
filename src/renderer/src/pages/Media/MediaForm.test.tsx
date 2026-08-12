@@ -33,10 +33,11 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
 }
 
 let charactersData: CharacterModel[] = []
+let tagsData: { id: string; name: string }[] = []
 
 vi.mock('../../hooks/useEntityLists', () => ({
   useArtists: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
-  useTags: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
+  useTags: () => ({ data: tagsData, loading: false, error: null, refetch: vi.fn() }),
   useCharacters: () => ({ data: charactersData, loading: false, error: null, refetch: vi.fn() }),
   useSeries: () => ({ data: [], loading: false, error: null, refetch: vi.fn() })
 }))
@@ -55,6 +56,7 @@ function renderForm(props: Partial<ComponentProps<typeof MediaForm>> = {}) {
 beforeEach(() => {
   setApi()
   charactersData = []
+  tagsData = []
 })
 
 describe('MediaForm initialFile', () => {
@@ -209,6 +211,57 @@ describe('MediaForm onMarkResolved', () => {
 
     await vi.waitFor(() => expect(onMarkResolved).toHaveBeenCalledTimes(1))
     expect(mediaUpdate).not.toHaveBeenCalled()
+  })
+})
+
+describe('MediaForm remount on media change', () => {
+  it('discards the previous item\'s loaded fields (e.g. tags) when re-keyed for a different media item', () => {
+    const mediaA = {
+      id: 'a',
+      name: 'First picture',
+      type: 'image' as const,
+      route: '/pics/a.png',
+      sfw: true,
+      isAiGenerated: false,
+      createdAt: Date.now(),
+      tags: [{ id: 't1', name: 'first-tag' }],
+      pendingTagging: true
+    }
+    const mediaB = {
+      id: 'b',
+      name: 'Second picture',
+      type: 'image' as const,
+      route: '/pics/b.png',
+      sfw: true,
+      isAiGenerated: false,
+      createdAt: Date.now(),
+      tags: [],
+      pendingTagging: true
+    }
+
+    tagsData = [{ id: 't1', name: 'first-tag' }]
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <MediaForm key={mediaA.id} media={mediaA} onCancel={vi.fn()} onSaved={vi.fn()} />
+      </MemoryRouter>
+    )
+    expect(screen.getByDisplayValue('First picture')).toBeInTheDocument()
+    expect(screen.getByText('first-tag')).toBeInTheDocument()
+
+    // Simulates what MediaPage does: it stays mounted across a pending-queue
+    // hop (React Router doesn't remount on a param-only change), and relies
+    // on MediaForm's `key` to force a fresh instance instead of carrying the
+    // previous item's loaded input state into the next one.
+    rerender(
+      <MemoryRouter>
+        <MediaForm key={mediaB.id} media={mediaB} onCancel={vi.fn()} onSaved={vi.fn()} />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByDisplayValue('Second picture')).toBeInTheDocument()
+    expect(screen.queryByDisplayValue('First picture')).not.toBeInTheDocument()
+    expect(screen.queryByText('first-tag')).not.toBeInTheDocument()
   })
 })
 

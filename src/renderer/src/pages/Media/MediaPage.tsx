@@ -186,6 +186,7 @@ const MediaPage: React.FC = () => {
       <div className="media-page-scroll-region" ref={scrollRegionRef}>
         {isEditing ? (
           <MediaForm
+            key={media.id}
             media={media}
             queueInfo={queueInfo}
             onCancel={() => setIsEditing(false)}
