@@ -91,15 +91,77 @@ describe('ImportQueue', () => {
     await vi.waitFor(() => expect(onLastSaved).toHaveBeenCalledWith({ id: 'm1' }))
   })
 
-  it('calls onClose when Close is clicked mid-queue, without touching remaining items', async () => {
+  it('opens the exit dialog instead of closing when Close is clicked with items remaining', async () => {
     const onClose = vi.fn()
     renderQueue(onClose)
     await screen.findByText('File 1 of 2')
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
 
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Add remaining to Pending' })).toBeInTheDocument()
+  })
+
+  it('exit dialog: Keep editing dismisses the dialog and stays on the current item', async () => {
+    renderQueue()
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }))
+
+    expect(screen.queryByRole('button', { name: 'Add remaining to Pending' })).not.toBeInTheDocument()
+    expect(screen.getByText('File 1 of 2')).toBeInTheDocument()
+  })
+
+  it('exit dialog: Discard closes without creating anything for the remaining files', async () => {
+    const onClose = vi.fn()
+    renderQueue(onClose)
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }))
+
     expect(onClose).toHaveBeenCalledTimes(1)
     expect(mediaCreate).not.toHaveBeenCalled()
+  })
+
+  it('exit dialog: Add remaining to Pending bulk-creates every unprocessed file with pendingTagging: true, then closes', async () => {
+    const onClose = vi.fn()
+    renderQueue(onClose)
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add remaining to Pending' }))
+
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+    expect(mediaCreate).toHaveBeenCalledTimes(2)
+    expect(mediaCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'a', route: '/src/a.png', pendingTagging: true })
+    )
+    expect(mediaCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'b', route: '/src/b.png', pendingTagging: true })
+    )
+  })
+
+  it('still opens the exit dialog on the last item, since it is itself unprocessed, and Add to Pending only creates that one', async () => {
+    const onClose = vi.fn()
+    const { container } = renderQueue(onClose)
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+    await screen.findByText('File 2 of 2')
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+    expect(screen.getByRole('button', { name: 'Add remaining to Pending' })).toBeInTheDocument()
+    mediaCreate.mockClear()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add remaining to Pending' }))
+
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+    expect(mediaCreate).toHaveBeenCalledTimes(1)
+    expect(mediaCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'b', route: '/src/b.png', pendingTagging: true })
+    )
   })
 
   it('shows an error and no form when expandSelection fails', async () => {
