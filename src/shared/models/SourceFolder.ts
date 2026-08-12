@@ -23,13 +23,19 @@ export interface SourceFolderBrowseEntry {
   relativePath: string
 }
 
+export interface SourceFolderBrowseFolder extends SourceFolderBrowseEntry {
+  /** Recursive count of media files anywhere under this folder, computed at
+   * request time (never persisted) - see sourceFolderBrowser.service.ts. */
+  fileCount: number
+}
+
 export interface SourceFolderBrowseFile extends SourceFolderBrowseEntry {
   type: 'image' | 'video' | 'gif'
   cataloged: boolean
 }
 
 export interface SourceFolderBrowseResult {
-  folders: SourceFolderBrowseEntry[]
+  folders: SourceFolderBrowseFolder[]
   files: SourceFolderBrowseFile[]
 }
 

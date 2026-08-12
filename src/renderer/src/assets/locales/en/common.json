@@ -233,7 +233,9 @@
     "importSelected": "Import selected ({{count}})",
     "breadcrumbLabel": "Folder path",
     "retry": "Retry",
-    "cataloged": "Already added"
+    "cataloged": "Already added",
+    "fileCount_one": "{{count}} file",
+    "fileCount_other": "{{count}} files"
   },
   "search": {
     "label": "Search",

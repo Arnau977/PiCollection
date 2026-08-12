@@ -233,7 +233,9 @@
     "importSelected": "Importar seleccionados ({{count}})",
     "breadcrumbLabel": "Ruta de carpeta",
     "retry": "Reintentar",
-    "cataloged": "Ya añadido"
+    "cataloged": "Ya añadido",
+    "fileCount_one": "{{count}} archivo",
+    "fileCount_other": "{{count}} archivos"
   },
   "search": {
     "label": "Buscar",

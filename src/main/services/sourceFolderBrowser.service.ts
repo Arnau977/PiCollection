@@ -1,7 +1,9 @@
 import { promises as fs } from 'fs'
 import { basename, extname, join, normalize } from 'path'
+import type { Kysely } from 'kysely'
 import { getDb } from '../database/connection'
 import * as mediaRepo from '../database/repositories/media.repository'
+import type { DB } from '../database/schema'
 import { AppError } from '../errors'
 import { isPathUnderRoot } from './pathPrefix'
 import { readSourceFolder, relativizeRoute, resolveRoute } from './sourceFolder'
@@ -68,19 +70,57 @@ async function collectFilesRecursively(absoluteDir: string): Promise<FileCandida
   return results
 }
 
+// A single native recursive readdir call, rather than collectFilesRecursively's
+// manual per-directory walk - cheap enough to run for every folder tile shown
+// in the browser. A failure anywhere in the subtree (e.g. a permission-denied
+// nested folder) shouldn't take down the whole browse() listing. Cataloged
+// files are excluded - the badge is meant to answer "how much is left to
+// import here", not "how much media exists here".
+async function countUncatalogedMediaFilesRecursively(
+  db: Kysely<DB>,
+  absoluteDir: string,
+  sourceFolder: string
+): Promise<number> {
+  try {
+    const entries = await fs.readdir(absoluteDir, { recursive: true, withFileTypes: true })
+    const mediaEntries = entries.filter(
+      (entry) => entry.isFile() && typeForExtension(entry.name) !== null
+    )
+    const relativeRoutes = mediaEntries.map((entry) =>
+      relativizeRoute(join(entry.parentPath, entry.name), sourceFolder)
+    )
+    const catalogedRoutes = await mediaRepo.routesExist(db, relativeRoutes)
+    return relativeRoutes.filter((route) => !catalogedRoutes.has(route)).length
+  } catch {
+    return 0
+  }
+}
+
 export const sourceFolderBrowserService = {
   async browse(relativePath: string): Promise<SourceFolderBrowseResult> {
     const sourceFolder = requireSourceFolder()
     const absoluteDir = resolveWithinSourceFolder(relativePath, sourceFolder)
     const entries = await fs.readdir(absoluteDir, { withFileTypes: true })
+    const db = getDb()
 
-    const folders = entries
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => ({
-        name: entry.name,
-        relativePath: relativizeRoute(join(absoluteDir, entry.name), sourceFolder)
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name))
+    const folders = (
+      await Promise.all(
+        entries
+          .filter((entry) => entry.isDirectory())
+          .map(async (entry) => {
+            const folderAbsolutePath = join(absoluteDir, entry.name)
+            return {
+              name: entry.name,
+              relativePath: relativizeRoute(folderAbsolutePath, sourceFolder),
+              fileCount: await countUncatalogedMediaFilesRecursively(
+                db,
+                folderAbsolutePath,
+                sourceFolder
+              )
+            }
+          })
+      )
+    ).sort((a, b) => a.name.localeCompare(b.name))
 
     const fileCandidates = entries
       .filter((entry) => entry.isFile())
@@ -92,7 +132,7 @@ export const sourceFolderBrowserService = {
     const fileRelativePaths = fileCandidates.map((candidate) =>
       relativizeRoute(join(absoluteDir, candidate.entry.name), sourceFolder)
     )
-    const catalogedRoutes = await mediaRepo.routesExist(getDb(), fileRelativePaths)
+    const catalogedRoutes = await mediaRepo.routesExist(db, fileRelativePaths)
 
     const files = fileCandidates
       .map((candidate, index) => ({

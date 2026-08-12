@@ -175,6 +175,23 @@
   width: 22px;
 }
 
+.folder-browser-tile-count-badge {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  bottom: 6px;
+  color: var(--color-text-muted);
+  display: flex;
+  font-size: 0.68rem;
+  font-weight: 700;
+  justify-content: center;
+  min-width: 22px;
+  padding: 0.15rem 0.4rem;
+  position: absolute;
+  right: 6px;
+}
+
 .folder-browser-tile-badge {
   align-items: center;
   background: var(--color-success);
