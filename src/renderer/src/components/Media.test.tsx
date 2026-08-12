@@ -19,11 +19,13 @@ function makeMedia(overrides: Partial<MediaModel> = {}): MediaModel {
   }
 }
 
-/** `Media` fetches the full series list (via `useSeries`) to resolve a linked series' ancestors. */
+/** `Media` fetches the full series/character lists (via `useSeries`/`useCharacters`) to resolve a
+ * linked series/character's ancestors. */
 function setApi(overrides: Record<string, unknown> = {}): void {
   Object.defineProperty(window, 'api', {
     value: {
       series: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+      character: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
       ...overrides
     },
     writable: true,
@@ -81,6 +83,28 @@ describe('Media', () => {
 
     expect(await screen.findByText('Honkai (series)')).toBeInTheDocument()
     expect(screen.getByText('Honkai: Star Rail')).toBeInTheDocument()
+  })
+
+  it("shows a linked character's parent for context even when only the child is directly linked", async () => {
+    setApi({
+      series: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+      character: {
+        getAll: vi.fn().mockResolvedValue({
+          success: true,
+          data: [
+            { id: 'p1', name: 'Elizabeth Bathory', series: [], parentId: null },
+            { id: 'c1', name: 'Elizabeth Bathory (Brave)', series: [], parentId: 'p1' }
+          ]
+        })
+      }
+    })
+
+    render(
+      <Media {...makeMedia({ characters: [{ id: 'c1', name: 'Elizabeth Bathory (Brave)', series: [] }] })} />
+    )
+
+    expect(await screen.findByText('Elizabeth Bathory')).toBeInTheDocument()
+    expect(screen.getByText('Elizabeth Bathory (Brave)')).toBeInTheDocument()
   })
 
   it('does not crash when tags/characters are omitted', () => {

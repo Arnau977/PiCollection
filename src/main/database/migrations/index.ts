@@ -6,6 +6,7 @@ import * as m0004MediaHash from './0004_media_hash'
 import * as m0005IndexMediaRoute from './0005_index_media_route'
 import * as m0006TagCreatedAt from './0006_tag_created_at'
 import * as m0007SeriesParent from './0007_series_parent'
+import * as m0008CharacterParent from './0008_character_parent'
 
 export const migrations: Record<string, Migration> = {
   '0001_initial_schema': m0001InitialSchema,
@@ -14,5 +15,6 @@ export const migrations: Record<string, Migration> = {
   '0004_media_hash': m0004MediaHash,
   '0005_index_media_route': m0005IndexMediaRoute,
   '0006_tag_created_at': m0006TagCreatedAt,
-  '0007_series_parent': m0007SeriesParent
+  '0007_series_parent': m0007SeriesParent,
+  '0008_character_parent': m0008CharacterParent
 }

@@ -53,19 +53,21 @@ function applyGroupedFilter<O>(
 
 /**
  * Same OR-of-AND-groups shape as `applyGroupedFilter`, but each id inside a group first expands
- * to its series-hierarchy closure (itself + descendants) via `seriesClosures` before being
- * ANDed - so "media must match series A AND series B" really means "must be in A's closure AND
- * in B's closure", not just carry exactly those two ids.
+ * to its hierarchy closure (itself + descendants) via `closures` before being ANDed - so "media
+ * must match series/character A AND B" really means "must be in A's closure AND in B's closure",
+ * not just carry exactly those two ids. Used for both `seriesGroups` and `characterGroups`.
  */
-function applySeriesGroupedFilter<O>(
+function applyClosureGroupedFilter<O>(
   qb: SelectQueryBuilder<DB, 'media', O>,
   db: Kysely<DB>,
+  table: 'media_series' | 'media_character',
+  column: 'series_id' | 'character_id',
   groups: string[][] | undefined,
-  seriesClosures?: Map<string, string[]>
+  closures?: Map<string, string[]>
 ): SelectQueryBuilder<DB, 'media', O> {
   const nonEmptyGroups = (groups ?? []).filter((group) => group.length > 0)
   if (!nonEmptyGroups.length) return qb
-  const closureFor = (id: string): string[] => seriesClosures?.get(id) ?? [id]
+  const closureFor = (id: string): string[] => closures?.get(id) ?? [id]
 
   return qb.where((eb) =>
     eb.or(
@@ -75,10 +77,7 @@ function applySeriesGroupedFilter<O>(
             eb(
               'media.id',
               'in',
-              db
-                .selectFrom('media_series')
-                .select('media_id')
-                .where('series_id', 'in', closureFor(id))
+              db.selectFrom(table).select('media_id').where(column, 'in', closureFor(id))
             )
           )
         )
@@ -157,7 +156,8 @@ function compileQueryNode(
 function applyMediaFilters(
   db: Kysely<DB>,
   filters: MediaFilters,
-  seriesClosures?: Map<string, string[]>
+  seriesClosures?: Map<string, string[]>,
+  characterClosures?: Map<string, string[]>
 ) {
   let qb = db.selectFrom('media')
 
@@ -183,13 +183,20 @@ function applyMediaFilters(
   }
 
   qb = applyGroupedFilter(qb, db, 'media_tag', 'tag_id', filters.tagGroups)
-  qb = applyGroupedFilter(qb, db, 'media_character', 'character_id', filters.characterGroups)
+  qb = applyClosureGroupedFilter(
+    qb,
+    db,
+    'media_character',
+    'character_id',
+    filters.characterGroups,
+    characterClosures
+  )
 
   if (filters.noCharacter) {
     qb = qb.where('media.id', 'not in', db.selectFrom('media_character').select('media_id'))
   }
 
-  qb = applySeriesGroupedFilter(qb, db, filters.seriesGroups, seriesClosures)
+  qb = applyClosureGroupedFilter(qb, db, 'media_series', 'series_id', filters.seriesGroups, seriesClosures)
 
   if (filters.noSeries) {
     qb = qb.where('media.id', 'not in', db.selectFrom('media_series').select('media_id'))
@@ -202,11 +209,12 @@ export function findMediaRows(
   db: Kysely<DB>,
   filters: MediaFilters,
   sorting?: Sorting,
-  seriesClosures?: Map<string, string[]>
+  seriesClosures?: Map<string, string[]>,
+  characterClosures?: Map<string, string[]>
 ): Promise<MediaTable[]> {
   const sortColumn = SORT_COLUMNS[sorting?.prop ?? 'createdAt'] ?? 'created_at'
 
-  return applyMediaFilters(db, filters, seriesClosures)
+  return applyMediaFilters(db, filters, seriesClosures, characterClosures)
     .selectAll('media')
     .orderBy(sortColumn, sorting?.desc ? 'desc' : 'asc')
     .limit(filters.limit ?? DEFAULT_LIMIT)
@@ -220,11 +228,12 @@ export function findMediaIds(
   db: Kysely<DB>,
   filters: MediaFilters,
   sorting?: Sorting,
-  seriesClosures?: Map<string, string[]>
+  seriesClosures?: Map<string, string[]>,
+  characterClosures?: Map<string, string[]>
 ): Promise<{ id: string }[]> {
   const sortColumn = SORT_COLUMNS[sorting?.prop ?? 'createdAt'] ?? 'created_at'
 
-  return applyMediaFilters(db, filters, seriesClosures)
+  return applyMediaFilters(db, filters, seriesClosures, characterClosures)
     .select('media.id')
     .orderBy(sortColumn, sorting?.desc ? 'desc' : 'asc')
     .execute()
@@ -233,9 +242,10 @@ export function findMediaIds(
 export async function countMediaRows(
   db: Kysely<DB>,
   filters: MediaFilters,
-  seriesClosures?: Map<string, string[]>
+  seriesClosures?: Map<string, string[]>,
+  characterClosures?: Map<string, string[]>
 ): Promise<number> {
-  const result = await applyMediaFilters(db, filters, seriesClosures)
+  const result = await applyMediaFilters(db, filters, seriesClosures, characterClosures)
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .executeTakeFirstOrThrow()
   return Number(result.count)
@@ -511,9 +521,9 @@ const ENTITY_THUMBNAIL_JOIN: Record<
  * tiebreak" isn't something the fluent query builder expresses cleanly, and
  * the four kinds each need slightly different joins.
  *
- * The `series` branch matches the exact requested ids only. Callers that want
- * a parent series to inherit a thumbnail from its descendants must use
- * `findSeriesThumbnailsByClosure` instead - see `mediaService.getEntityThumbnails`.
+ * The `series`/`character` branches match the exact requested ids only. Callers that want a
+ * parent to inherit a thumbnail from its descendants must use `findEntityThumbnailsByClosure`
+ * instead - see `mediaService.getEntityThumbnails`.
  */
 export async function findEntityThumbnails(
   db: Kysely<DB>,
@@ -561,39 +571,38 @@ export async function findEntityThumbnails(
   return result.rows
 }
 
-/** A series id actually linked in `media_series`, paired with the requested ancestor it should count towards. */
-export interface SeriesClosurePair {
+/** An id actually linked to media, paired with the requested ancestor it should count towards. */
+export interface EntityClosurePair {
   descendantId: string
   ancestorId: string
 }
 
 /**
- * Series thumbnails that honour the series tree: one SFW thumbnail per
- * *requested ancestor*, drawn from media linked to any series in that
- * ancestor's closure (itself plus every descendant). A parent series whose
- * media all live under its children still gets a preview, matching the
- * rolled-up counts the Manage list shows next to it.
+ * Thumbnails that honour a hierarchy: one SFW thumbnail per *requested ancestor*, drawn from
+ * media linked to any id in that ancestor's closure (itself plus every descendant). A parent
+ * whose media all live under its children still gets a preview, matching the rolled-up counts
+ * the Manage list shows next to it. Used for both series and characters.
  *
- * `media_series` only stores exact links, so the closure has to come from the
- * caller: the (descendant, ancestor) pairs are inlined as a derived table and
- * the window function partitions by `ancestor_id` rather than by the raw join
- * column. The pairs go in as a `WITH closure(descendant_id, ancestor_id) AS
- * (VALUES ...)` CTE - the CTE's column list is what names the otherwise
- * anonymous `VALUES` columns so the join below can reference them. A chain of
- * `SELECT ... UNION ALL` would name its columns too, but it is a compound
- * SELECT and so capped at `SQLITE_MAX_COMPOUND_SELECT` (500, hardcoded in
- * better-sqlite3's build): any library with more than ~500 closure pairs would
- * fail outright. A `VALUES` list carries no such cap, leaving only the far
- * roomier parameter limit (32766 host params, i.e. ~16k pairs).
+ * `media_series`/`media_character` only store exact links, so the closure has to come from the
+ * caller: the (descendant, ancestor) pairs are inlined as a derived table and the window function
+ * partitions by `ancestor_id` rather than by the raw join column. The pairs go in as a `WITH
+ * closure(descendant_id, ancestor_id) AS (VALUES ...)` CTE - the CTE's column list is what names
+ * the otherwise anonymous `VALUES` columns so the join below can reference them. A chain of
+ * `SELECT ... UNION ALL` would name its columns too, but it is a compound SELECT and so capped at
+ * `SQLITE_MAX_COMPOUND_SELECT` (500, hardcoded in better-sqlite3's build): any library with more
+ * than ~500 closure pairs would fail outright. A `VALUES` list carries no such cap, leaving only
+ * the far roomier parameter limit (32766 host params, i.e. ~16k pairs).
  */
-export async function findSeriesThumbnailsByClosure(
+export async function findEntityThumbnailsByClosure(
   db: Kysely<DB>,
-  pairs: SeriesClosurePair[]
+  kind: 'series' | 'character',
+  pairs: EntityClosurePair[]
 ): Promise<EntityThumbnailRow[]> {
   // Also keeps the `VALUES` list below from degenerating into invalid SQL,
   // since it needs at least one row.
   if (pairs.length === 0) return []
 
+  const { table, column } = ENTITY_THUMBNAIL_JOIN[kind]
   const pairRows = sql.join(pairs.map((pair) => sql`(${pair.descendantId}, ${pair.ancestorId})`))
 
   const result = await sql<EntityThumbnailRow>`
@@ -605,8 +614,8 @@ export async function findSeriesThumbnailsByClosure(
         media.type AS type,
         ROW_NUMBER() OVER (PARTITION BY closure.ancestor_id ORDER BY RANDOM()) AS rn
       FROM closure
-      JOIN media_series ms ON ms.series_id = closure.descendant_id
-      JOIN media ON media.id = ms.media_id
+      JOIN ${sql.table(table)} j ON j.${sql.ref(column)} = closure.descendant_id
+      JOIN media ON media.id = j.media_id
       WHERE media.sfw = 1
     ) WHERE rn = 1
   `.execute(db)

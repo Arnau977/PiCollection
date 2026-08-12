@@ -92,4 +92,54 @@ describe('characterService', () => {
     const all = await characterService.getAllCharacters()
     expect(all.find((c) => c.id === character.id)?.mediaCount).toBe(0)
   })
+
+  it('defaults parentId to null when omitted', async () => {
+    const character = await characterService.createCharacter({ name: 'Alice' })
+    expect(character.parentId).toBeNull()
+  })
+
+  it('stores and returns a parentId set on create', async () => {
+    const parent = await characterService.createCharacter({ name: 'Elizabeth Bathory' })
+    const child = await characterService.createCharacter({
+      name: 'Elizabeth Bathory (Brave)',
+      parentId: parent.id
+    })
+    expect(child.parentId).toBe(parent.id)
+  })
+
+  it('updates a character to attach it to a parent', async () => {
+    const parent = await characterService.createCharacter({ name: 'parent' })
+    const child = await characterService.createCharacter({ name: 'child' })
+
+    const updated = await characterService.updateCharacter(child.id, {
+      name: child.name,
+      parentId: parent.id
+    })
+
+    expect(updated.parentId).toBe(parent.id)
+  })
+
+  it('rejects setting a character as its own parent', async () => {
+    const character = await characterService.createCharacter({ name: 'self' })
+
+    await expect(
+      characterService.updateCharacter(character.id, { name: character.name, parentId: character.id })
+    ).rejects.toThrow(/cycle|own parent/i)
+  })
+
+  it('rejects parenting a character to one of its own descendants', async () => {
+    const grandparent = await characterService.createCharacter({ name: 'grandparent' })
+    const parent = await characterService.createCharacter({
+      name: 'parent',
+      parentId: grandparent.id
+    })
+    const child = await characterService.createCharacter({ name: 'child', parentId: parent.id })
+
+    await expect(
+      characterService.updateCharacter(grandparent.id, {
+        name: grandparent.name,
+        parentId: child.id
+      })
+    ).rejects.toThrow(/cycle|descendant/i)
+  })
 })

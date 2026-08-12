@@ -1,9 +1,9 @@
-export interface SeriesHierarchyNode {
+export interface HierarchyNode {
   id: string
   parentId: string | null
 }
 
-function buildChildrenIndex(hierarchy: SeriesHierarchyNode[]): Map<string, string[]> {
+function buildChildrenIndex(hierarchy: HierarchyNode[]): Map<string, string[]> {
   const childrenByParent = new Map<string, string[]>()
   for (const node of hierarchy) {
     if (node.parentId === null) continue
@@ -15,10 +15,7 @@ function buildChildrenIndex(hierarchy: SeriesHierarchyNode[]): Map<string, strin
 }
 
 /** For each requested id, resolves itself plus every descendant reachable through the tree. */
-export function buildSeriesClosureMap(
-  hierarchy: SeriesHierarchyNode[],
-  ids: string[]
-): Map<string, string[]> {
+export function buildClosureMap(hierarchy: HierarchyNode[], ids: string[]): Map<string, string[]> {
   const childrenByParent = buildChildrenIndex(hierarchy)
   const closures = new Map<string, string[]>()
 
@@ -36,17 +33,17 @@ export function buildSeriesClosureMap(
   return closures
 }
 
-/** True if setting `candidateParentId` as the parent of `seriesId` would create a cycle. */
+/** True if setting `candidateParentId` as the parent of `entityId` would create a cycle. */
 export function wouldCreateCycle(
-  hierarchy: SeriesHierarchyNode[],
-  seriesId: string,
+  hierarchy: HierarchyNode[],
+  entityId: string,
   candidateParentId: string
 ): boolean {
   const parentById = new Map(hierarchy.map((node) => [node.id, node.parentId]))
 
   let current: string | null = candidateParentId
   while (current !== null) {
-    if (current === seriesId) return true
+    if (current === entityId) return true
     current = parentById.get(current) ?? null
   }
   return false
