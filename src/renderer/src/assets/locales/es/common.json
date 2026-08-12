@@ -273,7 +273,10 @@
     "sortName": "Nombre",
     "sortDate": "Fecha de añadido",
     "ascending": "Ascendente",
-    "descending": "Descendente"
+    "descending": "Descendente",
+    "sortCount": "Cantidad",
+    "viewTree": "Árbol",
+    "viewFlat": "Plana"
   },
   "mediaThumb": {
     "missingFile": "Archivo no encontrado"
