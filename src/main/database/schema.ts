@@ -54,6 +54,10 @@ export interface MediaTable {
   hash: string | null
   /** 64-bit perceptual hash (hex), null under the same conditions as `hash`. */
   phash: string | null
+  /** Set only at creation, via batch import's "send to pending" / "add remaining
+      to pending" actions - cleared only via the dedicated clearPendingTagging
+      action, never as a side effect of a normal update. */
+  pending_tagging: number
 }
 
 export interface MediaTagTable {

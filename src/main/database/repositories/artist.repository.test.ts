@@ -34,7 +34,8 @@ describe('countMediaPerArtist', () => {
       artist_id: 'tagged',
       created_at: Date.now(),
       hash: null,
-      phash: null
+      phash: null,
+      pending_tagging: 0
     })
 
     const counts = await artistRepo.countMediaPerArtist(db)

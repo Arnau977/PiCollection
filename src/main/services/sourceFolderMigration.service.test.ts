@@ -42,7 +42,8 @@ async function insertRow(route: string): Promise<string> {
     artist_id: null,
     created_at: Date.now(),
     hash: null,
-    phash: null
+    phash: null,
+    pending_tagging: 0
   })
   return id
 }

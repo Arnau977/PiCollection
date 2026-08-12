@@ -60,7 +60,8 @@ function insertRow(
     artist_id: null,
     created_at: Date.now(),
     hash,
-    phash: null
+    phash: null,
+    pending_tagging: 0
   })
 }
 

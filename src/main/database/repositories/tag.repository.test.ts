@@ -34,7 +34,8 @@ describe('countMediaPerTag', () => {
       artist_id: null,
       created_at: Date.now(),
       hash: null,
-      phash: null
+      phash: null,
+      pending_tagging: 0
     })
     await mediaRepo.setMediaTags(db, media.id, ['tagged'])
 
