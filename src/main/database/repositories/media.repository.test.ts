@@ -134,25 +134,29 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
       id: randomUUID(),
       name: 'Ishtar',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
     const ereshkigal = await characterRepo.insertCharacter(db, {
       id: randomUUID(),
       name: 'Ereshkigal',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
     const rin = await characterRepo.insertCharacter(db, {
       id: randomUUID(),
       name: 'Rin',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
     const shirou = await characterRepo.insertCharacter(db, {
       id: randomUUID(),
       name: 'Shirou',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
 
     const bothMesopotamian = await insertMedia('bothMesopotamian')
@@ -190,7 +194,8 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
       id: randomUUID(),
       name: 'charX',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
 
     const matches = await insertMedia('matches')
@@ -509,13 +514,15 @@ describe('findEntityThumbnails', () => {
       id: 'c1',
       name: 'Solo',
       aliases_json: '[]',
-      created_at: 1
+      created_at: 1,
+      parent_id: null
     })
     const other = await characterRepo.insertCharacter(db, {
       id: 'c2',
       name: 'Other',
       aliases_json: '[]',
-      created_at: 1
+      created_at: 1,
+      parent_id: null
     })
     const groupMedia = await baseMediaRow({ id: 'm1', route: '/group', sfw: 1 })
     const soloMedia = await baseMediaRow({ id: 'm2', route: '/solo', sfw: 1 })

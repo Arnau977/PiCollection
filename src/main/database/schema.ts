@@ -18,6 +18,7 @@ export interface CharacterTable {
   name: string
   aliases_json: string
   created_at: number
+  parent_id: string | null
 }
 
 export interface SeriesTable {

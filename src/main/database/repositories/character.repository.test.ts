@@ -25,13 +25,15 @@ describe('countMediaPerCharacter', () => {
       id: 'tagged',
       name: 'Tagged',
       aliases_json: '[]',
-      created_at: 1
+      created_at: 1,
+      parent_id: null
     })
     await characterRepo.insertCharacter(db, {
       id: 'untagged',
       name: 'Untagged',
       aliases_json: '[]',
-      created_at: 2
+      created_at: 2,
+      parent_id: null
     })
     const media = await mediaRepo.insertMediaRow(db, {
       id: randomUUID(),

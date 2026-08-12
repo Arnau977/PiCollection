@@ -47,7 +47,8 @@ function insertCharacter(name: string): Promise<{ id: string }> {
     id: randomUUID(),
     name,
     aliases_json: '[]',
-    created_at: Date.now()
+    created_at: Date.now(),
+    parent_id: null
   })
 }
 

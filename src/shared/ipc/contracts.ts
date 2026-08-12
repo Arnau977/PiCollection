@@ -81,7 +81,8 @@ export const SeriesInputSchema = z.object({
 export const CharacterInputSchema = z.object({
   name: z.string().min(1),
   seriesIds: z.array(z.string()).optional(),
-  aliases: z.array(z.string()).optional()
+  aliases: z.array(z.string()).optional(),
+  parentId: z.string().nullable().optional()
 })
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- letting zod infer the precise object shape from T

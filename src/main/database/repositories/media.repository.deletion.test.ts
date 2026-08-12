@@ -83,7 +83,8 @@ describe('foreign key delete behavior', () => {
       id: randomUUID(),
       name: 'Hero',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
     const media = await mediaRepo.insertMediaRow(db, {
       id: randomUUID(),
@@ -118,7 +119,8 @@ describe('foreign key delete behavior', () => {
       id: randomUUID(),
       name: 'Hero',
       aliases_json: '[]',
-      created_at: Date.now()
+      created_at: Date.now(),
+      parent_id: null
     })
     const media = await mediaRepo.insertMediaRow(db, {
       id: randomUUID(),

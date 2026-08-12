@@ -69,7 +69,8 @@ export const characterService = {
         id,
         name: input.name,
         aliases_json: JSON.stringify(input.aliases ?? []),
-        created_at: Date.now()
+        created_at: Date.now(),
+        parent_id: null
       })
       if (input.seriesIds?.length) {
         await characterRepo.setCharacterSeries(trx, id, input.seriesIds)
