@@ -119,6 +119,7 @@
     "selectAllOnPage": "Select all on this page",
     "clearSelection": "Clear selection",
     "deleteSelected": "Delete selected",
+    "editMetadata": "Edit metadata",
     "confirmDeleteSelected": "Delete {{count}} selected media? This cannot be undone.",
     "pagination": {
       "previous": "Previous",
@@ -134,6 +135,17 @@
     "pageSize": {
       "label": "Per page"
     }
+  },
+  "batchEdit": {
+    "title": "Edit metadata for {{count}} items",
+    "addTags": "Add tags",
+    "removeTags": "Remove tags",
+    "addCharacters": "Add characters",
+    "removeCharacters": "Remove characters",
+    "addSeries": "Add series",
+    "removeSeries": "Remove series",
+    "apply": "Apply",
+    "cancel": "Cancel"
   },
   "filters": {
     "name": "Name",

@@ -1,0 +1,25 @@
+.batch-edit-dialog {
+  max-width: 640px;
+}
+
+.batch-edit-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.batch-edit-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.batch-edit-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
