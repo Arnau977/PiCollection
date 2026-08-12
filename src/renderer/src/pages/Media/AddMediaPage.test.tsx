@@ -322,7 +322,8 @@ describe('AddMediaPage duplicate detection', () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, makeFile('sunset.png'))
 
-    expect(await screen.findByText('Similar pic (4/64 difference)')).toBeInTheDocument()
+    expect(await screen.findByText('Similar pic')).toBeInTheDocument()
+    expect(screen.getByText('(4/64 difference)')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add' })).not.toBeDisabled()
 
     const form = container.querySelector('form') as HTMLFormElement

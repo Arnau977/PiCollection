@@ -1,6 +1,26 @@
+.media-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* `.page` sets padding on all sides; the scroll region below owns its own
+     bottom spacing, same pattern as `.gallery-page`/`.manage-page`. */
+  padding-bottom: 0;
+}
+
 .media-page-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-bottom: var(--space-4);
+  flex-shrink: 0;
+}
+
+.media-page-scroll-region {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* Extra room so the last metadata section doesn't sit flush against the
+     window edge / OS taskbar on a maximized window. */
+  padding-bottom: var(--space-7);
 }

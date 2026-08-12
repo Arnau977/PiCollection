@@ -35,9 +35,7 @@ export default function Media({
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const { data: allSeries } = useSeries()
   const seriesTree = buildAncestorAwareSeriesTree(series, allSeries)
-  // Video already owns its own click surface (native transport controls), so the
-  // prev/next zones only overlay stills - a video keeps the old open-lightbox-anywhere behavior.
-  const showNavZones = onNavigate && type !== 'video'
+  const showNavZones = Boolean(onNavigate)
 
   return (
     <div className="media-detail">
@@ -46,17 +44,20 @@ export default function Media({
           <img src={mediaUrl} alt={name} onClick={() => setLightboxOpen(true)} />
         )}
         {type === 'video' && (
-          <video controls src={mediaUrl} onClick={() => setLightboxOpen(true)}>
+          // No onClick here: the native controls already handle play/fullscreen,
+          // and opening the Lightbox on top of an already-playing video used to
+          // start a second, independent playback (double audio).
+          <video controls src={mediaUrl}>
             Your browser does not support the video tag.
           </video>
         )}
         {showNavZones && previousId && (
           <button
             type="button"
-            className="media-detail-nav media-detail-nav-prev"
+            className={`media-detail-nav media-detail-nav-prev${type === 'video' ? ' media-detail-nav-video' : ''}`}
             aria-label={t('media.previousImage')}
             title={t('media.previousImage')}
-            onClick={() => onNavigate(previousId)}
+            onClick={() => onNavigate?.(previousId)}
           >
             <ChevronLeft size={22} />
           </button>
@@ -64,10 +65,10 @@ export default function Media({
         {showNavZones && nextId && (
           <button
             type="button"
-            className="media-detail-nav media-detail-nav-next"
+            className={`media-detail-nav media-detail-nav-next${type === 'video' ? ' media-detail-nav-video' : ''}`}
             aria-label={t('media.nextImage')}
             title={t('media.nextImage')}
-            onClick={() => onNavigate(nextId)}
+            onClick={() => onNavigate?.(nextId)}
           >
             <ChevronRight size={22} />
           </button>

@@ -28,6 +28,9 @@ const PREVIEW_SIZE = 320
 const PREVIEW_MARGIN = 12
 const PREVIEW_DELAY_MS = 150
 const FILES_PER_PAGE = 40
+// Long enough to reliably distinguish a double-click's two clicks from two
+// separate single clicks, short enough to still feel responsive.
+const FOLDER_CLICK_DELAY_MS = 220
 
 /** Keeps the enlarged preview clear of the viewport edges: flips to the tile's
  * left when there's no room on the right, and clamps vertically instead of
@@ -61,9 +64,13 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   const [filePage, setFilePage] = useState(0)
   const [preview, setPreview] = useState<PreviewState | null>(null)
   const previewTimer = useRef<ReturnType<typeof setTimeout>>()
+  const folderClickTimer = useRef<ReturnType<typeof setTimeout>>()
 
   useEffect((): (() => void) => {
-    return () => clearTimeout(previewTimer.current)
+    return () => {
+      clearTimeout(previewTimer.current)
+      clearTimeout(folderClickTimer.current)
+    }
   }, [])
 
   useEffect((): (() => void) => {
@@ -112,6 +119,21 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
       else next.add(relativePath)
       return next
     })
+  }
+
+  // Toggling selection on a plain click's mousedown-up-click sequence briefly
+  // flashes the selected state before the matching double-click navigates
+  // away. Defer the toggle so a following double-click can cancel it instead.
+  function handleFolderClick(relativePath: string): void {
+    clearTimeout(folderClickTimer.current)
+    folderClickTimer.current = setTimeout(() => {
+      toggleFolder(relativePath)
+    }, FOLDER_CLICK_DELAY_MS)
+  }
+
+  function handleFolderDoubleClick(relativePath: string): void {
+    clearTimeout(folderClickTimer.current)
+    navigateTo(relativePath)
   }
 
   function startPreview(file: SourceFolderBrowseFile, anchor: HTMLElement): void {
@@ -182,8 +204,8 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                     type="button"
                     title={folder.name}
                     className={`folder-browser-tile${selectedFolders.has(folder.relativePath) ? ' is-selected' : ''}`}
-                    onClick={() => toggleFolder(folder.relativePath)}
-                    onDoubleClick={() => navigateTo(folder.relativePath)}
+                    onClick={() => handleFolderClick(folder.relativePath)}
+                    onDoubleClick={() => handleFolderDoubleClick(folder.relativePath)}
                   >
                     <span className="folder-browser-tile-thumb">
                       <Folder size={32} aria-hidden="true" />

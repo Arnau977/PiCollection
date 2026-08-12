@@ -150,7 +150,8 @@ describe('Media adjacent navigation', () => {
     expect(onNavigate).not.toHaveBeenCalled()
   })
 
-  it('does not render nav zones over a video', () => {
+  it('also renders nav zones over a video', async () => {
+    const user = userEvent.setup()
     const onNavigate = vi.fn()
     render(
       <Media
@@ -161,8 +162,18 @@ describe('Media adjacent navigation', () => {
       />
     )
 
-    expect(screen.queryByRole('button', { name: 'Previous image' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Next image' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Next image' }))
+    expect(onNavigate).toHaveBeenCalledWith('2')
+  })
+
+  it('does not open the lightbox when clicking a video (native controls own it)', async () => {
+    const user = userEvent.setup()
+    render(<Media {...makeMedia({ type: 'video', route: '/vid.mp4' })} />)
+
+    const video = document.querySelector('video') as HTMLVideoElement
+    await user.click(video)
+
+    expect(screen.queryByLabelText('Close')).not.toBeInTheDocument()
   })
 })
 

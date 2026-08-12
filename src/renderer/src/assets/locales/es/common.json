@@ -57,6 +57,7 @@
     "backupExport": "Exportar...",
     "backupImport": "Importar...",
     "backupExported": "Copia de seguridad exportada.",
+    "backupOpenFolder": "Abrir carpeta",
     "backupImportConfirm": "Esto reemplaza toda tu biblioteca y ajustes con la copia importada. ¿Continuar?",
     "backupImportedNeedsRestart": "Copia importada. Reinicia la app para terminar.",
     "backupRestartNow": "Reiniciar ahora",
@@ -192,7 +193,8 @@
     "successTitle": "Media añadido correctamente",
     "duplicateExact": "Este archivo ya está en la biblioteca como \"{{name}}\".",
     "duplicateSimilar": "Se parece a media que ya está en la biblioteca:",
-    "duplicateSimilarMatch": "{{distance}}/64 de diferencia"
+    "duplicateSimilarMatch": "{{distance}}/64 de diferencia",
+    "duplicatePreviewLabel": "Vista previa de \"{{name}}\""
   },
   "autocomplete": {
     "noResults": "Sin resultados",
@@ -283,5 +285,10 @@
     "missingSeries": "Series nuevas",
     "noApiKeyHint": "Las sugerencias de tags necesitan una API key gratuita de SauceNAO.",
     "noApiKeyHintLink": "Añádela en Ajustes"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "hint": "Aquí no hay nada. Puede que el enlace esté roto o que la página se haya movido.",
+    "backHome": "Volver al inicio"
   }
 }

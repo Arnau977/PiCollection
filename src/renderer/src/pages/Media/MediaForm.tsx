@@ -7,6 +7,7 @@ import { deriveMediaName, detectMediaType } from '@shared/utils'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
 import { MultiSelectAutocomplete } from '../../components/Autocomplete/MultiSelectAutocomplete'
+import { MediaHoverPreview } from '../../components/MediaHoverPreview/MediaHoverPreview'
 import { PATH } from '../../app.routes.const'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
 import { useSauceNaoApiKey } from '../../hooks/useSauceNaoApiKey'
@@ -376,7 +377,8 @@ export function MediaForm({
             <ul className="chip-list">
               {duplicateCheck.similar.map(({ media: similarMedia, distance }) => (
                 <li key={similarMedia.id}>
-                  {similarMedia.name} ({t('addMedia.duplicateSimilarMatch', { distance })})
+                  <MediaHoverPreview media={similarMedia}>{similarMedia.name}</MediaHoverPreview>{' '}
+                  ({t('addMedia.duplicateSimilarMatch', { distance })})
                 </li>
               ))}
             </ul>
@@ -404,7 +406,14 @@ export function MediaForm({
             )}
 
             {sauce.status === 'ready' && !sauce.match && (
-              <p className="sauce-hint">{t('sauceNao.noMatch')}</p>
+              <>
+                <p className="sauce-hint">{t('sauceNao.noMatch')}</p>
+                {sauce.remaining && (
+                  <p className="sauce-quota">
+                    {t('sauceNao.quota', { count: sauce.remaining.long })}
+                  </p>
+                )}
+              </>
             )}
 
             {sauce.match && (
