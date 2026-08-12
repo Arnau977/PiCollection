@@ -196,7 +196,8 @@
   },
   "autocomplete": {
     "noResults": "Sin resultados",
-    "createOption": "Crear \"{{name}}\""
+    "createOption": "Crear \"{{name}}\"",
+    "pendingLabel": "{{name}} (nuevo)"
   },
   "importQueue": {
     "loading": "Preparando archivos…",

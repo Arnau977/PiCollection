@@ -73,10 +73,6 @@ function getArtistLabel(artist: ArtistModel): string {
   return artist.name
 }
 
-function getTagLabel(tag: TagModel): string {
-  return tag.name
-}
-
 function getSeriesLabel(series: SeriesModel): string {
   return series.name
 }
@@ -99,6 +95,7 @@ export function MediaForm({
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [duplicateCheck, setDuplicateCheck] = useState<MediaDuplicateCheck | null>(null)
+  const [pendingTags, setPendingTags] = useState<TagModel[]>([])
   const hasSauceNaoApiKey = useSauceNaoApiKey()
 
   useEffect((): (() => void) | void => {
@@ -177,14 +174,10 @@ export function MediaForm({
     }
   }
 
-  async function handleCreateTag(name: string): Promise<void> {
-    const result = await window.api.tag.create({ name })
-    if (result.success) {
-      tags.refetch()
-      setInput((prev) => ({ ...prev, tagIds: [...(prev.tagIds ?? []), result.data.id] }))
-    } else {
-      setError(result.error.message)
-    }
+  function handleCreateTag(name: string): void {
+    const tag: TagModel = { id: crypto.randomUUID(), name }
+    setPendingTags((prev) => [...prev, tag])
+    setInput((prev) => ({ ...prev, tagIds: [...(prev.tagIds ?? []), tag.id] }))
   }
 
   async function handleCreateCharacter(name: string, seriesIds?: string[]): Promise<void> {
@@ -259,7 +252,7 @@ export function MediaForm({
           ? { name: artist.socialLabel ?? 'Link', url: artist.socialUrl }
           : undefined
       await handleCreateArtist(name, social)
-    } else if (category === 'tags') await handleCreateTag(name)
+    } else if (category === 'tags') handleCreateTag(name)
     else if (category === 'characters') {
       const seriesIds = await resolveSeriesIdsForNewCharacter()
       await handleCreateCharacter(name, seriesIds)
@@ -505,8 +498,13 @@ export function MediaForm({
         <MultiSelectAutocomplete
           name="tags"
           label={t('filters.tags')}
-          options={tags.data}
-          getOptionLabel={getTagLabel}
+          options={[...tags.data, ...pendingTags]}
+          getOptionLabel={(tag) =>
+            pendingTags.some((p) => p.id === tag.id)
+              ? t('autocomplete.pendingLabel', { name: tag.name })
+              : tag.name
+          }
+          getOptionMatchName={(tag) => tag.name}
           getOptionValue={(tag) => tag.id}
           selectedValues={input.tagIds ?? []}
           onChange={(tagIds) => setInput((prev) => ({ ...prev, tagIds }))}

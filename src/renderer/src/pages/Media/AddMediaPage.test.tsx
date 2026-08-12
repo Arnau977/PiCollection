@@ -177,15 +177,10 @@ describe('AddMediaPage', () => {
     expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ isAiGenerated: true }))
   })
 
-  it('shows a "Create" option when typing a tag name that does not exist, and creates it', async () => {
+  it('defers tag creation: "Create" only stages a pending tag locally, it does not call the API', async () => {
     const user = userEvent.setup()
-    const tagCreate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: { id: 't1', name: 'landscape' } })
+    const tagCreate = vi.fn()
     setApi({ tag: { create: tagCreate } })
-    refetchTags.mockImplementation(() => {
-      tagsData = [{ id: 't1', name: 'landscape' }]
-    })
     renderPage()
 
     const [, tagsInput] = screen.getAllByRole('combobox')
@@ -194,9 +189,29 @@ describe('AddMediaPage', () => {
     const createOption = await screen.findByText('Create "landscape"')
     await user.click(createOption)
 
-    expect(tagCreate).toHaveBeenCalledWith({ name: 'landscape' })
-    expect(refetchTags).toHaveBeenCalled()
-    expect(await screen.findByText('landscape')).toBeInTheDocument()
+    expect(tagCreate).not.toHaveBeenCalled()
+    expect(refetchTags).not.toHaveBeenCalled()
+    expect(await screen.findByText('landscape (new)')).toBeInTheDocument()
+  })
+
+  it('re-selecting a removed pending tag reuses the same draft instead of duplicating it', async () => {
+    const user = userEvent.setup()
+    const tagCreate = vi.fn()
+    setApi({ tag: { create: tagCreate } })
+    renderPage()
+
+    const [, tagsInput] = screen.getAllByRole('combobox')
+    await user.type(tagsInput, 'landscape')
+    await user.click(await screen.findByText('Create "landscape"'))
+
+    await user.click(screen.getByRole('button', { name: 'Quitar landscape (new)' }))
+    await user.type(tagsInput, 'landscape')
+
+    expect(screen.queryByText('Create "landscape"')).not.toBeInTheDocument()
+    await user.click(await screen.findByRole('option', { name: 'landscape (new)' }))
+
+    expect(screen.getByText('landscape (new)')).toBeInTheDocument()
+    expect(tagCreate).not.toHaveBeenCalled()
   })
 
   it('auto-selects the series of a character that belongs to exactly one', async () => {
