@@ -242,6 +242,7 @@
     "aliasesHint": "Nombres alternativos o apodos de este personaje.",
     "seriesAliasesHint": "Títulos alternativos u originales de esta serie.",
     "parentSeries": "Serie padre",
+    "parentCharacter": "Personaje padre",
     "noParentSeries": "Sin padre (nivel superior)",
     "add": "Añadir",
     "save": "Guardar",

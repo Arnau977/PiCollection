@@ -5,6 +5,7 @@ import { useCharacters, useSeries } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
+import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
 import { MultiSelectAutocomplete } from '../../components/Autocomplete/MultiSelectAutocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
 import { fromCsv, toCsv } from '../../utils/csvList'
@@ -15,6 +16,7 @@ import {
   type ManageSort
 } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
+import { buildAncestorAwareEntityTree, buildEntityTree } from '../../utils/buildEntityTree'
 import { formatCompactCount } from '../../utils/formatCompactCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { CharacterModel, SeriesModel } from '@shared/models'
@@ -23,12 +25,17 @@ interface CharacterFormValues {
   name: string
   seriesIds: string[]
   aliases: string
+  parentId: string | undefined
 }
 
-const EMPTY_FORM: CharacterFormValues = { name: '', seriesIds: [], aliases: '' }
+const EMPTY_FORM: CharacterFormValues = { name: '', seriesIds: [], aliases: '', parentId: undefined }
 
 function getSeriesLabel(series: SeriesModel): string {
   return series.name
+}
+
+function getCharacterLabel(character: CharacterModel): string {
+  return character.name
 }
 
 export function CharactersManager(): JSX.Element {
@@ -49,7 +56,7 @@ export function CharactersManager(): JSX.Element {
     saveManageSort('characters', next)
   }
 
-  const visibleCharacters = useMemo(() => {
+  const treeNodes = useMemo(() => {
     const searchedCharacters = filterByQuery(characters, debouncedSearch, (character) =>
       [character.name, ...(character.aliases ?? [])].join(' ')
     )
@@ -58,20 +65,26 @@ export function CharactersManager(): JSX.Element {
           character.series.some((s) => s.id === seriesFilter)
         )
       : searchedCharacters
-    return sortManageEntities(seriesFilteredCharacters, sort)
+    const sortedCharacters = sortManageEntities(seriesFilteredCharacters, sort)
+    const isFiltering = debouncedSearch.trim().length > 0 || seriesFilter.length > 0
+    if (!isFiltering) return buildEntityTree(sortManageEntities(characters, sort))
+    return buildAncestorAwareEntityTree(sortedCharacters, sortManageEntities(characters, sort))
   }, [characters, debouncedSearch, seriesFilter, sort])
-  const visibleCharacterIds = useMemo(
-    () => visibleCharacters.map((character) => character.id),
-    [visibleCharacters]
-  )
+  const visibleCharacterIds = useMemo(() => treeNodes.map((node) => node.entity.id), [treeNodes])
   const thumbnails = useEntityThumbnails('character', visibleCharacterIds)
+
+  // A character can't be its own parent; the backend also rejects deeper cycles (e.g. parenting
+  // to one of its own descendants), so this is a best-effort narrowing rather than the source of
+  // truth.
+  const parentOptions = characters.filter((c) => c.id !== editing?.id)
 
   function startEdit(character: CharacterModel): void {
     setEditing(character)
     setForm({
       name: character.name,
       seriesIds: character.series.map((s) => s.id),
-      aliases: toCsv(character.aliases ?? [])
+      aliases: toCsv(character.aliases ?? []),
+      parentId: character.parentId ?? undefined
     })
   }
 
@@ -87,7 +100,8 @@ export function CharactersManager(): JSX.Element {
     const input = {
       name: trimmed,
       seriesIds: form.seriesIds,
-      aliases: fromCsv(form.aliases)
+      aliases: fromCsv(form.aliases),
+      parentId: form.parentId
     }
     const result = editing
       ? await window.api.character.update(editing.id, input)
@@ -142,6 +156,18 @@ export function CharactersManager(): JSX.Element {
             selectedValues={form.seriesIds}
             onChange={(seriesIds) => setForm((prev) => ({ ...prev, seriesIds }))}
           />
+
+          <div className="field">
+            <Autocomplete
+              name="character-parent"
+              label={t('manage.parentCharacter')}
+              options={parentOptions}
+              getOptionLabel={getCharacterLabel}
+              getOptionValue={(c) => c.id}
+              selectedKey={form.parentId ?? null}
+              onSelect={(c) => setForm((prev) => ({ ...prev, parentId: c?.id }))}
+            />
+          </div>
 
           <div className="field">
             <label htmlFor="character-aliases">{t('manage.aliases')}</label>
@@ -200,19 +226,21 @@ export function CharactersManager(): JSX.Element {
             <p className="loading-state">{t('gallery.loading')}</p>
           ) : characters.length === 0 ? (
             <p className="manage-empty">{t('manage.empty')}</p>
-          ) : visibleCharacters.length === 0 ? (
+          ) : treeNodes.length === 0 ? (
             <p className="manage-empty">{t('manage.noResults')}</p>
           ) : (
             <ul className="manage-list">
-              {visibleCharacters.map((character) => (
+              {treeNodes.map(({ entity: character, depth, rolledUpCount }) => (
                 <li
                   key={character.id}
-                  className={
-                    editing?.id === character.id
-                      ? 'manage-list-item manage-list-item-editing'
-                      : 'manage-list-item'
-                  }
+                  className={`manage-list-item depth-${depth}${editing?.id === character.id ? ' manage-list-item-editing' : ''}`}
+                  style={depth > 0 ? { marginLeft: depth * 20 } : undefined}
                 >
+                  {depth > 0 && (
+                    <span className="manage-item-connector" aria-hidden="true">
+                      └
+                    </span>
+                  )}
                   <EntityThumbnail
                     route={thumbnails.get(character.id)?.route ?? null}
                     loading={!thumbnails.has(character.id)}
@@ -228,9 +256,7 @@ export function CharactersManager(): JSX.Element {
                       <span className="manage-item-aliases">{character.aliases.join(', ')}</span>
                     )}
                   </div>
-                  <span className="manage-item-count">
-                    {formatCompactCount(character.mediaCount ?? 0)}
-                  </span>
+                  <span className="manage-item-count">{formatCompactCount(rolledUpCount)}</span>
                   <button
                     type="button"
                     className="icon-btn"

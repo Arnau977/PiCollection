@@ -268,4 +268,70 @@ describe('CharactersManager', () => {
     expect(aliceItem).toHaveTextContent('29k')
     expect(peterItem).toHaveTextContent('0')
   })
+
+  it('sends the chosen parent character on create', async () => {
+    const user = userEvent.setup()
+    const create = vi.fn().mockResolvedValue({ success: true, data: {} })
+    setApi({ create })
+    render(<CharactersManager />)
+
+    await user.type(screen.getByLabelText('Name'), 'Elizabeth Bathory (Brave)')
+    const parentInput = screen.getByRole('combobox', { name: /Parent character/ })
+    await user.type(parentInput, 'Alice')
+    await user.click(await screen.findByRole('option', { name: 'Alice' }))
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(create).toHaveBeenCalledWith({
+      name: 'Elizabeth Bathory (Brave)',
+      seriesIds: [],
+      aliases: [],
+      parentId: 'c1'
+    })
+  })
+
+  it('renders a child character indented under its parent with a rolled-up media count', () => {
+    charactersData = [
+      { id: 'c1', name: 'Alice', series: [], aliases: [], createdAt: 1700000000000, mediaCount: 2 },
+      {
+        id: 'c2',
+        name: 'Alice (Alt)',
+        series: [],
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 'c1',
+        mediaCount: 5
+      }
+    ]
+    render(<CharactersManager />)
+
+    const parentItem = screen.getByText('Alice').closest('li')
+    const childItem = screen.getByText('Alice (Alt)').closest('li')
+    expect(parentItem).toHaveTextContent('7')
+    expect(childItem?.className).toContain('depth-1')
+  })
+
+  it("still shows a matched character's parent for context while searching, indented the same way as unfiltered", async () => {
+    const user = userEvent.setup()
+    charactersData = [
+      { id: 'c1', name: 'Alice', series: [], aliases: [], createdAt: 1700000000000, mediaCount: 1 },
+      {
+        id: 'c2',
+        name: 'Alice (Alt)',
+        series: [],
+        aliases: [],
+        createdAt: 1700000001000,
+        parentId: 'c1',
+        mediaCount: 5
+      }
+    ]
+    render(<CharactersManager />)
+
+    await user.type(screen.getByRole('searchbox'), 'Alt')
+
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBeInTheDocument()
+    })
+    const childItem = screen.getByText('Alice (Alt)').closest('li')
+    expect(childItem?.className).toContain('depth-1')
+  })
 })
