@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
 import { getDb } from '../database/connection'
 import * as seriesRepo from '../database/repositories/series.repository'
-import { wouldCreateCycle } from '../database/repositories/seriesHierarchy'
+import { wouldCreateCycle } from '../database/repositories/entityHierarchy'
 import { AppError } from '../errors'
 import type { SeriesInput, SeriesModel } from '@shared/models'
 import type { SeriesTable } from '../database/schema'

@@ -6,7 +6,7 @@ import * as artistRepo from '../database/repositories/artist.repository'
 import * as tagRepo from '../database/repositories/tag.repository'
 import * as characterRepo from '../database/repositories/character.repository'
 import * as seriesRepo from '../database/repositories/series.repository'
-import { buildSeriesClosureMap } from '../database/repositories/seriesHierarchy'
+import { buildClosureMap } from '../database/repositories/entityHierarchy'
 import { AppError } from '../errors'
 import {
   computeFileHash,
@@ -202,7 +202,7 @@ export const mediaService = {
     const db = getDb()
     const flatSeriesIds = filters.seriesGroups?.flat() ?? []
     const seriesClosures = flatSeriesIds.length
-      ? buildSeriesClosureMap(await seriesRepo.findSeriesHierarchy(db), flatSeriesIds)
+      ? buildClosureMap(await seriesRepo.findSeriesHierarchy(db), flatSeriesIds)
       : undefined
     const [rows, total] = await Promise.all([
       mediaRepo.findMediaRows(db, filters, sorting, seriesClosures),
@@ -216,7 +216,7 @@ export const mediaService = {
     const db = getDb()
     const flatSeriesIds = filters.seriesGroups?.flat() ?? []
     const seriesClosures = flatSeriesIds.length
-      ? buildSeriesClosureMap(await seriesRepo.findSeriesHierarchy(db), flatSeriesIds)
+      ? buildClosureMap(await seriesRepo.findSeriesHierarchy(db), flatSeriesIds)
       : undefined
     const rows = await mediaRepo.findMediaIds(db, filters, sorting, seriesClosures)
     return rows.map((row) => row.id)
@@ -311,7 +311,7 @@ export const mediaService = {
     // requested id to its closure (itself + descendants) the same way
     // getMediaFiltered does, so a parent whose media all sit under its children
     // still gets a thumbnail instead of a placeholder next to a rolled-up count.
-    const closures = buildSeriesClosureMap(await seriesRepo.findSeriesHierarchy(db), ids)
+    const closures = buildClosureMap(await seriesRepo.findSeriesHierarchy(db), ids)
     const pairs = ids.flatMap((ancestorId) =>
       (closures.get(ancestorId) ?? [ancestorId]).map((descendantId) => ({
         descendantId,
