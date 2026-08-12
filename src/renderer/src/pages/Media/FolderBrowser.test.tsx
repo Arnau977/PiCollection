@@ -19,7 +19,7 @@ describe('FolderBrowser', () => {
     browse.mockResolvedValue({
       success: true,
       data: {
-        folders: [{ name: 'Genshin', relativePath: 'Genshin' }],
+        folders: [{ name: 'Genshin', relativePath: 'Genshin', fileCount: 3 }],
         files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false }]
       }
     })
@@ -34,7 +34,7 @@ describe('FolderBrowser', () => {
   it('navigates into a folder on double click and re-browses that path', async () => {
     browse.mockResolvedValueOnce({
       success: true,
-      data: { folders: [{ name: 'Genshin', relativePath: 'Genshin' }], files: [] }
+      data: { folders: [{ name: 'Genshin', relativePath: 'Genshin', fileCount: 1 }], files: [] }
     })
     browse.mockResolvedValueOnce({
       success: true,
@@ -75,7 +75,7 @@ describe('FolderBrowser', () => {
   it('a single click selects a folder without navigating, feeding it to onStartImport', async () => {
     browse.mockResolvedValue({
       success: true,
-      data: { folders: [{ name: 'Genshin', relativePath: 'Genshin' }], files: [] }
+      data: { folders: [{ name: 'Genshin', relativePath: 'Genshin', fileCount: 2 }], files: [] }
     })
     const onStartImport = vi.fn()
 
@@ -159,7 +159,7 @@ describe('FolderBrowser', () => {
     }))
     browse.mockResolvedValue({
       success: true,
-      data: { folders: [{ name: 'sub', relativePath: 'sub' }], files }
+      data: { folders: [{ name: 'sub', relativePath: 'sub', fileCount: 7 }], files }
     })
 
     render(<FolderBrowser onStartImport={vi.fn()} />)
@@ -173,6 +173,25 @@ describe('FolderBrowser', () => {
     expect(await screen.findByText('file-40.png')).toBeInTheDocument()
     expect(screen.queryByText('file-0.png')).not.toBeInTheDocument()
     expect(screen.queryByText('sub')).not.toBeInTheDocument()
+  })
+
+  it('shows a recursive file-count badge on folder tiles, including 0 for an empty folder', async () => {
+    browse.mockResolvedValue({
+      success: true,
+      data: {
+        folders: [
+          { name: 'Genshin', relativePath: 'Genshin', fileCount: 5 },
+          { name: 'Empty', relativePath: 'Empty', fileCount: 0 }
+        ],
+        files: []
+      }
+    })
+
+    render(<FolderBrowser onStartImport={vi.fn()} />)
+
+    await screen.findByText('Genshin')
+    expect(screen.getByText('5')).toBeInTheDocument()
+    expect(screen.getByText('0')).toBeInTheDocument()
   })
 
   it('resets to page 1 when navigating into a different folder', async () => {

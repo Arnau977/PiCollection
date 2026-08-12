@@ -209,6 +209,12 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                   >
                     <span className="folder-browser-tile-thumb">
                       <Folder size={32} aria-hidden="true" />
+                      <span
+                        className="folder-browser-tile-count-badge"
+                        title={t('folderBrowser.fileCount', { count: folder.fileCount })}
+                      >
+                        {folder.fileCount.toLocaleString()}
+                      </span>
                       {selectedFolders.has(folder.relativePath) && (
                         <span className="folder-browser-tile-selected-badge">
                           <Check size={14} aria-hidden="true" />
