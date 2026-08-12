@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { useSeries } from '../hooks/useEntityLists'
-import { buildAncestorAwareSeriesTree } from '../utils/buildSeriesTree'
+import { buildAncestorAwareEntityTree } from '../utils/buildEntityTree'
 import { Lightbox } from './Lightbox/Lightbox'
 import './Media.css'
 
@@ -34,7 +34,7 @@ export default function Media({
   const mediaUrl = toMediaUrl(route)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const { data: allSeries } = useSeries()
-  const seriesTree = buildAncestorAwareSeriesTree(series, allSeries)
+  const seriesTree = buildAncestorAwareEntityTree(series, allSeries)
   const showNavZones = Boolean(onNavigate)
 
   return (
@@ -122,7 +122,7 @@ export default function Media({
             <ul className="media-detail-list media-detail-list-series">
               {seriesTree.map((node) => (
                 <li
-                  key={node.series.id}
+                  key={node.entity.id}
                   className="media-detail-name-series"
                   style={node.depth > 0 ? { marginLeft: node.depth * 16 } : undefined}
                 >
@@ -131,7 +131,7 @@ export default function Media({
                       └
                     </span>
                   )}
-                  {node.series.name}
+                  {node.entity.name}
                 </li>
               ))}
             </ul>

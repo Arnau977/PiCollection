@@ -15,7 +15,7 @@ import {
   type ManageSort
 } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
-import { buildAncestorAwareSeriesTree, buildSeriesTree } from '../../utils/buildSeriesTree'
+import { buildAncestorAwareEntityTree, buildEntityTree } from '../../utils/buildEntityTree'
 import { formatCompactCount } from '../../utils/formatCompactCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { SeriesModel } from '@shared/models'
@@ -53,16 +53,16 @@ export function SeriesManager(): JSX.Element {
   const treeNodes = useMemo(() => {
     const sortedSeries = sortManageEntities(seriesList, sort)
     const isSearching = debouncedSearch.trim().length > 0
-    if (!isSearching) return buildSeriesTree(sortedSeries)
+    if (!isSearching) return buildEntityTree(sortedSeries)
     const visibleSeries = filterByQuery(sortedSeries, debouncedSearch, (series) =>
       [series.name, ...(series.aliases ?? [])].join(' ')
     )
     // While searching, still show each match's ancestor chain (pulled from the full sorted list)
     // so the hierarchy reads the same way it does unfiltered - just restricted to matches plus the
     // ancestors needed to place them.
-    return buildAncestorAwareSeriesTree(visibleSeries, sortedSeries)
+    return buildAncestorAwareEntityTree(visibleSeries, sortedSeries)
   }, [seriesList, debouncedSearch, sort])
-  const visibleSeriesIds = useMemo(() => treeNodes.map((node) => node.series.id), [treeNodes])
+  const visibleSeriesIds = useMemo(() => treeNodes.map((node) => node.entity.id), [treeNodes])
   const thumbnails = useEntityThumbnails('series', visibleSeriesIds)
 
   // A series can't be its own parent; the backend also rejects deeper cycles (e.g. parenting to
@@ -237,7 +237,7 @@ export function SeriesManager(): JSX.Element {
             <p className="manage-empty">{t('manage.noResults')}</p>
           ) : (
             <ul className="manage-list">
-              {treeNodes.map((node) => renderItem(node.series, node.depth, node.rolledUpCount))}
+              {treeNodes.map((node) => renderItem(node.entity, node.depth, node.rolledUpCount))}
             </ul>
           )}
         </div>
