@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ExternalLink, Plus, ScanSearch } from 'lucide-react'
@@ -73,10 +73,6 @@ function getArtistLabel(artist: ArtistModel): string {
   return artist.name
 }
 
-function getSeriesLabel(series: SeriesModel): string {
-  return series.name
-}
-
 export function MediaForm({
   media,
   initialFile,
@@ -96,6 +92,9 @@ export function MediaForm({
   const [saving, setSaving] = useState(false)
   const [duplicateCheck, setDuplicateCheck] = useState<MediaDuplicateCheck | null>(null)
   const [pendingTags, setPendingTags] = useState<TagModel[]>([])
+  const [pendingSeries, setPendingSeries] = useState<SeriesModel[]>([])
+  const [pendingCharacters, setPendingCharacters] = useState<CharacterModel[]>([])
+  const pendingCharacterSeriesIds = useRef(new Map<string, string[]>())
   const hasSauceNaoApiKey = useSauceNaoApiKey()
 
   useEffect((): (() => void) | void => {
@@ -180,28 +179,21 @@ export function MediaForm({
     setInput((prev) => ({ ...prev, tagIds: [...(prev.tagIds ?? []), tag.id] }))
   }
 
-  async function handleCreateCharacter(name: string, seriesIds?: string[]): Promise<void> {
-    const result = await window.api.character.create({ name, seriesIds })
-    if (result.success) {
-      characters.refetch()
-      setInput((prev) => ({
-        ...prev,
-        characterIds: [...(prev.characterIds ?? []), result.data.id]
-      }))
-    } else {
-      setError(result.error.message)
-    }
+  function handleCreateCharacter(name: string, seriesIds?: string[]): void {
+    const draft: CharacterModel = { id: crypto.randomUUID(), name, series: [] }
+    setPendingCharacters((prev) => [...prev, draft])
+    if (seriesIds && seriesIds.length > 0) pendingCharacterSeriesIds.current.set(draft.id, seriesIds)
+    setInput((prev) => ({
+      ...prev,
+      characterIds: [...(prev.characterIds ?? []), draft.id]
+    }))
   }
 
-  async function handleCreateSeries(name: string): Promise<string | undefined> {
-    const result = await window.api.series.create({ name })
-    if (result.success) {
-      series.refetch()
-      setInput((prev) => ({ ...prev, seriesIds: [...(prev.seriesIds ?? []), result.data.id] }))
-      return result.data.id
-    }
-    setError(result.error.message)
-    return undefined
+  function handleCreateSeries(name: string): string {
+    const draft: SeriesModel = { id: crypto.randomUUID(), name }
+    setPendingSeries((prev) => [...prev, draft])
+    setInput((prev) => ({ ...prev, seriesIds: [...(prev.seriesIds ?? []), draft.id] }))
+    return draft.id
   }
 
   /**
@@ -238,8 +230,7 @@ export function MediaForm({
     if (totalSuggestedSeries !== 1 || sauce.missing.series.length !== 1) return current
 
     const soleSeriesName = sauce.missing.series[0]
-    const seriesId = await handleCreateSeries(soleSeriesName)
-    if (!seriesId) return current
+    const seriesId = handleCreateSeries(soleSeriesName)
     sauce.dismiss('series', soleSeriesName)
     return [seriesId]
   }
@@ -255,8 +246,8 @@ export function MediaForm({
     } else if (category === 'tags') handleCreateTag(name)
     else if (category === 'characters') {
       const seriesIds = await resolveSeriesIdsForNewCharacter()
-      await handleCreateCharacter(name, seriesIds)
-    } else await handleCreateSeries(name)
+      handleCreateCharacter(name, seriesIds)
+    } else handleCreateSeries(name)
     sauce.dismiss(category, name)
   }
 
@@ -513,8 +504,12 @@ export function MediaForm({
         <MultiSelectAutocomplete
           name="characters"
           label={t('filters.characters')}
-          options={characters.data}
-          getOptionLabel={formatCharacterOptionLabel}
+          options={[...characters.data, ...pendingCharacters]}
+          getOptionLabel={(character) =>
+            pendingCharacters.some((p) => p.id === character.id)
+              ? t('autocomplete.pendingLabel', { name: formatCharacterOptionLabel(character) })
+              : formatCharacterOptionLabel(character)
+          }
           getOptionMatchName={(character) => character.name}
           getOptionValue={(character) => character.id}
           selectedValues={input.characterIds ?? []}
@@ -524,8 +519,13 @@ export function MediaForm({
         <MultiSelectAutocomplete
           name="series"
           label={t('manage.series')}
-          options={series.data}
-          getOptionLabel={getSeriesLabel}
+          options={[...series.data, ...pendingSeries]}
+          getOptionLabel={(s) =>
+            pendingSeries.some((p) => p.id === s.id)
+              ? t('autocomplete.pendingLabel', { name: s.name })
+              : s.name
+          }
+          getOptionMatchName={(s) => s.name}
           getOptionValue={(s) => s.id}
           selectedValues={input.seriesIds ?? []}
           onChange={(seriesIds) => setInput((prev) => ({ ...prev, seriesIds }))}

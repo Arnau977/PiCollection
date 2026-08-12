@@ -214,6 +214,38 @@ describe('AddMediaPage', () => {
     expect(tagCreate).not.toHaveBeenCalled()
   })
 
+  it('defers series creation: "Create" only stages a pending series locally', async () => {
+    const user = userEvent.setup()
+    const seriesCreate = vi.fn()
+    setApi({ series: { create: seriesCreate } })
+    renderPage()
+
+    const [, , , seriesInput] = screen.getAllByRole('combobox')
+    await user.type(seriesInput, 'Neverland')
+
+    await user.click(await screen.findByText('Create "Neverland"'))
+
+    expect(seriesCreate).not.toHaveBeenCalled()
+    expect(refetchSeries).not.toHaveBeenCalled()
+    expect(await screen.findByText('Neverland (new)')).toBeInTheDocument()
+  })
+
+  it('defers character creation: "Create" only stages a pending character locally', async () => {
+    const user = userEvent.setup()
+    const characterCreate = vi.fn()
+    setApi({ character: { create: characterCreate } })
+    renderPage()
+
+    const [, , charactersInput] = screen.getAllByRole('combobox')
+    await user.type(charactersInput, 'Alice')
+
+    await user.click(await screen.findByText('Create "Alice"'))
+
+    expect(characterCreate).not.toHaveBeenCalled()
+    expect(refetchCharacters).not.toHaveBeenCalled()
+    expect(await screen.findByText('Alice (new)')).toBeInTheDocument()
+  })
+
   it('auto-selects the series of a character that belongs to exactly one', async () => {
     seriesData = [{ id: 's1', name: 'Wonderland' }]
     charactersData = [{ id: 'c1', name: 'Alice', series: [{ id: 's1', name: 'Wonderland' }] }]
@@ -397,7 +429,7 @@ describe('AddMediaPage SauceNAO suggestions', () => {
     expect(await screen.findByText('Alice')).toBeInTheDocument()
   })
 
-  it('creates and adds a suggested character that is not yet in the library', async () => {
+  it('stages (does not immediately create) a suggested character that is not yet in the library', async () => {
     const lookup = vi.fn().mockResolvedValue({
       success: true,
       data: {
@@ -414,9 +446,7 @@ describe('AddMediaPage SauceNAO suggestions', () => {
         remaining: { short: 5, long: 90 }
       }
     })
-    const characterCreate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: { id: 'c9', name: 'New Character' } })
+    const characterCreate = vi.fn()
     setApi({ sauceNao: { lookup }, character: { create: characterCreate } })
     const user = userEvent.setup()
     renderPage()
@@ -428,11 +458,12 @@ describe('AddMediaPage SauceNAO suggestions', () => {
     const addChip = await screen.findByRole('button', { name: /New Character/ })
     await user.click(addChip)
 
-    expect(characterCreate).toHaveBeenCalledWith({ name: 'New Character', seriesIds: [] })
-    expect(refetchCharacters).toHaveBeenCalled()
+    expect(characterCreate).not.toHaveBeenCalled()
+    expect(refetchCharacters).not.toHaveBeenCalled()
+    expect(await screen.findByText('New Character (new)')).toBeInTheDocument()
   })
 
-  it('capitalizes a suggested character name and auto-links the sole suggested series', async () => {
+  it('capitalizes a suggested character name and stages the sole suggested series as pending, linked locally', async () => {
     const lookup = vi.fn().mockResolvedValue({
       success: true,
       data: {
@@ -449,12 +480,8 @@ describe('AddMediaPage SauceNAO suggestions', () => {
         remaining: { short: 5, long: 90 }
       }
     })
-    const characterCreate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: { id: 'c9', name: 'New character' } })
-    const seriesCreate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: { id: 's9', name: 'New series' } })
+    const characterCreate = vi.fn()
+    const seriesCreate = vi.fn()
     setApi({
       sauceNao: { lookup },
       character: { create: characterCreate },
@@ -470,8 +497,9 @@ describe('AddMediaPage SauceNAO suggestions', () => {
     const addChip = await screen.findByRole('button', { name: 'New character' })
     await user.click(addChip)
 
-    await vi.waitFor(() => expect(seriesCreate).toHaveBeenCalledWith({ name: 'New series' }))
-    expect(characterCreate).toHaveBeenCalledWith({ name: 'New character', seriesIds: ['s9'] })
+    expect(seriesCreate).not.toHaveBeenCalled()
+    expect(characterCreate).not.toHaveBeenCalled()
+    expect(await screen.findByText('New series (new)')).toBeInTheDocument()
   })
 
   it('does not guess a series link when more than one series is suggested', async () => {
@@ -491,9 +519,7 @@ describe('AddMediaPage SauceNAO suggestions', () => {
         remaining: { short: 5, long: 90 }
       }
     })
-    const characterCreate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: { id: 'c9', name: 'New character' } })
+    const characterCreate = vi.fn()
     const seriesCreate = vi.fn()
     setApi({
       sauceNao: { lookup },
@@ -510,8 +536,8 @@ describe('AddMediaPage SauceNAO suggestions', () => {
     const addChip = await screen.findByRole('button', { name: 'New character' })
     await user.click(addChip)
 
-    await vi.waitFor(() => expect(characterCreate).toHaveBeenCalled())
-    expect(characterCreate).toHaveBeenCalledWith({ name: 'New character', seriesIds: [] })
+    expect(await screen.findByText('New character (new)')).toBeInTheDocument()
+    expect(characterCreate).not.toHaveBeenCalled()
     expect(seriesCreate).not.toHaveBeenCalled()
   })
 
