@@ -50,9 +50,9 @@
 }
 
 .add-media-tab.is-active {
-  background: var(--accent-gradient);
+  background: var(--accent);
   color: var(--accent-text);
-  box-shadow: var(--accent-glow-sm);
+  box-shadow: var(--shadow-offset-rest);
 }
 
 .add-media-tab:disabled {

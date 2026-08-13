@@ -43,8 +43,8 @@
 
 .gallery-density-btn.active {
   color: var(--accent-text);
-  background: var(--accent-gradient);
-  box-shadow: var(--accent-glow-sm);
+  background: var(--accent);
+  box-shadow: var(--shadow-offset-rest);
 }
 
 .gallery-page-size {

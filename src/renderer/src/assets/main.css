@@ -81,21 +81,22 @@ code {
 }
 
 .btn-primary {
-  background: var(--accent-gradient);
+  background: var(--accent);
   border-color: transparent;
   color: var(--accent-text);
-  box-shadow: var(--accent-glow-sm);
+  box-shadow: var(--shadow-offset-rest);
 }
 
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.08);
-  box-shadow: var(--accent-glow);
+  box-shadow: var(--shadow-offset-hover);
 }
 
 .btn-danger {
   background: var(--color-danger);
   border-color: transparent;
   color: var(--color-background);
+  box-shadow: var(--shadow-offset-rest);
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -107,6 +108,7 @@ code {
   background: var(--color-danger);
   border-color: transparent;
   filter: brightness(1.1);
+  box-shadow: var(--shadow-offset-hover);
 }
 
 /* ---------- Form fields ---------- */

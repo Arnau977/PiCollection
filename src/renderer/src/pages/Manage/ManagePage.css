@@ -47,8 +47,8 @@
 
 .manage-tab.active {
   color: var(--accent-text);
-  background: var(--accent-gradient);
-  box-shadow: var(--accent-glow-sm);
+  background: var(--accent);
+  box-shadow: var(--shadow-offset-rest);
 }
 
 .manage-content {
@@ -161,8 +161,8 @@
 
 .manage-view-toggle .btn.is-active {
   color: var(--accent-text);
-  background: var(--accent-gradient);
-  box-shadow: var(--accent-glow-sm);
+  background: var(--accent);
+  box-shadow: var(--shadow-offset-rest);
 }
 
 .manage-list-item.manage-list-item-editing {

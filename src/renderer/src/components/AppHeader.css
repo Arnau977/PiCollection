@@ -32,8 +32,7 @@
   width: 2.1rem;
   height: 2.1rem;
   border-radius: var(--radius-md);
-  background: var(--accent-gradient);
-  box-shadow: var(--accent-glow-sm);
+  background: var(--accent);
   color: #fff;
   font-weight: 800;
   font-size: 1.1rem;
@@ -86,8 +85,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--accent-gradient);
-  box-shadow: var(--accent-glow-sm);
+  background: var(--accent);
 }
 
 .app-sidebar-link:hover {
@@ -97,8 +95,8 @@
 
 .app-sidebar-link.active {
   color: var(--accent-text);
-  background: var(--accent-gradient);
-  box-shadow: var(--accent-glow-sm);
+  background: var(--accent);
+  box-shadow: var(--shadow-offset-rest);
 }
 
 /* Icon-only rail once the window gets too narrow for labels to have room
