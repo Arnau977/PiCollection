@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
 import type { CharacterModel } from '@shared/models'
@@ -279,6 +279,40 @@ describe('MediaForm character picker', () => {
     expect(
       await screen.findByRole('option', { name: 'Ishtar (Fate/Grand Order)' })
     ).toBeInTheDocument()
+  })
+
+  it('surfaces characters linked to the media\'s selected series first in the browse list', async () => {
+    const wonderland = { id: 's1', name: 'Wonderland' }
+    charactersData = [
+      { id: 'c1', name: 'Aardvark', series: [] },
+      { id: 'c2', name: 'Bandersnatch', series: [] },
+      { id: 'c3', name: 'Cheshire Cat', series: [wonderland] }
+    ]
+    const user = userEvent.setup()
+    const media = {
+      id: 'm1',
+      name: 'sunset',
+      type: 'image' as const,
+      route: '/pics/sunset.png',
+      sfw: true,
+      isAiGenerated: false,
+      createdAt: Date.now(),
+      tags: [],
+      characters: [],
+      series: [wonderland],
+      pendingTagging: false
+    }
+    renderForm({ media })
+
+    const charactersCombobox = screen.getByRole('combobox', { name: /characters/i })
+    const comboboxRoot = charactersCombobox.closest('.react-aria-ComboBox') as HTMLElement
+    await user.click(within(comboboxRoot).getByRole('button', { name: /show suggestions/i }))
+
+    const optionNames = (await screen.findAllByRole('option')).map((option) => option.textContent)
+    const cheshireIndex = optionNames.findIndex((name) => name?.startsWith('Cheshire Cat'))
+    expect(cheshireIndex).toBeGreaterThanOrEqual(0)
+    expect(cheshireIndex).toBeLessThan(optionNames.indexOf('Aardvark'))
+    expect(cheshireIndex).toBeLessThan(optionNames.indexOf('Bandersnatch'))
   })
 })
 
