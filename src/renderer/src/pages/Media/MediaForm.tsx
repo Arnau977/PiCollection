@@ -1,8 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Cpu, ExternalLink, Plus, ScanSearch } from 'lucide-react'
-import type { ArtistModel, CharacterModel, MediaDuplicateCheck, MediaInput, MediaModel, SeriesModel, TagModel } from '@shared/models'
+import {
+  ArrowLeft,
+  Cpu,
+  ExternalLink,
+  PanelRightClose,
+  PanelRightOpen,
+  Plus,
+  ScanSearch
+} from 'lucide-react'
+import type {
+  ArtistModel,
+  CharacterModel,
+  MediaDuplicateCheck,
+  MediaInput,
+  MediaModel,
+  SeriesModel,
+  TagModel
+} from '@shared/models'
 import { deriveMediaName, detectMediaType } from '@shared/utils'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
@@ -76,6 +92,17 @@ const MISSING_CATEGORIES: { category: SuggestionCategory; labelKey: string }[] =
   { category: 'series', labelKey: 'sauceNao.missingSeries' }
 ]
 
+/**
+ * WD14 has no category, only a per-tag confidence score - fading
+ * lower-confidence chips gives a wall of same-looking tags a scan order
+ * without extra chrome (see .wd14-confidence-* in MediaForm.css).
+ */
+function wd14ConfidenceClass(score: number): string {
+  if (score >= 0.6) return 'wd14-confidence-high'
+  if (score >= 0.45) return 'wd14-confidence-medium'
+  return 'wd14-confidence-low'
+}
+
 export function MediaForm({
   media,
   initialFile,
@@ -102,6 +129,7 @@ export function MediaForm({
   const pendingCharacterSeriesIds = useRef(new Map<string, string[]>())
   const pendingArtistSocials = useRef(new Map<string, { name: string; url: string }>())
   const hasSauceNaoApiKey = useSauceNaoApiKey()
+  const [suggestionsCollapsed, setSuggestionsCollapsed] = useState(false)
 
   useEffect((): (() => void) | void => {
     if (!initialFile) return
@@ -193,7 +221,8 @@ export function MediaForm({
   function handleCreateCharacter(name: string, seriesIds?: string[]): void {
     const draft: CharacterModel = { id: crypto.randomUUID(), name, series: [] }
     setPendingCharacters((prev) => [...prev, draft])
-    if (seriesIds && seriesIds.length > 0) pendingCharacterSeriesIds.current.set(draft.id, seriesIds)
+    if (seriesIds && seriesIds.length > 0)
+      pendingCharacterSeriesIds.current.set(draft.id, seriesIds)
     setInput((prev) => ({
       ...prev,
       characterIds: [...(prev.characterIds ?? []), draft.id]
@@ -404,7 +433,9 @@ export function MediaForm({
     const characterIdMap = await resolvePendingCharacterIds(seriesIdMap)
 
     const resolvedSeriesIds = (input.seriesIds ?? []).map((id) => seriesIdMap.get(id) ?? id)
-    const resolvedCharacterIds = (input.characterIds ?? []).map((id) => characterIdMap.get(id) ?? id)
+    const resolvedCharacterIds = (input.characterIds ?? []).map(
+      (id) => characterIdMap.get(id) ?? id
+    )
     const resolvedInput: MediaInput = {
       ...input,
       ...overrides,
@@ -488,6 +519,10 @@ export function MediaForm({
     input.seriesIds ?? []
   )
 
+  const totalMissingSuggestions =
+    MISSING_CATEGORIES.reduce((sum, { category }) => sum + sauce.missing[category].length, 0) +
+    wd14.missing.length
+
   return (
     <div className="media-form">
       <div className="media-page-actions">
@@ -502,336 +537,381 @@ export function MediaForm({
         )}
       </div>
 
-      <form className="media-form-card card" onSubmit={handleSubmit}>
-        <div className="media-form-group">
-          <h2>{t('addMedia.groupFile')}</h2>
-          {queueInfo && (
-            <p className="import-queue-progress">
-              {t('importQueue.progress', { current: queueInfo.current, total: queueInfo.total })}
-            </p>
-          )}
+      <div className="media-form-layout">
+        <form className="media-form-card card" onSubmit={handleSubmit}>
+          <div className="media-form-group">
+            <h2>{t('addMedia.groupFile')}</h2>
+            {queueInfo && (
+              <p className="import-queue-progress">
+                {t('importQueue.progress', { current: queueInfo.current, total: queueInfo.total })}
+              </p>
+            )}
 
-          {!isEditing && !initialFile && (
-            <div className="field">
-              <label htmlFor="media-file">{t('addMedia.file')}</label>
-              <input
-                id="media-file"
-                type="file"
-                accept="image/*,video/*,.gif"
-                onChange={handleFileChange}
-                required
-              />
-            </div>
-          )}
+            {!isEditing && !initialFile && (
+              <div className="field">
+                <label htmlFor="media-file">{t('addMedia.file')}</label>
+                <input
+                  id="media-file"
+                  type="file"
+                  accept="image/*,video/*,.gif"
+                  onChange={handleFileChange}
+                  required
+                />
+              </div>
+            )}
 
-          {isEditing && media && (
-            <div className="media-preview">
-              {media.type === 'video' ? (
-                <video muted controls src={toMediaUrl(media.route)} />
-              ) : (
-                <img src={toMediaUrl(media.route)} alt={media.name} />
-              )}
-            </div>
-          )}
-          {!isEditing && input.route && (
-            <div className="media-preview">
-              {input.type === 'video' ? (
-                <video muted controls src={toMediaUrl(input.route)} />
-              ) : (
-                <img src={toMediaUrl(input.route)} alt="" />
-              )}
-            </div>
-          )}
-
-          {duplicateCheck?.exactMatch && (
-            <p role="alert" className="duplicate-error">
-              {t('addMedia.duplicateExact', { name: duplicateCheck.exactMatch.name })}
-            </p>
-          )}
-          {!duplicateCheck?.exactMatch && duplicateCheck && duplicateCheck.similar.length > 0 && (
-            <div className="duplicate-warning">
-              <p>{t('addMedia.duplicateSimilar')}</p>
-              <ul className="chip-list">
-                {duplicateCheck.similar.map(({ media: similarMedia, distance }) => (
-                  <li key={similarMedia.id}>
-                    <MediaHoverPreview media={similarMedia}>{similarMedia.name}</MediaHoverPreview>{' '}
-                    ({t('addMedia.duplicateSimilarMatch', { distance })})
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {hasSauceNaoApiKey ? (
-            <div className="sauce-panel">
-              <button
-                type="button"
-                className="btn"
-                onClick={() => sauce.run(input.route)}
-                disabled={!input.route || saving || sauce.status === 'loading'}
-              >
-                <ScanSearch size={16} />
-                {sauce.status === 'loading' ? t('sauceNao.searching') : t('sauceNao.button')}
-              </button>
-              <p className="sauce-hint">{t('sauceNao.privacyHint')}</p>
-              {input.type === 'video' && <p className="sauce-hint">{t('sauceNao.videoHint')}</p>}
-
-              {sauce.status === 'error' && (
-                <p role="alert" className="sauce-error">
-                  {sauce.error}
-                </p>
-              )}
-
-              {sauce.status === 'ready' && !sauce.match && (
-                <>
-                  <p className="sauce-hint">{t('sauceNao.noMatch')}</p>
-                  {sauce.remaining && (
-                    <p className="sauce-quota">
-                      {t('sauceNao.quota', { count: sauce.remaining.long })}
-                    </p>
-                  )}
-                </>
-              )}
-
-              {sauce.match && (
-                <>
-                  <div className="sauce-result-head">
-                    <span className="badge badge-accent">
-                      {t('sauceNao.similarity', { value: Math.round(sauce.match.similarity) })}
-                    </span>
-                    <span>{sauce.match.indexName}</span>
-                    {sauce.match.sourceUrl && (
-                      <a href={sauce.match.sourceUrl} target="_blank" rel="noreferrer">
-                        <ExternalLink size={12} />
-                        {t('sauceNao.viewSource')}
-                      </a>
-                    )}
-                    {sauce.remaining && (
-                      <span className="sauce-quota">
-                        {t('sauceNao.quota', { count: sauce.remaining.long })}
-                      </span>
-                    )}
-                    <button type="button" className="btn" onClick={sauce.reset}>
-                      {t('sauceNao.dismiss')}
-                    </button>
-                  </div>
-                  <p className="sauce-hint">{t('sauceNao.applied', { count: sauce.appliedCount })}</p>
-
-                  {MISSING_CATEGORIES.map(
-                    ({ category, labelKey }) =>
-                      sauce.missing[category].length > 0 && (
-                        <div className="sauce-missing-row" key={category}>
-                          <span className="sauce-cat-label">{t(labelKey)}</span>
-                          <ul className="chip-list">
-                            {sauce.missing[category].map((name) => (
-                              <li key={name}>
-                                <button
-                                  type="button"
-                                  className="sauce-add-chip"
-                                  onClick={() => addMissingSuggestion(category, name)}
-                                >
-                                  <Plus size={12} />
-                                  {name}
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )
-                  )}
-                </>
-              )}
-            </div>
-          ) : (
-            <p className="sauce-hint">
-              {t('sauceNao.noApiKeyHint')}{' '}
-              <Link to={PATH.SETTINGS}>{t('sauceNao.noApiKeyHintLink')}</Link>
-            </p>
-          )}
-
-          {wd14Runtime.status === 'installed' ? (
-            <div className="sauce-panel">
-              <button
-                type="button"
-                className="btn"
-                onClick={() => wd14.run(input.route)}
-                disabled={!input.route || saving || wd14.status === 'loading'}
-              >
-                <Cpu size={16} />
-                {wd14.status === 'loading' ? t('wd14.searching') : t('wd14.button')}
-              </button>
-              <p className="sauce-hint">{t('wd14.privacyHint')}</p>
-
-              {wd14.status === 'error' && (
-                <p role="alert" className="sauce-error">
-                  {wd14.error}
-                </p>
-              )}
-
-              {wd14.status === 'ready' &&
-                (wd14.appliedCount === 0 && wd14.missing.length === 0 ? (
-                  <p className="sauce-hint">{t('wd14.noSuggestions')}</p>
+            {isEditing && media && (
+              <div className="media-preview">
+                {media.type === 'video' ? (
+                  <video muted controls src={toMediaUrl(media.route)} />
                 ) : (
-                  <>
-                    <div className="sauce-result-head">
-                      <span>{t('wd14.applied', { count: wd14.appliedCount })}</span>
-                      <button type="button" className="btn" onClick={wd14.reset}>
-                        {t('wd14.dismiss')}
-                      </button>
-                    </div>
-                    {wd14.missing.length > 0 && (
-                      <ul className="chip-list">
-                        {wd14.missing.map(({ name }) => (
-                          <li key={name} className="wd14-missing-chip">
-                            <button
-                              type="button"
-                              className="sauce-add-chip"
-                              onClick={() => addWd14Suggestion(name)}
-                            >
-                              <Plus size={12} />
-                              {name}
-                            </button>
-                            <TagWikiInfo tagName={name} />
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </>
-                ))}
-            </div>
-          ) : (
-            <p className="sauce-hint">
-              {t('wd14.notInstalledHint')}{' '}
-              <Link to={PATH.SETTINGS}>{t('wd14.notInstalledHintLink')}</Link>
-            </p>
-          )}
-        </div>
+                  <img src={toMediaUrl(media.route)} alt={media.name} />
+                )}
+              </div>
+            )}
+            {!isEditing && input.route && (
+              <div className="media-preview">
+                {input.type === 'video' ? (
+                  <video muted controls src={toMediaUrl(input.route)} />
+                ) : (
+                  <img src={toMediaUrl(input.route)} alt="" />
+                )}
+              </div>
+            )}
 
-        <div className="media-form-group">
-          <h2>{t('addMedia.groupDetails')}</h2>
-          {isEditing && (
-            <div className="field">
-              <label htmlFor="media-name">{t('manage.name')}</label>
+            {duplicateCheck?.exactMatch && (
+              <p role="alert" className="duplicate-error">
+                {t('addMedia.duplicateExact', { name: duplicateCheck.exactMatch.name })}
+              </p>
+            )}
+            {!duplicateCheck?.exactMatch && duplicateCheck && duplicateCheck.similar.length > 0 && (
+              <div className="duplicate-warning">
+                <p>{t('addMedia.duplicateSimilar')}</p>
+                <ul className="chip-list">
+                  {duplicateCheck.similar.map(({ media: similarMedia, distance }) => (
+                    <li key={similarMedia.id}>
+                      <MediaHoverPreview media={similarMedia}>
+                        {similarMedia.name}
+                      </MediaHoverPreview>{' '}
+                      ({t('addMedia.duplicateSimilarMatch', { distance })})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <div className="media-form-group">
+            <h2>{t('addMedia.groupDetails')}</h2>
+            {isEditing && (
+              <div className="field">
+                <label htmlFor="media-name">{t('manage.name')}</label>
+                <input
+                  id="media-name"
+                  type="text"
+                  name="name"
+                  value={input.name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            )}
+
+            <label className="checkbox-row">
+              <input type="checkbox" name="sfw" checked={input.sfw} onChange={handleChange} />
+              {t('addMedia.sfw')}
+            </label>
+
+            <label className="checkbox-row">
               <input
-                id="media-name"
-                type="text"
-                name="name"
-                value={input.name}
+                type="checkbox"
+                name="isAiGenerated"
+                checked={input.isAiGenerated}
                 onChange={handleChange}
-                required
               />
+              {t('addMedia.aiGenerated')}
+            </label>
+
+            <Autocomplete
+              name="artist"
+              label={t('filters.artist')}
+              options={[...artists.data, ...pendingArtists]}
+              getOptionLabel={(artist) =>
+                pendingArtists.some((p) => p.id === artist.id)
+                  ? t('autocomplete.pendingLabel', { name: artist.name })
+                  : artist.name
+              }
+              getOptionMatchName={(artist) => artist.name}
+              getOptionValue={(artist) => artist.id}
+              selectedKey={input.artistId ?? null}
+              onSelect={(artist) => setInput((prev) => ({ ...prev, artistId: artist?.id }))}
+              onCreate={handleCreateArtist}
+            />
+          </div>
+
+          <div className="media-form-group">
+            <h2>{t('addMedia.groupTaxonomy')}</h2>
+            <MultiSelectAutocomplete
+              name="tags"
+              label={t('filters.tags')}
+              options={[...tags.data, ...pendingTags]}
+              getOptionLabel={(tag) =>
+                pendingTags.some((p) => p.id === tag.id)
+                  ? t('autocomplete.pendingLabel', { name: tag.name })
+                  : tag.name
+              }
+              getOptionMatchName={(tag) => tag.name}
+              getOptionValue={(tag) => tag.id}
+              selectedValues={input.tagIds ?? []}
+              onChange={(tagIds) => setInput((prev) => ({ ...prev, tagIds }))}
+              onCreate={handleCreateTag}
+            />
+            <MultiSelectAutocomplete
+              name="characters"
+              label={t('filters.characters')}
+              options={sortedCharacterOptions}
+              getOptionLabel={(character) =>
+                pendingCharacters.some((p) => p.id === character.id)
+                  ? t('autocomplete.pendingLabel', { name: formatCharacterOptionLabel(character) })
+                  : formatCharacterOptionLabel(character)
+              }
+              getOptionMatchName={(character) => character.name}
+              getOptionValue={(character) => character.id}
+              selectedValues={input.characterIds ?? []}
+              onChange={handleCharactersChange}
+              onCreate={handleCreateCharacter}
+            />
+            <MultiSelectAutocomplete
+              name="series"
+              label={t('manage.series')}
+              options={[...series.data, ...pendingSeries]}
+              getOptionLabel={(s) =>
+                pendingSeries.some((p) => p.id === s.id)
+                  ? t('autocomplete.pendingLabel', { name: s.name })
+                  : s.name
+              }
+              getOptionMatchName={(s) => s.name}
+              getOptionValue={(s) => s.id}
+              selectedValues={input.seriesIds ?? []}
+              onChange={(seriesIds) => setInput((prev) => ({ ...prev, seriesIds }))}
+              onCreate={handleCreateSeries}
+            />
+          </div>
+
+          {error && <p role="alert">{error}</p>}
+
+          <div className="media-form-actions">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={saving || Boolean(duplicateCheck?.exactMatch)}
+            >
+              {saving
+                ? t('media.saving')
+                : queueInfo
+                  ? t('importQueue.saveAndNext')
+                  : isEditing
+                    ? t('manage.save')
+                    : t('addMedia.submit')}
+            </button>
+            {queueInfo && (
+              <button type="button" className="btn" onClick={queueInfo.onSkip}>
+                {t('importQueue.skip')}
+              </button>
+            )}
+            {queueInfo && !media && (
+              <button type="button" className="btn" onClick={handleSendToPending} disabled={saving}>
+                {t('importQueue.sendToPending')}
+              </button>
+            )}
+          </div>
+        </form>
+
+        <aside className={`suggestions-rail${suggestionsCollapsed ? ' is-collapsed' : ''}`}>
+          <button
+            type="button"
+            className="suggestions-rail-toggle"
+            onClick={() => setSuggestionsCollapsed((prev) => !prev)}
+            aria-expanded={!suggestionsCollapsed}
+            aria-label={t(
+              suggestionsCollapsed ? 'addMedia.suggestionsExpand' : 'addMedia.suggestionsCollapse'
+            )}
+          >
+            {suggestionsCollapsed ? <PanelRightOpen size={16} /> : <PanelRightClose size={16} />}
+            <span className="suggestions-rail-toggle-label">{t('addMedia.suggestionsTitle')}</span>
+            {suggestionsCollapsed && totalMissingSuggestions > 0 && (
+              <span className="suggestions-rail-badge">{totalMissingSuggestions}</span>
+            )}
+          </button>
+
+          {!suggestionsCollapsed && (
+            <div className="suggestions-rail-body">
+              <div className="suggestions-rail-section">
+                <span className="suggestions-rail-section-title">
+                  {t('addMedia.suggestionsSauceNaoTitle')}
+                </span>
+                {hasSauceNaoApiKey ? (
+                  <div className="sauce-panel">
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => sauce.run(input.route)}
+                      disabled={!input.route || saving || sauce.status === 'loading'}
+                    >
+                      <ScanSearch size={16} />
+                      {sauce.status === 'loading' ? t('sauceNao.searching') : t('sauceNao.button')}
+                    </button>
+                    <p className="sauce-hint">{t('sauceNao.privacyHint')}</p>
+                    {input.type === 'video' && (
+                      <p className="sauce-hint">{t('sauceNao.videoHint')}</p>
+                    )}
+
+                    {sauce.status === 'error' && (
+                      <p role="alert" className="sauce-error">
+                        {sauce.error}
+                      </p>
+                    )}
+
+                    {sauce.status === 'ready' && !sauce.match && (
+                      <>
+                        <p className="sauce-hint">{t('sauceNao.noMatch')}</p>
+                        {sauce.remaining && (
+                          <p className="sauce-quota">
+                            {t('sauceNao.quota', { count: sauce.remaining.long })}
+                          </p>
+                        )}
+                      </>
+                    )}
+
+                    {sauce.match && (
+                      <>
+                        <div className="sauce-result-head">
+                          <span className="badge badge-accent">
+                            {t('sauceNao.similarity', {
+                              value: Math.round(sauce.match.similarity)
+                            })}
+                          </span>
+                          <span>{sauce.match.indexName}</span>
+                          {sauce.match.sourceUrl && (
+                            <a href={sauce.match.sourceUrl} target="_blank" rel="noreferrer">
+                              <ExternalLink size={12} />
+                              {t('sauceNao.viewSource')}
+                            </a>
+                          )}
+                          {sauce.remaining && (
+                            <span className="sauce-quota">
+                              {t('sauceNao.quota', { count: sauce.remaining.long })}
+                            </span>
+                          )}
+                          <button type="button" className="btn" onClick={sauce.reset}>
+                            {t('sauceNao.dismiss')}
+                          </button>
+                        </div>
+                        <p className="sauce-hint">
+                          {t('sauceNao.applied', { count: sauce.appliedCount })}
+                        </p>
+
+                        {MISSING_CATEGORIES.map(
+                          ({ category, labelKey }) =>
+                            sauce.missing[category].length > 0 && (
+                              <div className="sauce-missing-row" key={category}>
+                                <span className="sauce-cat-label">{t(labelKey)}</span>
+                                <ul className={`chip-list chip-list-${category}`}>
+                                  {sauce.missing[category].map((name) => (
+                                    <li key={name}>
+                                      <button
+                                        type="button"
+                                        className="sauce-add-chip"
+                                        onClick={() => addMissingSuggestion(category, name)}
+                                      >
+                                        <Plus size={12} />
+                                        {name}
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <p className="sauce-hint">
+                    {t('sauceNao.noApiKeyHint')}{' '}
+                    <Link to={PATH.SETTINGS}>{t('sauceNao.noApiKeyHintLink')}</Link>
+                  </p>
+                )}
+              </div>
+
+              <div className="suggestions-rail-section">
+                <span className="suggestions-rail-section-title">
+                  {t('addMedia.suggestionsWd14Title')}
+                </span>
+                {wd14Runtime.status === 'installed' ? (
+                  <div className="sauce-panel">
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => wd14.run(input.route)}
+                      disabled={!input.route || saving || wd14.status === 'loading'}
+                    >
+                      <Cpu size={16} />
+                      {wd14.status === 'loading' ? t('wd14.searching') : t('wd14.button')}
+                    </button>
+                    <p className="sauce-hint">{t('wd14.privacyHint')}</p>
+
+                    {wd14.status === 'error' && (
+                      <p role="alert" className="sauce-error">
+                        {wd14.error}
+                      </p>
+                    )}
+
+                    {wd14.status === 'ready' &&
+                      (wd14.appliedCount === 0 && wd14.missing.length === 0 ? (
+                        <p className="sauce-hint">{t('wd14.noSuggestions')}</p>
+                      ) : (
+                        <>
+                          <div className="sauce-result-head">
+                            <span>{t('wd14.applied', { count: wd14.appliedCount })}</span>
+                            <button type="button" className="btn" onClick={wd14.reset}>
+                              {t('wd14.dismiss')}
+                            </button>
+                          </div>
+                          {wd14.missing.length > 0 && (
+                            <ul className="chip-list chip-list-tags">
+                              {wd14.missing.map(({ name, score }) => (
+                                <li
+                                  key={name}
+                                  className={`wd14-missing-chip ${wd14ConfidenceClass(score)}`}
+                                >
+                                  <button
+                                    type="button"
+                                    className="sauce-add-chip"
+                                    onClick={() => addWd14Suggestion(name)}
+                                  >
+                                    <Plus size={12} />
+                                    {name}
+                                  </button>
+                                  <TagWikiInfo tagName={name} />
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="sauce-hint">
+                    {t('wd14.notInstalledHint')}{' '}
+                    <Link to={PATH.SETTINGS}>{t('wd14.notInstalledHintLink')}</Link>
+                  </p>
+                )}
+              </div>
             </div>
           )}
-
-          <label className="checkbox-row">
-            <input type="checkbox" name="sfw" checked={input.sfw} onChange={handleChange} />
-            {t('addMedia.sfw')}
-          </label>
-
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              name="isAiGenerated"
-              checked={input.isAiGenerated}
-              onChange={handleChange}
-            />
-            {t('addMedia.aiGenerated')}
-          </label>
-
-          <Autocomplete
-            name="artist"
-            label={t('filters.artist')}
-            options={[...artists.data, ...pendingArtists]}
-            getOptionLabel={(artist) =>
-              pendingArtists.some((p) => p.id === artist.id)
-                ? t('autocomplete.pendingLabel', { name: artist.name })
-                : artist.name
-            }
-            getOptionMatchName={(artist) => artist.name}
-            getOptionValue={(artist) => artist.id}
-            selectedKey={input.artistId ?? null}
-            onSelect={(artist) => setInput((prev) => ({ ...prev, artistId: artist?.id }))}
-            onCreate={handleCreateArtist}
-          />
-        </div>
-
-        <div className="media-form-group">
-          <h2>{t('addMedia.groupTaxonomy')}</h2>
-          <MultiSelectAutocomplete
-            name="tags"
-            label={t('filters.tags')}
-            options={[...tags.data, ...pendingTags]}
-            getOptionLabel={(tag) =>
-              pendingTags.some((p) => p.id === tag.id)
-                ? t('autocomplete.pendingLabel', { name: tag.name })
-                : tag.name
-            }
-            getOptionMatchName={(tag) => tag.name}
-            getOptionValue={(tag) => tag.id}
-            selectedValues={input.tagIds ?? []}
-            onChange={(tagIds) => setInput((prev) => ({ ...prev, tagIds }))}
-            onCreate={handleCreateTag}
-          />
-          <MultiSelectAutocomplete
-            name="characters"
-            label={t('filters.characters')}
-            options={sortedCharacterOptions}
-            getOptionLabel={(character) =>
-              pendingCharacters.some((p) => p.id === character.id)
-                ? t('autocomplete.pendingLabel', { name: formatCharacterOptionLabel(character) })
-                : formatCharacterOptionLabel(character)
-            }
-            getOptionMatchName={(character) => character.name}
-            getOptionValue={(character) => character.id}
-            selectedValues={input.characterIds ?? []}
-            onChange={handleCharactersChange}
-            onCreate={handleCreateCharacter}
-          />
-          <MultiSelectAutocomplete
-            name="series"
-            label={t('manage.series')}
-            options={[...series.data, ...pendingSeries]}
-            getOptionLabel={(s) =>
-              pendingSeries.some((p) => p.id === s.id)
-                ? t('autocomplete.pendingLabel', { name: s.name })
-                : s.name
-            }
-            getOptionMatchName={(s) => s.name}
-            getOptionValue={(s) => s.id}
-            selectedValues={input.seriesIds ?? []}
-            onChange={(seriesIds) => setInput((prev) => ({ ...prev, seriesIds }))}
-            onCreate={handleCreateSeries}
-          />
-        </div>
-
-        {error && <p role="alert">{error}</p>}
-
-        <div className="media-form-actions">
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={saving || Boolean(duplicateCheck?.exactMatch)}
-          >
-            {saving
-              ? t('media.saving')
-              : queueInfo
-                ? t('importQueue.saveAndNext')
-                : isEditing
-                  ? t('manage.save')
-                  : t('addMedia.submit')}
-          </button>
-          {queueInfo && (
-            <button type="button" className="btn" onClick={queueInfo.onSkip}>
-              {t('importQueue.skip')}
-            </button>
-          )}
-          {queueInfo && !media && (
-            <button type="button" className="btn" onClick={handleSendToPending} disabled={saving}>
-              {t('importQueue.sendToPending')}
-            </button>
-          )}
-        </div>
-      </form>
+        </aside>
+      </div>
     </div>
   )
 }

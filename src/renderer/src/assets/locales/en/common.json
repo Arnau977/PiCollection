@@ -235,7 +235,12 @@
     "duplicateExact": "This file is already in the library as \"{{name}}\".",
     "duplicateSimilar": "This looks similar to media already in the library:",
     "duplicateSimilarMatch": "{{distance}}/64 difference",
-    "duplicatePreviewLabel": "Preview \"{{name}}\""
+    "duplicatePreviewLabel": "Preview \"{{name}}\"",
+    "suggestionsTitle": "Suggestions",
+    "suggestionsExpand": "Show suggestions panel",
+    "suggestionsCollapse": "Hide suggestions panel",
+    "suggestionsSauceNaoTitle": "SauceNAO match",
+    "suggestionsWd14Title": "Local AI tagging"
   },
   "autocomplete": {
     "noResults": "No results",
