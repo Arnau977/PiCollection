@@ -76,6 +76,13 @@ export interface MediaSeriesTable {
   series_id: string
 }
 
+export interface TagWikiCacheTable {
+  tag_name: string
+  body: string
+  other_names_json: string
+  fetched_at: number
+}
+
 export interface DB {
   artist: ArtistTable
   artist_social_link: ArtistSocialLinkTable
@@ -87,4 +94,5 @@ export interface DB {
   media_tag: MediaTagTable
   media_character: MediaCharacterTable
   media_series: MediaSeriesTable
+  tag_wiki_cache: TagWikiCacheTable
 }
