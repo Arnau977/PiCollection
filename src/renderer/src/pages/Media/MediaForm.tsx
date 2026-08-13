@@ -13,6 +13,7 @@ import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEn
 import { useSauceNaoApiKey } from '../../hooks/useSauceNaoApiKey'
 import { useSauceNaoSuggestions, type SuggestionCategory } from '../../hooks/useSauceNaoSuggestions'
 import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
+import { sortCharactersByRelevance } from '../../utils/sortCharactersBySeries'
 import { withImpliedSeries } from '../../utils/withImpliedSeries'
 import { resolvePendingId } from './resolvePendingId'
 import './MediaForm.css'
@@ -462,6 +463,11 @@ export function MediaForm({
     if (result.success) onMarkResolved()
   }
 
+  const sortedCharacterOptions = sortCharactersByRelevance(
+    [...characters.data, ...pendingCharacters],
+    input.seriesIds ?? []
+  )
+
   return (
     <div className="media-form">
       <div className="media-page-actions">
@@ -683,7 +689,7 @@ export function MediaForm({
         <MultiSelectAutocomplete
           name="characters"
           label={t('filters.characters')}
-          options={[...characters.data, ...pendingCharacters]}
+          options={sortedCharacterOptions}
           getOptionLabel={(character) =>
             pendingCharacters.some((p) => p.id === character.id)
               ? t('autocomplete.pendingLabel', { name: formatCharacterOptionLabel(character) })
