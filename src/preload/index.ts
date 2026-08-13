@@ -34,7 +34,9 @@ import type {
   TagModel,
   TagWikiEntry,
   UpdateChannel,
-  UpdaterEvent
+  UpdaterEvent,
+  Wd14RuntimeEvent,
+  Wd14RuntimeStatus
 } from '@shared/models'
 import { IPC, type IpcResult } from '@shared/ipc/contracts'
 
@@ -170,6 +172,18 @@ export const api = {
   tagWiki: {
     lookup: (tagName: string): Promise<IpcResult<TagWikiEntry | null>> =>
       ipcRenderer.invoke(IPC.tagWiki.lookup, tagName)
+  },
+  wd14Runtime: {
+    getStatus: (): Promise<IpcResult<Wd14RuntimeStatus>> =>
+      ipcRenderer.invoke(IPC.wd14Runtime.getStatus),
+    install: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.wd14Runtime.install),
+    remove: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.wd14Runtime.remove),
+    onEvent: (listener: (event: Wd14RuntimeEvent) => void): (() => void) => {
+      const handler = (_event: IpcRendererEvent, payload: Wd14RuntimeEvent): void =>
+        listener(payload)
+      ipcRenderer.on(IPC.wd14Runtime.event, handler)
+      return () => ipcRenderer.removeListener(IPC.wd14Runtime.event, handler)
+    }
   },
   logging: {
     getEnabled: (): Promise<IpcResult<boolean>> => ipcRenderer.invoke(IPC.logging.getEnabled),
