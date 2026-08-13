@@ -32,6 +32,9 @@ function setApi(overrides: Record<string, unknown> = {}): void {
       },
       danbooru: {
         autocompleteTags: vi.fn().mockResolvedValue({ success: true, data: [] })
+      },
+      tagWiki: {
+        lookup: vi.fn().mockResolvedValue({ success: true, data: null })
       }
     },
     writable: true,
@@ -262,5 +265,10 @@ describe('TagsManager', () => {
     const portraitItem = screen.getByText('portrait').closest('li')
     expect(landscapeItem).toHaveTextContent('29k')
     expect(portraitItem).toHaveTextContent('0')
+  })
+
+  it('renders a tag-wiki info button for each tag', () => {
+    render(<TagsManager />)
+    expect(screen.getByLabelText('What does this tag mean? (landscape)')).toBeInTheDocument()
   })
 })

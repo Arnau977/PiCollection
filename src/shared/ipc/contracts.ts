@@ -233,6 +233,9 @@ export const IPC = {
   danbooru: {
     autocompleteTags: 'danbooru:autocomplete-tags'
   },
+  tagWiki: {
+    lookup: 'tag-wiki:lookup'
+  },
   logging: {
     getEnabled: 'logging:get-enabled',
     setEnabled: 'logging:set-enabled',

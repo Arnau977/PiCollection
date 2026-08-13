@@ -32,6 +32,7 @@ import type {
   StatsSummary,
   TagInput,
   TagModel,
+  TagWikiEntry,
   UpdateChannel,
   UpdaterEvent
 } from '@shared/models'
@@ -165,6 +166,10 @@ export const api = {
   danbooru: {
     autocompleteTags: (query: string): Promise<IpcResult<DanbooruTagSuggestion[]>> =>
       ipcRenderer.invoke(IPC.danbooru.autocompleteTags, query)
+  },
+  tagWiki: {
+    lookup: (tagName: string): Promise<IpcResult<TagWikiEntry | null>> =>
+      ipcRenderer.invoke(IPC.tagWiki.lookup, tagName)
   },
   logging: {
     getEnabled: (): Promise<IpcResult<boolean>> => ipcRenderer.invoke(IPC.logging.getEnabled),
