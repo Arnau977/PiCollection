@@ -6,6 +6,7 @@ import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { useCharacters, useSeries } from '../hooks/useEntityLists'
 import { buildAncestorAwareEntityTree } from '../utils/buildEntityTree'
 import { Lightbox } from './Lightbox/Lightbox'
+import { SimilarMediaPanel } from './Media/SimilarMediaPanel'
 import './Media.css'
 
 interface MediaProps extends MediaModel {
@@ -17,6 +18,7 @@ interface MediaProps extends MediaModel {
 }
 
 export default function Media({
+  id,
   tags = [],
   sfw,
   isAiGenerated,
@@ -172,6 +174,8 @@ export default function Media({
             </ul>
           </div>
         )}
+
+        <SimilarMediaPanel mediaId={id} />
       </div>
     </div>
   )
