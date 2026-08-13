@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, Users } from 'lucide-react'
 import { useCharacters, useSeries } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
+import { EmptyState } from '../../components/EmptyState/EmptyState'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
@@ -255,9 +256,9 @@ export function CharactersManager(): JSX.Element {
           {loading ? (
             <p className="loading-state">{t('gallery.loading')}</p>
           ) : characters.length === 0 ? (
-            <p className="manage-empty">{t('manage.empty')}</p>
+            <EmptyState icon={<Users />} title={t('manage.empty')} />
           ) : treeNodes.length === 0 ? (
-            <p className="manage-empty">{t('manage.noResults')}</p>
+            <EmptyState icon={<Users />} title={t('manage.noResults')} />
           ) : (
             <ul className="manage-list">
               {treeNodes.map(({ entity: character, depth, rolledUpCount }) => (

@@ -25,11 +25,7 @@
 
 .media-card:hover {
   transform: translateY(-4px);
-  /* A dedicated, more contained glow rather than the shared --accent-glow
-     (0 8px 28px) - that one's tuned for buttons and reads as a long shadow
-     trailing well below a card that's only lifting 4px, especially on the
-     grid's first row, where it and the lift both crowd the toolbar above. */
-  box-shadow: 0 4px 14px rgba(124, 108, 240, 0.3);
+  box-shadow: var(--shadow-offset-hover);
   border-color: var(--accent);
 }
 

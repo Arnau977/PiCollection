@@ -21,13 +21,13 @@
   padding: var(--space-1);
   background: var(--color-surface-2);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
 }
 
 .add-media-tab {
   background: none;
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   color: var(--color-text-muted);
   cursor: pointer;
   font-size: 0.88rem;
@@ -50,9 +50,9 @@
 }
 
 .add-media-tab.is-active {
-  background: var(--accent-gradient);
+  background: var(--accent);
   color: var(--accent-text);
-  box-shadow: var(--accent-glow-sm);
+  box-shadow: var(--shadow-offset-rest);
 }
 
 .add-media-tab:disabled {

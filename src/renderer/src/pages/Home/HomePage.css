@@ -18,65 +18,11 @@
   gap: var(--space-2);
 }
 
-.home-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-4);
-}
-
 .stats-panel {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  border-top: 2px solid var(--stats-accent, var(--accent));
-  transition:
-    transform var(--transition-base),
-    box-shadow var(--transition-base);
-}
-
-.stats-panel:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.stats-panel h3 {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.stats-panel-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.9rem;
-  height: 1.9rem;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--stats-accent, var(--accent)) 18%, transparent);
-  color: var(--stats-accent, var(--accent));
-  flex-shrink: 0;
-}
-
-.stats-panel-violet {
-  --stats-accent: var(--accent);
-}
-
-.stats-panel-blue {
-  --stats-accent: var(--accent-2);
-}
-
-.stats-panel-green {
-  --stats-accent: var(--color-success);
-}
-
-.stats-panel-amber {
-  --stats-accent: #f5b942;
-}
-
-.stats-panel .stats-bar-fill {
-  background: var(--stats-accent, var(--accent));
+  margin-top: var(--space-3);
 }
 
 .stats-empty {

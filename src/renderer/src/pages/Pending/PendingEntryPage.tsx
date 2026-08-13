@@ -40,7 +40,7 @@ export default function PendingEntryPage(): JSX.Element {
 
   return (
     <div className="page">
-      <h1 className="gradient-title">{t('pending.allCaughtUp')}</h1>
+      <h1 className="page-title">{t('pending.allCaughtUp')}</h1>
       <p>{t('pending.allCaughtUpHint')}</p>
     </div>
   )

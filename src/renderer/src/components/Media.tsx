@@ -94,18 +94,18 @@ export default function Media({
           <h1>{name}</h1>
           <div className="media-detail-badges">
             {sfw ? (
-              <span className="badge badge-success" title={t('media.sfwTitle')}>
+              <span className="badge badge-neutral" title={t('media.sfwTitle')}>
                 <ShieldCheck size={14} />
                 {t('media.sfwBadge')}
               </span>
             ) : (
-              <span className="badge badge-danger" title={t('media.nsfwTitle')}>
+              <span className="badge badge-neutral" title={t('media.nsfwTitle')}>
                 <ShieldAlert size={14} />
                 {t('media.nsfwBadge')}
               </span>
             )}
             {isAiGenerated && (
-              <span className="badge badge-accent" title={t('media.aiGeneratedTitle')}>
+              <span className="badge badge-neutral" title={t('media.aiGeneratedTitle')}>
                 <Sparkles size={14} />
                 {t('media.aiGeneratedBadge')}
               </span>
@@ -113,7 +113,7 @@ export default function Media({
           </div>
         </div>
 
-        <div className="media-detail-section">
+        <div className="media-detail-section media-detail-section-artist">
           <h2>{t('filters.artist')}</h2>
           <p className="media-detail-name media-detail-name-artist">
             {artist?.name ?? t('media.unknownArtist')}
@@ -121,7 +121,7 @@ export default function Media({
         </div>
 
         {series.length > 0 && (
-          <div className="media-detail-section">
+          <div className="media-detail-section media-detail-section-series">
             <h2>{t('manage.series')}</h2>
             <ul className="media-detail-list media-detail-list-series">
               {seriesTree.map((node) => (
@@ -143,7 +143,7 @@ export default function Media({
         )}
 
         {characters.length > 0 && (
-          <div className="media-detail-section">
+          <div className="media-detail-section media-detail-section-characters">
             <h2>{t('filters.characters')}</h2>
             <ul className="media-detail-list media-detail-list-characters">
               {charactersTree.map((node) => (
@@ -165,7 +165,7 @@ export default function Media({
         )}
 
         {tags.length > 0 && (
-          <div className="media-detail-section">
+          <div className="media-detail-section media-detail-section-tags">
             <h2>{t('filters.tags')}</h2>
             <ul className="chip-list chip-list-tags">
               {tags.map((tag) => (

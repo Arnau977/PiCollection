@@ -34,6 +34,7 @@ const MediaPage: React.FC = () => {
   const confirm = useConfirm()
   const [isEditing, setIsEditing] = useState(() => pendingQueue)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const scrollRegionRef = useRef<HTMLDivElement>(null)
   const savedScrollTop = useRef(0)
 
@@ -60,11 +61,13 @@ const MediaPage: React.FC = () => {
   async function handleDelete(mediaId: string): Promise<void> {
     const ok = await confirm({ message: t('media.confirmDelete'), danger: true })
     if (!ok) return
+    setDeleting(true)
     const result = await window.api.media.delete(mediaId)
     if (result.success) {
       navigate(PATH.GALLERY)
     } else {
       setDeleteError(result.error.message)
+      setDeleting(false)
     }
   }
 
@@ -171,9 +174,14 @@ const MediaPage: React.FC = () => {
               {t('media.markResolved')}
             </button>
           )}
-          <button type="button" className="btn btn-danger" onClick={() => handleDelete(media.id)}>
+          <button
+            type="button"
+            className="btn btn-danger"
+            disabled={deleting}
+            onClick={() => handleDelete(media.id)}
+          >
             <Trash2 size={16} />
-            {t('media.delete')}
+            {deleting ? t('media.deleting') : t('media.delete')}
           </button>
           <MediaFileActions route={media.route} type={media.type} />
         </div>

@@ -451,6 +451,26 @@ describe('GalleryPage batch selection and delete', () => {
     await waitFor(() => expect(getFiltered).toHaveBeenCalledTimes(2))
   })
 
+  it('shows a Deleting label and disables the button while the batch delete is in flight', async () => {
+    const user = userEvent.setup()
+    const deleteFn = vi.fn().mockReturnValue(new Promise(() => {}))
+    setApiWithDelete(
+      vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }),
+      deleteFn
+    )
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Select media-0' }))
+    await user.click(screen.getByRole('button', { name: 'Delete selected' }))
+
+    expect(await screen.findByRole('button', { name: 'Deleting...' })).toBeDisabled()
+  })
+
   it('does not delete anything when the confirm dialog is dismissed', async () => {
     confirmMock.mockResolvedValueOnce(false)
     const user = userEvent.setup()

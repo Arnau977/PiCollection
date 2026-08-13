@@ -30,6 +30,7 @@ const GalleryPage: React.FC = () => {
   const confirm = useConfirm()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showBatchEdit, setShowBatchEdit] = useState(false)
+  const [deletingSelected, setDeletingSelected] = useState(false)
 
   const pageSize = defaults.pageSize
   // Pending media lives only under the dedicated Pending tab - always excluded
@@ -81,9 +82,11 @@ const GalleryPage: React.FC = () => {
       danger: true
     })
     if (!ok) return
+    setDeletingSelected(true)
     await Promise.all([...selectedIds].map((id) => window.api.media.delete(id)))
     clearSelection()
     refetch()
+    setDeletingSelected(false)
   }
 
   async function handleBatchEditApply(selections: BatchEditSelections): Promise<void> {
@@ -98,7 +101,7 @@ const GalleryPage: React.FC = () => {
 
   return (
     <div className="page gallery-page">
-      <h1 className="gradient-title">{t('gallery.title')}</h1>
+      <h1 className="page-title">{t('gallery.title')}</h1>
 
       <FilterBar
         filters={filters}
@@ -168,8 +171,13 @@ const GalleryPage: React.FC = () => {
           <button type="button" className="btn" onClick={() => setShowBatchEdit(true)}>
             {t('gallery.editMetadata')}
           </button>
-          <button type="button" className="btn btn-danger" onClick={handleDeleteSelected}>
-            {t('gallery.deleteSelected')}
+          <button
+            type="button"
+            className="btn btn-danger"
+            disabled={deletingSelected}
+            onClick={handleDeleteSelected}
+          >
+            {deletingSelected ? t('media.deleting') : t('gallery.deleteSelected')}
           </button>
         </div>
       )}
