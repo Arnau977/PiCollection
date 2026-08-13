@@ -78,4 +78,8 @@ export function registerMediaHandlers(): void {
       mediaService.checkDuplicate(route)
     )
   )
+  ipcMain.handle(
+    IPC.media.findSimilar,
+    ipcHandler(IPC.media.findSimilar, IdSchema, (id) => mediaService.findSimilarMedia(id))
+  )
 }

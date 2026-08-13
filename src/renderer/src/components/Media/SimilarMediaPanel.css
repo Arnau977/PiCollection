@@ -1,0 +1,17 @@
+.similar-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.similar-media-grid li {
+  aspect-ratio: 1;
+}
+
+.similar-media-grid a {
+  display: block;
+  height: 100%;
+}

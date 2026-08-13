@@ -11,6 +11,7 @@ import type {
   ExpandedMediaFile,
   MediaBatchUpdateAssociationsInput,
   MediaDuplicateCheck,
+  MediaDuplicateMatch,
   MediaFilteredResult,
   MediaFilters,
   MediaInput,
@@ -63,7 +64,9 @@ export const api = {
     cacheThumbnail: (route: string, png: Uint8Array): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.media.cacheThumbnail, { route, png }),
     checkDuplicate: (route: string): Promise<IpcResult<MediaDuplicateCheck>> =>
-      ipcRenderer.invoke(IPC.media.checkDuplicate, { route })
+      ipcRenderer.invoke(IPC.media.checkDuplicate, { route }),
+    findSimilar: (mediaId: string): Promise<IpcResult<MediaDuplicateMatch[]>> =>
+      ipcRenderer.invoke(IPC.media.findSimilar, mediaId)
   },
   artist: {
     getAll: (): Promise<IpcResult<ArtistModel[]>> => ipcRenderer.invoke(IPC.artist.getAll),
