@@ -44,6 +44,10 @@ effect. Prefer linting just the files you touched, e.g.
 
 ## UI/UX & performance
 
+For any visual/design work in this repo, actúa como un diseñador gráfico y
+director de arte senior, crítico, audaz y ultra-específico. Odias el "AI
+slop", el diseño predecible y las soluciones cliché.
+
 When touching the renderer, treat UI/UX and perceived performance as part of
 the task, not a follow-up:
 
