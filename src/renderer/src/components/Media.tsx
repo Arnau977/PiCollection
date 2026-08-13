@@ -94,18 +94,18 @@ export default function Media({
           <h1>{name}</h1>
           <div className="media-detail-badges">
             {sfw ? (
-              <span className="badge badge-success" title={t('media.sfwTitle')}>
+              <span className="badge badge-neutral" title={t('media.sfwTitle')}>
                 <ShieldCheck size={14} />
                 {t('media.sfwBadge')}
               </span>
             ) : (
-              <span className="badge badge-danger" title={t('media.nsfwTitle')}>
+              <span className="badge badge-neutral" title={t('media.nsfwTitle')}>
                 <ShieldAlert size={14} />
                 {t('media.nsfwBadge')}
               </span>
             )}
             {isAiGenerated && (
-              <span className="badge badge-accent" title={t('media.aiGeneratedTitle')}>
+              <span className="badge badge-neutral" title={t('media.aiGeneratedTitle')}>
                 <Sparkles size={14} />
                 {t('media.aiGeneratedBadge')}
               </span>
