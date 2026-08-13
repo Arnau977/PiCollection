@@ -28,4 +28,8 @@ describe('stripDtext', () => {
     const raw = '* [b]Do not use[/b] when [[nude]].\n* [b]Do not use[/b] when [[bare legs]].'
     expect(stripDtext(raw)).toBe('* Do not use when nude.\n* Do not use when bare legs.')
   })
+
+  it('strips the "!" marker from post references, keeping the post number readable', () => {
+    expect(stripDtext('Examples\n* !post #9926195')).toBe('Examples\n* post #9926195')
+  })
 })

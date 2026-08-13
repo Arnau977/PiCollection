@@ -11,4 +11,5 @@ export function stripDtext(raw: string): string {
     .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
     .replace(/\[\[([^\]]+)\]\]/g, '$1')
     .replace(/^h[1-6]\.\s*/gm, '')
+    .replace(/!post\b/gi, 'post')
 }
