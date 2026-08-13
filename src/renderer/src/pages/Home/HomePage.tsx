@@ -80,7 +80,7 @@ export default function HomePage(): JSX.Element {
 
   return (
     <div className="page home-page">
-      <h1 className="gradient-title">{t('home.title')}</h1>
+      <h1 className="page-title">{t('home.title')}</h1>
 
       <section className="home-section">
         <div className="home-section-header">
