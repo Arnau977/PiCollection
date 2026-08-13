@@ -7,6 +7,7 @@ import type {
   BackupImportResult,
   CharacterInput,
   CharacterModel,
+  DanbooruTagSuggestion,
   EntitiesChangedEvent,
   ExpandedMediaFile,
   MediaBatchUpdateAssociationsInput,
@@ -160,6 +161,10 @@ export const api = {
       ipcRenderer.invoke(IPC.sauceNao.getApiKey),
     setApiKey: (apiKey: string | undefined): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.sauceNao.setApiKey, apiKey)
+  },
+  danbooru: {
+    autocompleteTags: (query: string): Promise<IpcResult<DanbooruTagSuggestion[]>> =>
+      ipcRenderer.invoke(IPC.danbooru.autocompleteTags, query)
   },
   logging: {
     getEnabled: (): Promise<IpcResult<boolean>> => ipcRenderer.invoke(IPC.logging.getEnabled),

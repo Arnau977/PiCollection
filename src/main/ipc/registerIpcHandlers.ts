@@ -7,6 +7,7 @@ import { registerStatsHandlers } from './stats.handlers'
 import { registerSystemHandlers } from './system.handlers'
 import { registerUpdaterHandlers } from './updater.handlers'
 import { registerSauceNaoHandlers } from './sauceNao.handlers'
+import { registerDanbooruAutocompleteHandlers } from './danbooruAutocomplete.handlers'
 import { registerBackupHandlers } from './backup.handlers'
 import { registerMediaMaintenanceHandlers } from './mediaMaintenance.handlers'
 import { registerSourceFolderHandlers } from './sourceFolder.handlers'
@@ -22,6 +23,7 @@ export function registerIpcHandlers(): void {
   registerSystemHandlers()
   registerUpdaterHandlers()
   registerSauceNaoHandlers()
+  registerDanbooruAutocompleteHandlers()
   registerBackupHandlers()
   registerMediaMaintenanceHandlers()
   registerSourceFolderHandlers()
