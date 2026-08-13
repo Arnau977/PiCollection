@@ -2,6 +2,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import type { MediaModel } from '@shared/models'
 import { __resetEntityListCachesForTests } from '../hooks/useEntityLists'
 import Media from './Media'
@@ -27,6 +28,7 @@ function setApi(overrides: Record<string, unknown> = {}): void {
     value: {
       series: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
       character: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+      media: { findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }) },
       ...overrides
     },
     writable: true,
@@ -267,5 +269,41 @@ describe('Media lightbox', () => {
     await user.keyboard('{Escape}')
 
     expect(screen.queryByRole('button', { name: 'Copy location' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Media similar panel', () => {
+  it('renders similar media returned by the API', async () => {
+    setApi({
+      media: {
+        findSimilar: vi.fn().mockResolvedValue({
+          success: true,
+          data: [
+            {
+              media: {
+                id: '2',
+                name: 'Other picture',
+                type: 'image',
+                route: '/pics/2.png',
+                sfw: true,
+                isAiGenerated: false,
+                createdAt: 1,
+                pendingTagging: false
+              },
+              distance: 3
+            }
+          ]
+        })
+      }
+    })
+
+    render(
+      <MemoryRouter>
+        <Media {...makeMedia()} />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Similar media' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Other picture' })).toBeInTheDocument()
   })
 })

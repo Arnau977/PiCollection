@@ -171,6 +171,33 @@ async function findDuplicates(
   return { exactRow: undefined, hash, phash }
 }
 
+/** Shared by checkDuplicate() (new-file near-duplicate warning) and findSimilarMedia() (detail-page panel). */
+async function findSimilarByPhash(
+  db: Kysely<DB>,
+  phash: string,
+  excludeId: string | null,
+  limit: number
+): Promise<{ media: MediaModel; distance: number }[]> {
+  const candidates = await mediaRepo.listAllMediaHashes(db)
+  const scored = candidates
+    .filter((row) => row.id !== excludeId)
+    .map((row) => ({ id: row.id, distance: hammingDistance(phash, row.phash as string) }))
+    .filter((row) => row.distance <= PHASH_SIMILAR_THRESHOLD)
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, limit)
+
+  return (
+    await Promise.all(
+      scored.map(async (row) => {
+        const media = await getMediaModelById(db, row.id)
+        return media ? { media, distance: row.distance } : null
+      })
+    )
+  ).filter((entry): entry is { media: MediaModel; distance: number } => entry !== null)
+}
+
+const SIMILAR_MEDIA_LIMIT = 12
+
 export const mediaService = {
   async checkDuplicate(route: string): Promise<MediaDuplicateCheck> {
     const db = getDb()
@@ -183,23 +210,19 @@ export const mediaService = {
       return { exactMatch: null, similar: [] }
     }
 
-    const candidates = await mediaRepo.listAllMediaHashes(db)
-    const scored = candidates
-      .map((row) => ({ id: row.id, distance: hammingDistance(phash, row.phash as string) }))
-      .filter((row) => row.distance <= PHASH_SIMILAR_THRESHOLD)
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, SIMILAR_MATCH_LIMIT)
-
-    const similar = (
-      await Promise.all(
-        scored.map(async (row) => {
-          const media = await getMediaModelById(db, row.id)
-          return media ? { media, distance: row.distance } : null
-        })
-      )
-    ).filter((entry): entry is { media: MediaModel; distance: number } => entry !== null)
+    const similar = await findSimilarByPhash(db, phash, null, SIMILAR_MATCH_LIMIT)
 
     return { exactMatch: null, similar }
+  },
+
+  async findSimilarMedia(
+    mediaId: string,
+    limit: number = SIMILAR_MEDIA_LIMIT
+  ): Promise<{ media: MediaModel; distance: number }[]> {
+    const db = getDb()
+    const row = await mediaRepo.findMediaRowById(db, mediaId)
+    if (!row?.phash) return []
+    return findSimilarByPhash(db, row.phash, mediaId, limit)
   },
 
   async getMediaFiltered(filters: MediaFilters, sorting?: Sorting): Promise<MediaFilteredResult> {

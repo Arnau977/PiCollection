@@ -72,6 +72,7 @@ beforeEach(() => {
   Object.defineProperty(window, 'api', {
     value: {
       media: {
+        findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
         update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
         getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
         delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -141,6 +142,7 @@ function setOrderedIds(data: string[]): void {
   Object.defineProperty(window, 'api', {
     value: {
       media: {
+        findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
         update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
         getOrderedIds: vi.fn().mockResolvedValue({ success: true, data }),
         delete: vi.fn().mockResolvedValue({ success: true, data: undefined })
@@ -322,6 +324,7 @@ describe('MediaPage editing', () => {
     Object.defineProperty(window, 'api', {
       value: {
         media: {
+          findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
           update,
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['1'] })
         },
@@ -368,6 +371,7 @@ describe('MediaPage delete', () => {
     Object.defineProperty(window, 'api', {
       value: {
         media: {
+          findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
           update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: deleteFn
@@ -398,6 +402,7 @@ describe('MediaPage delete', () => {
     Object.defineProperty(window, 'api', {
       value: {
         media: {
+          findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
           update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: deleteFn
@@ -450,6 +455,7 @@ describe('MediaPage pending queue', () => {
     Object.defineProperty(window, 'api', {
       value: {
         media: {
+          findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
           update,
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -495,6 +501,7 @@ describe('MediaPage pending queue', () => {
     Object.defineProperty(window, 'api', {
       value: {
         media: {
+          findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
           update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
           getOrderedIds,
           delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -530,6 +537,7 @@ describe('MediaPage pending queue', () => {
     Object.defineProperty(window, 'api', {
       value: {
         media: {
+          findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
           update,
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -590,6 +598,7 @@ describe('MediaPage mark resolved', () => {
     Object.defineProperty(window, 'api', {
       value: {
         media: {
+          findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
           update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -624,6 +633,7 @@ describe('MediaPage mark resolved', () => {
     Object.defineProperty(window, 'api', {
       value: {
         media: {
+          findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
           update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['1', '2'] }),
           delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),

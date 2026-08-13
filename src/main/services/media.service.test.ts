@@ -7,6 +7,8 @@ vi.mock('../events/entityEvents', () => ({ notifyEntitiesChanged: vi.fn() }))
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { initTestDbSingleton } from '../database/testHelpers'
+import { getDb } from '../database/connection'
+import * as mediaRepo from '../database/repositories/media.repository'
 import { mediaService } from './media.service'
 import { tagService } from './tag.service'
 import { characterService } from './character.service'
@@ -429,6 +431,52 @@ describe('mediaService entity-change notifications', () => {
     })
 
     expect(notifyEntitiesChanged).toHaveBeenCalledWith(['tag'])
+  })
+})
+
+describe('mediaService.findSimilarMedia', () => {
+  it('returns visually similar media ordered by ascending distance, excluding itself', async () => {
+    const target = await mediaService.addMedia(baseInput({ route: '/a.png' }))
+    const close = await mediaService.addMedia(baseInput({ route: '/b.png' }))
+    const closer = await mediaService.addMedia(baseInput({ route: '/c.png' }))
+    const tooDifferent = await mediaService.addMedia(baseInput({ route: '/d.png' }))
+    const db = getDb()
+    // 64-bit hex hashes; hammingDistance XORs digit-by-digit against target's
+    // all-zero hash, so each candidate's distance is just the popcount of its
+    // one differing leading nibble: '1' -> 1 bit, '3' -> 2 bits. tooDifferent
+    // flips every nibble to 'f' (4 bits each x 16 = 64), well past
+    // PHASH_SIMILAR_THRESHOLD (10).
+    await mediaRepo.setMediaHash(db, target.id, null, '0000000000000000')
+    await mediaRepo.setMediaHash(db, close.id, null, '3000000000000000')
+    await mediaRepo.setMediaHash(db, closer.id, null, '1000000000000000')
+    await mediaRepo.setMediaHash(db, tooDifferent.id, null, 'ffffffffffffffff')
+
+    const result = await mediaService.findSimilarMedia(target.id)
+
+    expect(result.map((r) => r.media.id)).toEqual([closer.id, close.id])
+    expect(result.map((r) => r.distance)).toEqual([1, 2])
+  })
+
+  it('returns an empty array when the media has no phash yet', async () => {
+    const target = await mediaService.addMedia(baseInput({ route: '/a.png' }))
+
+    const result = await mediaService.findSimilarMedia(target.id)
+
+    expect(result).toEqual([])
+  })
+
+  it('respects the limit parameter', async () => {
+    const target = await mediaService.addMedia(baseInput({ route: '/a.png' }))
+    const db = getDb()
+    await mediaRepo.setMediaHash(db, target.id, null, '0000000000000000')
+    for (let i = 0; i < 3; i += 1) {
+      const other = await mediaService.addMedia(baseInput({ route: `/other-${i}.png` }))
+      await mediaRepo.setMediaHash(db, other.id, null, '1000000000000000')
+    }
+
+    const result = await mediaService.findSimilarMedia(target.id, 2)
+
+    expect(result).toHaveLength(2)
   })
 
   it('deleteMedia always notifies all four kinds', async () => {
