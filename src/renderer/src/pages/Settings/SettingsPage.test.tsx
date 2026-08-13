@@ -52,6 +52,12 @@ beforeEach(() => {
         getEnabled: vi.fn().mockResolvedValue({ success: true, data: false }),
         setEnabled: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         openFolder: vi.fn().mockResolvedValue({ success: true, data: undefined })
+      },
+      wd14Runtime: {
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
+        install: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+        remove: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+        onEvent: vi.fn().mockReturnValue(() => {})
       }
     },
     writable: true,
