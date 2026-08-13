@@ -140,4 +140,59 @@ describe('TagWikiInfo', () => {
       expect(link).toHaveAttribute('target', '_blank')
     })
   })
+
+  it('renders a "pool #N" reference as a link to that Danbooru pool', async () => {
+    lookup.mockResolvedValue({
+      success: true,
+      data: { tagName: 'cute', body: 'Related pools\n* pool #903: Disgustingly Adorable', otherNames: [] }
+    })
+    const user = userEvent.setup()
+    render(<TagWikiInfo tagName="cute" />)
+
+    await user.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      const link = screen.getByRole('link', { name: 'pool #903' })
+      expect(link).toHaveAttribute('href', 'https://danbooru.donmai.us/pools/903')
+    })
+  })
+
+  it('renders a {{pool:Name}} reference as a link with a readable label', async () => {
+    lookup.mockResolvedValue({
+      success: true,
+      data: {
+        tagName: 'cute',
+        body: 'See {{pool:Disgustingly_Adorable}} instead.',
+        otherNames: []
+      }
+    })
+    const user = userEvent.setup()
+    render(<TagWikiInfo tagName="cute" />)
+
+    await user.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      const link = screen.getByRole('link', { name: 'Disgustingly Adorable' })
+      expect(link).toHaveAttribute(
+        'href',
+        'https://danbooru.donmai.us/posts?tags=pool%3ADisgustingly_Adorable'
+      )
+    })
+  })
+
+  it('renders "*" bullet markers as dashes instead of the raw asterisk', async () => {
+    lookup.mockResolvedValue({
+      success: true,
+      data: { tagName: 'ass', body: '* first point\n* second point', otherNames: [] }
+    })
+    const user = userEvent.setup()
+    render(<TagWikiInfo tagName="ass" />)
+
+    await user.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      expect(screen.getByText(/- first point/)).toBeInTheDocument()
+      expect(screen.getByText(/- second point/)).toBeInTheDocument()
+    })
+  })
 })

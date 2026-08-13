@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Info } from 'lucide-react'
-import { splitDtextPostLinks, stripDtext } from '../../utils/dtext'
+import { splitDtextLinks, stripDtext } from '../../utils/dtext'
 import './TagWikiInfo.css'
 
 interface TagWikiInfoProps {
@@ -73,14 +73,9 @@ export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element {
             <>
               <p className="tag-wiki-info-body">
                 {body &&
-                  splitDtextPostLinks(body).map((segment, index) =>
-                    segment.postId ? (
-                      <a
-                        key={index}
-                        href={`https://danbooru.donmai.us/posts/${segment.postId}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
+                  splitDtextLinks(body).map((segment, index) =>
+                    segment.href ? (
+                      <a key={index} href={segment.href} target="_blank" rel="noreferrer">
                         {segment.text}
                       </a>
                     ) : (

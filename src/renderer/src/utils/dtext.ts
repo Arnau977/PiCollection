@@ -1,9 +1,11 @@
 /**
  * Danbooru wiki bodies use "DText" markup (Textile-like: [b]...[/b],
- * [[wiki links]], "h4. " headers) rather than real Markdown. This strips the
- * tokens that would otherwise show up literally in a plain-text popover -
- * not a full DText renderer, just enough to read as prose. Line breaks are
- * left as-is; the caller renders them via CSS `white-space: pre-line`.
+ * [[wiki links]], "h4. " headers, "* " bullets) rather than real Markdown.
+ * This strips the tokens that would otherwise show up literally in a
+ * plain-text popover - not a full DText renderer, just enough to read as
+ * prose. Line breaks are left as-is; the caller renders them via CSS
+ * `white-space: pre-line`. Post/pool references are left intact for
+ * `splitDtextLinks` to turn into actual links.
  */
 export function stripDtext(raw: string): string {
   return raw
@@ -11,28 +13,47 @@ export function stripDtext(raw: string): string {
     .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
     .replace(/\[\[([^\]]+)\]\]/g, '$1')
     .replace(/^h[1-6]\.\s*/gm, '')
+    .replace(/^\*\s+/gm, '- ')
     .replace(/!post\b/gi, 'post')
 }
 
 export interface DtextSegment {
   text: string
-  /** Set when this segment is a "post #12345" reference - render as a link
-   * to that post on Danbooru, since a bare post number means nothing on its
-   * own without a way to see what it refers to. */
-  postId?: string
+  /** Set when this segment is a post/pool reference - render as a link
+   * instead of a bare, unexplained number. */
+  href?: string
 }
 
-/** Splits `stripDtext`'s output around "post #12345" references so the
- * caller can render each one as a link instead of an unexplained number. */
-export function splitDtextPostLinks(text: string): DtextSegment[] {
-  const parts = text.split(/post #(\d+)/g)
+const LINK_PATTERN = /pool #(\d+)|post #(\d+)|\{\{pool:([^}]+)\}\}/g
+
+/** Splits `stripDtext`'s output around post/pool references so the caller
+ * can render each one as a link to the actual Danbooru page. */
+export function splitDtextLinks(text: string): DtextSegment[] {
   const segments: DtextSegment[] = []
-  for (let i = 0; i < parts.length; i++) {
-    if (i % 2 === 0) {
-      if (parts[i]) segments.push({ text: parts[i] })
-    } else {
-      segments.push({ text: `post #${parts[i]}`, postId: parts[i] })
+  let lastIndex = 0
+
+  for (const match of text.matchAll(LINK_PATTERN)) {
+    const index = match.index ?? 0
+    if (index > lastIndex) {
+      segments.push({ text: text.slice(lastIndex, index) })
     }
+
+    const [full, poolId, postId, poolName] = match
+    if (poolId) {
+      segments.push({ text: full, href: `https://danbooru.donmai.us/pools/${poolId}` })
+    } else if (postId) {
+      segments.push({ text: full, href: `https://danbooru.donmai.us/posts/${postId}` })
+    } else if (poolName) {
+      segments.push({
+        text: poolName.replace(/_/g, ' '),
+        href: `https://danbooru.donmai.us/posts?tags=${encodeURIComponent(`pool:${poolName}`)}`
+      })
+    }
+    lastIndex = index + full.length
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({ text: text.slice(lastIndex) })
   }
   return segments
 }
