@@ -64,6 +64,13 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
       lookup: vi.fn(),
       getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
     },
+    wd14Runtime: {
+      getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
+      onEvent: vi.fn().mockReturnValue(() => {})
+    },
+    wd14Tagger: {
+      suggestTags: vi.fn()
+    },
     sourceFolder: {
       get: vi.fn().mockResolvedValue({ success: true, data: null })
     }
@@ -304,7 +311,9 @@ describe('AddMediaPage', () => {
 
     const [, , charactersInput] = screen.getAllByRole('combobox')
     await user.type(charactersInput, 'Alice')
-    await user.click(await screen.findByRole('option', { name: 'Alice (Wonderland, Looking Glass)' }))
+    await user.click(
+      await screen.findByRole('option', { name: 'Alice (Wonderland, Looking Glass)' })
+    )
 
     expect(screen.queryByText('Wonderland')).not.toBeInTheDocument()
     expect(screen.queryByText('Looking Glass')).not.toBeInTheDocument()
@@ -336,7 +345,9 @@ describe('AddMediaPage', () => {
   })
 
   it('does not show a "Create" option for an existing character with a linked series', async () => {
-    charactersData = [{ id: 'c1', name: 'Ishtar', series: [{ id: 's1', name: 'Fate/Grand Order' }] }]
+    charactersData = [
+      { id: 'c1', name: 'Ishtar', series: [{ id: 's1', name: 'Fate/Grand Order' }] }
+    ]
     const user = userEvent.setup()
     renderPage()
 
@@ -351,7 +362,9 @@ describe('AddMediaPage', () => {
 
   it('resolves a pending tag on save: creates it and passes the real id to media.create', async () => {
     const user = userEvent.setup()
-    const tagCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 't1', name: 'landscape' } })
+    const tagCreate = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { id: 't1', name: 'landscape' } })
     const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
     setApi({ tag: { create: tagCreate }, media: { create: mediaCreate } })
     const { container } = renderPage()
@@ -460,7 +473,10 @@ describe('AddMediaPage', () => {
     const addSocialLink = vi.fn()
     const artistGetAll = vi
       .fn()
-      .mockResolvedValue({ success: true, data: [{ id: 'existing-artist', name: 'Kyoto Animation' }] })
+      .mockResolvedValue({
+        success: true,
+        data: [{ id: 'existing-artist', name: 'Kyoto Animation' }]
+      })
     const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
     setApi({
       artist: { create: artistCreate, getAll: artistGetAll, addSocialLink },
@@ -886,7 +902,10 @@ describe('AddMediaPage folder tab', () => {
   it('shows the folder browser when a source folder is configured and the tab is selected', async () => {
     const browse = vi.fn().mockResolvedValue({ success: true, data: { folders: [], files: [] } })
     setApi({
-      sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: 'D:\\Multimedia' }), browse }
+      sourceFolder: {
+        get: vi.fn().mockResolvedValue({ success: true, data: 'D:\\Multimedia' }),
+        browse
+      }
     })
     const user = userEvent.setup()
     renderPage()
@@ -900,7 +919,9 @@ describe('AddMediaPage folder tab', () => {
   })
 
   it('keeps the single-file tab active by default, unaffected by the new tab', async () => {
-    setApi({ sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: 'D:\\Multimedia' }) } })
+    setApi({
+      sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: 'D:\\Multimedia' }) }
+    })
     renderPage()
 
     expect(document.querySelector('input[type="file"]')).toBeInTheDocument()
@@ -909,7 +930,10 @@ describe('AddMediaPage folder tab', () => {
   it('shows the folder browser again (not a stale queue) after switching to Single file and back mid-import', async () => {
     const browse = vi.fn().mockResolvedValue({
       success: true,
-      data: { folders: [], files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false }] }
+      data: {
+        folders: [],
+        files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false }]
+      }
     })
     // Never resolves, so the queue stays on its loading state until this tree unmounts.
     const expandSelection = vi.fn().mockReturnValue(new Promise(() => {}))

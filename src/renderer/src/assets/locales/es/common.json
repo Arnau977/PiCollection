@@ -235,7 +235,12 @@
     "duplicateExact": "Este archivo ya está en la biblioteca como \"{{name}}\".",
     "duplicateSimilar": "Se parece a media que ya está en la biblioteca:",
     "duplicateSimilarMatch": "{{distance}}/64 de diferencia",
-    "duplicatePreviewLabel": "Vista previa de \"{{name}}\""
+    "duplicatePreviewLabel": "Vista previa de \"{{name}}\"",
+    "suggestionsTitle": "Sugerencias",
+    "suggestionsExpand": "Mostrar panel de sugerencias",
+    "suggestionsCollapse": "Ocultar panel de sugerencias",
+    "suggestionsSauceNaoTitle": "Coincidencia SauceNAO",
+    "suggestionsWd14Title": "Etiquetado local con IA"
   },
   "autocomplete": {
     "noResults": "Sin resultados",
@@ -348,6 +353,16 @@
     "missingSeries": "Series nuevas",
     "noApiKeyHint": "Las sugerencias de tags necesitan una API key gratuita de SauceNAO.",
     "noApiKeyHintLink": "Añádela en Ajustes"
+  },
+  "wd14": {
+    "button": "Sugerir tags localmente",
+    "searching": "Analizando...",
+    "privacyHint": "Se ejecuta enteramente en este dispositivo - no se sube nada.",
+    "applied": "Se añadieron {{count}} sugerencias",
+    "noSuggestions": "No se encontraron tags con suficiente confianza.",
+    "dismiss": "Descartar",
+    "notInstalledHint": "El etiquetado local con IA debe activarse primero.",
+    "notInstalledHintLink": "Actívalo en Ajustes"
   },
   "notFound": {
     "title": "Página no encontrada",
