@@ -8,6 +8,7 @@ import { EmptyState } from '../../components/EmptyState/EmptyState'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
+import { fromCsv, toCsv } from '../../utils/csvList'
 import {
   loadManageSort,
   saveManageSort,
@@ -18,11 +19,18 @@ import { ManageSortControl } from '../../components/ManageSortControl/ManageSort
 import { formatCompactCount } from '../../utils/formatCompactCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 
+interface TagFormValues {
+  name: string
+  aliases: string
+}
+
+const EMPTY_FORM: TagFormValues = { name: '', aliases: '' }
+
 export function TagsManager(): JSX.Element {
   const { t } = useTranslation()
   const confirm = useConfirm()
   const { data: tags, loading, refetch } = useTags()
-  const [formName, setFormName] = useState('')
+  const [form, setForm] = useState<TagFormValues>(EMPTY_FORM)
   const [editing, setEditing] = useState<TagModel | null>(null)
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebouncedValue(search, 200)
@@ -35,7 +43,11 @@ export function TagsManager(): JSX.Element {
   }
 
   const visibleTags = useMemo(
-    () => sortManageEntities(filterByQuery(tags, debouncedSearch, (tag) => tag.name), sort),
+    () =>
+      sortManageEntities(
+        filterByQuery(tags, debouncedSearch, (tag) => [tag.name, ...(tag.aliases ?? [])].join(' ')),
+        sort
+      ),
     [tags, debouncedSearch, sort]
   )
   const visibleTagIds = useMemo(() => visibleTags.map((tag) => tag.id), [visibleTags])
@@ -43,21 +55,22 @@ export function TagsManager(): JSX.Element {
 
   function startEdit(tag: TagModel): void {
     setEditing(tag)
-    setFormName(tag.name)
+    setForm({ name: tag.name, aliases: toCsv(tag.aliases ?? []) })
   }
 
   function resetForm(): void {
     setEditing(null)
-    setFormName('')
+    setForm(EMPTY_FORM)
   }
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault()
-    const trimmed = formName.trim()
+    const trimmed = form.name.trim()
     if (!trimmed) return
+    const input = { name: trimmed, aliases: fromCsv(form.aliases) }
     const result = editing
-      ? await window.api.tag.update(editing.id, { name: trimmed })
-      : await window.api.tag.create({ name: trimmed })
+      ? await window.api.tag.update(editing.id, input)
+      : await window.api.tag.create(input)
     if (result.success) {
       resetForm()
       setError(null)
@@ -89,15 +102,30 @@ export function TagsManager(): JSX.Element {
       <div className="manage-form-panel">
         <h2>{editing ? t('manage.editingItem', { name: editing.name }) : t('manage.addNew')}</h2>
         <form className="manage-add-form-stacked" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={formName}
-            onChange={(e) => setFormName(e.target.value)}
-            placeholder={t('manage.name')}
-            aria-label={t('manage.name')}
-          />
+          <div className="field">
+            <label htmlFor="tag-name">{t('manage.name')}</label>
+            <input
+              id="tag-name"
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+            />
+          </div>
+
+          <div className="field">
+            <label htmlFor="tag-aliases">{t('manage.aliases')}</label>
+            <input
+              id="tag-aliases"
+              type="text"
+              value={form.aliases}
+              onChange={(e) => setForm((prev) => ({ ...prev, aliases: e.target.value }))}
+              placeholder={t('manage.aliasesPlaceholder')}
+            />
+            <span className="field-hint">{t('manage.tagAliasesHint')}</span>
+          </div>
+
           <div className="manage-edit-actions">
-            <button type="submit" className="btn btn-primary" disabled={!formName.trim()}>
+            <button type="submit" className="btn btn-primary" disabled={!form.name.trim()}>
               {editing ? t('manage.save') : t('manage.add')}
             </button>
             {editing && (
@@ -147,7 +175,12 @@ export function TagsManager(): JSX.Element {
                     route={thumbnails.get(tag.id)?.route ?? null}
                     loading={!thumbnails.has(tag.id)}
                   />
-                  <span className="manage-item-name">{tag.name}</span>
+                  <div className="manage-item-info">
+                    <span className="manage-item-name">{tag.name}</span>
+                    {tag.aliases && tag.aliases.length > 0 && (
+                      <span className="manage-item-aliases">{tag.aliases.join(', ')}</span>
+                    )}
+                  </div>
                   <span className="manage-item-count">
                     {formatCompactCount(tag.mediaCount ?? 0)}
                   </span>

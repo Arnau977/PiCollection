@@ -278,6 +278,7 @@
     "aliasesPlaceholder": "Comma-separated",
     "aliasesHint": "Alternate names or nicknames for this character.",
     "seriesAliasesHint": "Alternate or original titles for this series.",
+    "tagAliasesHint": "Alternate names or synonyms for this tag.",
     "parentSeries": "Parent series",
     "parentCharacter": "Parent character",
     "noParentSeries": "No parent (top-level)",
