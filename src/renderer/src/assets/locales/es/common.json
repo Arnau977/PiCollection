@@ -59,6 +59,8 @@
     "localTaggingDownloadingPython": "Descargando runtime de Python...",
     "localTaggingDownloadingPackages": "Descargando paquetes...",
     "localTaggingDownloadingModel": "Descargando modelo de etiquetado...",
+    "localTaggingExtracting": "Configurando Python...",
+    "localTaggingInstallingPackages": "Instalando paquetes...",
     "localTaggingInstalled": "El etiquetado local con IA está activado.",
     "localTaggingRemove": "Desactivar y eliminar",
     "localTaggingError": "No se pudo configurar el etiquetado local con IA: {{message}}",

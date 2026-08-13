@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 type Status = 'not-installed' | 'installing' | 'installed' | 'error'
-type Step = 'python' | 'packages' | 'model'
+type Step = 'python' | 'packages' | 'model' | 'extracting' | 'installing'
 
 interface UseWd14RuntimeResult {
   status: Status

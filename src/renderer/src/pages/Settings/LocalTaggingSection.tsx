@@ -6,7 +6,9 @@ import './LocalTaggingSection.css'
 const STEP_LABEL_KEYS = {
   python: 'settings.localTaggingDownloadingPython',
   packages: 'settings.localTaggingDownloadingPackages',
-  model: 'settings.localTaggingDownloadingModel'
+  model: 'settings.localTaggingDownloadingModel',
+  extracting: 'settings.localTaggingExtracting',
+  installing: 'settings.localTaggingInstallingPackages'
 } as const
 
 export function LocalTaggingSection(): JSX.Element {
