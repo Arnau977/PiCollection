@@ -6,7 +6,13 @@ import type { TagInput, TagModel } from '@shared/models'
 import type { TagTable } from '../database/schema'
 
 function toModel(row: TagTable, mediaCount?: number): TagModel {
-  return { id: row.id, name: row.name, createdAt: row.created_at, mediaCount }
+  return {
+    id: row.id,
+    name: row.name,
+    aliases: JSON.parse(row.aliases_json),
+    createdAt: row.created_at,
+    mediaCount
+  }
 }
 
 export const tagService = {
@@ -23,6 +29,7 @@ export const tagService = {
     const row = await tagRepo.insertTag(getDb(), {
       id: randomUUID(),
       name: input.name,
+      aliases_json: JSON.stringify(input.aliases ?? []),
       created_at: Date.now()
     })
     notifyEntitiesChanged(['tag'])
@@ -30,7 +37,10 @@ export const tagService = {
   },
 
   async updateTag(id: string, input: TagInput): Promise<TagModel> {
-    const row = await tagRepo.updateTag(getDb(), id, { name: input.name })
+    const row = await tagRepo.updateTag(getDb(), id, {
+      name: input.name,
+      aliases_json: JSON.stringify(input.aliases ?? [])
+    })
     notifyEntitiesChanged(['tag'])
     return toModel(row)
   },

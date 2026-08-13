@@ -27,12 +27,29 @@ describe('tagService', () => {
     expect(all.map((t) => t.name)).toEqual(['apple', 'zebra'])
   })
 
+  it('defaults aliases to an empty array when omitted', async () => {
+    const tag = await tagService.createTag({ name: 'zebra' })
+    expect(tag.aliases).toEqual([])
+  })
+
+  it('stores aliases and round-trips them through JSON storage', async () => {
+    const tag = await tagService.createTag({ name: 'zebra', aliases: ['striped horse'] })
+    expect(tag.aliases).toEqual(['striped horse'])
+  })
+
   it('updates a tag name', async () => {
     const tag = await tagService.createTag({ name: 'old-name' })
     const updated = await tagService.updateTag(tag.id, { name: 'new-name' })
     expect(updated.name).toBe('new-name')
     const all = await tagService.getAllTags()
     expect(all.map((t) => t.name)).toEqual(['new-name'])
+  })
+
+  it('updates a tag aliases', async () => {
+    const tag = await tagService.createTag({ name: 'old-name' })
+    const updated = await tagService.updateTag(tag.id, { name: 'new-name', aliases: ['alt'] })
+    expect(updated.name).toBe('new-name')
+    expect(updated.aliases).toEqual(['alt'])
   })
 
   it('deletes a tag', async () => {
