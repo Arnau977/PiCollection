@@ -15,7 +15,7 @@
   display: inline-flex;
   gap: 0.2rem;
   padding: 0.2rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   border: 1px solid var(--border-color);
 }
@@ -43,8 +43,8 @@
 
 .gallery-density-btn.active {
   color: var(--accent-text);
-  background: var(--accent-gradient);
-  box-shadow: var(--accent-glow-sm);
+  background: var(--accent);
+  box-shadow: var(--shadow-offset-rest);
 }
 
 .gallery-page-size {

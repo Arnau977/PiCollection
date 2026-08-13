@@ -64,7 +64,7 @@
 }
 
 .stats-panel-blue {
-  --stats-accent: var(--accent-2);
+  --stats-accent: var(--accent);
 }
 
 .stats-panel-green {
