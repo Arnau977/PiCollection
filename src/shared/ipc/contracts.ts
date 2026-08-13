@@ -243,6 +243,9 @@ export const IPC = {
     /** Main -> renderer push channel; not invoked directly, see `onEvent` in preload. */
     event: 'wd14-runtime:event'
   },
+  wd14Tagger: {
+    suggestTags: 'wd14-tagger:suggest-tags'
+  },
   logging: {
     getEnabled: 'logging:get-enabled',
     setEnabled: 'logging:set-enabled',

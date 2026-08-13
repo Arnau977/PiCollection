@@ -36,7 +36,8 @@ import type {
   UpdateChannel,
   UpdaterEvent,
   Wd14RuntimeEvent,
-  Wd14RuntimeStatus
+  Wd14RuntimeStatus,
+  Wd14TagSuggestion
 } from '@shared/models'
 import { IPC, type IpcResult } from '@shared/ipc/contracts'
 
@@ -184,6 +185,10 @@ export const api = {
       ipcRenderer.on(IPC.wd14Runtime.event, handler)
       return () => ipcRenderer.removeListener(IPC.wd14Runtime.event, handler)
     }
+  },
+  wd14Tagger: {
+    suggestTags: (route: string): Promise<IpcResult<Wd14TagSuggestion[]>> =>
+      ipcRenderer.invoke(IPC.wd14Tagger.suggestTags, route)
   },
   logging: {
     getEnabled: (): Promise<IpcResult<boolean>> => ipcRenderer.invoke(IPC.logging.getEnabled),

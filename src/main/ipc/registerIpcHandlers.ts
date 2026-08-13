@@ -10,6 +10,7 @@ import { registerSauceNaoHandlers } from './sauceNao.handlers'
 import { registerDanbooruAutocompleteHandlers } from './danbooruAutocomplete.handlers'
 import { registerTagWikiHandlers } from './tagWiki.handlers'
 import { registerWd14RuntimeHandlers } from './wd14Runtime.handlers'
+import { registerWd14TaggerHandlers } from './wd14Tagger.handlers'
 import { registerBackupHandlers } from './backup.handlers'
 import { registerMediaMaintenanceHandlers } from './mediaMaintenance.handlers'
 import { registerSourceFolderHandlers } from './sourceFolder.handlers'
@@ -28,6 +29,7 @@ export function registerIpcHandlers(): void {
   registerDanbooruAutocompleteHandlers()
   registerTagWikiHandlers()
   registerWd14RuntimeHandlers()
+  registerWd14TaggerHandlers()
   registerBackupHandlers()
   registerMediaMaintenanceHandlers()
   registerSourceFolderHandlers()
