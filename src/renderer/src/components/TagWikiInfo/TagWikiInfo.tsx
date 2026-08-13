@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Info } from 'lucide-react'
-import { stripDtext } from '../../utils/dtext'
+import { splitDtextPostLinks, stripDtext } from '../../utils/dtext'
 import './TagWikiInfo.css'
 
 interface TagWikiInfoProps {
@@ -71,7 +71,23 @@ export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element {
           {state === 'not-found' && <p>{t('manage.tagWikiNotFound')}</p>}
           {state === 'loaded' && (
             <>
-              <p className="tag-wiki-info-body">{body}</p>
+              <p className="tag-wiki-info-body">
+                {body &&
+                  splitDtextPostLinks(body).map((segment, index) =>
+                    segment.postId ? (
+                      <a
+                        key={index}
+                        href={`https://danbooru.donmai.us/posts/${segment.postId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {segment.text}
+                      </a>
+                    ) : (
+                      <span key={index}>{segment.text}</span>
+                    )
+                  )}
+              </p>
               {otherNames.length > 0 && (
                 <p className="tag-wiki-info-other-names">
                   {t('manage.tagWikiOtherNames')}: {otherNames.join(', ')}

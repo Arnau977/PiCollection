@@ -27,6 +27,16 @@
   white-space: pre-line;
 }
 
+.tag-wiki-info-body a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.tag-wiki-info-body a:hover,
+.tag-wiki-info-body a:focus-visible {
+  text-decoration: underline;
+}
+
 .tag-wiki-info-other-names {
   margin-top: var(--space-2);
   color: var(--color-text-faint);

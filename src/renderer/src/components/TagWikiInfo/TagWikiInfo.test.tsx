@@ -123,4 +123,21 @@ describe('TagWikiInfo', () => {
       ).toBeInTheDocument()
     })
   })
+
+  it('renders a "post #N" reference as a link to that Danbooru post', async () => {
+    lookup.mockResolvedValue({
+      success: true,
+      data: { tagName: 'ass', body: 'Examples\n* !post #8241273', otherNames: [] }
+    })
+    const user = userEvent.setup()
+    render(<TagWikiInfo tagName="ass" />)
+
+    await user.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      const link = screen.getByRole('link', { name: 'post #8241273' })
+      expect(link).toHaveAttribute('href', 'https://danbooru.donmai.us/posts/8241273')
+      expect(link).toHaveAttribute('target', '_blank')
+    })
+  })
 })

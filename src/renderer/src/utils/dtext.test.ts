@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { stripDtext } from './dtext'
+import { splitDtextPostLinks, stripDtext } from './dtext'
 
 describe('stripDtext', () => {
   it('leaves plain prose untouched', () => {
@@ -31,5 +31,30 @@ describe('stripDtext', () => {
 
   it('strips the "!" marker from post references, keeping the post number readable', () => {
     expect(stripDtext('Examples\n* !post #9926195')).toBe('Examples\n* post #9926195')
+  })
+})
+
+describe('splitDtextPostLinks', () => {
+  it('returns a single text segment when there are no post references', () => {
+    expect(splitDtextPostLinks('A character with cat ears.')).toEqual([
+      { text: 'A character with cat ears.' }
+    ])
+  })
+
+  it('splits out a post reference as its own linkable segment', () => {
+    expect(splitDtextPostLinks('Examples\n* post #8241273')).toEqual([
+      { text: 'Examples\n* ' },
+      { text: 'post #8241273', postId: '8241273' }
+    ])
+  })
+
+  it('handles multiple post references, keeping surrounding text intact', () => {
+    expect(splitDtextPostLinks('* post #111: Flat ass\n* post #222: Huge ass')).toEqual([
+      { text: '* ' },
+      { text: 'post #111', postId: '111' },
+      { text: ': Flat ass\n* ' },
+      { text: 'post #222', postId: '222' },
+      { text: ': Huge ass' }
+    ])
   })
 })
