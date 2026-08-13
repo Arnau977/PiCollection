@@ -34,14 +34,7 @@ code {
   padding: 3px 5px;
   border-radius: var(--radius-sm);
   background-color: var(--color-background-mute);
-  font-family:
-    ui-monospace,
-    SFMono-Regular,
-    SF Mono,
-    Menlo,
-    Consolas,
-    Liberation Mono,
-    monospace;
+  font-family: var(--font-mono);
   font-size: 85%;
 }
 

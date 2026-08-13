@@ -30,15 +30,11 @@
   --border-color: rgba(255, 255, 255, 0.1);
   --border-color-strong: rgba(255, 255, 255, 0.18);
 
-  /* Accent - violet paired with a cooler blue for gradients/glows */
-  --accent: #7c6cf0;
-  --accent-hover: #8f81f5;
+  /* Accent - muted wine/burgundy, "Archive Cabinet" direction */
+  --accent: #9b4358;
+  --accent-hover: #b15971;
   --accent-text: #ffffff;
-  --accent-soft: rgba(124, 108, 240, 0.16);
-  --accent-2: #4fb6ff;
-  --accent-gradient: linear-gradient(135deg, #8f7bf7 0%, #7c6cf0 45%, #4fb6ff 100%);
-  --accent-glow: 0 8px 28px rgba(124, 108, 240, 0.35);
-  --accent-glow-sm: 0 2px 10px rgba(124, 108, 240, 0.3);
+  --accent-soft: rgba(155, 67, 88, 0.16);
 
   /* Semantic aliases used by react-aria-components based CSS */
   --text-color: var(--color-text);
@@ -57,6 +53,14 @@
   --color-info-soft: rgba(79, 182, 255, 0.15);
   --color-artist: #f0a860;
   --color-artist-soft: rgba(240, 168, 96, 0.15);
+
+  /* Taxonomy category colors - each distinct from every state color above
+     and from --accent, so category identity never doubles as system state
+     (Characters used to alias --color-success, Tags used to alias
+     --color-info - fixed here). */
+  --color-series: #4fafa0;
+  --color-character: #9c8cdb;
+  --color-tag: #a6a155;
 
   /* Radii */
   --radius-sm: 6px;
@@ -78,6 +82,18 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --shadow-offset-rest: 3px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-offset-hover: 5px 5px 0 rgba(0, 0, 0, 0.5);
+
+  /* Fonts */
+  --font-mono:
+    ui-monospace,
+    SFMono-Regular,
+    SF Mono,
+    Menlo,
+    Consolas,
+    Liberation Mono,
+    monospace;
 
   /* App shell */
   --sidebar-w: 236px;
@@ -149,16 +165,8 @@ h1 {
 /* Shared page-title treatment (Home/Gallery/Metadata/Settings): every page's
    h1 should look and sit identically so switching pages doesn't feel like
    the heading is jumping around. */
-.gradient-title {
-  /* Without this, the h1 (a stretched flex child) keeps the full container
-     width, so the gradient background paints across that whole span and only
-     a near-solid sliver shows behind short titles like "Home" or "Settings". */
-  width: max-content;
-  max-width: 100%;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.page-title {
+  color: var(--color-text);
 }
 
 h2 {
