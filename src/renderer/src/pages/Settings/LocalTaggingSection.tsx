@@ -1,6 +1,7 @@
 import { Cpu } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useWd14Runtime } from '../../hooks/useWd14Runtime'
+import './LocalTaggingSection.css'
 
 const STEP_LABEL_KEYS = {
   python: 'settings.localTaggingDownloadingPython',
@@ -21,9 +22,21 @@ export function LocalTaggingSection(): JSX.Element {
       <p className="settings-version">{t('settings.localTaggingHint')}</p>
 
       {status === 'installing' && (
-        <p className="settings-version">
-          {step ? t(STEP_LABEL_KEYS[step]) : ''} {percent}%
-        </p>
+        <div className="local-tagging-progress">
+          <p className="settings-version">
+            {step ? t(STEP_LABEL_KEYS[step]) : ''} {percent}%
+          </p>
+          <div
+            className="local-tagging-progress-track"
+            role="progressbar"
+            aria-valuenow={percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={t('settings.localTaggingTitle')}
+          >
+            <div className="local-tagging-progress-fill" style={{ width: `${percent}%` }} />
+          </div>
+        </div>
       )}
 
       {status === 'installed' && (
