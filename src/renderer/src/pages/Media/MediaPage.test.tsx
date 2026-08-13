@@ -396,6 +396,34 @@ describe('MediaPage delete', () => {
     expect(navigateMock).toHaveBeenCalledWith('/gallery')
   })
 
+  it('shows a Deleting label and disables the button while the delete is in flight', async () => {
+    const deleteFn = vi.fn().mockReturnValue(new Promise(() => {}))
+    Object.defineProperty(window, 'api', {
+      value: {
+        media: {
+          findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
+          getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
+          delete: deleteFn
+        },
+        artist: { create: vi.fn() },
+        tag: { create: vi.fn() },
+        character: { create: vi.fn() },
+        series: { create: vi.fn() },
+        system: { showInFolder: vi.fn() },
+        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) }
+      },
+      writable: true,
+      configurable: true
+    })
+    const user = userEvent.setup()
+    renderMediaPage()
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByRole('button', { name: 'Deleting...' })).toBeDisabled()
+  })
+
   it('does not delete or navigate when the confirm dialog is dismissed', async () => {
     confirmMock.mockResolvedValueOnce(false)
     const deleteFn = vi.fn()

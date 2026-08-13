@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Check } from 'lucide-react'
+import { Check, Images } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import type { MediaModel } from '@shared/models'
 import type { GalleryDensity } from '../utils/gallerySettings'
+import { EmptyState } from './EmptyState/EmptyState'
 import { MediaThumb } from './MediaThumb/MediaThumb'
 import './Gallery.css'
 
@@ -34,10 +35,12 @@ export default function Gallery({
 
   if (media.length === 0) {
     return (
-      <div className="gallery-empty">
-        <p>{t('gallery.emptyTitle')}</p>
-        <p>{t('gallery.emptyHint')}</p>
-      </div>
+      <EmptyState
+        icon={<Images />}
+        title={t('gallery.emptyTitle')}
+        hint={t('gallery.emptyHint')}
+        action={{ label: t('gallery.addMedia'), to: PATH.ADD_MEDIA }}
+      />
     )
   }
 

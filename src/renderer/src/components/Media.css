@@ -133,6 +133,30 @@
   gap: var(--space-2);
 }
 
+.media-detail-section {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--border-color-strong);
+  border-radius: var(--radius-sm);
+}
+
+.media-detail-section-artist {
+  border-left-color: var(--color-artist);
+}
+
+.media-detail-section-series {
+  border-left-color: var(--color-series);
+}
+
+.media-detail-section-characters {
+  border-left-color: var(--color-character);
+}
+
+.media-detail-section-tags {
+  border-left-color: var(--color-tag);
+}
+
 .media-detail-section h2 {
   margin-bottom: var(--space-2);
 }
@@ -155,11 +179,11 @@
 }
 
 .media-detail-name-series {
-  color: var(--accent);
+  color: var(--color-series);
 }
 
 .media-detail-name-character {
-  color: var(--color-success);
+  color: var(--color-character);
 }
 
 .media-detail-tree-connector {
@@ -169,5 +193,5 @@
 }
 
 .chip-list-tags li {
-  color: var(--color-info);
+  color: var(--color-tag);
 }

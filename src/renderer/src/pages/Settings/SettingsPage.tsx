@@ -91,7 +91,7 @@ export default function SettingsPage(): JSX.Element {
 
   return (
     <div className="page settings-page">
-      <h1 className="gradient-title">{t('settings.title')}</h1>
+      <h1 className="page-title">{t('settings.title')}</h1>
 
       <Tabs className="settings-tabs">
         <TabList aria-label={t('settings.title')} className="settings-tablist">

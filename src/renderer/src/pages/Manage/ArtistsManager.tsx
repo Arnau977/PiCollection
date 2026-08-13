@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Palette, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useArtists } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
+import { EmptyState } from '../../components/EmptyState/EmptyState'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
@@ -209,9 +210,9 @@ export function ArtistsManager(): JSX.Element {
           {loading ? (
             <p className="loading-state">{t('gallery.loading')}</p>
           ) : artists.length === 0 ? (
-            <p className="manage-empty">{t('manage.empty')}</p>
+            <EmptyState icon={<Palette />} title={t('manage.empty')} />
           ) : visibleArtists.length === 0 ? (
-            <p className="manage-empty">{t('manage.noResults')}</p>
+            <EmptyState icon={<Palette />} title={t('manage.noResults')} />
           ) : (
             <ul className="manage-list">
               {visibleArtists.map((artist) => (

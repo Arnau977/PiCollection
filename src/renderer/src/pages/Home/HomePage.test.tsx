@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { MediaModel, StatsSummary } from '@shared/models'
@@ -88,7 +89,8 @@ describe('HomePage', () => {
     )
   })
 
-  it('renders the top artists/tags/characters/series stats panels', async () => {
+  it('shows the top artists tab by default, other categories switched to via tabs', async () => {
+    const user = userEvent.setup()
     const getSummary = vi.fn().mockResolvedValue({
       success: true,
       data: {
@@ -101,10 +103,17 @@ describe('HomePage', () => {
     setApi({ getSummary })
     renderHomePage()
 
-    expect(await screen.findByText('Jane Doe')).toBeInTheDocument()
-    expect(screen.getByText('landscape')).toBeInTheDocument()
-    expect(screen.getByText('Alice')).toBeInTheDocument()
-    expect(screen.getByText('Wonderland')).toBeInTheDocument()
+    expect(await screen.findByText('Jane Doe')).toBeVisible()
+
+    await user.click(screen.getByRole('tab', { name: 'Top tags' }))
+    expect(screen.getByText('landscape')).toBeVisible()
+    expect(screen.getByText('Jane Doe')).not.toBeVisible()
+
+    await user.click(screen.getByRole('tab', { name: 'Top characters' }))
+    expect(screen.getByText('Alice')).toBeVisible()
+
+    await user.click(screen.getByRole('tab', { name: 'Top series' }))
+    expect(screen.getByText('Wonderland')).toBeVisible()
   })
 
   it('shows a "not enough data" message for an empty stats panel', async () => {
