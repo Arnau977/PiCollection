@@ -3,6 +3,7 @@ import { vi } from 'vitest'
 vi.mock('electron', () => ({
   app: { getPath: () => '' }
 }))
+vi.mock('../events/entityEvents', () => ({ notifyEntitiesChanged: vi.fn() }))
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { initTestDbSingleton } from '../database/testHelpers'
@@ -11,6 +12,7 @@ import { tagService } from './tag.service'
 import { characterService } from './character.service'
 import { artistService } from './artist.service'
 import { seriesService } from './series.service'
+import { notifyEntitiesChanged } from '../events/entityEvents'
 import type { MediaInput } from '@shared/models'
 
 let cleanup: () => Promise<void>
@@ -18,6 +20,7 @@ let cleanup: () => Promise<void>
 beforeEach(async () => {
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
+  vi.mocked(notifyEntitiesChanged).mockClear()
 })
 
 afterEach(async () => {
@@ -382,5 +385,58 @@ describe('mediaService.batchUpdateAssociations', () => {
 
     const reloaded = await mediaService.getMediaById(media.id)
     expect(reloaded?.tags).toEqual([])
+  })
+})
+
+describe('mediaService entity-change notifications', () => {
+  it('addMedia only notifies kinds actually attached', async () => {
+    const tag = await tagService.createTag({ name: 'landscape' })
+    vi.mocked(notifyEntitiesChanged).mockClear()
+
+    await mediaService.addMedia(baseInput({ tagIds: [tag.id] }))
+
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['tag'])
+  })
+
+  it('addMedia notifies nothing when the media has no associations', async () => {
+    await mediaService.addMedia(baseInput())
+
+    expect(notifyEntitiesChanged).not.toHaveBeenCalled()
+  })
+
+  it('updateMedia always notifies all four kinds, since any could have changed', async () => {
+    const media = await mediaService.addMedia(baseInput())
+    vi.mocked(notifyEntitiesChanged).mockClear()
+
+    await mediaService.updateMedia(media.id, baseInput())
+
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['tag', 'character', 'series', 'artist'])
+  })
+
+  it('batchUpdateAssociations only notifies kinds that were actually touched', async () => {
+    const tag = await tagService.createTag({ name: 'add-me' })
+    const media = await mediaService.addMedia(baseInput())
+    vi.mocked(notifyEntitiesChanged).mockClear()
+
+    await mediaService.batchUpdateAssociations({
+      mediaIds: [media.id],
+      addTagIds: [tag.id],
+      removeTagIds: [],
+      addCharacterIds: [],
+      removeCharacterIds: [],
+      addSeriesIds: [],
+      removeSeriesIds: []
+    })
+
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['tag'])
+  })
+
+  it('deleteMedia always notifies all four kinds', async () => {
+    const media = await mediaService.addMedia(baseInput())
+    vi.mocked(notifyEntitiesChanged).mockClear()
+
+    await mediaService.deleteMedia(media.id)
+
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['tag', 'character', 'series', 'artist'])
   })
 })

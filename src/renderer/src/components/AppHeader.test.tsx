@@ -21,7 +21,12 @@ beforeEach(() => {
           emit = listener
           return () => {}
         })
-      }
+      },
+      tag: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+      character: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+      series: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+      artist: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+      entities: { onChanged: vi.fn().mockReturnValue(() => {}) }
     },
     writable: true,
     configurable: true

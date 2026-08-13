@@ -3,6 +3,7 @@ import { getDb } from '../database/connection'
 import * as seriesRepo from '../database/repositories/series.repository'
 import { wouldCreateCycle } from '../database/repositories/entityHierarchy'
 import { AppError } from '../errors'
+import { notifyEntitiesChanged } from '../events/entityEvents'
 import type { SeriesInput, SeriesModel } from '@shared/models'
 import type { SeriesTable } from '../database/schema'
 
@@ -35,6 +36,7 @@ export const seriesService = {
       created_at: Date.now(),
       parent_id: input.parentId ?? null
     })
+    notifyEntitiesChanged(['series'])
     return toModel(row)
   },
 
@@ -50,10 +52,12 @@ export const seriesService = {
       aliases_json: JSON.stringify(input.aliases ?? []),
       parent_id: input.parentId ?? null
     })
+    notifyEntitiesChanged(['series'])
     return toModel(row)
   },
 
   async deleteSeries(id: string): Promise<void> {
     await seriesRepo.deleteSeries(getDb(), id)
+    notifyEntitiesChanged(['series'])
   }
 }

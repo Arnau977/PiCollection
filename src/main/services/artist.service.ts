@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto'
 import { getDb } from '../database/connection'
 import * as artistRepo from '../database/repositories/artist.repository'
+import { notifyEntitiesChanged } from '../events/entityEvents'
 import type { ArtistInput, ArtistModel, SocialLinkInput } from '@shared/models'
 import type { ArtistSocialLinkTable, ArtistTable } from '../database/schema'
 
@@ -57,6 +58,7 @@ export const artistService = {
       name: input.name,
       created_at: Date.now()
     })
+    notifyEntitiesChanged(['artist'])
     return toModel(row, [])
   },
 
@@ -64,11 +66,13 @@ export const artistService = {
     const db = getDb()
     const row = await artistRepo.updateArtist(db, id, { name: input.name })
     const links = await artistRepo.findSocialLinksForArtistIds(db, [id])
+    notifyEntitiesChanged(['artist'])
     return toModel(row, links)
   },
 
   async deleteArtist(id: string): Promise<void> {
     await artistRepo.deleteArtist(getDb(), id)
+    notifyEntitiesChanged(['artist'])
   },
 
   async addSocialLink(artistId: string, socialLink: SocialLinkInput): Promise<ArtistModel> {

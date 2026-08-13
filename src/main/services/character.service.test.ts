@@ -1,13 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { initTestDbSingleton } from '../database/testHelpers'
 import { characterService } from './character.service'
 import { seriesService } from './series.service'
+import { notifyEntitiesChanged } from '../events/entityEvents'
+
+vi.mock('../events/entityEvents', () => ({ notifyEntitiesChanged: vi.fn() }))
 
 let cleanup: () => Promise<void>
 
 beforeEach(async () => {
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
+  vi.mocked(notifyEntitiesChanged).mockClear()
 })
 
 afterEach(async () => {
@@ -15,6 +19,19 @@ afterEach(async () => {
 })
 
 describe('characterService', () => {
+  it('notifies entity-change listeners on create, update, and delete', async () => {
+    const character = await characterService.createCharacter({ name: 'temp' })
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['character'])
+
+    vi.mocked(notifyEntitiesChanged).mockClear()
+    await characterService.updateCharacter(character.id, { name: 'renamed' })
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['character'])
+
+    vi.mocked(notifyEntitiesChanged).mockClear()
+    await characterService.deleteCharacter(character.id)
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['character'])
+  })
+
   it('creates a character with aliases and no series', async () => {
     const character = await characterService.createCharacter({ name: 'Nobody', aliases: ['N'] })
 

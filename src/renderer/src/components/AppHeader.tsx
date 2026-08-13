@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Home, Images, Inbox, Database, Settings } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import { useAppUpdater } from '../hooks/useAppUpdater'
+import { useEntityCacheSync } from '../hooks/useEntityLists'
 import './AppHeader.css'
 
 function navLinkClassName({ isActive }: { isActive: boolean }): string {
@@ -13,6 +14,7 @@ export function AppHeader(): JSX.Element {
   const { t } = useTranslation()
   const { status } = useAppUpdater()
   const updateReady = status.state === 'available' || status.state === 'downloaded'
+  useEntityCacheSync()
 
   return (
     <aside className="app-sidebar">

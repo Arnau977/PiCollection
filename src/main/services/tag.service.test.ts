@@ -1,12 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { initTestDbSingleton } from '../database/testHelpers'
 import { tagService } from './tag.service'
+import { notifyEntitiesChanged } from '../events/entityEvents'
+
+vi.mock('../events/entityEvents', () => ({ notifyEntitiesChanged: vi.fn() }))
 
 let cleanup: () => Promise<void>
 
 beforeEach(async () => {
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
+  vi.mocked(notifyEntitiesChanged).mockClear()
 })
 
 afterEach(async () => {
@@ -48,5 +52,18 @@ describe('tagService', () => {
     const tag = await tagService.createTag({ name: 'untagged' })
     const all = await tagService.getAllTags()
     expect(all.find((t) => t.id === tag.id)?.mediaCount).toBe(0)
+  })
+
+  it('notifies entity-change listeners on create, update, and delete', async () => {
+    const tag = await tagService.createTag({ name: 'temp' })
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['tag'])
+
+    vi.mocked(notifyEntitiesChanged).mockClear()
+    await tagService.updateTag(tag.id, { name: 'renamed' })
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['tag'])
+
+    vi.mocked(notifyEntitiesChanged).mockClear()
+    await tagService.deleteTag(tag.id)
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['tag'])
   })
 })

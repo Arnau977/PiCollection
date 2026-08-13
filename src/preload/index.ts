@@ -7,6 +7,7 @@ import type {
   BackupImportResult,
   CharacterInput,
   CharacterModel,
+  EntitiesChangedEvent,
   ExpandedMediaFile,
   MediaBatchUpdateAssociationsInput,
   MediaDuplicateCheck,
@@ -178,6 +179,15 @@ export const api = {
       const handler = (_event: IpcRendererEvent, payload: UpdaterEvent): void => listener(payload)
       ipcRenderer.on(IPC.updater.event, handler)
       return () => ipcRenderer.removeListener(IPC.updater.event, handler)
+    }
+  },
+  entities: {
+    /** Subscribes to entity-kind change notifications (tag/character/series/artist mediaCount changed); returns an unsubscribe function. */
+    onChanged: (listener: (event: EntitiesChangedEvent) => void): (() => void) => {
+      const handler = (_event: IpcRendererEvent, payload: EntitiesChangedEvent): void =>
+        listener(payload)
+      ipcRenderer.on(IPC.entities.changed, handler)
+      return () => ipcRenderer.removeListener(IPC.entities.changed, handler)
     }
   }
 }

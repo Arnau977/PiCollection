@@ -1,12 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { initTestDbSingleton } from '../database/testHelpers'
 import { seriesService } from './series.service'
+import { notifyEntitiesChanged } from '../events/entityEvents'
+
+vi.mock('../events/entityEvents', () => ({ notifyEntitiesChanged: vi.fn() }))
 
 let cleanup: () => Promise<void>
 
 beforeEach(async () => {
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
+  vi.mocked(notifyEntitiesChanged).mockClear()
 })
 
 afterEach(async () => {
@@ -14,6 +18,19 @@ afterEach(async () => {
 })
 
 describe('seriesService', () => {
+  it('notifies entity-change listeners on create, update, and delete', async () => {
+    const series = await seriesService.createSeries({ name: 'temp' })
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['series'])
+
+    vi.mocked(notifyEntitiesChanged).mockClear()
+    await seriesService.updateSeries(series.id, { name: 'renamed' })
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['series'])
+
+    vi.mocked(notifyEntitiesChanged).mockClear()
+    await seriesService.deleteSeries(series.id)
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['series'])
+  })
+
   it('includes each series direct media count, 0 when untagged', async () => {
     const series = await seriesService.createSeries({ name: 'untagged' })
     const all = await seriesService.getAllSeries()

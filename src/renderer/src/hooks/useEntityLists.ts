@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { ArtistModel, CharacterModel, SeriesModel, TagModel } from '@shared/models'
+import type { ArtistModel, CharacterModel, EntityKind, SeriesModel, TagModel } from '@shared/models'
 import type { IpcResult } from '@shared/ipc/contracts'
 
 interface ListState<T> {
@@ -9,6 +9,8 @@ interface ListState<T> {
 }
 
 type ListHookResult<T> = ListState<T> & { refetch: () => void }
+
+type ListHook<T> = (() => ListHookResult<T>) & { invalidate: () => void }
 
 const INITIAL_STATE = { data: [], loading: true, error: null }
 
@@ -31,7 +33,7 @@ const resetters: Array<() => void> = []
  * all four lists from scratch; `refetch()` from any one subscriber notifies
  * every other mounted subscriber of the new data.
  */
-function createListHook<T>(fetchAll: () => Promise<IpcResult<T[]>>): () => ListHookResult<T> {
+function createListHook<T>(fetchAll: () => Promise<IpcResult<T[]>>): ListHook<T> {
   const cache: ListCacheEntry<T> = {
     state: INITIAL_STATE,
     subscribers: new Set(),
@@ -63,7 +65,7 @@ function createListHook<T>(fetchAll: () => Promise<IpcResult<T[]>>): () => ListH
     })
   }
 
-  return function useList(): ListHookResult<T> {
+  function useList(): ListHookResult<T> {
     const [state, setState] = useState<ListState<T>>(cache.state)
 
     useEffect(() => {
@@ -79,12 +81,41 @@ function createListHook<T>(fetchAll: () => Promise<IpcResult<T[]>>): () => ListH
     const refetch = useCallback(() => load(), [])
     return { ...state, refetch }
   }
+
+  // Lets non-component code (the `entities:changed` push-event subscriber
+  // below) force a refetch of this entity's shared cache without needing a
+  // mounted hook instance of its own - same underlying `load()` as `refetch`.
+  useList.invalidate = load
+  return useList
 }
 
 export const useArtists = createListHook<ArtistModel>(() => window.api.artist.getAll())
 export const useTags = createListHook<TagModel>(() => window.api.tag.getAll())
 export const useCharacters = createListHook<CharacterModel>(() => window.api.character.getAll())
 export const useSeries = createListHook<SeriesModel>(() => window.api.series.getAll())
+
+const CACHE_BY_KIND: Record<EntityKind, { invalidate: () => void }> = {
+  tag: useTags,
+  character: useCharacters,
+  series: useSeries,
+  artist: useArtists
+}
+
+/**
+ * Mount once near the app root (alongside `useAppUpdater`). Subscribes to
+ * the main process's `entities:changed` push event and invalidates the
+ * matching `useEntityLists` cache(s), so Metadata counts stay correct
+ * without every mutation call site needing to remember to call `refetch()`.
+ */
+export function useEntityCacheSync(): void {
+  useEffect(
+    () =>
+      window.api.entities.onChanged(({ kinds }) => {
+        for (const kind of kinds) CACHE_BY_KIND[kind].invalidate()
+      }),
+    []
+  )
+}
 
 /**
  * Test-only: clears every entity-list module cache back to its initial,
