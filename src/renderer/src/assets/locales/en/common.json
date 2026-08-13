@@ -349,6 +349,16 @@
     "noApiKeyHint": "Tag suggestions need a free SauceNAO API key.",
     "noApiKeyHintLink": "Add one in Settings"
   },
+  "wd14": {
+    "button": "Suggest tags locally",
+    "searching": "Analyzing...",
+    "privacyHint": "Runs entirely on this device - nothing is uploaded.",
+    "applied": "Added {{count}} suggestions",
+    "noSuggestions": "No confident tags found.",
+    "dismiss": "Dismiss",
+    "notInstalledHint": "Local AI tagging needs to be enabled first.",
+    "notInstalledHintLink": "Enable it in Settings"
+  },
   "notFound": {
     "title": "Page not found",
     "hint": "There's nothing here. The link may be broken or the page may have moved.",

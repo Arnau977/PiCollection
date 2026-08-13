@@ -23,6 +23,13 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
     sauceNao: {
       lookup: vi.fn(),
       getApiKey: vi.fn().mockResolvedValue({ success: true, data: null })
+    },
+    wd14Runtime: {
+      getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
+      onEvent: vi.fn().mockReturnValue(() => {})
+    },
+    wd14Tagger: {
+      suggestTags: vi.fn()
     }
   }
   const merged: Record<string, unknown> = {}
@@ -367,5 +374,87 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
     await vi.waitFor(() =>
       expect(mediaUpdate).toHaveBeenCalledWith('m1', expect.objectContaining({ tagIds: ['t-real'] }))
     )
+  })
+
+  it('shows an enable-in-Settings hint for local tagging when not installed', async () => {
+    renderForm()
+    expect(
+      await screen.findByText('Local AI tagging needs to be enabled first.')
+    ).toBeInTheDocument()
+  })
+
+  it('runs a WD14 lookup, applies existing tags, and offers missing ones as create chips', async () => {
+    const suggestTags = vi.fn().mockResolvedValue({
+      success: true,
+      data: [{ name: 'landscape', score: 0.9 }]
+    })
+    setApi({
+      wd14Runtime: {
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'installed' } }),
+        onEvent: vi.fn().mockReturnValue(() => {})
+      },
+      wd14Tagger: { suggestTags }
+    })
+    tagsData = [{ id: 't1', name: 'landscape' }]
+    const user = userEvent.setup()
+    renderForm({ initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' } })
+
+    await user.click(await screen.findByRole('button', { name: 'Suggest tags locally' }))
+
+    expect(suggestTags).toHaveBeenCalledWith('/pic.png')
+    expect(await screen.findByText('Added 1 suggestions')).toBeInTheDocument()
+  })
+
+  it('shows a tag-wiki info button next to each missing WD14 suggestion', async () => {
+    const suggestTags = vi.fn().mockResolvedValue({
+      success: true,
+      data: [{ name: 'new tag', score: 0.8 }]
+    })
+    setApi({
+      wd14Runtime: {
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'installed' } }),
+        onEvent: vi.fn().mockReturnValue(() => {})
+      },
+      wd14Tagger: { suggestTags },
+      tagWiki: { lookup: vi.fn().mockResolvedValue({ success: true, data: null }) }
+    })
+    const user = userEvent.setup()
+    renderForm({ initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' } })
+
+    await user.click(await screen.findByRole('button', { name: 'Suggest tags locally' }))
+
+    // Exact match: the add-chip button's accessible name is just "new tag",
+    // distinct from TagWikiInfo's own button, whose aria-label is
+    // "What does this tag mean? (new tag)" - a regex/substring match here
+    // would ambiguously match both.
+    expect(await screen.findByRole('button', { name: 'new tag' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'What does this tag mean? (new tag)' })
+    ).toBeInTheDocument()
+  })
+
+  it('creates a tag from a missing WD14 suggestion and removes its chip', async () => {
+    const suggestTags = vi.fn().mockResolvedValue({
+      success: true,
+      data: [{ name: 'new tag', score: 0.8 }]
+    })
+    setApi({
+      wd14Runtime: {
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'installed' } }),
+        onEvent: vi.fn().mockReturnValue(() => {})
+      },
+      wd14Tagger: { suggestTags },
+      tagWiki: { lookup: vi.fn().mockResolvedValue({ success: true, data: null }) }
+    })
+    const user = userEvent.setup()
+    renderForm({ initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' } })
+
+    await user.click(await screen.findByRole('button', { name: 'Suggest tags locally' }))
+    await user.click(await screen.findByRole('button', { name: 'new tag' }))
+
+    expect(screen.queryByRole('button', { name: 'new tag' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'What does this tag mean? (new tag)' })
+    ).not.toBeInTheDocument()
   })
 })

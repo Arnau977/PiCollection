@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ExternalLink, Plus, ScanSearch } from 'lucide-react'
+import { ArrowLeft, Cpu, ExternalLink, Plus, ScanSearch } from 'lucide-react'
 import type { ArtistModel, CharacterModel, MediaDuplicateCheck, MediaInput, MediaModel, SeriesModel, TagModel } from '@shared/models'
 import { deriveMediaName, detectMediaType } from '@shared/utils'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
 import { MultiSelectAutocomplete } from '../../components/Autocomplete/MultiSelectAutocomplete'
 import { MediaHoverPreview } from '../../components/MediaHoverPreview/MediaHoverPreview'
+import { TagWikiInfo } from '../../components/TagWikiInfo/TagWikiInfo'
 import { PATH } from '../../app.routes.const'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
 import { useSauceNaoApiKey } from '../../hooks/useSauceNaoApiKey'
 import { useSauceNaoSuggestions, type SuggestionCategory } from '../../hooks/useSauceNaoSuggestions'
+import { useWd14Runtime } from '../../hooks/useWd14Runtime'
+import { useWd14Suggestions } from '../../hooks/useWd14Suggestions'
 import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import { sortCharactersByRelevance } from '../../utils/sortCharactersBySeries'
 import { withImpliedSeries } from '../../utils/withImpliedSeries'
@@ -141,6 +144,17 @@ export function MediaForm({
     }
   })
 
+  const wd14Runtime = useWd14Runtime()
+  const wd14 = useWd14Suggestions({
+    tags: tags.data,
+    onApplyExisting: (tagIds) => {
+      setInput((prev) => ({
+        ...prev,
+        tagIds: Array.from(new Set([...(prev.tagIds ?? []), ...tagIds]))
+      }))
+    }
+  })
+
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>): Promise<void> {
     const file = e.target.files?.[0]
     if (!file) return
@@ -152,6 +166,7 @@ export function MediaForm({
       name: deriveMediaName(file.name)
     }))
     sauce.reset()
+    wd14.reset()
     setDuplicateCheck(null)
     const result = await window.api.media.checkDuplicate(route)
     if (result.success) setDuplicateCheck(result.data)
@@ -245,6 +260,11 @@ export function MediaForm({
       handleCreateCharacter(name, seriesIds)
     } else handleCreateSeries(name)
     sauce.dismiss(category, name)
+  }
+
+  function addWd14Suggestion(name: string): void {
+    handleCreateTag(name)
+    wd14.dismiss(name)
   }
 
   /**
@@ -626,6 +646,63 @@ export function MediaForm({
             <p className="sauce-hint">
               {t('sauceNao.noApiKeyHint')}{' '}
               <Link to={PATH.SETTINGS}>{t('sauceNao.noApiKeyHintLink')}</Link>
+            </p>
+          )}
+
+          {wd14Runtime.status === 'installed' ? (
+            <div className="sauce-panel">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => wd14.run(input.route)}
+                disabled={!input.route || saving || wd14.status === 'loading'}
+              >
+                <Cpu size={16} />
+                {wd14.status === 'loading' ? t('wd14.searching') : t('wd14.button')}
+              </button>
+              <p className="sauce-hint">{t('wd14.privacyHint')}</p>
+
+              {wd14.status === 'error' && (
+                <p role="alert" className="sauce-error">
+                  {wd14.error}
+                </p>
+              )}
+
+              {wd14.status === 'ready' &&
+                (wd14.appliedCount === 0 && wd14.missing.length === 0 ? (
+                  <p className="sauce-hint">{t('wd14.noSuggestions')}</p>
+                ) : (
+                  <>
+                    <div className="sauce-result-head">
+                      <span>{t('wd14.applied', { count: wd14.appliedCount })}</span>
+                      <button type="button" className="btn" onClick={wd14.reset}>
+                        {t('wd14.dismiss')}
+                      </button>
+                    </div>
+                    {wd14.missing.length > 0 && (
+                      <ul className="chip-list">
+                        {wd14.missing.map(({ name }) => (
+                          <li key={name} className="wd14-missing-chip">
+                            <button
+                              type="button"
+                              className="sauce-add-chip"
+                              onClick={() => addWd14Suggestion(name)}
+                            >
+                              <Plus size={12} />
+                              {name}
+                            </button>
+                            <TagWikiInfo tagName={name} />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                ))}
+            </div>
+          ) : (
+            <p className="sauce-hint">
+              {t('wd14.notInstalledHint')}{' '}
+              <Link to={PATH.SETTINGS}>{t('wd14.notInstalledHintLink')}</Link>
             </p>
           )}
         </div>

@@ -349,6 +349,16 @@
     "noApiKeyHint": "Las sugerencias de tags necesitan una API key gratuita de SauceNAO.",
     "noApiKeyHintLink": "Añádela en Ajustes"
   },
+  "wd14": {
+    "button": "Sugerir tags localmente",
+    "searching": "Analizando...",
+    "privacyHint": "Se ejecuta enteramente en este dispositivo - no se sube nada.",
+    "applied": "Se añadieron {{count}} sugerencias",
+    "noSuggestions": "No se encontraron tags con suficiente confianza.",
+    "dismiss": "Descartar",
+    "notInstalledHint": "El etiquetado local con IA debe activarse primero.",
+    "notInstalledHintLink": "Actívalo en Ajustes"
+  },
   "notFound": {
     "title": "Página no encontrada",
     "hint": "Aquí no hay nada. Puede que el enlace esté roto o que la página se haya movido.",
