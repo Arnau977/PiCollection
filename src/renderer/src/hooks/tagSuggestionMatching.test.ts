@@ -81,4 +81,42 @@ describe('matchSuggestionCandidate', () => {
 
     expect(result.applied.characterIds).toEqual(['c1'])
   })
+
+  it('keeps only the most specific series when suggestions span a parent/child chain', () => {
+    const nintendo: SeriesModel = { id: 's-nintendo', name: 'Nintendo' }
+    const fireEmblem: SeriesModel = { id: 's-fe', name: 'Fire Emblem', parentId: 's-nintendo' }
+    const fireEmblemHeroes: SeriesModel = {
+      id: 's-feh',
+      name: 'Fire Emblem Heroes',
+      parentId: 's-fe'
+    }
+    const result = matchSuggestionCandidate(
+      makeCandidate({
+        characters: [],
+        series: [{ name: 'Nintendo' }, { name: 'Fire Emblem' }, { name: 'Fire Emblem Heroes' }]
+      }),
+      { ...entities, series: [nintendo, fireEmblem, fireEmblemHeroes] }
+    )
+
+    expect(result.applied.seriesIds).toEqual(['s-feh'])
+  })
+
+  it('keeps only the most specific character when suggestions span a parent/child chain', () => {
+    const miku: CharacterModel = { id: 'c-miku', name: 'Hatsune Miku', series: [] }
+    const mikuCostume: CharacterModel = {
+      id: 'c-miku-costume',
+      name: 'Hatsune Miku (Symphony)',
+      series: [],
+      parentId: 'c-miku'
+    }
+    const result = matchSuggestionCandidate(
+      makeCandidate({
+        series: [],
+        characters: [{ name: 'Hatsune Miku' }, { name: 'Hatsune Miku (Symphony)' }]
+      }),
+      { ...entities, characters: [miku, mikuCostume] }
+    )
+
+    expect(result.applied.characterIds).toEqual(['c-miku-costume'])
+  })
 })
