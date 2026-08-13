@@ -59,6 +59,8 @@
     "localTaggingDownloadingPython": "Downloading Python runtime...",
     "localTaggingDownloadingPackages": "Downloading packages...",
     "localTaggingDownloadingModel": "Downloading tagging model...",
+    "localTaggingExtracting": "Setting up Python...",
+    "localTaggingInstallingPackages": "Installing packages...",
     "localTaggingInstalled": "Local AI tagging is enabled.",
     "localTaggingRemove": "Disable and remove",
     "localTaggingError": "Could not set up local AI tagging: {{message}}",

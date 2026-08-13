@@ -26,8 +26,9 @@ function fakeSpawnSuccess(): { on: (event: string, cb: (code: number) => void) =
   }
 }
 
-const { getWd14RuntimeStatus, installWd14Runtime, removeWd14Runtime } =
-  await import('./wd14Runtime.service')
+const { getWd14RuntimeStatus, installWd14Runtime, removeWd14Runtime } = await import(
+  './wd14Runtime.service'
+)
 
 beforeEach(() => {
   userDataDir = mkdtempSync(path.join(tmpdir(), 'wd14-service-test-'))
@@ -103,19 +104,40 @@ describe('installWd14Runtime', () => {
     await expect(installWd14Runtime(vi.fn())).rejects.toThrow('pip install failed')
   })
 
-  it('emits progress events with increasing percent', async () => {
-    const events: { type: string; percent?: number }[] = []
+  it('emits progress events with increasing percent, capped below 100 until actually installed', async () => {
+    const events: { type: string; step?: string; percent?: number }[] = []
     downloadAndVerify.mockImplementation(
       async (asset: { size: number }, _dest: string, onBytes: (n: number) => void) => {
         onBytes(asset.size)
       }
     )
 
-    await installWd14Runtime((e) => events.push(e as { type: string; percent?: number }))
+    await installWd14Runtime((e) =>
+      events.push(e as { type: string; step?: string; percent?: number })
+    )
 
     const progressEvents = events.filter((e) => e.type === 'progress')
     expect(progressEvents.length).toBeGreaterThan(0)
-    expect(progressEvents.at(-1)?.percent).toBe(100)
+    for (const event of progressEvents) {
+      expect(event.percent).toBeLessThan(100)
+    }
+    expect(events.at(-1)).toEqual({ type: 'installed' })
+  })
+
+  it('reports explicit extracting/installing checkpoints once downloads finish', async () => {
+    const events: { type: string; step?: string; percent?: number }[] = []
+    downloadAndVerify.mockImplementation(
+      async (asset: { size: number }, _dest: string, onBytes: (n: number) => void) => {
+        onBytes(asset.size)
+      }
+    )
+
+    await installWd14Runtime((e) =>
+      events.push(e as { type: string; step?: string; percent?: number })
+    )
+
+    expect(events).toContainEqual({ type: 'progress', step: 'extracting', percent: 90 })
+    expect(events).toContainEqual({ type: 'progress', step: 'installing', percent: 95 })
   })
 })
 

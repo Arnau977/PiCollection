@@ -116,6 +116,16 @@ export async function installWd14Runtime(
   const totalBytes = downloads.reduce((sum, d) => sum + d.asset.size, 0)
   const completedPerDownload = new Array(downloads.length).fill(0)
 
+  // Downloads only ever fill up to DOWNLOAD_PERCENT_CAP - extraction and the
+  // pip install that follow have no byte-level progress to report, but they
+  // still take real time (tens of seconds), so reaching 100% here would sit
+  // there looking finished while work is still happening. Reserving the top
+  // of the bar for two explicit checkpoints keeps it honest: it never claims
+  // 100% until the `installed` event actually fires.
+  const DOWNLOAD_PERCENT_CAP = 90
+  const EXTRACTING_PERCENT = 90
+  const INSTALLING_PERCENT = 95
+
   function reportProgress(
     index: number,
     downloaded: number,
@@ -126,7 +136,7 @@ export async function installWd14Runtime(
     onEvent({
       type: 'progress',
       step,
-      percent: Math.min(100, Math.round((sum / totalBytes) * 100))
+      percent: Math.min(DOWNLOAD_PERCENT_CAP, Math.round((sum / totalBytes) * DOWNLOAD_PERCENT_CAP))
     })
   }
 
@@ -136,7 +146,10 @@ export async function installWd14Runtime(
       await downloadAndVerify(asset, dest, (downloaded) => reportProgress(i, downloaded, step))
     }
 
+    onEvent({ type: 'progress', step: 'extracting', percent: EXTRACTING_PERCENT })
     await extractTarGz(join(dir, 'python.tar.gz'), pythonDir())
+
+    onEvent({ type: 'progress', step: 'installing', percent: INSTALLING_PERCENT })
     await runPipInstall(wheelDir)
 
     writeFileSync(

@@ -44,6 +44,21 @@ describe('LocalTaggingSection', () => {
     ).toBeInTheDocument()
   })
 
+  it('shows a progress bar reflecting the current percent while installing', async () => {
+    let emit: (event: unknown) => void = () => {}
+    onEvent.mockImplementation((listener) => {
+      emit = listener
+      return () => {}
+    })
+    render(<LocalTaggingSection />)
+    await screen.findByRole('button', { name: 'Enable local AI tagging' })
+
+    emit({ type: 'progress', step: 'model', percent: 42 })
+
+    const progressBar = await screen.findByRole('progressbar')
+    expect(progressBar).toHaveAttribute('aria-valuenow', '42')
+  })
+
   it('shows an error message and a retry button on failure', async () => {
     let emit: (event: unknown) => void = () => {}
     onEvent.mockImplementation((listener) => {
