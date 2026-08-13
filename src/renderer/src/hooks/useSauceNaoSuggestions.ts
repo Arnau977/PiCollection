@@ -7,20 +7,13 @@ import type {
   TagModel
 } from '@shared/models'
 import {
-  capitalizeFirstLetter,
-  matchCharacterNames,
-  matchEntityNames,
-  normalizeEntityName
-} from '../utils/matchEntityNames'
+  EMPTY_MISSING,
+  matchSuggestionCandidate,
+  type ApplyPayload,
+  type SuggestionCategory
+} from './tagSuggestionMatching'
 
-export type SuggestionCategory = 'artist' | 'tags' | 'characters' | 'series'
-
-export interface ApplyPayload {
-  artistId?: string
-  tagIds: string[]
-  characterIds: string[]
-  seriesIds: string[]
-}
+export type { ApplyPayload, SuggestionCategory }
 
 interface UseSauceNaoSuggestionsArgs {
   artists: ArtistModel[]
@@ -43,13 +36,6 @@ interface UseSauceNaoSuggestionsResult {
   run: (route: string) => Promise<void>
   dismiss: (category: SuggestionCategory, name: string) => void
   reset: () => void
-}
-
-const EMPTY_MISSING: Record<SuggestionCategory, string[]> = {
-  artist: [],
-  tags: [],
-  characters: [],
-  series: []
 }
 
 export function useSauceNaoSuggestions({
@@ -97,36 +83,10 @@ export function useSauceNaoSuggestions({
       const found = result.data.match
       setMatch(found)
 
-      const artistMatch = found.artist
-        ? matchEntityNames([found.artist], artists)
-        : { existing: [], missing: [] }
-      const tagsMatch = matchEntityNames(found.tags, tags)
-      const seriesSuggestions = [...found.series, ...found.seriesHints]
-      const seriesContext = seriesSuggestions.map((s) => normalizeEntityName(s.name))
-      const charactersMatch = matchCharacterNames(found.characters, characters, seriesContext)
-      const seriesMatch = matchEntityNames(seriesSuggestions, series)
-
-      onApplyExisting({
-        artistId: artistMatch.existing[0]?.id,
-        tagIds: tagsMatch.existing.map((entity) => entity.id),
-        characterIds: charactersMatch.existing.map((entity) => entity.id),
-        seriesIds: seriesMatch.existing.map((entity) => entity.id)
-      })
-
-      setMissing({
-        artist: artistMatch.missing,
-        tags: tagsMatch.missing,
-        // Booru-sourced names arrive lowercase; characters and series read
-        // oddly that way, so capitalize before they're shown or created.
-        characters: charactersMatch.missing.map(capitalizeFirstLetter),
-        series: seriesMatch.missing.map(capitalizeFirstLetter)
-      })
-      setAppliedCount(
-        (artistMatch.existing.length > 0 ? 1 : 0) +
-          tagsMatch.existing.length +
-          charactersMatch.existing.length +
-          seriesMatch.existing.length
-      )
+      const matched = matchSuggestionCandidate(found, { artists, tags, characters, series })
+      onApplyExisting(matched.applied)
+      setMissing(matched.missing)
+      setAppliedCount(matched.appliedCount)
       setStatus('ready')
     },
     [status, artists, tags, characters, series, onApplyExisting]
