@@ -12,7 +12,6 @@ import { useAdjacentMedia } from '../../hooks/useAdjacentMedia'
 import { MediaForm } from './MediaForm'
 import './MediaPage.css'
 
-const CLICK_THROUGH_SELECTOR = '.media-detail-media, .media-detail-info, .media-page-actions'
 const TEXT_INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
 const PENDING_QUEUE_OVERRIDE: { filters: MediaFilters; sorting: Sorting } = {
@@ -127,12 +126,6 @@ const MediaPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- goToMedia/navigate are stable for the lifetime of this component
   }, [isEditing, previousId, nextId])
 
-  function handleBackgroundClick(e: React.MouseEvent<HTMLDivElement>): void {
-    const target = e.target as HTMLElement
-    if (target.closest(CLICK_THROUGH_SELECTOR)) return
-    goBack()
-  }
-
   if (loading) {
     return (
       <div className="page">
@@ -158,7 +151,7 @@ const MediaPage: React.FC = () => {
   }
 
   return (
-    <div className="page media-page" onClick={isEditing ? undefined : handleBackgroundClick}>
+    <div className="page media-page">
       {!isEditing && (
         <div className="media-page-actions">
           <button type="button" className="btn media-page-back" onClick={goBack}>
