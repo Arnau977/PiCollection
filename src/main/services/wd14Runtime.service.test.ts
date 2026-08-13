@@ -64,7 +64,15 @@ describe('installWd14Runtime', () => {
     expect(extractTarGz).toHaveBeenCalledTimes(1)
     expect(spawnMock).toHaveBeenCalledWith(
       expect.stringContaining('python'),
-      expect.arrayContaining(['-m', 'pip', 'install', '--no-index']),
+      expect.arrayContaining([
+        '-m',
+        'pip',
+        'install',
+        '--find-links',
+        'onnxruntime==1.22.0',
+        'numpy==2.5.2',
+        'pillow==12.3.0'
+      ]),
       expect.anything()
     )
     expect(events).toContainEqual({ type: 'installed' })

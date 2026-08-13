@@ -4,6 +4,22 @@ export interface PinnedAsset {
   size: number
 }
 
+/**
+ * Exact versions to pass to `pip install` (see `runPipInstall` in
+ * `wd14Runtime.service.ts`). Verified via a real end-to-end dry run: pip
+ * requires an exact version pin per package even when `--find-links`
+ * already points at the downloaded wheel, otherwise (once pip is allowed
+ * to consult the live index for onnxruntime's own transitive
+ * dependencies - see `PACKAGE_VERSIONS`'s doc comment there) it silently
+ * resolves the newest version on PyPI instead of the one actually
+ * downloaded and checksum-verified.
+ */
+export const PACKAGE_VERSIONS = {
+  onnxruntime: '1.22.0',
+  numpy: '2.5.2',
+  pillow: '12.3.0'
+} as const
+
 interface PlatformAssets {
   python: PinnedAsset
   onnxruntime: PinnedAsset

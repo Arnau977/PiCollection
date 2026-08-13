@@ -1,9 +1,14 @@
 import { app } from 'electron'
 import { spawn } from 'child_process'
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { basename, join } from 'path'
 import type { Wd14RuntimeEvent, Wd14RuntimeStatus } from '@shared/models'
-import { getModelAssets, getPlatformAssets, type PinnedAsset } from './wd14Runtime.assets'
+import {
+  getModelAssets,
+  getPlatformAssets,
+  PACKAGE_VERSIONS,
+  type PinnedAsset
+} from './wd14Runtime.assets'
 import { downloadAndVerify, extractTarGz } from './wd14Runtime.download'
 
 function runtimeDir(): string {
@@ -28,6 +33,17 @@ export function getWd14RuntimeStatus(): Wd14RuntimeStatus {
   return existsSync(markerPath()) ? { state: 'installed' } : { state: 'not-installed' }
 }
 
+/**
+ * Deliberately not `--no-index`: verified via a real end-to-end dry run
+ * that `onnxruntime` pulls in its own transitive dependencies (coloredlogs,
+ * flatbuffers, packaging, protobuf, sympy, and *their* transitive deps)
+ * that aren't in `wheelDir` - a fully offline install fails outright. Pip
+ * is instead allowed to resolve those few small extra packages from the
+ * live index, while `--find-links` plus an exact version pin per package
+ * (`PACKAGE_VERSIONS`) guarantees the three packages this app actually
+ * cares about install as the specific checksum-verified versions just
+ * downloaded, not whatever's newest on PyPI.
+ */
 function runPipInstall(wheelDir: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn(
@@ -36,12 +52,11 @@ function runPipInstall(wheelDir: string): Promise<void> {
         '-m',
         'pip',
         'install',
-        '--no-index',
         '--find-links',
         wheelDir,
-        'onnxruntime',
-        'numpy',
-        'pillow'
+        `onnxruntime==${PACKAGE_VERSIONS.onnxruntime}`,
+        `numpy==${PACKAGE_VERSIONS.numpy}`,
+        `pillow==${PACKAGE_VERSIONS.pillow}`
       ],
       { stdio: 'ignore' }
     )
@@ -69,15 +84,26 @@ export async function installWd14Runtime(
   const wheelDir = join(dir, 'wheels')
   mkdirSync(wheelDir, { recursive: true })
 
+  // Wheel filenames must stay pip-compliant (name-version-pytag-abitag-platform.whl)
+  // for `--find-links` to recognize them - verified via a real dry run that a
+  // renamed-to-generic .whl file is silently invisible to pip's directory scan.
   const downloads: { asset: PinnedAsset; dest: string; step: 'python' | 'packages' | 'model' }[] = [
     { asset: platformAssets.python, dest: join(dir, 'python.tar.gz'), step: 'python' },
     {
       asset: platformAssets.onnxruntime,
-      dest: join(wheelDir, 'onnxruntime.whl'),
+      dest: join(wheelDir, basename(platformAssets.onnxruntime.url)),
       step: 'packages'
     },
-    { asset: platformAssets.numpy, dest: join(wheelDir, 'numpy.whl'), step: 'packages' },
-    { asset: platformAssets.pillow, dest: join(wheelDir, 'pillow.whl'), step: 'packages' },
+    {
+      asset: platformAssets.numpy,
+      dest: join(wheelDir, basename(platformAssets.numpy.url)),
+      step: 'packages'
+    },
+    {
+      asset: platformAssets.pillow,
+      dest: join(wheelDir, basename(platformAssets.pillow.url)),
+      step: 'packages'
+    },
     { asset: modelAssets.model, dest: join(dir, 'model.onnx'), step: 'model' },
     { asset: modelAssets.tags, dest: join(dir, 'selected_tags.csv'), step: 'model' }
   ]
@@ -112,9 +138,9 @@ export async function installWd14Runtime(
       JSON.stringify({
         installedAt: Date.now(),
         pythonVersion: '3.12.13',
-        onnxruntimeVersion: '1.22.0',
-        numpyVersion: '2.5.2',
-        pillowVersion: '12.3.0',
+        onnxruntimeVersion: PACKAGE_VERSIONS.onnxruntime,
+        numpyVersion: PACKAGE_VERSIONS.numpy,
+        pillowVersion: PACKAGE_VERSIONS.pillow,
         modelRepo: 'SmilingWolf/wd-vit-tagger-v3'
       })
     )

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { getModelAssets, getPlatformAssets } from './wd14Runtime.assets'
+import { getModelAssets, getPlatformAssets, PACKAGE_VERSIONS } from './wd14Runtime.assets'
 
 const originalPlatform = process.platform
 const originalArch = process.arch
@@ -62,5 +62,15 @@ describe('getModelAssets', () => {
     expect(assets.tags.sha256).toBe(
       '298633d94d0031d2081c0893f29c82eab7f0df00b08483ba8f29d1e979441217'
     )
+  })
+})
+
+describe('PACKAGE_VERSIONS', () => {
+  it('matches the versions actually pinned in PLATFORM_ASSETS', () => {
+    expect(PACKAGE_VERSIONS).toEqual({
+      onnxruntime: '1.22.0',
+      numpy: '2.5.2',
+      pillow: '12.3.0'
+    })
   })
 })
