@@ -32,8 +32,11 @@ const GalleryPage: React.FC = () => {
   const [showBatchEdit, setShowBatchEdit] = useState(false)
 
   const pageSize = defaults.pageSize
+  // Pending media lives only under the dedicated Pending tab - always excluded
+  // here regardless of the user's own filters, so clearing filters can't
+  // surface it either.
   const effectiveFilters = useMemo(
-    () => ({ ...filters, limit: pageSize, offset: page * pageSize }),
+    () => ({ ...filters, pendingTagging: false, limit: pageSize, offset: page * pageSize }),
     [filters, page, pageSize]
   )
   const { data: media, total, loading, error, refetch } = useMediaQuery(effectiveFilters, sorting)

@@ -127,6 +127,26 @@ describe('GalleryPage pagination', () => {
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
   })
 
+  it('always excludes pending media from the query, since pending items belong only under Pending', async () => {
+    const getFiltered = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { items: makeMedia(1), total: 1 } })
+    setApi(getFiltered)
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() =>
+      expect(getFiltered).toHaveBeenCalledWith(
+        expect.objectContaining({ pendingTagging: false }),
+        expect.anything()
+      )
+    )
+  })
+
   it('does not render pagination controls when there is no media', async () => {
     setApi(vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } }))
 
