@@ -29,14 +29,11 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 2.1rem;
-  height: 2.1rem;
-  border-radius: var(--radius-md);
-  background: var(--accent);
-  color: #fff;
+  color: var(--accent);
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.6rem;
   font-style: normal;
+  line-height: 1;
 }
 
 .app-brand-text {
@@ -57,7 +54,7 @@
   align-items: center;
   gap: var(--space-3);
   padding: 0.65rem var(--space-3);
-  border-radius: var(--radius-md);
+  border-left: 2px solid transparent;
   color: var(--color-text-muted);
   text-decoration: none;
   font-weight: 600;
@@ -65,7 +62,8 @@
   white-space: nowrap;
   transition:
     background-color var(--transition-base),
-    color var(--transition-base);
+    color var(--transition-base),
+    border-left-color var(--transition-base);
 }
 
 .app-sidebar-link svg {
@@ -94,9 +92,10 @@
 }
 
 .app-sidebar-link.active {
-  color: var(--accent-text);
-  background: var(--accent-gradient);
-  box-shadow: var(--accent-glow-sm);
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+  font-weight: 700;
 }
 
 /* Icon-only rail once the window gets too narrow for labels to have room
