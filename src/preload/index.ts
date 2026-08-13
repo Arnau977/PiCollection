@@ -31,6 +31,7 @@ import type {
   StatsSummary,
   TagInput,
   TagModel,
+  TagWikiEntry,
   UpdateChannel,
   UpdaterEvent
 } from '@shared/models'
@@ -160,6 +161,10 @@ export const api = {
       ipcRenderer.invoke(IPC.sauceNao.getApiKey),
     setApiKey: (apiKey: string | undefined): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.sauceNao.setApiKey, apiKey)
+  },
+  tagWiki: {
+    lookup: (tagName: string): Promise<IpcResult<TagWikiEntry | null>> =>
+      ipcRenderer.invoke(IPC.tagWiki.lookup, tagName)
   },
   logging: {
     getEnabled: (): Promise<IpcResult<boolean>> => ipcRenderer.invoke(IPC.logging.getEnabled),

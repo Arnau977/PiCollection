@@ -230,6 +230,9 @@ export const IPC = {
     getApiKey: 'sauce-nao:get-api-key',
     setApiKey: 'sauce-nao:set-api-key'
   },
+  tagWiki: {
+    lookup: 'tag-wiki:lookup'
+  },
   logging: {
     getEnabled: 'logging:get-enabled',
     setEnabled: 'logging:set-enabled',
