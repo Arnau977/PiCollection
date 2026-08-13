@@ -1,12 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { initTestDbSingleton } from '../database/testHelpers'
 import { artistService } from './artist.service'
+import { notifyEntitiesChanged } from '../events/entityEvents'
+
+vi.mock('../events/entityEvents', () => ({ notifyEntitiesChanged: vi.fn() }))
 
 let cleanup: () => Promise<void>
 
 beforeEach(async () => {
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
+  vi.mocked(notifyEntitiesChanged).mockClear()
 })
 
 afterEach(async () => {
@@ -14,6 +18,22 @@ afterEach(async () => {
 })
 
 describe('artistService', () => {
+  it('notifies entity-change listeners on create, update, and delete (not on social-link edits)', async () => {
+    const artist = await artistService.createArtist({ name: 'temp' })
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['artist'])
+
+    vi.mocked(notifyEntitiesChanged).mockClear()
+    await artistService.updateArtist(artist.id, { name: 'renamed' })
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['artist'])
+
+    vi.mocked(notifyEntitiesChanged).mockClear()
+    await artistService.addSocialLink(artist.id, { name: 'X', url: 'https://x.example' })
+    expect(notifyEntitiesChanged).not.toHaveBeenCalled()
+
+    await artistService.deleteArtist(artist.id)
+    expect(notifyEntitiesChanged).toHaveBeenCalledWith(['artist'])
+  })
+
   it('creates an artist with no social links', async () => {
     const artist = await artistService.createArtist({ name: 'Jane' })
     expect(artist.name).toBe('Jane')

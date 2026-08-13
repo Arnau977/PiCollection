@@ -2,7 +2,12 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import type { SeriesModel, TagModel } from '@shared/models'
-import { __resetEntityListCachesForTests, useSeries, useTags } from './useEntityLists'
+import {
+  __resetEntityListCachesForTests,
+  useEntityCacheSync,
+  useSeries,
+  useTags
+} from './useEntityLists'
 
 const tags: TagModel[] = [{ id: '1', name: 'landscape', createdAt: 1700000000000 }]
 const series: SeriesModel[] = [
@@ -90,5 +95,66 @@ describe('useSeries', () => {
     expect(result.current.loading).toBe(true)
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.data).toEqual(series)
+  })
+})
+
+describe('useTags.invalidate', () => {
+  it('triggers a new fetch and updates mounted subscribers, like refetch', async () => {
+    const getAll = vi.fn().mockResolvedValue({ success: true, data: tags })
+    setApi({ tag: { getAll } })
+
+    const { result } = renderHook(() => useTags())
+    await waitFor(() => expect(getAll).toHaveBeenCalledTimes(1))
+
+    act(() => {
+      useTags.invalidate()
+    })
+
+    await waitFor(() => expect(getAll).toHaveBeenCalledTimes(2))
+    expect(result.current.data).toEqual(tags)
+  })
+})
+
+function setApiForCacheSync(onChanged: ReturnType<typeof vi.fn>): {
+  tagGetAll: ReturnType<typeof vi.fn>
+} {
+  const tagGetAll = vi.fn().mockResolvedValue({ success: true, data: tags })
+  setApi({
+    tag: { getAll: tagGetAll },
+    character: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+    series: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+    artist: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+    entities: { onChanged }
+  })
+  return { tagGetAll }
+}
+
+describe('useEntityCacheSync', () => {
+  it('invalidates the cache matching the kinds named in an entities:changed event', async () => {
+    let emit: (event: { kinds: string[] }) => void = () => {}
+    const onChanged = vi.fn((listener: (event: { kinds: string[] }) => void) => {
+      emit = listener
+      return () => {}
+    })
+    const { tagGetAll } = setApiForCacheSync(onChanged)
+
+    renderHook(() => useTags())
+    await waitFor(() => expect(tagGetAll).toHaveBeenCalledTimes(1))
+    renderHook(() => useEntityCacheSync())
+
+    act(() => emit({ kinds: ['tag'] }))
+
+    await waitFor(() => expect(tagGetAll).toHaveBeenCalledTimes(2))
+  })
+
+  it('unsubscribes on unmount', () => {
+    const unsubscribe = vi.fn()
+    const onChanged = vi.fn().mockReturnValue(unsubscribe)
+    setApiForCacheSync(onChanged)
+
+    const { unmount } = renderHook(() => useEntityCacheSync())
+    unmount()
+
+    expect(unsubscribe).toHaveBeenCalled()
   })
 })

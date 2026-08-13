@@ -242,5 +242,9 @@ export const IPC = {
     setChannel: 'updater:set-channel',
     /** Main -> renderer push channel; not invoked directly, see `onEvent` in preload. */
     event: 'updater:event'
+  },
+  entities: {
+    /** Main -> renderer push channel; not invoked directly, see `onChanged` in preload. */
+    changed: 'entities:changed'
   }
 } as const

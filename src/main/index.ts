@@ -16,6 +16,7 @@ import { registerIpcHandlers } from './ipc/registerIpcHandlers'
 import { createWindowStateKeeper } from './window/windowState'
 import { MIN_WIDTH, MIN_HEIGHT } from './window/windowBounds'
 import { checkForUpdates, initAutoUpdater, setUpdaterWindow } from './updater/autoUpdater'
+import { setEntityEventsWindow } from './events/entityEvents'
 import { flushLogBuffer, logError, logInfo } from './logging/logger'
 
 registerMediaProtocolScheme()
@@ -95,6 +96,7 @@ function createWindow(): BrowserWindow {
 
   windowState.register(mainWindow)
   setUpdaterWindow(mainWindow)
+  setEntityEventsWindow(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()

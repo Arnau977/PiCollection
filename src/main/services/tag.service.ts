@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto'
 import { getDb } from '../database/connection'
 import * as tagRepo from '../database/repositories/tag.repository'
+import { notifyEntitiesChanged } from '../events/entityEvents'
 import type { TagInput, TagModel } from '@shared/models'
 import type { TagTable } from '../database/schema'
 
@@ -24,15 +25,18 @@ export const tagService = {
       name: input.name,
       created_at: Date.now()
     })
+    notifyEntitiesChanged(['tag'])
     return toModel(row)
   },
 
   async updateTag(id: string, input: TagInput): Promise<TagModel> {
     const row = await tagRepo.updateTag(getDb(), id, { name: input.name })
+    notifyEntitiesChanged(['tag'])
     return toModel(row)
   },
 
   async deleteTag(id: string): Promise<void> {
     await tagRepo.deleteTag(getDb(), id)
+    notifyEntitiesChanged(['tag'])
   }
 }

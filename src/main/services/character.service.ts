@@ -5,6 +5,7 @@ import * as characterRepo from '../database/repositories/character.repository'
 import * as seriesRepo from '../database/repositories/series.repository'
 import { wouldCreateCycle } from '../database/repositories/entityHierarchy'
 import { AppError } from '../errors'
+import { notifyEntitiesChanged } from '../events/entityEvents'
 import type { CharacterInput, CharacterModel, SeriesModel } from '@shared/models'
 import type { CharacterTable, DB } from '../database/schema'
 
@@ -82,6 +83,7 @@ export const characterService = {
 
     const created = await getCharacterModelById(db, id)
     if (!created) throw new Error('Failed to load created character')
+    notifyEntitiesChanged(['character'])
     return created
   },
 
@@ -106,10 +108,12 @@ export const characterService = {
 
     const updated = await getCharacterModelById(db, id)
     if (!updated) throw new Error('Failed to load updated character')
+    notifyEntitiesChanged(['character'])
     return updated
   },
 
   async deleteCharacter(id: string): Promise<void> {
     await characterRepo.deleteCharacter(getDb(), id)
+    notifyEntitiesChanged(['character'])
   }
 }

@@ -15,9 +15,11 @@ import {
   PHASH_SIMILAR_THRESHOLD
 } from './mediaHash'
 import { readSourceFolder, relativizeRoute } from './sourceFolder'
+import { notifyEntitiesChanged } from '../events/entityEvents'
 import type {
   ArtistModel,
   CharacterModel,
+  EntityKind,
   MediaBatchUpdateAssociationsInput,
   MediaDuplicateCheck,
   MediaFilteredResult,
@@ -277,6 +279,14 @@ export const mediaService = {
 
     const created = await getMediaModelById(db, id)
     if (!created) throw new Error('Failed to load created media')
+
+    const attachedKinds: EntityKind[] = []
+    if (input.tagIds?.length) attachedKinds.push('tag')
+    if (input.characterIds?.length) attachedKinds.push('character')
+    if (input.seriesIds?.length) attachedKinds.push('series')
+    if (input.artistId) attachedKinds.push('artist')
+    if (attachedKinds.length) notifyEntitiesChanged(attachedKinds)
+
     return created
   },
 
@@ -302,6 +312,11 @@ export const mediaService = {
 
     const updated = await getMediaModelById(db, id)
     if (!updated) throw new Error('Failed to load updated media')
+    // Unlike addMedia, this replaces existing associations wholesale rather
+    // than only adding new ones - the old associations aren't diffed against
+    // the new ones, so any of the four kinds could have gained or lost this
+    // media, even ones absent from the new input entirely.
+    notifyEntitiesChanged(['tag', 'character', 'series', 'artist'])
     return updated
   },
 
@@ -315,10 +330,19 @@ export const mediaService = {
       await mediaRepo.addMediaSeriesBulk(trx, input.mediaIds, input.addSeriesIds)
       await mediaRepo.removeMediaSeriesBulk(trx, input.mediaIds, input.removeSeriesIds)
     })
+
+    const touchedKinds: EntityKind[] = []
+    if (input.addTagIds.length || input.removeTagIds.length) touchedKinds.push('tag')
+    if (input.addCharacterIds.length || input.removeCharacterIds.length) touchedKinds.push('character')
+    if (input.addSeriesIds.length || input.removeSeriesIds.length) touchedKinds.push('series')
+    if (touchedKinds.length) notifyEntitiesChanged(touchedKinds)
   },
 
   async deleteMedia(id: string): Promise<void> {
     await mediaRepo.deleteMediaRow(getDb(), id)
+    // The deleted media could have held any kind of association; not worth
+    // fetching them first just to compute an exact subset.
+    notifyEntitiesChanged(['tag', 'character', 'series', 'artist'])
   },
 
   async clearPendingTagging(id: string): Promise<MediaModel> {
