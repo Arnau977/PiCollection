@@ -40,7 +40,7 @@ function insertMedia(name: string, artistId: string | null = null): Promise<{ id
 }
 
 function insertTag(name: string): Promise<{ id: string }> {
-  return tagRepo.insertTag(db, { id: randomUUID(), name, created_at: Date.now() })
+  return tagRepo.insertTag(db, { id: randomUUID(), name, aliases_json: '[]', created_at: Date.now() })
 }
 
 function insertCharacter(name: string): Promise<{ id: string }> {

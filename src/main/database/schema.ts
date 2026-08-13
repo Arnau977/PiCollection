@@ -37,6 +37,7 @@ export interface CharacterSeriesTable {
 export interface TagTable {
   id: string
   name: string
+  aliases_json: string
   created_at: number
 }
 

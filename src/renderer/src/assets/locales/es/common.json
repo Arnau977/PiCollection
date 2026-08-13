@@ -278,6 +278,7 @@
     "aliasesPlaceholder": "Separados por coma",
     "aliasesHint": "Nombres alternativos o apodos de este personaje.",
     "seriesAliasesHint": "Títulos alternativos u originales de esta serie.",
+    "tagAliasesHint": "Nombres alternativos o sinónimos de este tag.",
     "parentSeries": "Serie padre",
     "parentCharacter": "Personaje padre",
     "noParentSeries": "Sin padre (nivel superior)",

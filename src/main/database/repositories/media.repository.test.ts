@@ -64,11 +64,13 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
     const tagA = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagA',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const tagB = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagB',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const onlyA = await insertMedia('onlyA')
@@ -90,11 +92,13 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
     const tagA = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagA',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const tagB = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagB',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const onlyA = await insertMedia('onlyA')
@@ -114,11 +118,13 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
     const tagA = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagA',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const tagC = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagC',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const onlyA = await insertMedia('onlyA')
@@ -185,11 +191,13 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
     const tagA = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagA',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const tagB = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagB',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const charX = await characterRepo.insertCharacter(db, {
@@ -222,6 +230,7 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
     const tagA = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagA',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const onlyA = await insertMedia('onlyA')
@@ -491,6 +500,7 @@ describe('media.repository free-text/sfw/type filtering', () => {
     const tagA = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagA',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const onlyOne = await insertMedia('onlyOne')
@@ -530,8 +540,8 @@ describe('routesExist', () => {
 
 describe('findEntityThumbnails', () => {
   it('returns one thumbnail per tag id, ignoring NSFW media', async () => {
-    const tagA = await tagRepo.insertTag(db, { id: 'ta', name: 'a', created_at: 1 })
-    const tagB = await tagRepo.insertTag(db, { id: 'tb', name: 'b', created_at: 1 })
+    const tagA = await tagRepo.insertTag(db, { id: 'ta', name: 'a', aliases_json: '[]', created_at: 1 })
+    const tagB = await tagRepo.insertTag(db, { id: 'tb', name: 'b', aliases_json: '[]', created_at: 1 })
     const sfwMedia = await baseMediaRow({ id: 'm1', sfw: 1 })
     const nsfwMedia = await baseMediaRow({ id: 'm2', route: '/m2', sfw: 0 })
     await mediaRepo.setMediaTags(db, sfwMedia.id, [tagA.id])
@@ -581,7 +591,7 @@ describe('findEntityThumbnails', () => {
   })
 
   it('omits an entity with no eligible SFW media entirely', async () => {
-    const tag = await tagRepo.insertTag(db, { id: 't1', name: 'a', created_at: 1 })
+    const tag = await tagRepo.insertTag(db, { id: 't1', name: 'a', aliases_json: '[]', created_at: 1 })
     expect(await mediaRepo.findEntityThumbnails(db, 'tag', [tag.id])).toEqual([])
   })
 })
@@ -763,11 +773,13 @@ describe('media.repository bulk association add/remove', () => {
     const tagA = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagA',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const tagB = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagB',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const mediaA = await insertMedia('a')
@@ -790,6 +802,7 @@ describe('media.repository bulk association add/remove', () => {
     const tag = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagA',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const media = await insertMedia('a')
@@ -805,11 +818,13 @@ describe('media.repository bulk association add/remove', () => {
     const tagA = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagA',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const tagB = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'tagB',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const media = await insertMedia('a')

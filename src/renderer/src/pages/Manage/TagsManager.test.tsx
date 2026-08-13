@@ -38,8 +38,8 @@ function setApi(overrides: Record<string, unknown> = {}): void {
 
 beforeEach(() => {
   tagsData = [
-    { id: 't1', name: 'landscape', createdAt: 1700000000000, mediaCount: 3 },
-    { id: 't2', name: 'portrait', createdAt: 1700000001000 }
+    { id: 't1', name: 'landscape', aliases: ['scenery'], createdAt: 1700000000000, mediaCount: 3 },
+    { id: 't2', name: 'portrait', aliases: [], createdAt: 1700000001000 }
   ]
   refetchTags.mockReset()
   confirmMock.mockReset()
@@ -69,11 +69,25 @@ describe('TagsManager', () => {
     await user.type(screen.getByLabelText('Name'), 'new-tag')
     await user.click(screen.getByRole('button', { name: 'Add' }))
 
-    expect(create).toHaveBeenCalledWith({ name: 'new-tag' })
+    expect(create).toHaveBeenCalledWith({ name: 'new-tag', aliases: [] })
     expect(refetchTags).toHaveBeenCalled()
   })
 
-  it('switches the panel into edit mode and pre-fills the name', async () => {
+  it('creates a new tag with aliases', async () => {
+    const user = userEvent.setup()
+    const create = vi.fn().mockResolvedValue({ success: true, data: { id: 't3', name: 'new-tag' } })
+    setApi({ create })
+    render(<TagsManager />)
+
+    await user.type(screen.getByLabelText('Name'), 'new-tag')
+    await user.type(screen.getByLabelText('Aliases'), 'synonym')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(create).toHaveBeenCalledWith({ name: 'new-tag', aliases: ['synonym'] })
+    expect(refetchTags).toHaveBeenCalled()
+  })
+
+  it('switches the panel into edit mode and pre-fills the fields', async () => {
     const user = userEvent.setup()
     render(<TagsManager />)
 
@@ -81,6 +95,7 @@ describe('TagsManager', () => {
 
     expect(screen.getByText('Editing "landscape"')).toBeInTheDocument()
     expect(screen.getByLabelText('Name')).toHaveValue('landscape')
+    expect(screen.getByLabelText('Aliases')).toHaveValue('scenery')
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
   })
@@ -97,8 +112,25 @@ describe('TagsManager', () => {
     await user.type(input, 'renamed')
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
-    expect(update).toHaveBeenCalledWith('t1', { name: 'renamed' })
+    expect(update).toHaveBeenCalledWith('t1', { name: 'renamed', aliases: ['scenery'] })
     expect(refetchTags).toHaveBeenCalled()
+  })
+
+  it('shows tag aliases in the list', () => {
+    render(<TagsManager />)
+    expect(screen.getByText('scenery')).toBeInTheDocument()
+  })
+
+  it('filters the list by alias match', async () => {
+    const user = userEvent.setup()
+    render(<TagsManager />)
+
+    await user.type(screen.getByRole('searchbox'), 'scenery')
+
+    await waitFor(() => {
+      expect(screen.getByText('landscape')).toBeInTheDocument()
+      expect(screen.queryByText('portrait')).not.toBeInTheDocument()
+    })
   })
 
   it('returns to the add-new form when editing is cancelled', async () => {
