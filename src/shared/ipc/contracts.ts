@@ -236,6 +236,13 @@ export const IPC = {
   tagWiki: {
     lookup: 'tag-wiki:lookup'
   },
+  wd14Runtime: {
+    getStatus: 'wd14-runtime:get-status',
+    install: 'wd14-runtime:install',
+    remove: 'wd14-runtime:remove',
+    /** Main -> renderer push channel; not invoked directly, see `onEvent` in preload. */
+    event: 'wd14-runtime:event'
+  },
   logging: {
     getEnabled: 'logging:get-enabled',
     setEnabled: 'logging:set-enabled',
