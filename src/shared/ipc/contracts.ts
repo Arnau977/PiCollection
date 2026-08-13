@@ -166,7 +166,8 @@ export const IPC = {
     clearPendingTagging: 'db:media:clear-pending-tagging',
     delete: 'db:media:delete',
     cacheThumbnail: 'db:media:cache-thumbnail',
-    checkDuplicate: 'db:media:check-duplicate'
+    checkDuplicate: 'db:media:check-duplicate',
+    findSimilar: 'db:media:find-similar'
   },
   artist: {
     getAll: 'db:artist:get-all',
