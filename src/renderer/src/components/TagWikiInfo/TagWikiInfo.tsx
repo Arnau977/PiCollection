@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Info } from 'lucide-react'
+import { stripDtext } from '../../utils/dtext'
 import './TagWikiInfo.css'
 
 interface TagWikiInfoProps {
@@ -11,11 +12,25 @@ type LoadState = 'idle' | 'loading' | 'error' | 'not-found' | 'loaded'
 
 export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element {
   const { t } = useTranslation()
+  const containerRef = useRef<HTMLSpanElement>(null)
   const [open, setOpen] = useState(false)
   const [state, setState] = useState<LoadState>('idle')
   const [body, setBody] = useState<string | null>(null)
   const [otherNames, setOtherNames] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+
+    function handlePointerDown(event: MouseEvent): void {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => document.removeEventListener('mousedown', handlePointerDown)
+  }, [open])
 
   async function handleClick(): Promise<void> {
     if (state !== 'idle') {
@@ -34,13 +49,13 @@ export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element {
       setState('not-found')
       return
     }
-    setBody(result.data.body)
+    setBody(stripDtext(result.data.body))
     setOtherNames(result.data.otherNames)
     setState('loaded')
   }
 
   return (
-    <span className="tag-wiki-info">
+    <span className="tag-wiki-info" ref={containerRef}>
       <button
         type="button"
         className="icon-btn"
@@ -56,7 +71,7 @@ export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element {
           {state === 'not-found' && <p>{t('manage.tagWikiNotFound')}</p>}
           {state === 'loaded' && (
             <>
-              <p>{body}</p>
+              <p className="tag-wiki-info-body">{body}</p>
               {otherNames.length > 0 && (
                 <p className="tag-wiki-info-other-names">
                   {t('manage.tagWikiOtherNames')}: {otherNames.join(', ')}

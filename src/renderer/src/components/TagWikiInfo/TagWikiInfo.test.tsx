@@ -81,4 +81,46 @@ describe('TagWikiInfo', () => {
     expect(screen.getByText('A character with cat ears.')).toBeInTheDocument()
     expect(lookup).toHaveBeenCalledTimes(1)
   })
+
+  it('closes when clicking outside the popover', async () => {
+    lookup.mockResolvedValue({
+      success: true,
+      data: { tagName: 'cat_ears', body: 'A character with cat ears.', otherNames: [] }
+    })
+    const user = userEvent.setup()
+    render(
+      <div>
+        <TagWikiInfo tagName="cat_ears" />
+        <button type="button">elsewhere</button>
+      </div>
+    )
+
+    await user.click(screen.getByRole('button', { name: /What does this tag mean/ }))
+    await waitFor(() => expect(screen.getByText('A character with cat ears.')).toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: 'elsewhere' }))
+
+    expect(screen.queryByText('A character with cat ears.')).not.toBeInTheDocument()
+  })
+
+  it('strips DText markup from the wiki body before displaying it', async () => {
+    lookup.mockResolvedValue({
+      success: true,
+      data: {
+        tagName: 'bottomless',
+        body: '[b]Do not use[/b] when the character is wearing [[pantyhose]].',
+        otherNames: []
+      }
+    })
+    const user = userEvent.setup()
+    render(<TagWikiInfo tagName="bottomless" />)
+
+    await user.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Do not use when the character is wearing pantyhose.')
+      ).toBeInTheDocument()
+    })
+  })
 })
