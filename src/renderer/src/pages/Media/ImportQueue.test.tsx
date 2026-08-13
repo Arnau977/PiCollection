@@ -11,7 +11,9 @@ const checkDuplicate = vi.fn()
 beforeEach(() => {
   expandSelection.mockReset()
   mediaCreate.mockReset().mockResolvedValue({ success: true, data: { id: 'm1' } })
-  checkDuplicate.mockReset().mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } })
+  checkDuplicate
+    .mockReset()
+    .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } })
   Object.defineProperty(window, 'api', {
     value: {
       sourceFolder: { expandSelection },
@@ -20,7 +22,15 @@ beforeEach(() => {
       tag: { create: vi.fn() },
       character: { create: vi.fn() },
       series: { create: vi.fn() },
-      sauceNao: { lookup: vi.fn(), getApiKey: vi.fn().mockResolvedValue({ success: true, data: null }) }
+      sauceNao: {
+        lookup: vi.fn(),
+        getApiKey: vi.fn().mockResolvedValue({ success: true, data: null })
+      },
+      wd14Runtime: {
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
+        onEvent: vi.fn().mockReturnValue(() => {})
+      },
+      wd14Tagger: { suggestTags: vi.fn() }
     },
     writable: true,
     configurable: true
@@ -44,7 +54,11 @@ function renderQueue(onClose = vi.fn(), onLastSaved = vi.fn()) {
   })
   return render(
     <MemoryRouter>
-      <ImportQueue selection={{ files: ['a.png', 'b.png'], folders: [] }} onClose={onClose} onLastSaved={onLastSaved} />
+      <ImportQueue
+        selection={{ files: ['a.png', 'b.png'], folders: [] }}
+        onClose={onClose}
+        onLastSaved={onLastSaved}
+      />
     </MemoryRouter>
   )
 }
@@ -109,7 +123,9 @@ describe('ImportQueue', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }))
 
-    expect(screen.queryByRole('button', { name: 'Add remaining to Pending' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Add remaining to Pending' })
+    ).not.toBeInTheDocument()
     expect(screen.getByText('File 1 of 2')).toBeInTheDocument()
   })
 
@@ -165,11 +181,18 @@ describe('ImportQueue', () => {
   })
 
   it('shows an error and no form when expandSelection fails', async () => {
-    expandSelection.mockResolvedValue({ success: false, error: { code: 'INTERNAL', message: 'Boom' } })
+    expandSelection.mockResolvedValue({
+      success: false,
+      error: { code: 'INTERNAL', message: 'Boom' }
+    })
 
     render(
       <MemoryRouter>
-        <ImportQueue selection={{ files: [], folders: ['sub'] }} onClose={vi.fn()} onLastSaved={vi.fn()} />
+        <ImportQueue
+          selection={{ files: [], folders: ['sub'] }}
+          onClose={vi.fn()}
+          onLastSaved={vi.fn()}
+        />
       </MemoryRouter>
     )
 
@@ -182,12 +205,18 @@ describe('ImportQueue', () => {
 
     const { container } = render(
       <MemoryRouter>
-        <ImportQueue selection={{ files: [], folders: ['sub'] }} onClose={onClose} onLastSaved={vi.fn()} />
+        <ImportQueue
+          selection={{ files: [], folders: ['sub'] }}
+          onClose={onClose}
+          onLastSaved={vi.fn()}
+        />
       </MemoryRouter>
     )
 
     expect(
-      await screen.findByText('No files to import — everything in your selection is already in the library.')
+      await screen.findByText(
+        'No files to import — everything in your selection is already in the library.'
+      )
     ).toBeInTheDocument()
     expect(mediaCreate).not.toHaveBeenCalled()
     expect(container.querySelector('form')).not.toBeInTheDocument()
