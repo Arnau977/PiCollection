@@ -211,25 +211,28 @@ input[type='checkbox'] {
   align-items: center;
   gap: 0.35rem;
   padding: 0.25rem 0.65rem;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
-.badge-success {
-  background: var(--color-success-soft);
-  color: var(--color-success);
-}
-
-.badge-danger {
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
+.badge-neutral {
+  background: transparent;
+  border: 1px solid var(--border-color-strong);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .badge-accent {
-  background: var(--accent-soft);
+  background: transparent;
+  border: 1px solid var(--accent);
   color: var(--accent);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .chip-list {
