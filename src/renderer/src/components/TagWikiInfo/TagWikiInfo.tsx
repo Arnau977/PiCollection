@@ -29,7 +29,7 @@ export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element {
     }
 
     document.addEventListener('mousedown', handlePointerDown)
-    return () => document.removeEventListener('mousedown', handlePointerDown)
+    return (): void => document.removeEventListener('mousedown', handlePointerDown)
   }, [open])
 
   async function handleClick(): Promise<void> {
