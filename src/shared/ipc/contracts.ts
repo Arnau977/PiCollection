@@ -230,6 +230,9 @@ export const IPC = {
     getApiKey: 'sauce-nao:get-api-key',
     setApiKey: 'sauce-nao:set-api-key'
   },
+  danbooru: {
+    autocompleteTags: 'danbooru:autocomplete-tags'
+  },
   tagWiki: {
     lookup: 'tag-wiki:lookup'
   },

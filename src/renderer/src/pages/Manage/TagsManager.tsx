@@ -6,6 +6,7 @@ import { useTags } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EmptyState } from '../../components/EmptyState/EmptyState'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
+import { DanbooruTagAutocomplete } from '../../components/DanbooruTagAutocomplete/DanbooruTagAutocomplete'
 import { TagWikiInfo } from '../../components/TagWikiInfo/TagWikiInfo'
 import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
@@ -105,11 +106,10 @@ export function TagsManager(): JSX.Element {
         <form className="manage-add-form-stacked" onSubmit={handleSubmit}>
           <div className="field">
             <label htmlFor="tag-name">{t('manage.name')}</label>
-            <input
+            <DanbooruTagAutocomplete
               id="tag-name"
-              type="text"
               value={form.name}
-              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={(name) => setForm((prev) => ({ ...prev, name }))}
             />
           </div>
 
