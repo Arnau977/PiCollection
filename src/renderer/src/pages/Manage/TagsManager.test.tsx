@@ -29,6 +29,9 @@ function setApi(overrides: Record<string, unknown> = {}): void {
       },
       media: {
         getEntityThumbnails: vi.fn().mockResolvedValue({ success: true, data: [] })
+      },
+      danbooru: {
+        autocompleteTags: vi.fn().mockResolvedValue({ success: true, data: [] })
       }
     },
     writable: true,
