@@ -32,7 +32,7 @@ export function DanbooruTagAutocomplete({
       if (cancelled) return
       setSuggestions(result.success ? result.data : [])
     })
-    return () => {
+    return (): void => {
       cancelled = true
     }
   }, [debouncedValue])
@@ -45,7 +45,7 @@ export function DanbooruTagAutocomplete({
       }
     }
     document.addEventListener('mousedown', handlePointerDown)
-    return () => document.removeEventListener('mousedown', handlePointerDown)
+    return (): void => document.removeEventListener('mousedown', handlePointerDown)
   }, [open])
 
   function handleSelect(name: string): void {
