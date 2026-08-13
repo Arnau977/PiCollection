@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Tags as TagsIcon, Trash2 } from 'lucide-react'
 import type { TagModel } from '@shared/models'
 import { useTags } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
+import { EmptyState } from '../../components/EmptyState/EmptyState'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
 import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
@@ -128,9 +129,9 @@ export function TagsManager(): JSX.Element {
           {loading ? (
             <p className="loading-state">{t('gallery.loading')}</p>
           ) : tags.length === 0 ? (
-            <p className="manage-empty">{t('manage.empty')}</p>
+            <EmptyState icon={<TagsIcon />} title={t('manage.empty')} />
           ) : visibleTags.length === 0 ? (
-            <p className="manage-empty">{t('manage.noResults')}</p>
+            <EmptyState icon={<TagsIcon />} title={t('manage.noResults')} />
           ) : (
             <ul className="manage-list">
               {visibleTags.map((tag) => (
