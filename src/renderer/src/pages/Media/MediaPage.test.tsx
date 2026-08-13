@@ -100,14 +100,14 @@ describe('MediaPage back navigation', () => {
     expect(navigateMock).toHaveBeenCalledWith('/gallery')
   })
 
-  it('navigates to the gallery when clicking outside the media/info panels', async () => {
+  it('does not navigate when clicking outside the media/info panels', async () => {
     const user = userEvent.setup()
     const { container } = renderMediaPage()
 
     const pageRoot = container.querySelector('.media-page') as HTMLElement
     await user.click(pageRoot)
 
-    expect(navigateMock).toHaveBeenCalledWith('/gallery')
+    expect(navigateMock).not.toHaveBeenCalled()
   })
 
   it('does not navigate when clicking on the media image', async () => {
