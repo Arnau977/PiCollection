@@ -190,6 +190,8 @@
     "revealNsfw": "Hover to reveal",
     "edit": "Edit",
     "delete": "Delete",
+    "deleting": "Deleting...",
+    "saving": "Saving...",
     "markResolved": "Mark resolved",
     "confirmDelete": "Delete this media? This cannot be undone.",
     "aiGeneratedTitle": "Generated using AI",

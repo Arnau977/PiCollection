@@ -725,11 +725,13 @@ export function MediaForm({
             className="btn btn-primary"
             disabled={saving || Boolean(duplicateCheck?.exactMatch)}
           >
-            {queueInfo
-              ? t('importQueue.saveAndNext')
-              : isEditing
-                ? t('manage.save')
-                : t('addMedia.submit')}
+            {saving
+              ? t('media.saving')
+              : queueInfo
+                ? t('importQueue.saveAndNext')
+                : isEditing
+                  ? t('manage.save')
+                  : t('addMedia.submit')}
           </button>
           {queueInfo && (
             <button type="button" className="btn" onClick={queueInfo.onSkip}>

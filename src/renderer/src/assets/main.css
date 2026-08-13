@@ -106,6 +106,12 @@ code {
   box-shadow: var(--shadow-offset-hover);
 }
 
+.btn-primary:active:not(:disabled),
+.btn-danger:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
 /* ---------- Form fields ---------- */
 
 .field {

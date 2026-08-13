@@ -84,6 +84,19 @@ describe('MediaForm initialFile', () => {
   })
 })
 
+describe('MediaForm saving state', () => {
+  it('shows a Saving label on the submit button while the save is in flight', async () => {
+    const mediaCreate = vi.fn().mockReturnValue(new Promise(() => {}))
+    setApi({ media: { create: mediaCreate } })
+    const user = userEvent.setup()
+    renderForm({ initialFile: { route: '/pics/a.png', name: 'a', type: 'image' } })
+
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(await screen.findByRole('button', { name: 'Saving...' })).toBeInTheDocument()
+  })
+})
+
 describe('MediaForm queueInfo', () => {
   it('shows progress and a Save & next label instead of Add', async () => {
     renderForm({

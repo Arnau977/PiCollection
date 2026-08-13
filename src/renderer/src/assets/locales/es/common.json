@@ -190,6 +190,8 @@
     "revealNsfw": "Pasa el cursor para revelar",
     "edit": "Editar",
     "delete": "Eliminar",
+    "deleting": "Eliminando...",
+    "saving": "Guardando...",
     "markResolved": "Dar por válido",
     "confirmDelete": "¿Eliminar este archivo? Esta acción no se puede deshacer.",
     "aiGeneratedTitle": "Generado mediante IA",
