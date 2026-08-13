@@ -6,6 +6,7 @@ import { useTags } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { EmptyState } from '../../components/EmptyState/EmptyState'
 import { EntityThumbnail } from '../../components/EntityThumbnail'
+import { TagWikiInfo } from '../../components/TagWikiInfo/TagWikiInfo'
 import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
 import { fromCsv, toCsv } from '../../utils/csvList'
@@ -181,6 +182,7 @@ export function TagsManager(): JSX.Element {
                       <span className="manage-item-aliases">{tag.aliases.join(', ')}</span>
                     )}
                   </div>
+                  <TagWikiInfo tagName={tag.name} />
                   <span className="manage-item-count">
                     {formatCompactCount(tag.mediaCount ?? 0)}
                   </span>
