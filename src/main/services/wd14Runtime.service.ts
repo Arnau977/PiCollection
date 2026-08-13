@@ -29,6 +29,12 @@ export function getPythonExecutablePath(): string {
     : join(pythonDir(), 'python', 'bin', 'python3')
 }
 
+/** Paths to the downloaded model/tags files, for `wd14Tagger.service.ts` to spawn against. */
+export function getModelFilePaths(): { model: string; tags: string } {
+  const dir = runtimeDir()
+  return { model: join(dir, 'model.onnx'), tags: join(dir, 'selected_tags.csv') }
+}
+
 export function getWd14RuntimeStatus(): Wd14RuntimeStatus {
   return existsSync(markerPath()) ? { state: 'installed' } : { state: 'not-installed' }
 }
@@ -104,8 +110,8 @@ export async function installWd14Runtime(
       dest: join(wheelDir, basename(platformAssets.pillow.url)),
       step: 'packages'
     },
-    { asset: modelAssets.model, dest: join(dir, 'model.onnx'), step: 'model' },
-    { asset: modelAssets.tags, dest: join(dir, 'selected_tags.csv'), step: 'model' }
+    { asset: modelAssets.model, dest: getModelFilePaths().model, step: 'model' },
+    { asset: modelAssets.tags, dest: getModelFilePaths().tags, step: 'model' }
   ]
   const totalBytes = downloads.reduce((sum, d) => sum + d.asset.size, 0)
   const completedPerDownload = new Array(downloads.length).fill(0)
