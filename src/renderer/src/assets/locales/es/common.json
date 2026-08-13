@@ -201,7 +201,8 @@
     "openInFolder": "Abrir en el explorador de archivos",
     "closeLightbox": "Cerrar",
     "previousImage": "Imagen anterior",
-    "nextImage": "Imagen siguiente"
+    "nextImage": "Imagen siguiente",
+    "similarMedia": "Contenido similar"
   },
   "addMedia": {
     "title": "Añadir nuevo media",

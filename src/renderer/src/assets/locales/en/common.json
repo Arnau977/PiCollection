@@ -201,7 +201,8 @@
     "openInFolder": "Open in file explorer",
     "closeLightbox": "Close",
     "previousImage": "Previous image",
-    "nextImage": "Next image"
+    "nextImage": "Next image",
+    "similarMedia": "Similar media"
   },
   "addMedia": {
     "title": "Add new media",
