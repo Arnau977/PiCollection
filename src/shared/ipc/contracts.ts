@@ -94,7 +94,8 @@ export const RemoveSocialLinkSchema = z.object({
 })
 
 export const TagInputSchema = z.object({
-  name: z.string().min(1)
+  name: z.string().min(1),
+  aliases: z.array(z.string()).optional()
 })
 
 export const SeriesInputSchema = z.object({

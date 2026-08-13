@@ -20,7 +20,7 @@ describe('0006_tag_created_at migration', () => {
   it('gives every tag a numeric created_at once migrated', async () => {
     const row = await db
       .insertInto('tag')
-      .values({ id: 't1', name: 'landscape', created_at: 123 })
+      .values({ id: 't1', name: 'landscape', aliases_json: '[]', created_at: 123 })
       .returningAll()
       .executeTakeFirstOrThrow()
 

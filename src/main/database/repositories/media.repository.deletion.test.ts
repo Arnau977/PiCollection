@@ -54,6 +54,7 @@ describe('foreign key delete behavior', () => {
     const tag = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'landscape',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const media = await mediaRepo.insertMediaRow(db, {
@@ -116,6 +117,7 @@ describe('foreign key delete behavior', () => {
     const tag = await tagRepo.insertTag(db, {
       id: randomUUID(),
       name: 'landscape',
+      aliases_json: '[]',
       created_at: Date.now()
     })
     const character = await characterRepo.insertCharacter(db, {
