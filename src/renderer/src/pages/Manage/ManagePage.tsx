@@ -14,7 +14,7 @@ export default function ManagePage(): JSX.Element {
 
   return (
     <div className="page manage-page">
-      <h1 className="gradient-title">{t('manage.title')}</h1>
+      <h1 className="page-title">{t('manage.title')}</h1>
       <div className="manage-tabs" role="tablist">
         <button
           type="button"

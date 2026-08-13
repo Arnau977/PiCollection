@@ -98,7 +98,7 @@ const GalleryPage: React.FC = () => {
 
   return (
     <div className="page gallery-page">
-      <h1 className="gradient-title">{t('gallery.title')}</h1>
+      <h1 className="page-title">{t('gallery.title')}</h1>
 
       <FilterBar
         filters={filters}
