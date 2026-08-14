@@ -121,7 +121,8 @@ function createWindow(): BrowserWindow {
   }
 
   mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.setTitle(`PiCollection - ${APP_VERSION}`)
+    const devSuffix = is.dev ? ' (Dev)' : ''
+    mainWindow.setTitle(`PiCollection${devSuffix} - ${APP_VERSION}`)
   })
 
   return mainWindow

@@ -109,6 +109,31 @@
   background: var(--highlight-background);
   color: var(--highlight-foreground);
   font-size: 0.85rem;
+  /* Every chip here is a freshly-mounted <li> the moment its value is
+     added (stable per-value key, so already-selected chips never remount) -
+     a plain CSS animation-on-mount is enough to flag "this one just landed"
+     without any JS bookkeeping, and it fires the same way whether the value
+     came from a suggestion chip or a manual pick from the dropdown. */
+  animation: chip-landed 700ms ease-out;
+}
+
+@keyframes chip-landed {
+  0% {
+    box-shadow: 0 0 0 3px var(--color-success);
+    transform: scale(1.08);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .multi-select-chips .chip {
+    animation: none;
+  }
 }
 
 .multi-select-chips .chip button {

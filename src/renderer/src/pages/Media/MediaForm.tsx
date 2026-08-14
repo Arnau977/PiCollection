@@ -31,7 +31,11 @@ import { useSauceNaoApiKey } from '../../hooks/useSauceNaoApiKey'
 import { useSauceNaoSuggestions, type SuggestionCategory } from '../../hooks/useSauceNaoSuggestions'
 import { useWd14Runtime } from '../../hooks/useWd14Runtime'
 import { useWd14Suggestions } from '../../hooks/useWd14Suggestions'
-import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
+import {
+  formatCharacterOptionLabel,
+  normalizeEntityName,
+  titleCaseTagName
+} from '../../utils/matchEntityNames'
 import { sortCharactersByRelevance } from '../../utils/sortCharactersBySeries'
 import { withImpliedSeries } from '../../utils/withImpliedSeries'
 import { resolvePendingId } from './resolvePendingId'
@@ -92,6 +96,16 @@ const MISSING_CATEGORIES: { category: SuggestionCategory; labelKey: string }[] =
   { category: 'series', labelKey: 'sauceNao.missingSeries' }
 ]
 
+// WD14 never suggests an artist - reuses the same category labels as SauceNAO's panel above.
+const WD14_MISSING_CATEGORIES: {
+  category: Extract<SuggestionCategory, 'tags' | 'characters' | 'series'>
+  labelKey: string
+}[] = [
+  { category: 'tags', labelKey: 'sauceNao.missingTags' },
+  { category: 'characters', labelKey: 'sauceNao.missingCharacters' },
+  { category: 'series', labelKey: 'sauceNao.missingSeries' }
+]
+
 /**
  * WD14 has no category, only a per-tag confidence score - fading
  * lower-confidence chips gives a wall of same-looking tags a scan order
@@ -146,11 +160,16 @@ export function MediaForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // A suggestion's own matching only ever sees what's actually in the
+  // library (tags.data etc.) - a pending draft added earlier in *this* edit
+  // (e.g. from an earlier suggestion click, still unsaved) isn't there yet,
+  // so without this a second suggestion source re-detecting the same name
+  // would offer it again as "new" instead of recognizing the draft.
   const sauce = useSauceNaoSuggestions({
-    artists: artists.data,
-    tags: tags.data,
-    characters: characters.data,
-    series: series.data,
+    artists: [...artists.data, ...pendingArtists],
+    tags: [...tags.data, ...pendingTags],
+    characters: [...characters.data, ...pendingCharacters],
+    series: [...series.data, ...pendingSeries],
     onApplyExisting: ({ artistId, tagIds, characterIds, seriesIds }) => {
       setInput((prev) => {
         const nextCharacterIds = Array.from(
@@ -174,12 +193,25 @@ export function MediaForm({
 
   const wd14Runtime = useWd14Runtime()
   const wd14 = useWd14Suggestions({
-    tags: tags.data,
-    onApplyExisting: (tagIds) => {
-      setInput((prev) => ({
-        ...prev,
-        tagIds: Array.from(new Set([...(prev.tagIds ?? []), ...tagIds]))
-      }))
+    tags: [...tags.data, ...pendingTags],
+    characters: [...characters.data, ...pendingCharacters],
+    series: [...series.data, ...pendingSeries],
+    onApplyExisting: ({ tagIds, characterIds, seriesIds }) => {
+      setInput((prev) => {
+        const nextCharacterIds = Array.from(
+          new Set([...(prev.characterIds ?? []), ...characterIds])
+        )
+        const addedCharacterIds = nextCharacterIds.filter(
+          (id) => !(prev.characterIds ?? []).includes(id)
+        )
+        const nextSeriesIds = Array.from(new Set([...(prev.seriesIds ?? []), ...seriesIds]))
+        return {
+          ...prev,
+          tagIds: Array.from(new Set([...(prev.tagIds ?? []), ...tagIds])),
+          characterIds: nextCharacterIds,
+          seriesIds: withImpliedSeries(characters.data, addedCharacterIds, nextSeriesIds)
+        }
+      })
     }
   })
 
@@ -237,6 +269,30 @@ export function MediaForm({
   }
 
   /**
+   * A "missing" series chip isn't always actually missing - a SauceNAO series
+   * hint (a qualifier peeled off a character name, e.g. "Fate" from
+   * "Ishtar (Fate)") is deliberately routed through this same chip instead of
+   * auto-applied, since it's a guess rather than confirmed data, but the
+   * series it names may well already exist in the library. Attach that
+   * existing entity instead of creating a same-named duplicate.
+   */
+  function attachExistingOrCreateSeries(name: string): string {
+    const existing = series.data.find(
+      (candidate) => normalizeEntityName(candidate.name) === normalizeEntityName(name)
+    )
+    if (existing) {
+      setInput((prev) => ({
+        ...prev,
+        seriesIds: prev.seriesIds?.includes(existing.id)
+          ? prev.seriesIds
+          : [...(prev.seriesIds ?? []), existing.id]
+      }))
+      return existing.id
+    }
+    return handleCreateSeries(name)
+  }
+
+  /**
    * Picking a character that belongs to exactly one series implies that series,
    * so it gets selected automatically. Characters spanning several series stay
    * ambiguous and are left for the user to resolve.
@@ -256,22 +312,25 @@ export function MediaForm({
   /**
    * A new character should link to its series the same way manually picking
    * an existing single-series character already does (see `withImpliedSeries`
-   * above). If the match's only series is itself still unconfirmed (a
-   * "missing" chip, not yet created), create it now instead of leaving the
-   * character unlinked until the user separately clicks that chip too -
-   * there's nothing ambiguous to resolve when only one candidate exists.
+   * above). If the only suggested series is itself still unconfirmed (a
+   * "missing" chip, not yet created), create/attach it now instead of
+   * leaving the character unlinked until the user separately clicks that
+   * chip too - there's nothing ambiguous to resolve when only one candidate
+   * exists. (If a series suggestion *was* auto-applied, `input.seriesIds` is
+   * already non-empty by the time this runs, so the check below never needs
+   * to separately count applied + missing suggestions.)
    */
-  async function resolveSeriesIdsForNewCharacter(): Promise<string[]> {
+  async function resolveSoleMissingSeries(
+    missingSeriesNames: string[],
+    dismissSeries: (name: string) => void
+  ): Promise<string[]> {
     const current = input.seriesIds ?? []
     if (current.length > 0) return current
+    if (missingSeriesNames.length !== 1) return current
 
-    const totalSuggestedSeries =
-      (sauce.match?.series.length ?? 0) + (sauce.match?.seriesHints.length ?? 0)
-    if (totalSuggestedSeries !== 1 || sauce.missing.series.length !== 1) return current
-
-    const soleSeriesName = sauce.missing.series[0]
-    const seriesId = handleCreateSeries(soleSeriesName)
-    sauce.dismiss('series', soleSeriesName)
+    const soleSeriesName = missingSeriesNames[0]
+    const seriesId = attachExistingOrCreateSeries(soleSeriesName)
+    dismissSeries(soleSeriesName)
     return [seriesId]
   }
 
@@ -285,15 +344,33 @@ export function MediaForm({
       handleCreateArtist(name, social)
     } else if (category === 'tags') handleCreateTag(name)
     else if (category === 'characters') {
-      const seriesIds = await resolveSeriesIdsForNewCharacter()
+      const seriesIds = await resolveSoleMissingSeries(sauce.missing.series, (seriesName) =>
+        sauce.dismiss('series', seriesName)
+      )
       handleCreateCharacter(name, seriesIds)
-    } else handleCreateSeries(name)
+    } else attachExistingOrCreateSeries(name)
     sauce.dismiss(category, name)
   }
 
-  function addWd14Suggestion(name: string): void {
-    handleCreateTag(name)
-    wd14.dismiss(name)
+  async function addWd14Suggestion(
+    category: Extract<SuggestionCategory, 'tags' | 'characters' | 'series'>,
+    name: string
+  ): Promise<void> {
+    if (category === 'tags') {
+      // The model's raw output is all-lowercase; title-case only the tag
+      // that actually gets created, not the name used to look it up in the
+      // wiki or to dismiss it from the suggestion list below.
+      handleCreateTag(titleCaseTagName(name))
+    } else if (category === 'characters') {
+      const missingSeriesNames = wd14.missing.series.map((entry) => entry.name)
+      const seriesIds = await resolveSoleMissingSeries(missingSeriesNames, (seriesName) =>
+        wd14.dismiss('series', seriesName)
+      )
+      handleCreateCharacter(name, seriesIds)
+    } else {
+      attachExistingOrCreateSeries(name)
+    }
+    wd14.dismiss(category, name)
   }
 
   /**
@@ -519,9 +596,13 @@ export function MediaForm({
     input.seriesIds ?? []
   )
 
+  const totalWd14Missing = WD14_MISSING_CATEGORIES.reduce(
+    (sum, { category }) => sum + wd14.missing[category].length,
+    0
+  )
   const totalMissingSuggestions =
     MISSING_CATEGORIES.reduce((sum, { category }) => sum + sauce.missing[category].length, 0) +
-    wd14.missing.length
+    totalWd14Missing
 
   return (
     <div className="media-form">
@@ -868,7 +949,7 @@ export function MediaForm({
                     )}
 
                     {wd14.status === 'ready' &&
-                      (wd14.appliedCount === 0 && wd14.missing.length === 0 ? (
+                      (wd14.appliedCount === 0 && totalWd14Missing === 0 ? (
                         <p className="sauce-hint">{t('wd14.noSuggestions')}</p>
                       ) : (
                         <>
@@ -878,25 +959,31 @@ export function MediaForm({
                               {t('wd14.dismiss')}
                             </button>
                           </div>
-                          {wd14.missing.length > 0 && (
-                            <ul className="chip-list chip-list-tags">
-                              {wd14.missing.map(({ name, score }) => (
-                                <li
-                                  key={name}
-                                  className={`wd14-missing-chip ${wd14ConfidenceClass(score)}`}
-                                >
-                                  <button
-                                    type="button"
-                                    className="sauce-add-chip"
-                                    onClick={() => addWd14Suggestion(name)}
-                                  >
-                                    <Plus size={12} />
-                                    {name}
-                                  </button>
-                                  <TagWikiInfo tagName={name} />
-                                </li>
-                              ))}
-                            </ul>
+                          {WD14_MISSING_CATEGORIES.map(
+                            ({ category, labelKey }) =>
+                              wd14.missing[category].length > 0 && (
+                                <div className="sauce-missing-row" key={category}>
+                                  <span className="sauce-cat-label">{t(labelKey)}</span>
+                                  <ul className="chip-list chip-list-tags">
+                                    {wd14.missing[category].map(({ name, score }) => (
+                                      <li
+                                        key={name}
+                                        className={`wd14-missing-chip ${wd14ConfidenceClass(score)}`}
+                                      >
+                                        <button
+                                          type="button"
+                                          className="sauce-add-chip"
+                                          onClick={() => addWd14Suggestion(category, name)}
+                                        >
+                                          <Plus size={12} />
+                                          {category === 'tags' ? titleCaseTagName(name) : name}
+                                        </button>
+                                        <TagWikiInfo tagName={name} />
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )
                           )}
                         </>
                       ))}
