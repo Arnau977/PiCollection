@@ -74,6 +74,47 @@ describe('matchSuggestionCandidate', () => {
     expect(result.missing.series).toEqual(['Fate/Grand Order'])
   })
 
+  it('drops a series hint that names the sole series already implied by an applied character', () => {
+    const fgoIshtar: CharacterModel = {
+      id: 'c1',
+      name: 'Ishtar',
+      series: [{ id: 's1', name: 'Fate/Grand Order' }]
+    }
+    const result = matchSuggestionCandidate(
+      makeCandidate({
+        characters: [{ name: 'Ishtar' }],
+        series: [],
+        seriesHints: [{ name: 'Fate/Grand Order' }]
+      }),
+      { ...entities, characters: [fgoIshtar] }
+    )
+
+    expect(result.applied.characterIds).toEqual(['c1'])
+    expect(result.missing.series).toEqual([])
+  })
+
+  it('still surfaces a series hint when the matched character has more than one series', () => {
+    const ambiguousIshtar: CharacterModel = {
+      id: 'c1',
+      name: 'Ishtar',
+      series: [
+        { id: 's1', name: 'Fate/Grand Order' },
+        { id: 's2', name: 'Some Other Series' }
+      ]
+    }
+    const result = matchSuggestionCandidate(
+      makeCandidate({
+        characters: [{ name: 'Ishtar' }],
+        series: [],
+        seriesHints: [{ name: 'Fate/Grand Order' }]
+      }),
+      { ...entities, characters: [ambiguousIshtar] }
+    )
+
+    expect(result.applied.characterIds).toEqual(['c1'])
+    expect(result.missing.series).toEqual(['Fate/Grand Order'])
+  })
+
   it('disambiguates same-named characters using the series context', () => {
     const otherIshtar: CharacterModel = {
       id: 'c2',

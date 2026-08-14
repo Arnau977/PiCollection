@@ -100,12 +100,23 @@ export function matchSuggestionCandidate(
   // by name, it's surfaced as a chip to confirm rather than applied silently.
   const seriesMatch = matchEntityNames(candidate.series, entities.series)
   const seriesHintsMatch = matchEntityNames(candidate.seriesHints, entities.series)
-  const seriesHintNames = [
-    ...seriesHintsMatch.existing.map((entity) => entity.name),
-    ...seriesHintsMatch.missing
-  ]
   const leafCharacters = pruneAncestors(charactersMatch.existing, entities.characters)
   const leafSeries = pruneAncestors(seriesMatch.existing, entities.series)
+  // A matched character with exactly one associated series gets that series
+  // silently linked elsewhere (see withImpliedSeries) - if a hint happens to
+  // name that same series, surfacing it again as a "confirm this" chip would
+  // just duplicate what's already been applied.
+  const impliedSeriesIds = new Set(
+    leafCharacters.flatMap((character) =>
+      character.series.length === 1 ? [character.series[0].id] : []
+    )
+  )
+  const seriesHintNames = [
+    ...seriesHintsMatch.existing
+      .filter((entity) => !impliedSeriesIds.has(entity.id))
+      .map((entity) => entity.name),
+    ...seriesHintsMatch.missing
+  ]
 
   return {
     applied: {
