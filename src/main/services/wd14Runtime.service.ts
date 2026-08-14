@@ -10,6 +10,7 @@ import {
   type PinnedAsset
 } from './wd14Runtime.assets'
 import { downloadAndVerify, extractTarGz } from './wd14Runtime.download'
+import { brandWindowsExecutable } from './wd14Runtime.brand'
 
 function runtimeDir(): string {
   return join(app.getPath('userData'), 'wd14-runtime')
@@ -148,6 +149,7 @@ export async function installWd14Runtime(
 
     onEvent({ type: 'progress', step: 'extracting', percent: EXTRACTING_PERCENT })
     await extractTarGz(join(dir, 'python.tar.gz'), pythonDir())
+    await brandWindowsExecutable(getPythonExecutablePath())
 
     onEvent({ type: 'progress', step: 'installing', percent: INSTALLING_PERCENT })
     await runPipInstall(wheelDir)

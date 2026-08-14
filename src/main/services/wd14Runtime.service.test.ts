@@ -5,11 +5,15 @@ import path from 'path'
 
 const downloadAndVerify = vi.fn()
 const extractTarGz = vi.fn()
+const brandWindowsExecutable = vi.fn()
 const spawnMock = vi.fn()
 
 vi.mock('./wd14Runtime.download', () => ({
   downloadAndVerify: (...args: unknown[]) => downloadAndVerify(...args),
   extractTarGz: (...args: unknown[]) => extractTarGz(...args)
+}))
+vi.mock('./wd14Runtime.brand', () => ({
+  brandWindowsExecutable: (...args: unknown[]) => brandWindowsExecutable(...args)
 }))
 vi.mock('child_process', () => ({
   spawn: (...args: unknown[]) => spawnMock(...args)
@@ -34,6 +38,7 @@ beforeEach(() => {
   userDataDir = mkdtempSync(path.join(tmpdir(), 'wd14-service-test-'))
   downloadAndVerify.mockReset().mockResolvedValue(undefined)
   extractTarGz.mockReset().mockResolvedValue(undefined)
+  brandWindowsExecutable.mockReset().mockResolvedValue(undefined)
   spawnMock.mockReset().mockReturnValue(fakeSpawnSuccess())
 })
 
@@ -77,6 +82,25 @@ describe('installWd14Runtime', () => {
       expect.anything()
     )
     expect(events).toContainEqual({ type: 'installed' })
+  })
+
+  it('rebrands the extracted python executable after extraction, before installing packages', async () => {
+    const order: string[] = []
+    extractTarGz.mockImplementation(async () => {
+      order.push('extract')
+    })
+    brandWindowsExecutable.mockImplementation(async () => {
+      order.push('brand')
+    })
+    spawnMock.mockImplementation(() => {
+      order.push('install')
+      return fakeSpawnSuccess()
+    })
+
+    await installWd14Runtime(() => {})
+
+    expect(brandWindowsExecutable).toHaveBeenCalledWith(expect.stringContaining('python'))
+    expect(order).toEqual(['extract', 'brand', 'install'])
   })
 
   it('writes the runtime.json marker only after every step succeeds', async () => {
