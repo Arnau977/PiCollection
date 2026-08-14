@@ -20,7 +20,7 @@ export default function ManagePage(): JSX.Element {
           type="button"
           role="tab"
           aria-selected={tab === 'artists'}
-          className={tab === 'artists' ? 'manage-tab active' : 'manage-tab'}
+          className={tab === 'artists' ? 'manage-tab stats-tab-artists active' : 'manage-tab'}
           onClick={() => setTab('artists')}
         >
           {t('manage.artists')}
@@ -29,7 +29,7 @@ export default function ManagePage(): JSX.Element {
           type="button"
           role="tab"
           aria-selected={tab === 'tags'}
-          className={tab === 'tags' ? 'manage-tab active' : 'manage-tab'}
+          className={tab === 'tags' ? 'manage-tab stats-tab-tags active' : 'manage-tab'}
           onClick={() => setTab('tags')}
         >
           {t('manage.tags')}
@@ -38,7 +38,9 @@ export default function ManagePage(): JSX.Element {
           type="button"
           role="tab"
           aria-selected={tab === 'characters'}
-          className={tab === 'characters' ? 'manage-tab active' : 'manage-tab'}
+          className={
+            tab === 'characters' ? 'manage-tab stats-tab-characters active' : 'manage-tab'
+          }
           onClick={() => setTab('characters')}
         >
           {t('manage.characters')}
@@ -47,7 +49,7 @@ export default function ManagePage(): JSX.Element {
           type="button"
           role="tab"
           aria-selected={tab === 'series'}
-          className={tab === 'series' ? 'manage-tab active' : 'manage-tab'}
+          className={tab === 'series' ? 'manage-tab stats-tab-series active' : 'manage-tab'}
           onClick={() => setTab('series')}
         >
           {t('manage.series')}
