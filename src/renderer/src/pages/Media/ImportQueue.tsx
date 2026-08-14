@@ -20,6 +20,11 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
   const { t } = useTranslation()
   const [state, setState] = useState<QueueState>({ kind: 'loading' })
   const [showExitDialog, setShowExitDialog] = useState(false)
+  // "Guardar" persists the current item but no longer advances the queue by
+  // itself - tracked here so that moving past the *last* item (via
+  // "Siguiente") can still open the item that was actually saved, instead of
+  // just closing blindly the way skipping an unsaved item does.
+  const [currentSaved, setCurrentSaved] = useState<MediaModel | null>(null)
 
   useEffect((): (() => void) => {
     let cancelled = false
@@ -59,18 +64,26 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
 
   function advance(): void {
     if (index + 1 >= items.length) {
-      onClose()
+      if (currentSaved) onLastSaved(currentSaved)
+      else onClose()
       return
     }
+    setCurrentSaved(null)
     setState({ kind: 'ready', items, index: index + 1 })
   }
 
+  // Going back re-shows the file's own picked route (`key={current.route}`
+  // remounts MediaForm), but any tags typed for the item being left behind
+  // are lost unless "Guardar" was pressed first - same trade-off "Siguiente"
+  // already has when skipping an unsaved item.
+  function goBack(): void {
+    if (index === 0) return
+    setCurrentSaved(null)
+    setState({ kind: 'ready', items, index: index - 1 })
+  }
+
   function handleSaved(media: MediaModel): void {
-    if (index + 1 >= items.length) {
-      onLastSaved(media)
-      return
-    }
-    setState({ kind: 'ready', items, index: index + 1 })
+    setCurrentSaved(media)
   }
 
   function handleCloseClick(): void {
@@ -108,7 +121,12 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
       <MediaForm
         key={current.route}
         initialFile={{ route: current.route, name: deriveMediaName(current.fileName), type: current.type }}
-        queueInfo={{ current: index + 1, total: items.length, onSkip: advance }}
+        queueInfo={{
+          current: index + 1,
+          total: items.length,
+          onNext: advance,
+          onPrevious: index > 0 ? goBack : undefined
+        }}
         onCancel={handleCloseClick}
         onSaved={handleSaved}
       />

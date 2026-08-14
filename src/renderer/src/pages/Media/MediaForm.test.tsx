@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
@@ -105,39 +105,61 @@ describe('MediaForm saving state', () => {
 })
 
 describe('MediaForm queueInfo', () => {
-  it('shows progress and a Save & next label instead of Add', async () => {
+  it('shows progress and a Save label instead of Add', async () => {
     renderForm({
       initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
-      queueInfo: { current: 2, total: 5, onSkip: vi.fn() }
+      queueInfo: { current: 2, total: 5, onNext: vi.fn() }
     })
 
     expect(screen.getByText('File 2 of 5')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Save & next' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add' })).not.toBeInTheDocument()
   })
 
-  it('calls onSkip without saving when Skip is clicked', async () => {
-    const onSkip = vi.fn()
+  it('hides the Previous button when queueInfo has no onPrevious', async () => {
+    renderForm({
+      initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
+      queueInfo: { current: 1, total: 3, onNext: vi.fn() }
+    })
+
+    expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument()
+  })
+
+  it('calls onPrevious when Previous is clicked', async () => {
+    const onPrevious = vi.fn()
+    renderForm({
+      initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
+      queueInfo: { current: 2, total: 3, onNext: vi.fn(), onPrevious }
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }))
+
+    expect(onPrevious).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls onNext without saving when Next is clicked', async () => {
+    const onNext = vi.fn()
     const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
     setApi({ media: { create: mediaCreate } })
 
     renderForm({
       initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
-      queueInfo: { current: 1, total: 3, onSkip }
+      queueInfo: { current: 1, total: 3, onNext }
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
-    expect(onSkip).toHaveBeenCalledTimes(1)
+    expect(onNext).toHaveBeenCalledTimes(1)
     expect(mediaCreate).not.toHaveBeenCalled()
   })
 
-  it('saves normally when Save & next is submitted', async () => {
+  it('saves without advancing the queue when Save is submitted', async () => {
     const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
     setApi({ media: { create: mediaCreate } })
+    const onNext = vi.fn()
     const { container, onSaved } = renderForm({
       initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
-      queueInfo: { current: 1, total: 3, onSkip: vi.fn() }
+      queueInfo: { current: 1, total: 3, onNext }
     })
 
     const form = container.querySelector('form') as HTMLFormElement
@@ -145,12 +167,31 @@ describe('MediaForm queueInfo', () => {
 
     await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' })))
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalled())
+    expect(onNext).not.toHaveBeenCalled()
+  })
+
+  it('updates rather than duplicates on a second Save for the same queue item', async () => {
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    const mediaUpdate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({ media: { create: mediaCreate, update: mediaUpdate } })
+    const { container } = renderForm({
+      initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
+      queueInfo: { current: 1, total: 3, onNext: vi.fn() }
+    })
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledTimes(1))
+
+    fireEvent.submit(form)
+    await vi.waitFor(() => expect(mediaUpdate).toHaveBeenCalledWith('m1', expect.objectContaining({ name: 'a' })))
+    expect(mediaCreate).toHaveBeenCalledTimes(1)
   })
 
   it('shows a Send to pending button only during queue creation (not on edit)', async () => {
     renderForm({
       initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
-      queueInfo: { current: 1, total: 3, onSkip: vi.fn() }
+      queueInfo: { current: 1, total: 3, onNext: vi.fn() }
     })
 
     expect(screen.getByRole('button', { name: 'Send to pending' })).toBeInTheDocument()
@@ -168,18 +209,34 @@ describe('MediaForm queueInfo', () => {
         createdAt: Date.now(),
         pendingTagging: false
       },
-      queueInfo: { current: 1, total: 3, onSkip: vi.fn() }
+      queueInfo: { current: 1, total: 3, onNext: vi.fn() }
     })
 
     expect(screen.queryByRole('button', { name: 'Send to pending' })).not.toBeInTheDocument()
   })
 
-  it('creates with pendingTagging: true and advances the queue when Send to pending is clicked', async () => {
+  it('hides Send to pending once the item has been saved', async () => {
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({ media: { create: mediaCreate } })
+    const { container } = renderForm({
+      initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
+      queueInfo: { current: 1, total: 3, onNext: vi.fn() }
+    })
+
+    const form = container.querySelector('form') as HTMLFormElement
+    fireEvent.submit(form)
+
+    await vi.waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Send to pending' })).not.toBeInTheDocument()
+    )
+  })
+
+  it('creates with pendingTagging: true when Send to pending is clicked', async () => {
     const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
     setApi({ media: { create: mediaCreate } })
     const { onSaved } = renderForm({
       initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
-      queueInfo: { current: 1, total: 3, onSkip: vi.fn() }
+      queueInfo: { current: 1, total: 3, onNext: vi.fn() }
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'Send to pending' }))
@@ -188,6 +245,40 @@ describe('MediaForm queueInfo', () => {
       expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a', pendingTagging: true }))
     )
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalledWith({ id: 'm1' }))
+  })
+})
+
+describe('MediaForm hideNames', () => {
+  const existingMedia = {
+    id: 'm1',
+    name: 'Existing',
+    type: 'image' as const,
+    route: '/pics/a.png',
+    sfw: true,
+    isAiGenerated: false,
+    createdAt: Date.now(),
+    pendingTagging: false
+  }
+
+  afterEach(() => {
+    window.localStorage.clear()
+  })
+
+  it('shows the Name field when editing and the setting is off', () => {
+    renderForm({ media: existingMedia })
+
+    expect(screen.getByLabelText('Name')).toBeInTheDocument()
+  })
+
+  it('hides the Name field when editing and hideNames is on in Settings', () => {
+    window.localStorage.setItem(
+      'picollection:gallery-defaults',
+      JSON.stringify({ hideNames: true })
+    )
+
+    renderForm({ media: existingMedia })
+
+    expect(screen.queryByLabelText('Name')).not.toBeInTheDocument()
   })
 })
 
@@ -486,5 +577,78 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
     expect(
       screen.queryByRole('button', { name: 'What does this tag mean? (new tag)' })
     ).not.toBeInTheDocument()
+  })
+})
+
+describe('MediaForm SFW/AI toggles', () => {
+  it('defaults SFW checked and AI-generated unchecked for a new item', () => {
+    renderForm({ initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' } })
+
+    expect(screen.getByRole('checkbox', { name: 'Safe for work' })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Generated using AI' })).not.toBeChecked()
+  })
+
+  it('flips the accessible name to the NSFW label when SFW is unchecked', async () => {
+    const user = userEvent.setup()
+    renderForm({ initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' } })
+
+    await user.click(screen.getByRole('checkbox', { name: 'Safe for work' }))
+
+    expect(screen.getByRole('checkbox', { name: 'Explicit content' })).not.toBeChecked()
+  })
+
+  it('checking AI-generated is reflected on submit', async () => {
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({ media: { create: mediaCreate } })
+    const user = userEvent.setup()
+    const { container } = renderForm({
+      initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' }
+    })
+
+    await user.click(screen.getByRole('checkbox', { name: 'Generated using AI' }))
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ isAiGenerated: true }))
+    )
+  })
+})
+
+describe('MediaForm suggestions rail responsive default', () => {
+  const matchMediaSpy = window.matchMedia
+
+  afterEach(() => {
+    window.matchMedia = matchMediaSpy
+  })
+
+  function mockMatchMedia(matches: boolean): void {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }))
+  }
+
+  it('starts expanded on a wide viewport', () => {
+    mockMatchMedia(false)
+    const { container } = renderForm({
+      initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' }
+    })
+
+    expect(container.querySelector('.suggestions-rail')).not.toHaveClass('is-collapsed')
+  })
+
+  it('starts collapsed on a narrow viewport, where the rail moves above the form', () => {
+    mockMatchMedia(true)
+    const { container } = renderForm({
+      initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' }
+    })
+
+    expect(container.querySelector('.suggestions-rail')).toHaveClass('is-collapsed')
   })
 })

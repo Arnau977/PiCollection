@@ -16,7 +16,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  max-width: 640px;
+  /* Wide enough that the tag/character/series chip lists (flex-wrap, see
+     .multi-select-chips in Autocomplete.css) fold into more columns instead
+     of stacking into many rows - on a heavily-tagged item, a narrower cap
+     was previously wasting most of a wide window's width while still
+     growing tall vertically. */
+  max-width: 960px;
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -34,9 +39,120 @@
   border-top: none;
 }
 
-.media-form-actions {
+/* The Guardar/Anterior/Siguiente/Enviar-a-pending group used to sit at the
+   bottom of the form, after the tag/character/series fields - the more tags
+   a file had, the further down it landed, so it jumped position on every
+   file switch in the pending queue. Moving it into the top .media-page-
+   actions bar (submit button now wired via form="media-form" instead of
+   nesting) keeps it in a constant spot regardless of field content. */
+.media-form-top-actions {
+  justify-content: space-between;
+}
+
+.media-form-top-actions-left,
+.media-form-top-actions-right {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+/* Ties each taxonomy field back to the same color used for it everywhere
+   else in the app (media detail sections, suggestion chips - see
+   --color-artist/series/character/tag in base.css), instead of every field
+   in this form looking identical regardless of what it edits. */
+.media-form-field-accent {
+  border-left: 3px solid var(--field-accent-color, transparent);
+  padding-left: var(--space-3);
+}
+
+.media-form-field-accent-artist {
+  --field-accent-color: var(--color-artist);
+}
+
+.media-form-field-accent-tags {
+  --field-accent-color: var(--color-tag);
+}
+
+.media-form-field-accent-characters {
+  --field-accent-color: var(--color-character);
+}
+
+.media-form-field-accent-series {
+  --field-accent-color: var(--color-series);
+}
+
+.media-form-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* Two boolean attributes of the record (SFW/NSFW, AI-generated), upgraded
+   from a tiny native checkbox to a pill built on a real <input
+   type="checkbox"> (visually hidden, not display:none, so keyboard/screen
+   reader semantics stay exactly right - only the presentation changes).
+   Deliberately not styled like a live on/off switch: this form still needs
+   "Guardar" to persist, and the app already uses a switch-like control
+   elsewhere (Settings' log toggle) that takes effect immediately - reusing
+   that look here would wrongly imply the same immediacy. */
+.media-form-toggle {
+  position: relative;
+  display: inline-flex;
+  width: fit-content;
+  cursor: pointer;
+}
+
+.media-form-toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.media-form-toggle-track {
+  display: inline-flex;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  background: var(--field-background);
+  overflow: hidden;
+  transition: border-color var(--transition-fast);
+}
+
+.media-form-toggle:hover .media-form-toggle-track {
+  border-color: var(--border-color-strong);
+}
+
+.media-form-toggle-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-faint);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+/* The active segment mirrors this app's own existing "filled with --accent"
+   convention for a selected option (see .manage-tab.active,
+   .add-media-tab.is-active) - the checkbox's checked state (not a second
+   control) decides which segment lights up. */
+.media-form-toggle-input:checked + .media-form-toggle-track .media-form-toggle-option-on,
+.media-form-toggle-input:not(:checked) + .media-form-toggle-track .media-form-toggle-option-off {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.media-form-toggle-input:focus-visible + .media-form-toggle-track {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 
 .duplicate-error {
@@ -274,6 +390,17 @@
 @media (max-width: 900px) {
   .media-form-layout {
     flex-direction: column;
+  }
+
+  /* Stacked single-column layout: the suggestion tools (SauceNAO/WD14) are
+     the most useful first step - running them before typing anything by
+     hand avoids duplicate work - so they move above the form fields instead
+     of trailing behind a long scroll. Visual order only; DOM/tab order is
+     unchanged (the toggle's own aria-expanded/badge count already say what
+     it is, and it starts collapsed here - see suggestionsCollapsed's
+     initial state in MediaForm.tsx - so it doesn't push the fields down). */
+  .suggestions-rail {
+    order: -1;
   }
 
   .suggestions-rail {

@@ -1,5 +1,11 @@
+/* Tight on purpose: MediaForm's own "Volver"/Cancelar action bar
+   (.media-page-actions) is the first thing inside .media-form, and it reads
+   as an orphaned control if it floats far below the tabs above it - keeping
+   it close groups title + tabs + back-action into one header cluster
+   instead of two disconnected rows. The form's actual content further down
+   keeps its own normal breathing room via .media-form-group. */
 .add-media-page .media-form {
-  margin-top: var(--space-5);
+  margin-top: var(--space-3);
 }
 
 /* Bounds the page to the viewport when the folder grid is showing, so the

@@ -496,7 +496,7 @@ describe('MediaPage pending queue', () => {
     expect(screen.getByRole('button', { name: /^Save/ })).toBeInTheDocument()
   })
 
-  it('shows progress across the pending queue and a Save & next label once the ordered list resolves', async () => {
+  it('shows progress across the pending queue and a Save label once the ordered list resolves', async () => {
     render(
       <MemoryRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
         <MediaPage />
@@ -505,10 +505,10 @@ describe('MediaPage pending queue', () => {
 
     // beforeEach's getOrderedIds resolves ['0', '1', '2'] - id '1' is index 1, i.e. 2 of 3.
     expect(await screen.findByText('File 2 of 3')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Save & next' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
   })
 
-  it('Skip navigates to the next pending item without saving', async () => {
+  it('Next navigates to the next pending item without saving', async () => {
     const update = vi.fn().mockResolvedValue({ success: true, data: sampleMedia })
     Object.defineProperty(window, 'api', {
       value: {
@@ -542,10 +542,50 @@ describe('MediaPage pending queue', () => {
       </MemoryRouter>
     )
     await screen.findByText('File 2 of 3')
-    await user.click(screen.getByRole('button', { name: 'Skip' }))
+    await user.click(screen.getByRole('button', { name: 'Next' }))
 
     expect(update).not.toHaveBeenCalled()
     expect(navigateMock).toHaveBeenCalledWith('/media/2', {
+      state: { pendingQueue: true },
+      replace: true
+    })
+  })
+
+  it('Previous navigates to the previous pending item', async () => {
+    Object.defineProperty(window, 'api', {
+      value: {
+        media: {
+          findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
+          delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+          clearPendingTagging: vi.fn().mockResolvedValue({ success: true, data: sampleMedia })
+        },
+        artist: { create: vi.fn() },
+        tag: { create: vi.fn() },
+        character: { create: vi.fn() },
+        series: { create: vi.fn() },
+        system: { showInFolder: vi.fn() },
+        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+        wd14Runtime: {
+          getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
+          onEvent: vi.fn().mockReturnValue(() => {})
+        },
+        wd14Tagger: { suggestTags: vi.fn() }
+      },
+      writable: true,
+      configurable: true
+    })
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
+        <MediaPage />
+      </MemoryRouter>
+    )
+    await screen.findByText('File 2 of 3')
+    await user.click(screen.getByRole('button', { name: 'Previous' }))
+
+    expect(navigateMock).toHaveBeenCalledWith('/media/0', {
       state: { pendingQueue: true },
       replace: true
     })
@@ -603,7 +643,7 @@ describe('MediaPage pending queue', () => {
     )
   })
 
-  it('saving with Save & next advances to the next pending item after the update succeeds', async () => {
+  it('Save persists the item without advancing; Next then moves to the next pending item', async () => {
     const update = vi.fn().mockResolvedValue({ success: true, data: sampleMedia })
     Object.defineProperty(window, 'api', {
       value: {
@@ -636,12 +676,19 @@ describe('MediaPage pending queue', () => {
         <MediaPage />
       </MemoryRouter>
     )
-    await screen.findByRole('button', { name: 'Save & next' })
-    await user.click(screen.getByRole('button', { name: 'Save & next' }))
+    await screen.findByRole('button', { name: 'Save' })
+    await user.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith('1', expect.objectContaining({ name: 'My picture' }))
     )
+    expect(navigateMock).not.toHaveBeenCalledWith('/media/2', {
+      state: { pendingQueue: true },
+      replace: true
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Next' }))
+
     await waitFor(() =>
       expect(navigateMock).toHaveBeenCalledWith('/media/2', {
         state: { pendingQueue: true },

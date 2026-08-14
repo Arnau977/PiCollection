@@ -182,7 +182,7 @@ describe('AddMediaPage', () => {
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, makeFile('sunset.png'))
-    await user.click(screen.getByRole('checkbox', { name: 'AI-generated' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Generated using AI' }))
 
     const form = container.querySelector('form') as HTMLFormElement
     fireEvent.submit(form)
