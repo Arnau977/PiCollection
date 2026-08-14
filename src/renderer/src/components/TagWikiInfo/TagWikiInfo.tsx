@@ -12,6 +12,8 @@ interface TagWikiInfoProps {
 type LoadState = 'idle' | 'loading' | 'error' | 'not-found' | 'loaded'
 
 const POPOVER_MAX_WIDTH = 360
+// Keep in sync with the CSS `max-height` on .tag-wiki-info-popover.
+const POPOVER_MAX_HEIGHT = 320
 const MARGIN = 12
 
 function computePosition(anchor: DOMRect): { top: number; left: number } {
@@ -19,7 +21,11 @@ function computePosition(anchor: DOMRect): { top: number; left: number } {
     Math.max(anchor.right - POPOVER_MAX_WIDTH, MARGIN),
     window.innerWidth - POPOVER_MAX_WIDTH - MARGIN
   )
-  return { top: anchor.bottom + 8, left }
+  const top = Math.max(
+    Math.min(anchor.bottom + 8, window.innerHeight - POPOVER_MAX_HEIGHT - MARGIN),
+    MARGIN
+  )
+  return { top, left }
 }
 
 export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element {
