@@ -8,11 +8,21 @@ import { logInfo } from '../logging/logger'
 
 let updaterWindow: BrowserWindow | null = null
 let initialized = false
+// The last event broadcast, so a renderer component that mounts after it
+// fired (e.g. the Settings page, opened well after the startup check) can
+// learn the current state via getStatus() instead of only ever finding out
+// from a check that happens to run while it's mounted.
+let lastEvent: UpdaterEvent | null = null
 
 function send(event: UpdaterEvent): void {
+  lastEvent = event
   if (updaterWindow && !updaterWindow.isDestroyed()) {
     updaterWindow.webContents.send(IPC.updater.event, event)
   }
+}
+
+export function getStatus(): UpdaterEvent | null {
+  return lastEvent
 }
 
 /** Re-points which window receives updater events - call whenever a new main window is created (e.g. macOS activate-triggered recreation), not just at startup. */

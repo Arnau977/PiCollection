@@ -38,6 +38,7 @@
     "checkingForUpdates": "Buscando actualizaciones...",
     "upToDate": "Ya tienes la última versión.",
     "updateAvailable": "La versión {{version}} está disponible.",
+    "updateToastView": "Ver",
     "whatsNew": "Novedades",
     "downloadUpdate": "Descargar actualización",
     "downloadingUpdate": "Descargando actualización... {{percent}}%",

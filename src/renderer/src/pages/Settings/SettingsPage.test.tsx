@@ -29,6 +29,7 @@ beforeEach(() => {
         checkForUpdates: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         downloadUpdate: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         quitAndInstall: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: null }),
         onEvent: vi.fn().mockReturnValue(() => {})
       },
       backup: {

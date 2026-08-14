@@ -206,6 +206,8 @@ export const api = {
     getChannel: (): Promise<IpcResult<UpdateChannel>> => ipcRenderer.invoke(IPC.updater.getChannel),
     setChannel: (channel: UpdateChannel): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.updater.setChannel, channel),
+    getStatus: (): Promise<IpcResult<UpdaterEvent | null>> =>
+      ipcRenderer.invoke(IPC.updater.getStatus),
     /** Subscribes to update-check/download progress; returns an unsubscribe function. */
     onEvent: (listener: (event: UpdaterEvent) => void): (() => void) => {
       const handler = (_event: IpcRendererEvent, payload: UpdaterEvent): void => listener(payload)

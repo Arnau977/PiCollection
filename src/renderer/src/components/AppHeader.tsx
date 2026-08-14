@@ -1,9 +1,11 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Home, Images, Inbox, Database, Settings } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import { useAppUpdater } from '../hooks/useAppUpdater'
 import { useEntityCacheSync } from '../hooks/useEntityLists'
+import { Toast } from './Toast/Toast'
 import './AppHeader.css'
 
 function navLinkClassName({ isActive }: { isActive: boolean }): string {
@@ -26,8 +28,16 @@ export function AppHeader(): JSX.Element {
   const { t } = useTranslation()
   const { status } = useAppUpdater()
   const location = useLocation()
+  const navigate = useNavigate()
   const updateReady = status.state === 'available' || status.state === 'downloaded'
   useEntityCacheSync()
+
+  // The badge stays up for as long as an update is pending, but the toast is
+  // a one-time nudge - once dismissed (by the user, or by its own auto-hide
+  // timer), it shouldn't come back just because a later background check
+  // re-confirms the same update is still available.
+  const [updateToastDismissed, setUpdateToastDismissed] = useState(false)
+  const showUpdateToast = status.state === 'available' && !updateToastDismissed
 
   const isMediaDetail = MEDIA_DETAIL_PATTERN.test(location.pathname)
   const fromPendingQueue = Boolean(
@@ -76,6 +86,18 @@ export function AppHeader(): JSX.Element {
           <span className="app-sidebar-label">{t('nav.settings')}</span>
         </NavLink>
       </nav>
+
+      {status.state === 'available' && showUpdateToast && (
+        <Toast
+          message={t('settings.updateAvailable', { version: status.version })}
+          actionLabel={t('settings.updateToastView')}
+          onAction={() => {
+            setUpdateToastDismissed(true)
+            navigate(PATH.SETTINGS)
+          }}
+          onDismiss={() => setUpdateToastDismissed(true)}
+        />
+      )}
     </aside>
   )
 }

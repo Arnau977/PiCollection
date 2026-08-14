@@ -258,6 +258,8 @@ export const IPC = {
     quitAndInstall: 'updater:quit-and-install',
     getChannel: 'updater:get-channel',
     setChannel: 'updater:set-channel',
+    /** Last event the main process broadcast (or null before any check has run) - lets a component that mounts after that broadcast (e.g. navigating to Settings later) learn the current state without forcing a fresh check. */
+    getStatus: 'updater:get-status',
     /** Main -> renderer push channel; not invoked directly, see `onEvent` in preload. */
     event: 'updater:event'
   },
