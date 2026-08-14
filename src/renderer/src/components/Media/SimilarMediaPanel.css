@@ -15,3 +15,55 @@
   display: block;
   height: 100%;
 }
+
+.similar-media-thumb-wrap {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.similar-media-thumb-wrap img,
+.similar-media-thumb-wrap video {
+  transition:
+    transform 300ms ease,
+    filter 300ms ease;
+}
+
+.similar-media-thumb-wrap.nsfw-blur img,
+.similar-media-thumb-wrap.nsfw-blur video {
+  filter: blur(18px);
+  transform: scale(1.1);
+}
+
+/* Hovering (or focusing, for keyboard users) the link lifts the blur in
+   place instead of requiring a click-through to the detail page to see it. */
+.similar-media-link:hover .similar-media-thumb-wrap.nsfw-blur img,
+.similar-media-link:hover .similar-media-thumb-wrap.nsfw-blur video,
+.similar-media-link:focus-visible .similar-media-thumb-wrap.nsfw-blur img,
+.similar-media-link:focus-visible .similar-media-thumb-wrap.nsfw-blur video {
+  filter: none;
+  transform: none;
+}
+
+.similar-media-thumb-wrap .nsfw-blur-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-2);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.similar-media-link:hover .nsfw-blur-overlay,
+.similar-media-link:focus-visible .nsfw-blur-overlay {
+  opacity: 0;
+}
