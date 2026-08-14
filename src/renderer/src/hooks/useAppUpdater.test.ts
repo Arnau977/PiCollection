@@ -11,6 +11,7 @@ function setApi(overrides: {
   quitAndInstall?: ReturnType<typeof vi.fn>
   onEvent?: ReturnType<typeof vi.fn>
   getAppVersion?: ReturnType<typeof vi.fn>
+  getStatus?: ReturnType<typeof vi.fn>
 }): void {
   Object.defineProperty(window, 'api', {
     value: {
@@ -38,7 +39,8 @@ function setApi(overrides: {
           overrides.downloadUpdate ?? vi.fn().mockResolvedValue({ success: true, data: undefined }),
         quitAndInstall:
           overrides.quitAndInstall ?? vi.fn().mockResolvedValue({ success: true, data: undefined }),
-        onEvent: overrides.onEvent ?? vi.fn().mockReturnValue(() => {})
+        onEvent: overrides.onEvent ?? vi.fn().mockReturnValue(() => {}),
+        getStatus: overrides.getStatus ?? vi.fn().mockResolvedValue({ success: true, data: null })
       }
     },
     writable: true,
@@ -76,6 +78,24 @@ describe('useAppUpdater', () => {
       version: '2.0.0',
       highlights: '- New thing'
     })
+  })
+
+  it('hydrates status from the last known event on mount, not just idle', async () => {
+    const getStatus = vi.fn().mockResolvedValue({
+      success: true,
+      data: { type: 'available', version: '2.0.0', highlights: null }
+    })
+    setApi({ getStatus })
+
+    const { result } = renderHook(() => useAppUpdater())
+
+    await waitFor(() =>
+      expect(result.current.status).toEqual({
+        state: 'available',
+        version: '2.0.0',
+        highlights: null
+      })
+    )
   })
 
   it('unsubscribes from updater events on unmount', () => {

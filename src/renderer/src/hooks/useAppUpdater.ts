@@ -50,6 +50,14 @@ export function useAppUpdater(): UseAppUpdaterResult {
     window.api.system.getAppVersion().then((result) => {
       if (result.success) setAppVersion(result.data)
     })
+    // Hydrates from whatever the main process already knows - a component
+    // that mounts after the startup/daily check already broadcast its
+    // result (e.g. Settings, opened well after launch) would otherwise show
+    // a stale "idle" state and require a redundant manual check to learn
+    // something the app already found out.
+    window.api.updater.getStatus().then((result) => {
+      if (result.success && result.data) setStatus(statusFromEvent(result.data))
+    })
   }, [])
 
   useEffect(() => window.api.updater.onEvent((event) => setStatus(statusFromEvent(event))), [])

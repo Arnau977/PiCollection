@@ -41,9 +41,11 @@
     "kysely": "^0.28.17",
     "lucide-react": "^0.536.0",
     "path-browserify": "^1.0.1",
+    "pe-library": "^2.0.1",
     "react-aria-components": "^1.11.0",
     "react-i18next": "^15.4.0",
     "react-router-dom": "^7.1.1",
+    "resedit": "^3.0.2",
     "tar": "^7.5.22",
     "zod": "^4.4.3"
   },

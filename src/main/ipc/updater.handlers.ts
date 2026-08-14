@@ -6,6 +6,7 @@ import {
   checkForUpdates,
   downloadUpdate,
   getChannel,
+  getStatus,
   quitAndInstall,
   setChannel
 } from '../updater/autoUpdater'
@@ -31,6 +32,11 @@ export function registerUpdaterHandlers(): void {
   ipcMain.handle(
     IPC.updater.getChannel,
     ipcHandler(IPC.updater.getChannel, z.void(), async () => getChannel())
+  )
+
+  ipcMain.handle(
+    IPC.updater.getStatus,
+    ipcHandler(IPC.updater.getStatus, z.void(), async () => getStatus())
   )
 
   ipcMain.handle(

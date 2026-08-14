@@ -17,6 +17,7 @@ beforeEach(() => {
         checkForUpdates: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         downloadUpdate: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         quitAndInstall: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: null }),
         onEvent: vi.fn((listener: (event: unknown) => void) => {
           emit = listener
           return () => {}
@@ -90,6 +91,25 @@ describe('AppHeader', () => {
     act(() => emit({ type: 'downloaded', version: '2.0.0' }))
 
     expect(container.querySelector('.app-sidebar-badge')).toBeInTheDocument()
+  })
+
+  it('shows an update toast once, and dismisses it for the rest of the session', () => {
+    render(
+      <MemoryRouter>
+        <AppHeader />
+      </MemoryRouter>
+    )
+
+    act(() => emit({ type: 'available', version: '2.0.0', highlights: null }))
+    expect(screen.getByText('Version 2.0.0 is available.')).toBeInTheDocument()
+
+    act(() => screen.getByRole('button', { name: 'View' }).click())
+    expect(screen.queryByText('Version 2.0.0 is available.')).not.toBeInTheDocument()
+
+    // A later background check re-confirming the same update shouldn't bring it back.
+    act(() => emit({ type: 'checking' }))
+    act(() => emit({ type: 'available', version: '2.0.0', highlights: null }))
+    expect(screen.queryByText('Version 2.0.0 is available.')).not.toBeInTheDocument()
   })
 
   it('highlights Gallery when on a media detail page opened without a pending queue', () => {
