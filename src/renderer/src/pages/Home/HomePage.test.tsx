@@ -104,16 +104,45 @@ describe('HomePage', () => {
     renderHomePage()
 
     expect(await screen.findByText('Jane Doe')).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'Top artists' })).toHaveClass('stats-tab-artists')
 
     await user.click(screen.getByRole('tab', { name: 'Top tags' }))
     expect(screen.getByText('landscape')).toBeVisible()
     expect(screen.getByText('Jane Doe')).not.toBeVisible()
+    expect(screen.getByRole('tab', { name: 'Top tags' })).toHaveClass('active')
 
     await user.click(screen.getByRole('tab', { name: 'Top characters' }))
     expect(screen.getByText('Alice')).toBeVisible()
 
     await user.click(screen.getByRole('tab', { name: 'Top series' }))
     expect(screen.getByText('Wonderland')).toBeVisible()
+  })
+
+  it('colors each stat bar to match its metadata category', async () => {
+    const user = userEvent.setup()
+    const getSummary = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        topArtists: [{ id: 'a1', name: 'Jane Doe', count: 5 }],
+        topTags: [{ id: 't1', name: 'landscape', count: 3 }],
+        topCharacters: [{ id: 'c1', name: 'Alice', count: 2 }],
+        topSeries: [{ id: 's1', name: 'Wonderland', count: 1 }]
+      }
+    })
+    setApi({ getSummary })
+    const { container } = renderHomePage()
+
+    await screen.findByText('Jane Doe')
+    expect(container.querySelector('.stats-bar-fill-artists')).not.toBeNull()
+
+    await user.click(screen.getByRole('tab', { name: 'Top tags' }))
+    expect(container.querySelector('.stats-bar-fill-tags')).not.toBeNull()
+
+    await user.click(screen.getByRole('tab', { name: 'Top characters' }))
+    expect(container.querySelector('.stats-bar-fill-characters')).not.toBeNull()
+
+    await user.click(screen.getByRole('tab', { name: 'Top series' }))
+    expect(container.querySelector('.stats-bar-fill-series')).not.toBeNull()
   })
 
   it('shows a "not enough data" message for an empty stats panel', async () => {

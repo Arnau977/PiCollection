@@ -59,8 +59,11 @@
      (Characters used to alias --color-success, Tags used to alias
      --color-info - fixed here). */
   --color-series: #4fafa0;
+  --color-series-soft: rgba(79, 175, 160, 0.15);
   --color-character: #9c8cdb;
+  --color-character-soft: rgba(156, 140, 219, 0.15);
   --color-tag: #a6a155;
+  --color-tag-soft: rgba(166, 161, 85, 0.15);
 
   /* Radii */
   --radius-sm: 6px;

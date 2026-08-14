@@ -73,3 +73,25 @@
   border-radius: var(--radius-pill);
   background: var(--accent);
 }
+
+/* Each stat tracks a different metadata category - match its bar to the same
+   color used for that category everywhere else in the app (artist/series/
+   character/tag accents, see base.css and Media.css), instead of a single
+   flat accent for all four. The matching `.manage-tab.stats-tab-*.active`
+   rules for the tab itself live in ManagePage.css - Metadata's own tabs use
+   the same classes now, so that's the shared home for them. */
+.stats-bar-fill-artists {
+  background: var(--color-artist);
+}
+
+.stats-bar-fill-tags {
+  background: var(--color-tag);
+}
+
+.stats-bar-fill-characters {
+  background: var(--color-character);
+}
+
+.stats-bar-fill-series {
+  background: var(--color-series);
+}
