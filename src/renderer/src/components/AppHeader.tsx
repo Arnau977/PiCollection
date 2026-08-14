@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Home, Images, Inbox, Database, Settings } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
@@ -10,11 +10,29 @@ function navLinkClassName({ isActive }: { isActive: boolean }): string {
   return isActive ? 'app-sidebar-link active' : 'app-sidebar-link'
 }
 
+function withExtraActive(extraActive: boolean) {
+  return ({ isActive }: { isActive: boolean }): string =>
+    isActive || extraActive ? 'app-sidebar-link active' : 'app-sidebar-link'
+}
+
+// A media detail page (/media/:id) isn't nested under /gallery or /pending
+// in the route tree, so it never matches either NavLink by path alone -
+// highlight whichever one it was actually opened from instead, using the
+// `pendingQueue` flag MediaPage's own navigation already carries in
+// location.state (see MediaPage.tsx's goToMedia/pendingQueue).
+const MEDIA_DETAIL_PATTERN = /^\/media\/(?!add$)/
+
 export function AppHeader(): JSX.Element {
   const { t } = useTranslation()
   const { status } = useAppUpdater()
+  const location = useLocation()
   const updateReady = status.state === 'available' || status.state === 'downloaded'
   useEntityCacheSync()
+
+  const isMediaDetail = MEDIA_DETAIL_PATTERN.test(location.pathname)
+  const fromPendingQueue = Boolean(
+    (location.state as { pendingQueue?: boolean } | null)?.pendingQueue
+  )
 
   return (
     <aside className="app-sidebar">
@@ -30,11 +48,19 @@ export function AppHeader(): JSX.Element {
           <Home size={19} aria-hidden="true" />
           <span className="app-sidebar-label">{t('nav.home')}</span>
         </NavLink>
-        <NavLink to={PATH.GALLERY} className={navLinkClassName} title={t('nav.gallery')}>
+        <NavLink
+          to={PATH.GALLERY}
+          className={withExtraActive(isMediaDetail && !fromPendingQueue)}
+          title={t('nav.gallery')}
+        >
           <Images size={19} aria-hidden="true" />
           <span className="app-sidebar-label">{t('nav.gallery')}</span>
         </NavLink>
-        <NavLink to={PATH.PENDING} className={navLinkClassName} title={t('nav.pending')}>
+        <NavLink
+          to={PATH.PENDING}
+          className={withExtraActive(isMediaDetail && fromPendingQueue)}
+          title={t('nav.pending')}
+        >
           <Inbox size={19} aria-hidden="true" />
           <span className="app-sidebar-label">{t('nav.pending')}</span>
         </NavLink>

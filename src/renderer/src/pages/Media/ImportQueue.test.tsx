@@ -71,38 +71,73 @@ describe('ImportQueue', () => {
     await vi.waitFor(() => expect(checkDuplicate).toHaveBeenCalledWith('/src/a.png'))
   })
 
-  it('advances to the next file after saving', async () => {
+  it('saves without advancing, and only moves to the next file once Next is clicked', async () => {
     const { container } = renderQueue()
     await screen.findByText('File 1 of 2')
 
     const form = container.querySelector('form') as HTMLFormElement
     fireEvent.submit(form)
 
+    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' })))
+    expect(screen.getByText('File 1 of 2')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+
     expect(await screen.findByText('File 2 of 2')).toBeInTheDocument()
-    expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' }))
   })
 
-  it('advances to the next file on Skip without saving', async () => {
+  it('hides Previous on the first file and moves back to it from the second, discarding unsaved edits', async () => {
+    renderQueue()
+    await screen.findByText('File 1 of 2')
+    expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await screen.findByText('File 2 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }))
+
+    expect(await screen.findByText('File 1 of 2')).toBeInTheDocument()
+  })
+
+  it('advances to the next file on Next without saving', async () => {
     renderQueue()
     await screen.findByText('File 1 of 2')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
     expect(await screen.findByText('File 2 of 2')).toBeInTheDocument()
     expect(mediaCreate).not.toHaveBeenCalled()
   })
 
-  it('calls onLastSaved after saving the final item', async () => {
+  it('calls onLastSaved once Next is clicked after saving the final item', async () => {
     const onClose = vi.fn()
     const onLastSaved = vi.fn()
     const { container } = renderQueue(onClose, onLastSaved)
     await screen.findByText('File 1 of 2')
 
-    fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     await screen.findByText('File 2 of 2')
     fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'b' })))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
     await vi.waitFor(() => expect(onLastSaved).toHaveBeenCalledWith({ id: 'm1' }))
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('closes instead of calling onLastSaved when Next is clicked unsaved on the final item', async () => {
+    const onClose = vi.fn()
+    const onLastSaved = vi.fn()
+    renderQueue(onClose, onLastSaved)
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await screen.findByText('File 2 of 2')
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+
+    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(onLastSaved).not.toHaveBeenCalled()
   })
 
   it('opens the exit dialog instead of closing when Close is clicked with items remaining', async () => {
@@ -165,6 +200,8 @@ describe('ImportQueue', () => {
     await screen.findByText('File 1 of 2')
 
     fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' })))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     await screen.findByText('File 2 of 2')
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
 

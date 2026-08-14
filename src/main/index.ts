@@ -20,6 +20,15 @@ import { setWd14RuntimeWindow } from './ipc/wd14Runtime.handlers'
 import { setEntityEventsWindow } from './events/entityEvents'
 import { flushLogBuffer, logError, logInfo } from './logging/logger'
 
+// Two instances writing to the same SQLite file (and racing each other's
+// windowState/settings writes) would corrupt state with no user-visible
+// benefit - bail out before touching anything else if another instance
+// already holds the lock.
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+  process.exit(0)
+}
+
 registerMediaProtocolScheme()
 
 // Node's default behavior for an uncaught exception is to print and terminate
@@ -175,6 +184,13 @@ app.whenReady().then(async () => {
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
+  })
+
+  app.on('second-instance', () => {
+    const [mainWindow] = BrowserWindow.getAllWindows()
+    if (!mainWindow) return
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.focus()
   })
 
   app.on('before-quit', () => {

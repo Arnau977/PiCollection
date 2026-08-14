@@ -91,4 +91,39 @@ describe('AppHeader', () => {
 
     expect(container.querySelector('.app-sidebar-badge')).toBeInTheDocument()
   })
+
+  it('highlights Gallery when on a media detail page opened without a pending queue', () => {
+    render(
+      <MemoryRouter initialEntries={['/media/abc']}>
+        <AppHeader />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('link', { name: 'Gallery' })).toHaveClass('active')
+    expect(screen.getByRole('link', { name: 'Pending' })).not.toHaveClass('active')
+  })
+
+  it('highlights Pending when on a media detail page opened from the pending queue', () => {
+    render(
+      <MemoryRouter
+        initialEntries={[{ pathname: '/media/abc', state: { pendingQueue: true } }]}
+      >
+        <AppHeader />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('link', { name: 'Pending' })).toHaveClass('active')
+    expect(screen.getByRole('link', { name: 'Gallery' })).not.toHaveClass('active')
+  })
+
+  it('does not highlight Gallery or Pending on the add-media page', () => {
+    render(
+      <MemoryRouter initialEntries={['/media/add']}>
+        <AppHeader />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('link', { name: 'Gallery' })).not.toHaveClass('active')
+    expect(screen.getByRole('link', { name: 'Pending' })).not.toHaveClass('active')
+  })
 })

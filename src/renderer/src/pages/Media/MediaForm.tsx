@@ -3,12 +3,17 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Cpu,
   ExternalLink,
   PanelRightClose,
   PanelRightOpen,
   Plus,
-  ScanSearch
+  ScanSearch,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react'
 import type {
   ArtistModel,
@@ -27,6 +32,7 @@ import { MediaHoverPreview } from '../../components/MediaHoverPreview/MediaHover
 import { TagWikiInfo } from '../../components/TagWikiInfo/TagWikiInfo'
 import { PATH } from '../../app.routes.const'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
+import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { useSauceNaoApiKey } from '../../hooks/useSauceNaoApiKey'
 import { useSauceNaoSuggestions, type SuggestionCategory } from '../../hooks/useSauceNaoSuggestions'
 import { useWd14Runtime } from '../../hooks/useWd14Runtime'
@@ -50,7 +56,10 @@ interface InitialFile {
 interface QueueInfo {
   current: number
   total: number
-  onSkip: () => void
+  /** Moves to the next item, whether or not the current one was saved via "Guardar" first. */
+  onNext: () => void
+  /** Moves back to the previous item; omitted entirely on the first item of a queue. */
+  onPrevious?: () => void
 }
 
 interface MediaFormProps {
@@ -131,8 +140,15 @@ export function MediaForm({
   const tags = useTags()
   const characters = useCharacters()
   const series = useSeries()
+  const { defaults: galleryDefaults } = useGalleryDefaults()
 
   const [input, setInput] = useState<MediaInput>(() => toInput(media, initialFile))
+  // In a queue, "Guardar" no longer advances to the next item - it just
+  // persists the current one and stays put, so a second "Guardar" click (or
+  // one from the queue's "Siguiente" bookkeeping) must update that same
+  // record instead of creating a duplicate. Only relevant for brand-new
+  // media (`media` is unset); an existing record already has its own id.
+  const [queueSavedMedia, setQueueSavedMedia] = useState<MediaModel | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [duplicateCheck, setDuplicateCheck] = useState<MediaDuplicateCheck | null>(null)
@@ -143,7 +159,14 @@ export function MediaForm({
   const pendingCharacterSeriesIds = useRef(new Map<string, string[]>())
   const pendingArtistSocials = useRef(new Map<string, { name: string; url: string }>())
   const hasSauceNaoApiKey = useSauceNaoApiKey()
-  const [suggestionsCollapsed, setSuggestionsCollapsed] = useState(false)
+  // Below 900px the rail moves above the form fields (see the media query in
+  // MediaForm.css) so it's reachable without scrolling past the whole form
+  // first - but starting it expanded there would do the opposite, pushing
+  // the actual fields down instead. Start collapsed only on that narrow
+  // layout; wide screens keep the rail expanded as before.
+  const [suggestionsCollapsed, setSuggestionsCollapsed] = useState(
+    () => window.matchMedia('(max-width: 900px)').matches
+  )
 
   useEffect((): (() => void) | void => {
     if (!initialFile) return
@@ -540,8 +563,9 @@ export function MediaForm({
     }
     const { resolvedInput, resolvedSeriesIds, resolvedCharacterIds } = resolution
 
-    const result = media
-      ? await window.api.media.update(media.id, resolvedInput)
+    const existingMedia = media ?? queueSavedMedia
+    const result = existingMedia
+      ? await window.api.media.update(existingMedia.id, resolvedInput)
       : await window.api.media.create(resolvedInput)
     setSaving(false)
     if (result.success) {
@@ -550,6 +574,7 @@ export function MediaForm({
       if (pendingSeries.length > 0) series.refetch()
       if (pendingCharacters.length > 0) characters.refetch()
       await linkCharactersToSoleSeries(resolvedSeriesIds, resolvedCharacterIds)
+      if (!media) setQueueSavedMedia(result.data)
       onSaved(result.data)
     } else {
       setError(result.error.message)
@@ -606,20 +631,53 @@ export function MediaForm({
 
   return (
     <div className="media-form">
-      <div className="media-page-actions">
-        <button type="button" className="btn" onClick={onCancel}>
-          <ArrowLeft size={16} />
-          {queueInfo ? t('importQueue.close') : t('manage.cancel')}
-        </button>
-        {media?.pendingTagging && onMarkResolved && (
-          <button type="button" className="btn" onClick={handleMarkResolved}>
-            {t('media.markResolved')}
+      <div className="media-page-actions media-form-top-actions">
+        <div className="media-form-top-actions-left">
+          <button type="button" className="btn" onClick={onCancel}>
+            <ArrowLeft size={16} />
+            {queueInfo ? t('importQueue.close') : t('manage.cancel')}
           </button>
-        )}
+          {media?.pendingTagging && onMarkResolved && (
+            <button type="button" className="btn" onClick={handleMarkResolved}>
+              {t('media.markResolved')}
+            </button>
+          )}
+        </div>
+        <div className="media-form-top-actions-right">
+          {queueInfo?.onPrevious && (
+            <button type="button" className="btn" onClick={queueInfo.onPrevious}>
+              <ChevronLeft size={16} />
+              {t('importQueue.previous')}
+            </button>
+          )}
+          <button
+            type="submit"
+            form="media-form"
+            className="btn btn-primary"
+            disabled={saving || Boolean(duplicateCheck?.exactMatch)}
+          >
+            {saving
+              ? t('media.saving')
+              : queueInfo || isEditing
+                ? t('manage.save')
+                : t('addMedia.submit')}
+          </button>
+          {queueInfo && (
+            <button type="button" className="btn" onClick={queueInfo.onNext}>
+              {t('importQueue.next')}
+              <ChevronRight size={16} />
+            </button>
+          )}
+          {queueInfo && !media && !queueSavedMedia && (
+            <button type="button" className="btn" onClick={handleSendToPending} disabled={saving}>
+              {t('importQueue.sendToPending')}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="media-form-layout">
-        <form className="media-form-card card" onSubmit={handleSubmit}>
+        <form id="media-form" className="media-form-card card" onSubmit={handleSubmit}>
           <div className="media-form-group">
             <h2>{t('addMedia.groupFile')}</h2>
             {queueInfo && (
@@ -684,7 +742,7 @@ export function MediaForm({
 
           <div className="media-form-group">
             <h2>{t('addMedia.groupDetails')}</h2>
-            {isEditing && (
+            {isEditing && !galleryDefaults.hideNames && (
               <div className="field">
                 <label htmlFor="media-name">{t('manage.name')}</label>
                 <input
@@ -698,114 +756,126 @@ export function MediaForm({
               </div>
             )}
 
-            <label className="checkbox-row">
-              <input type="checkbox" name="sfw" checked={input.sfw} onChange={handleChange} />
-              {t('addMedia.sfw')}
-            </label>
+            <div className="media-form-toggles">
+              <label
+                className="media-form-toggle"
+                title={input.sfw ? t('media.sfwTitle') : t('media.nsfwTitle')}
+              >
+                <input
+                  type="checkbox"
+                  className="media-form-toggle-input"
+                  name="sfw"
+                  checked={input.sfw}
+                  onChange={handleChange}
+                  aria-label={input.sfw ? t('media.sfwTitle') : t('media.nsfwTitle')}
+                />
+                <span className="media-form-toggle-track" aria-hidden="true">
+                  <span className="media-form-toggle-option media-form-toggle-option-on">
+                    <ShieldCheck size={14} />
+                    {t('media.sfwBadge')}
+                  </span>
+                  <span className="media-form-toggle-option media-form-toggle-option-off">
+                    <ShieldAlert size={14} />
+                    {t('media.nsfwBadge')}
+                  </span>
+                </span>
+              </label>
 
-            <label className="checkbox-row">
-              <input
-                type="checkbox"
-                name="isAiGenerated"
-                checked={input.isAiGenerated}
-                onChange={handleChange}
+              <label className="media-form-toggle" title={t('media.aiGeneratedTitle')}>
+                <input
+                  type="checkbox"
+                  className="media-form-toggle-input"
+                  name="isAiGenerated"
+                  checked={input.isAiGenerated}
+                  onChange={handleChange}
+                  aria-label={t('media.aiGeneratedTitle')}
+                />
+                <span className="media-form-toggle-track" aria-hidden="true">
+                  <span className="media-form-toggle-option media-form-toggle-option-on">
+                    <Sparkles size={14} />
+                    {t('media.aiGeneratedBadge')}
+                  </span>
+                </span>
+              </label>
+            </div>
+
+            <div className="media-form-field-accent media-form-field-accent-artist">
+              <Autocomplete
+                name="artist"
+                label={t('filters.artist')}
+                options={[...artists.data, ...pendingArtists]}
+                getOptionLabel={(artist) =>
+                  pendingArtists.some((p) => p.id === artist.id)
+                    ? t('autocomplete.pendingLabel', { name: artist.name })
+                    : artist.name
+                }
+                getOptionMatchName={(artist) => artist.name}
+                getOptionValue={(artist) => artist.id}
+                selectedKey={input.artistId ?? null}
+                onSelect={(artist) => setInput((prev) => ({ ...prev, artistId: artist?.id }))}
+                onCreate={handleCreateArtist}
               />
-              {t('addMedia.aiGenerated')}
-            </label>
-
-            <Autocomplete
-              name="artist"
-              label={t('filters.artist')}
-              options={[...artists.data, ...pendingArtists]}
-              getOptionLabel={(artist) =>
-                pendingArtists.some((p) => p.id === artist.id)
-                  ? t('autocomplete.pendingLabel', { name: artist.name })
-                  : artist.name
-              }
-              getOptionMatchName={(artist) => artist.name}
-              getOptionValue={(artist) => artist.id}
-              selectedKey={input.artistId ?? null}
-              onSelect={(artist) => setInput((prev) => ({ ...prev, artistId: artist?.id }))}
-              onCreate={handleCreateArtist}
-            />
+            </div>
           </div>
 
           <div className="media-form-group">
             <h2>{t('addMedia.groupTaxonomy')}</h2>
-            <MultiSelectAutocomplete
-              name="tags"
-              label={t('filters.tags')}
-              options={[...tags.data, ...pendingTags]}
-              getOptionLabel={(tag) =>
-                pendingTags.some((p) => p.id === tag.id)
-                  ? t('autocomplete.pendingLabel', { name: tag.name })
-                  : tag.name
-              }
-              getOptionMatchName={(tag) => tag.name}
-              getOptionValue={(tag) => tag.id}
-              selectedValues={input.tagIds ?? []}
-              onChange={(tagIds) => setInput((prev) => ({ ...prev, tagIds }))}
-              onCreate={handleCreateTag}
-            />
-            <MultiSelectAutocomplete
-              name="characters"
-              label={t('filters.characters')}
-              options={sortedCharacterOptions}
-              getOptionLabel={(character) =>
-                pendingCharacters.some((p) => p.id === character.id)
-                  ? t('autocomplete.pendingLabel', { name: formatCharacterOptionLabel(character) })
-                  : formatCharacterOptionLabel(character)
-              }
-              getOptionMatchName={(character) => character.name}
-              getOptionValue={(character) => character.id}
-              selectedValues={input.characterIds ?? []}
-              onChange={handleCharactersChange}
-              onCreate={handleCreateCharacter}
-            />
-            <MultiSelectAutocomplete
-              name="series"
-              label={t('manage.series')}
-              options={[...series.data, ...pendingSeries]}
-              getOptionLabel={(s) =>
-                pendingSeries.some((p) => p.id === s.id)
-                  ? t('autocomplete.pendingLabel', { name: s.name })
-                  : s.name
-              }
-              getOptionMatchName={(s) => s.name}
-              getOptionValue={(s) => s.id}
-              selectedValues={input.seriesIds ?? []}
-              onChange={(seriesIds) => setInput((prev) => ({ ...prev, seriesIds }))}
-              onCreate={handleCreateSeries}
-            />
+            <div className="media-form-field-accent media-form-field-accent-tags">
+              <MultiSelectAutocomplete
+                name="tags"
+                label={t('filters.tags')}
+                options={[...tags.data, ...pendingTags]}
+                getOptionLabel={(tag) =>
+                  pendingTags.some((p) => p.id === tag.id)
+                    ? t('autocomplete.pendingLabel', { name: tag.name })
+                    : tag.name
+                }
+                getOptionMatchName={(tag) => tag.name}
+                getOptionValue={(tag) => tag.id}
+                selectedValues={input.tagIds ?? []}
+                onChange={(tagIds) => setInput((prev) => ({ ...prev, tagIds }))}
+                onCreate={handleCreateTag}
+              />
+            </div>
+            <div className="media-form-field-accent media-form-field-accent-characters">
+              <MultiSelectAutocomplete
+                name="characters"
+                label={t('filters.characters')}
+                options={sortedCharacterOptions}
+                getOptionLabel={(character) =>
+                  pendingCharacters.some((p) => p.id === character.id)
+                    ? t('autocomplete.pendingLabel', {
+                        name: formatCharacterOptionLabel(character)
+                      })
+                    : formatCharacterOptionLabel(character)
+                }
+                getOptionMatchName={(character) => character.name}
+                getOptionValue={(character) => character.id}
+                selectedValues={input.characterIds ?? []}
+                onChange={handleCharactersChange}
+                onCreate={handleCreateCharacter}
+              />
+            </div>
+            <div className="media-form-field-accent media-form-field-accent-series">
+              <MultiSelectAutocomplete
+                name="series"
+                label={t('manage.series')}
+                options={[...series.data, ...pendingSeries]}
+                getOptionLabel={(s) =>
+                  pendingSeries.some((p) => p.id === s.id)
+                    ? t('autocomplete.pendingLabel', { name: s.name })
+                    : s.name
+                }
+                getOptionMatchName={(s) => s.name}
+                getOptionValue={(s) => s.id}
+                selectedValues={input.seriesIds ?? []}
+                onChange={(seriesIds) => setInput((prev) => ({ ...prev, seriesIds }))}
+                onCreate={handleCreateSeries}
+              />
+            </div>
           </div>
 
           {error && <p role="alert">{error}</p>}
-
-          <div className="media-form-actions">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={saving || Boolean(duplicateCheck?.exactMatch)}
-            >
-              {saving
-                ? t('media.saving')
-                : queueInfo
-                  ? t('importQueue.saveAndNext')
-                  : isEditing
-                    ? t('manage.save')
-                    : t('addMedia.submit')}
-            </button>
-            {queueInfo && (
-              <button type="button" className="btn" onClick={queueInfo.onSkip}>
-                {t('importQueue.skip')}
-              </button>
-            )}
-            {queueInfo && !media && (
-              <button type="button" className="btn" onClick={handleSendToPending} disabled={saving}>
-                {t('importQueue.sendToPending')}
-              </button>
-            )}
-          </div>
         </form>
 
         <aside className={`suggestions-rail${suggestionsCollapsed ? ' is-collapsed' : ''}`}>

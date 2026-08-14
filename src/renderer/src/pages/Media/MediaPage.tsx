@@ -72,7 +72,7 @@ const MediaPage: React.FC = () => {
 
   // Hopping between media items always replaces the current history entry
   // instead of pushing a new one - otherwise flipping through several images
-  // (arrow keys, prev/next zones, or the pending queue's Skip/Save & next)
+  // (arrow keys, prev/next zones, or the pending queue's "Siguiente")
   // pushes one entry per hop, and "Back to gallery" (navigate(-1)) would only
   // undo a single hop instead of returning to wherever the browsing session
   // actually started (Gallery, the pending entry point, etc).
@@ -85,10 +85,11 @@ const MediaPage: React.FC = () => {
     }
   }
 
-  // Shared "what's next" routing for every way of moving past the current
-  // pending item: marking it resolved, saving it (Save & next), or skipping
-  // it outright - all three want the same target (next pending item, or the
-  // gallery once the queue is exhausted) regardless of which one triggered it.
+  // Shared "what's next" routing for the two ways of moving past the current
+  // pending item: marking it resolved, or pressing "Siguiente" - both want
+  // the same target (next pending item, or the gallery once the queue is
+  // exhausted) regardless of which one triggered it. "Guardar" alone no
+  // longer advances - it just persists the item in place.
   function advanceQueue(): void {
     if (pendingQueue && nextId) {
       goToMedia(nextId)
@@ -107,7 +108,12 @@ const MediaPage: React.FC = () => {
 
   const queueInfo =
     pendingQueue && index !== null && total !== null
-      ? { current: index + 1, total, onSkip: advanceQueue }
+      ? {
+          current: index + 1,
+          total,
+          onNext: advanceQueue,
+          onPrevious: previousId ? (): void => goToMedia(previousId) : undefined
+        }
       : undefined
 
   useEffect(() => {
@@ -192,9 +198,9 @@ const MediaPage: React.FC = () => {
             queueInfo={queueInfo}
             onCancel={() => setIsEditing(false)}
             onSaved={() => {
-              if (pendingQueue) {
-                advanceQueue()
-              } else {
+              // "Guardar" persists the item in place - the pending queue only
+              // moves on when "Siguiente" is pressed (see advanceQueue).
+              if (!pendingQueue) {
                 setIsEditing(false)
                 refetch()
               }

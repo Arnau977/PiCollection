@@ -51,6 +51,35 @@
   box-shadow: var(--shadow-offset-rest);
 }
 
+/* Each of the four tabs corresponds to a metadata category with its own
+   color used everywhere else in the app (artist/series/character/tag
+   accents, see base.css and Media.css) - match that instead of the single
+   flat --accent used above, so identity carries over from Home's stats
+   switcher (which shares these same classes) to here. */
+.manage-tab.stats-tab-artists.active {
+  color: var(--color-artist);
+  background: var(--color-artist-soft);
+  box-shadow: var(--shadow-offset-rest), inset 0 -2px 0 var(--color-artist);
+}
+
+.manage-tab.stats-tab-tags.active {
+  color: var(--color-tag);
+  background: var(--color-tag-soft);
+  box-shadow: var(--shadow-offset-rest), inset 0 -2px 0 var(--color-tag);
+}
+
+.manage-tab.stats-tab-characters.active {
+  color: var(--color-character);
+  background: var(--color-character-soft);
+  box-shadow: var(--shadow-offset-rest), inset 0 -2px 0 var(--color-character);
+}
+
+.manage-tab.stats-tab-series.active {
+  color: var(--color-series);
+  background: var(--color-series-soft);
+  box-shadow: var(--shadow-offset-rest), inset 0 -2px 0 var(--color-series);
+}
+
 .manage-content {
   display: flex;
   flex-direction: column;

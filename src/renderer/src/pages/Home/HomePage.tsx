@@ -76,7 +76,11 @@ export default function HomePage(): JSX.Element {
                 type="button"
                 role="tab"
                 aria-selected={statsTab === 'artists'}
-                className={statsTab === 'artists' ? 'manage-tab active' : 'manage-tab'}
+                className={
+                  statsTab === 'artists'
+                    ? 'manage-tab stats-tab-artists active'
+                    : 'manage-tab stats-tab-artists'
+                }
                 onClick={() => setStatsTab('artists')}
               >
                 {t('home.topArtists')}
@@ -85,7 +89,11 @@ export default function HomePage(): JSX.Element {
                 type="button"
                 role="tab"
                 aria-selected={statsTab === 'tags'}
-                className={statsTab === 'tags' ? 'manage-tab active' : 'manage-tab'}
+                className={
+                  statsTab === 'tags'
+                    ? 'manage-tab stats-tab-tags active'
+                    : 'manage-tab stats-tab-tags'
+                }
                 onClick={() => setStatsTab('tags')}
               >
                 {t('home.topTags')}
@@ -94,7 +102,11 @@ export default function HomePage(): JSX.Element {
                 type="button"
                 role="tab"
                 aria-selected={statsTab === 'characters'}
-                className={statsTab === 'characters' ? 'manage-tab active' : 'manage-tab'}
+                className={
+                  statsTab === 'characters'
+                    ? 'manage-tab stats-tab-characters active'
+                    : 'manage-tab stats-tab-characters'
+                }
                 onClick={() => setStatsTab('characters')}
               >
                 {t('home.topCharacters')}
@@ -103,7 +115,11 @@ export default function HomePage(): JSX.Element {
                 type="button"
                 role="tab"
                 aria-selected={statsTab === 'series'}
-                className={statsTab === 'series' ? 'manage-tab active' : 'manage-tab'}
+                className={
+                  statsTab === 'series'
+                    ? 'manage-tab stats-tab-series active'
+                    : 'manage-tab stats-tab-series'
+                }
                 onClick={() => setStatsTab('series')}
               >
                 {t('home.topSeries')}
@@ -111,16 +127,16 @@ export default function HomePage(): JSX.Element {
             </div>
             <div className="card stats-panel">
               <div hidden={statsTab !== 'artists'}>
-                <StatsBarList items={stats.topArtists} />
+                <StatsBarList items={stats.topArtists} category="artists" />
               </div>
               <div hidden={statsTab !== 'tags'}>
-                <StatsBarList items={stats.topTags} />
+                <StatsBarList items={stats.topTags} category="tags" />
               </div>
               <div hidden={statsTab !== 'characters'}>
-                <StatsBarList items={stats.topCharacters} />
+                <StatsBarList items={stats.topCharacters} category="characters" />
               </div>
               <div hidden={statsTab !== 'series'}>
-                <StatsBarList items={stats.topSeries} />
+                <StatsBarList items={stats.topSeries} category="series" />
               </div>
             </div>
           </>

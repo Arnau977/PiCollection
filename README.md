@@ -7,6 +7,26 @@ browse and filter a personal collection without uploading anything anywhere,
 with one explicit, opt-in exception: the "Suggest tags" button (see below)
 sends a thumbnail to saucenao.com only when you press it.
 
+## For users
+
+This section is for anyone who just wants to run the app - no coding
+required.
+
+- **Download**: grab the installer for your OS (Windows/macOS/Linux) from
+  the [GitHub Releases page](https://github.com/Arnau977/PiCollection/releases)
+  and run it. The app checks for new versions itself afterwards
+  (**Settings → Updates**), with an optional beta channel.
+- **What it does**: see [Features](#features) below for the full list -
+  tagging, gallery search, NSFW handling, backup/restore, duplicate
+  detection, and tag suggestions (both an online one via SauceNAO and an
+  offline one that runs entirely on your machine).
+- **Your data stays local**: your media files never move or get uploaded.
+  The only network activity tied to your content is opt-in: pressing
+  "Suggest tags" sends a thumbnail to SauceNAO, and enabling local tag
+  suggestions downloads a one-time tagging runtime the first time you use
+  it. Everything else (browsing, tagging, search, backups) never leaves
+  your machine.
+
 ## Features
 
 - **Tagging** — attach Artists, Tags, Characters and Series to each item, with
@@ -46,7 +66,12 @@ sends a thumbnail to saucenao.com only when you press it.
   even from a different path) blocks the add, and a visually similar file
   (e.g. a recompressed or resized copy) shows a non-blocking warning.
 
-## Tech stack
+## For developers
+
+Everything from here down is for people building or contributing to
+PiCollection itself.
+
+### Tech stack
 
 - [Electron](https://www.electronjs.org/) + [electron-vite](https://electron-vite.org/) — desktop shell and build tooling
 - React 18 + TypeScript, [react-router-dom](https://reactrouter.com/) (`HashRouter`), [react-aria-components](https://react-spectrum.adobe.com/react-aria/) for accessible primitives
@@ -54,14 +79,14 @@ sends a thumbnail to saucenao.com only when you press it.
 - [Zod](https://zod.dev/) validation at the IPC boundary between renderer and main process
 - [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/)
 
-## Requirements
+### Requirements
 
 - Node.js **20** or newer
 - On Windows, a working C++ toolchain if `better-sqlite3` needs to compile
   from source (a prebuilt binary is normally used instead, so this is rarely
   needed)
 
-## Getting started
+### Getting started
 
 ```bash
 npm install
@@ -71,7 +96,7 @@ npm install
 `postinstall` script, so the app can open a database as soon as install
 finishes.
 
-### Development
+#### Development
 
 ```bash
 npm run dev
@@ -83,7 +108,7 @@ from the packaged app's `picollection.sqlite`, so day-to-day development
 never touches real collection data). Migrations run automatically on
 startup — nothing to run by hand.
 
-### Tests
+#### Tests
 
 ```bash
 npm test
@@ -96,14 +121,14 @@ for Electron afterwards (`posttest`), so `npm run dev` keeps working right
 after. Use `npm run test:watch` for a watch-mode run during active
 development.
 
-### Linting & type checking
+#### Linting & type checking
 
 ```bash
 npm run lint        # eslint --fix
 npm run typecheck    # tsc, main + renderer configs
 ```
 
-### Building
+#### Building
 
 ```bash
 npm run build         # typecheck + electron-vite build, no installer
@@ -115,7 +140,7 @@ npm run build:linux   # + electron-builder, Linux
 Packaged builds land in `dist/`; unsigned/unpacked output for quick local
 testing is available via `npm run build:unpack`.
 
-### Releases & auto-update
+#### Releases & auto-update
 
 Pushing a `v*` tag (e.g. `v1.2.0`, or `v1.2.0-beta.1` for a beta) triggers
 `.github/workflows/release.yml`, which builds Windows/macOS/Linux installers
@@ -124,7 +149,7 @@ updates and lets the user download/install from **Settings → Updates**, with
 a stable/beta channel choice. See [`docs/auto-update.md`](docs/auto-update.md)
 for the full flow.
 
-### Database migrations
+#### Database migrations
 
 Schema changes live as plain TypeScript files in
 `src/main/database/migrations/`, applied in order at app startup. When
@@ -141,7 +166,7 @@ These use a local file at `.data/picollection.dev.sqlite` (ignored by git);
 set `DB_PATH` to point them elsewhere. This is independent of the database
 the Electron app itself opens under `userData`.
 
-## Project layout
+### Project layout
 
 ```
 src/
@@ -161,6 +186,6 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how a request flows
 from the UI down to SQLite and back, and for a worked example of adding a new
 entity or field.
 
-## Recommended IDE setup
+### Recommended IDE setup
 
 [VS Code](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)

@@ -48,6 +48,31 @@ For any visual/design work in this repo, actúa como un diseñador gráfico y
 director de arte senior, crítico, audaz y ultra-específico. Odias el "AI
 slop", el diseño predecible y las soluciones cliché.
 
+**Al diseñar o rediseñar una pantalla**, pasa la propuesta por un "council"
+de cuatro jueces antes de decidir cómo seguir, cada uno opinando desde un
+ángulo distinto y con un peso por defecto (ajusta los pesos si para esa
+pantalla concreta un eje pesa claramente más que los demás — dilo
+explícitamente si lo haces):
+
+- **UI (30%)** — jerarquía visual, color, tipografía, consistencia con el
+  lenguaje visual ya existente en la app (p.ej. los colores por categoría de
+  metadata: `--color-artist`/`--color-series`/`--color-character`/
+  `--color-tag`, o el acento `--accent` "Archive Cabinet").
+- **UX (30%)** — flujo, orden de las acciones, qué se pierde/gana en
+  viewports estrechos, fricción real del usuario, qué es lo primero que
+  debería ver/hacer.
+- **Accesibilidad (20%)** — contraste, foco de teclado visible, roles ARIA,
+  tamaño de objetivo de click, `prefers-reduced-motion`.
+- **Estructura de apps de escritorio (20%)** — específicamente Electron y
+  apps de gestión de archivos/colecciones: qué es "nativo" en ese contexto
+  frente a un patrón web trasplantado sin pensar, y consistencia con
+  patrones ya establecidos en este repo (`*-scroll-region`, sticky vs.
+  scroll-bound, ver más abajo).
+
+Pondera los cuatro votos según esos pesos para decidir cómo proseguir. Si dos
+jueces con peso alto discrepan, dilo explícitamente en la respuesta en vez de
+promediar en silencio, y explica cómo se resolvió (qué juez cedió y por qué).
+
 When touching the renderer, treat UI/UX and perceived performance as part of
 the task, not a follow-up:
 
