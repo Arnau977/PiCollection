@@ -14,6 +14,10 @@ KAOMOJIS = {
 
 GENERAL_THRESHOLD = 0.35
 CHARACTER_THRESHOLD = 0.85
+# Same bar as CHARACTER_THRESHOLD - a copyright/series guess is just as prone
+# to false positives as a character guess, so it gets the same conservative
+# floor rather than the loose GENERAL_THRESHOLD.
+COPYRIGHT_THRESHOLD = 0.85
 
 
 def load_labels(csv_path):
@@ -29,7 +33,8 @@ def load_labels(csv_path):
             categories.append(int(row["category"]))
     general_indexes = [i for i, c in enumerate(categories) if c == 0]
     character_indexes = [i for i, c in enumerate(categories) if c == 4]
-    return tag_names, general_indexes, character_indexes
+    copyright_indexes = [i for i, c in enumerate(categories) if c == 3]
+    return tag_names, general_indexes, character_indexes, copyright_indexes
 
 
 def prepare_image(image, target_size):
@@ -55,7 +60,7 @@ def prepare_image(image, target_size):
 def main():
     model_path, csv_path = sys.argv[1], sys.argv[2]
 
-    tag_names, general_indexes, character_indexes = load_labels(csv_path)
+    tag_names, general_indexes, character_indexes, copyright_indexes = load_labels(csv_path)
     session = rt.InferenceSession(model_path, providers=["CPUExecutionProvider"])
     input_meta = session.get_inputs()[0]
     target_size = input_meta.shape[1]
@@ -77,11 +82,15 @@ def main():
             for i in general_indexes:
                 score = float(preds[i])
                 if score > GENERAL_THRESHOLD:
-                    tags.append({"name": tag_names[i], "score": score})
+                    tags.append({"name": tag_names[i], "score": score, "category": "general"})
             for i in character_indexes:
                 score = float(preds[i])
                 if score > CHARACTER_THRESHOLD:
-                    tags.append({"name": tag_names[i], "score": score})
+                    tags.append({"name": tag_names[i], "score": score, "category": "character"})
+            for i in copyright_indexes:
+                score = float(preds[i])
+                if score > COPYRIGHT_THRESHOLD:
+                    tags.append({"name": tag_names[i], "score": score, "category": "copyright"})
             tags.sort(key=lambda t: t["score"], reverse=True)
 
             response = {"id": request_id, "tags": tags}

@@ -1,4 +1,4 @@
-import { cleanEntityName } from './sauceNao.parse'
+import { cleanEntityName } from '@shared/utils'
 import type { SauceNaoName } from '@shared/models'
 
 const DANBOORU_POST_URL = /^https?:\/\/danbooru\.donmai\.us\/posts\/(\d+)/i

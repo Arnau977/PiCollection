@@ -386,7 +386,7 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
   it('runs a WD14 lookup, applies existing tags, and offers missing ones as create chips', async () => {
     const suggestTags = vi.fn().mockResolvedValue({
       success: true,
-      data: [{ name: 'landscape', score: 0.9 }]
+      data: [{ name: 'landscape', score: 0.9, category: 'general' }]
     })
     setApi({
       wd14Runtime: {
@@ -405,10 +405,40 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
     expect(await screen.findByText('Added 1 suggestions')).toBeInTheDocument()
   })
 
+  it('recognizes a series added earlier in this same edit as existing, not new, on a later WD14 run', async () => {
+    // A series added via an earlier suggestion click is a pending draft -
+    // not yet saved to the library - so a second WD14 run re-detecting the
+    // same name must still recognize it, not offer it again as "new".
+    const suggestTags = vi.fn().mockResolvedValue({
+      success: true,
+      data: [{ name: 'honkai: star rail', score: 0.9, category: 'copyright' }]
+    })
+    setApi({
+      wd14Runtime: {
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'installed' } }),
+        onEvent: vi.fn().mockReturnValue(() => {})
+      },
+      wd14Tagger: { suggestTags }
+    })
+    const user = userEvent.setup()
+    renderForm({ initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' } })
+
+    const runButton = await screen.findByRole('button', { name: 'Suggest tags locally' })
+    await user.click(runButton)
+    await user.click(await screen.findByRole('button', { name: 'Honkai: star rail' }))
+    expect(screen.queryByRole('button', { name: 'Honkai: star rail' })).not.toBeInTheDocument()
+
+    await user.click(runButton)
+
+    expect(await screen.findByText('Added 1 suggestions')).toBeInTheDocument()
+    expect(screen.queryByText('New series')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Honkai: star rail' })).not.toBeInTheDocument()
+  })
+
   it('shows a tag-wiki info button next to each missing WD14 suggestion', async () => {
     const suggestTags = vi.fn().mockResolvedValue({
       success: true,
-      data: [{ name: 'new tag', score: 0.8 }]
+      data: [{ name: 'new tag', score: 0.8, category: 'general' }]
     })
     setApi({
       wd14Runtime: {
@@ -423,11 +453,11 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Suggest tags locally' }))
 
-    // Exact match: the add-chip button's accessible name is just "new tag",
-    // distinct from TagWikiInfo's own button, whose aria-label is
-    // "What does this tag mean? (new tag)" - a regex/substring match here
-    // would ambiguously match both.
-    expect(await screen.findByRole('button', { name: 'new tag' })).toBeInTheDocument()
+    // Exact match: the add-chip button's accessible name is the title-cased
+    // display form ("New Tag"), distinct from TagWikiInfo's own button,
+    // whose aria-label keeps the raw lowercase name used for the wiki
+    // lookup - "What does this tag mean? (new tag)".
+    expect(await screen.findByRole('button', { name: 'New Tag' })).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'What does this tag mean? (new tag)' })
     ).toBeInTheDocument()
@@ -436,7 +466,7 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
   it('creates a tag from a missing WD14 suggestion and removes its chip', async () => {
     const suggestTags = vi.fn().mockResolvedValue({
       success: true,
-      data: [{ name: 'new tag', score: 0.8 }]
+      data: [{ name: 'new tag', score: 0.8, category: 'general' }]
     })
     setApi({
       wd14Runtime: {
@@ -450,9 +480,9 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
     renderForm({ initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' } })
 
     await user.click(await screen.findByRole('button', { name: 'Suggest tags locally' }))
-    await user.click(await screen.findByRole('button', { name: 'new tag' }))
+    await user.click(await screen.findByRole('button', { name: 'New Tag' }))
 
-    expect(screen.queryByRole('button', { name: 'new tag' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'New Tag' })).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'What does this tag mean? (new tag)' })
     ).not.toBeInTheDocument()

@@ -3,14 +3,13 @@ import { randomUUID } from 'crypto'
 import { createInterface } from 'readline'
 import { app } from 'electron'
 import { join } from 'path'
+import type { Wd14TagSuggestion } from '@shared/models'
+import { resolveThumbnail } from '../thumbnails/thumbnails'
 import { getModelFilePaths, getPythonExecutablePath } from './wd14Runtime.service'
 
 const REQUEST_TIMEOUT_MS = 30_000
 
-export interface Wd14Tag {
-  name: string
-  score: number
-}
+export type Wd14Tag = Wd14TagSuggestion
 
 interface PendingRequest {
   resolve: (tags: Wd14Tag[]) => void
@@ -73,7 +72,12 @@ function ensureProcess(): ChildProcess {
   return proc
 }
 
-export function suggestTags(imagePath: string): Promise<Wd14Tag[]> {
+/**
+ * Runs the WD14 model against `imagePath` directly. The subprocess is a
+ * plain PIL/onnxruntime pipeline that only ever understands still images -
+ * see `suggestTags` below for the piece that makes video/GIF files work too.
+ */
+function runPrediction(imagePath: string): Promise<Wd14Tag[]> {
   const proc = ensureProcess()
   const id = randomUUID()
 
@@ -86,6 +90,20 @@ export function suggestTags(imagePath: string): Promise<Wd14Tag[]> {
     pending.set(id, { resolve, reject, timeout })
     proc.stdin?.write(JSON.stringify({ id, path: imagePath }) + '\n')
   })
+}
+
+/**
+ * Reuses the exact thumbnail the gallery already generates/caches, which
+ * uniformly handles images, video poster frames, and GIF first frames - the
+ * same thing `lookupSauceNao` does before uploading to SauceNAO. Without
+ * this, a video route reaches `resources/wd14_predict.py`'s
+ * `PIL.Image.open()` directly and fails with a raw "cannot identify image
+ * file ...mp4" error, since PIL doesn't decode video containers at all.
+ */
+export async function suggestTags(imagePath: string): Promise<Wd14Tag[]> {
+  const thumbPath = await resolveThumbnail(imagePath)
+  if (!thumbPath) throw new Error('Could not read that file to tag.')
+  return runPrediction(thumbPath)
 }
 
 /** Test-only: kills the cached subprocess reference so tests don't leak state between files. */

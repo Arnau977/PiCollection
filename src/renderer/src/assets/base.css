@@ -130,6 +130,14 @@ body {
   color: var(--color-text);
   background: var(--color-background);
   line-height: 1.6;
+  /* This is a desktop app, not a page of text - selection is off by default
+     (dragging across the gallery/UI chrome shouldn't paint a text-selection
+     highlight over thumbnails and labels) and re-enabled only where there's
+     real content worth copying: form fields (browsers already exempt these
+     from an ancestor's `user-select: none`, listed below for clarity),
+     error/status text, and the specific data views (media detail, manage
+     list names, settings values) that opt back in explicitly. */
+  user-select: none;
   font-family:
     Inter,
     -apple-system,
@@ -182,6 +190,24 @@ p {
 ::selection {
   background: var(--accent);
   color: var(--accent-text);
+}
+
+input,
+textarea,
+[contenteditable='true'] {
+  user-select: text;
+}
+
+img {
+  /* Stops the native ghost-image drag cursor when a mouse-down over a
+     thumbnail turns into a drag - there's nothing in the app that accepts an
+     image drop, so it only ever looked like a broken gesture. */
+  -webkit-user-drag: none;
+}
+
+[role='alert'] {
+  /* Error/status text is worth copying into a bug report. */
+  user-select: text;
 }
 
 ::-webkit-scrollbar {

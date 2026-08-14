@@ -47,6 +47,18 @@
   /* Room for the first row's hover lift (.media-card:hover translateY(-4px))
      and glow, which would otherwise crowd the toolbar right above it. */
   padding-top: var(--space-2);
+  /* The container's bottom edge is a hard scroll boundary - whatever row
+     lands there looks flush-cut against the window, at any scroll position,
+     not just the end of the list. Fading that edge instead of clipping it
+     softens every mid-scroll stop. Sized to match padding-bottom above, so
+     at the true end of the list the fade only ever covers that empty strip,
+     not the last row itself. */
+  mask-image: linear-gradient(to bottom, black calc(100% - var(--space-6)), transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black calc(100% - var(--space-6)),
+    transparent 100%
+  );
 }
 
 .gallery-bulk-bar {

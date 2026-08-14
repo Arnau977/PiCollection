@@ -234,6 +234,7 @@
 .manage-item-name {
   flex: 1;
   font-weight: 600;
+  user-select: text;
 }
 
 .manage-item-info {
@@ -252,6 +253,7 @@
   font-size: 0.78rem;
   font-style: italic;
   color: var(--color-text-muted);
+  user-select: text;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

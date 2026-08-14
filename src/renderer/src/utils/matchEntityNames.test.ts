@@ -5,6 +5,7 @@ import {
   matchCharacterNames,
   matchEntityNames,
   normalizeEntityName,
+  titleCaseTagName,
   type NameMatchable
 } from './matchEntityNames'
 import type { CharacterModel } from '@shared/models'
@@ -30,6 +31,21 @@ describe('capitalizeFirstLetter', () => {
 
   it('handles an empty string', () => {
     expect(capitalizeFirstLetter('')).toBe('')
+  })
+})
+
+describe('titleCaseTagName', () => {
+  it('capitalizes every word', () => {
+    expect(titleCaseTagName('large breasts')).toBe('Large Breasts')
+    expect(titleCaseTagName('white background')).toBe('White Background')
+  })
+
+  it('capitalizes the word right after an opening parenthesis', () => {
+    expect(titleCaseTagName('power (chainsaw man)')).toBe('Power (Chainsaw Man)')
+  })
+
+  it('leaves a leading digit run alone rather than capitalizing mid-word', () => {
+    expect(titleCaseTagName('1girl')).toBe('1girl')
   })
 })
 

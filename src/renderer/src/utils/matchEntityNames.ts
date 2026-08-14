@@ -27,6 +27,21 @@ export function capitalizeFirstLetter(value: string): string {
 }
 
 /**
+ * Uppercases the first letter of every word (booru/WD14 tags arrive all
+ * lowercase, e.g. "large breasts", "power (chainsaw man)") - display-only
+ * title-casing, not a normalization used for matching. A leading digit run
+ * ("1girl") is left as-is rather than capitalizing the letter after it,
+ * since there's no reliable way to tell a genuine word boundary from a
+ * booru-style count prefix.
+ */
+export function titleCaseTagName(value: string): string {
+  return value.replace(
+    /(^|[\s(])([a-z])/g,
+    (_match, boundary: string, letter: string) => `${boundary}${letter.toUpperCase()}`
+  )
+}
+
+/**
  * Splits suggested names into ones that already exist in the library
  * (matched by name or alias) and ones that don't yet exist (the clean base
  * name only - never a qualified "X (Y)" form, so anything created from it

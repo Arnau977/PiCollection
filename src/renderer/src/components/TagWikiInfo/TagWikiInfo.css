@@ -4,9 +4,11 @@
 }
 
 .tag-wiki-info-popover {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+  /* Positioned via inline top/left (viewport coordinates, computed on open)
+     and rendered through a portal into <body> - not `absolute` within the
+     trigger, so it isn't clipped by a scrolling ancestor like the
+     suggestions panel. */
+  position: fixed;
   width: max-content;
   min-width: 220px;
   max-width: min(360px, calc(100vw - 2 * var(--space-4)));

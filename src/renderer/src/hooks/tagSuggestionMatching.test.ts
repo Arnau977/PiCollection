@@ -61,6 +61,19 @@ describe('matchSuggestionCandidate', () => {
     expect(result.applied.artistId).toBeUndefined()
   })
 
+  it('never silently applies a series hint, even one that matches an existing series by name', () => {
+    const result = matchSuggestionCandidate(
+      makeCandidate({
+        series: [],
+        seriesHints: [{ name: 'Fate/Grand Order' }]
+      }),
+      entities
+    )
+
+    expect(result.applied.seriesIds).toEqual([])
+    expect(result.missing.series).toEqual(['Fate/Grand Order'])
+  })
+
   it('disambiguates same-named characters using the series context', () => {
     const otherIshtar: CharacterModel = {
       id: 'c2',

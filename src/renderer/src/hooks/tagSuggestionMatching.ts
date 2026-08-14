@@ -84,14 +84,26 @@ export function matchSuggestionCandidate(
     ? matchEntityNames([candidate.artist], entities.artists)
     : { existing: [], missing: [] }
   const tagsMatch = matchEntityNames(candidate.tags, entities.tags)
-  const seriesSuggestions = [...candidate.series, ...candidate.seriesHints]
-  const seriesContext = seriesSuggestions.map((s) => normalizeEntityName(s.name))
+  const seriesContext = [...candidate.series, ...candidate.seriesHints].map((s) =>
+    normalizeEntityName(s.name)
+  )
   const charactersMatch = matchCharacterNames(
     candidate.characters,
     entities.characters,
     seriesContext
   )
-  const seriesMatch = matchEntityNames(seriesSuggestions, entities.series)
+  // `series` comes straight from the source's own series field - trustworthy
+  // enough to apply on an existing-entity match with no further review.
+  // `seriesHints` are a heuristic (a qualifier peeled off a character name,
+  // e.g. "Fate" from "Ishtar (Fate)") that's usually the series but isn't
+  // guaranteed to be, so even when one happens to match an existing series
+  // by name, it's surfaced as a chip to confirm rather than applied silently.
+  const seriesMatch = matchEntityNames(candidate.series, entities.series)
+  const seriesHintsMatch = matchEntityNames(candidate.seriesHints, entities.series)
+  const seriesHintNames = [
+    ...seriesHintsMatch.existing.map((entity) => entity.name),
+    ...seriesHintsMatch.missing
+  ]
   const leafCharacters = pruneAncestors(charactersMatch.existing, entities.characters)
   const leafSeries = pruneAncestors(seriesMatch.existing, entities.series)
 
@@ -108,7 +120,7 @@ export function matchSuggestionCandidate(
       // oddly that way, so capitalize before they're shown or created.
       tags: tagsMatch.missing,
       characters: charactersMatch.missing.map(capitalizeFirstLetter),
-      series: seriesMatch.missing.map(capitalizeFirstLetter)
+      series: [...seriesMatch.missing, ...seriesHintNames].map(capitalizeFirstLetter)
     },
     appliedCount:
       (artistMatch.existing.length > 0 ? 1 : 0) +
