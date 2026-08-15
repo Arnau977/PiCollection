@@ -99,6 +99,12 @@ the task, not a follow-up:
   not about skipping test runs - still run the full suite before anything
   high-stakes (a release, pushing to an open PR).
 - Don't spawn subagents - do the work directly in this session.
+- Keep files human-readable: no need to force files tiny, but when one grows
+  large enough to become hard to navigate (a component/hook mixing several
+  distinct concerns), split it - extract hooks for logic and components for
+  separate visual blocks - instead of letting it keep growing. See
+  `src/renderer/src/pages/Media/MediaForm.tsx` and its sibling
+  `useMediaForm*`/`MediaForm*`/`*SuggestionsPanel` files for the pattern.
 
 ## Architecture
 
