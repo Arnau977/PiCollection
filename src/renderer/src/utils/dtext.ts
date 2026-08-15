@@ -24,10 +24,12 @@ export interface DtextSegment {
   href?: string
 }
 
-const LINK_PATTERN = /pool #(\d+)|post #(\d+)|\{\{pool:([^}]+)\}\}/g
+const LINK_PATTERN =
+  /pool #(\d+)|post #(\d+)|\{\{pool:([^}]+)\}\}|"([^"]+)":\s*\[?(https?:\/\/[^\s\]]+)\]?/g
 
-/** Splits `stripDtext`'s output around post/pool references so the caller
- * can render each one as a link to the actual Danbooru page. */
+/** Splits `stripDtext`'s output around post/pool references and named
+ * external links (`"text":url` / `"text":[url]`) so the caller can render
+ * each one as an actual link. */
 export function splitDtextLinks(text: string): DtextSegment[] {
   const segments: DtextSegment[] = []
   let lastIndex = 0
@@ -38,7 +40,7 @@ export function splitDtextLinks(text: string): DtextSegment[] {
       segments.push({ text: text.slice(lastIndex, index) })
     }
 
-    const [full, poolId, postId, poolName] = match
+    const [full, poolId, postId, poolName, linkText, linkUrl] = match
     if (poolId) {
       segments.push({ text: full, href: `https://danbooru.donmai.us/pools/${poolId}` })
     } else if (postId) {
@@ -48,6 +50,8 @@ export function splitDtextLinks(text: string): DtextSegment[] {
         text: poolName.replace(/_/g, ' '),
         href: `https://danbooru.donmai.us/posts?tags=${encodeURIComponent(`pool:${poolName}`)}`
       })
+    } else if (linkText && linkUrl) {
+      segments.push({ text: linkText, href: linkUrl })
     }
     lastIndex = index + full.length
   }

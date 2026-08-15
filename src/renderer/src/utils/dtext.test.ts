@@ -80,4 +80,26 @@ describe('splitDtextLinks', () => {
       { text: ' instead.' }
     ])
   })
+
+  it('converts a "text":[url] named link into a link with the display text', () => {
+    expect(
+      splitDtextLinks(
+        '"she announced": [https://twitter.com/murasakishionch/status/18976207158] that she would graduate'
+      )
+    ).toEqual([
+      {
+        text: 'she announced',
+        href: 'https://twitter.com/murasakishionch/status/18976207158'
+      },
+      { text: ' that she would graduate' }
+    ])
+  })
+
+  it('converts a "text":url named link without brackets', () => {
+    expect(splitDtextLinks('See "the source":https://example.com/page for more.')).toEqual([
+      { text: 'See ' },
+      { text: 'the source', href: 'https://example.com/page' },
+      { text: ' for more.' }
+    ])
+  })
 })
