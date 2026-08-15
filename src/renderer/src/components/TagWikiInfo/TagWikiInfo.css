@@ -27,6 +27,7 @@
 
 .tag-wiki-info-body {
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .tag-wiki-info-body a {
