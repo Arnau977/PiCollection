@@ -1,6 +1,4 @@
 import { readFile, rename, writeFile } from 'fs/promises'
-import { NtExecutable, NtExecutableResource } from 'pe-library'
-import { Resource } from 'resedit'
 import { logError } from '../logging/logger'
 
 const LANG_EN_US = 1033
@@ -26,6 +24,15 @@ export async function brandWindowsExecutable(exePath: string): Promise<void> {
   if (process.platform !== 'win32') return
 
   try {
+    // pe-library/resedit ship ESM-only, while electron-vite bundles the main
+    // process as CJS - a static import fails at load time with
+    // ERR_REQUIRE_ESM (it would crash the whole app on startup, not just
+    // this best-effort feature), so pull them in via dynamic import instead.
+    const [{ NtExecutable, NtExecutableResource }, { Resource }] = await Promise.all([
+      import('pe-library'),
+      import('resedit')
+    ])
+
     const data = await readFile(exePath)
     const exe = NtExecutable.from(data)
     const res = NtExecutableResource.from(exe)
