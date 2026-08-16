@@ -18,6 +18,17 @@ function wd14ConfidenceClass(score: number): string {
   return 'wd14-confidence-low'
 }
 
+/**
+ * Danbooru's 4-tier rating is ordered general < sensitive < questionable <
+ * explicit - "sensitive" covers mild fanservice (a swimsuit, a slit dress),
+ * not actual explicit content, so it maps to this app's binary flag the
+ * same way "general" does. Only the two higher tiers count as NSFW here,
+ * matching the toggle's own "Explicit content" label.
+ */
+function wd14RatingImpliesSfw(rating: string): boolean {
+  return rating === 'general' || rating === 'sensitive'
+}
+
 interface Wd14SuggestionsPanelProps {
   wd14Runtime: MediaFormSuggestions['wd14Runtime']
   wd14: MediaFormSuggestions['wd14']
@@ -52,7 +63,7 @@ export function Wd14SuggestionsPanel({
   // Only worth surfacing when it would actually change something - hide it
   // once applying (or the toggle already agreeing on its own) makes the
   // suggested and current value match.
-  const suggestedSfw = wd14.rating?.name === 'general'
+  const suggestedSfw = wd14.rating != null && wd14RatingImpliesSfw(wd14.rating.name)
   const showRatingHint = wd14.status === 'ready' && wd14.rating != null && suggestedSfw !== inputSfw
 
   return (
