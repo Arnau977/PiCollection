@@ -34,7 +34,8 @@ def load_labels(csv_path):
     general_indexes = [i for i, c in enumerate(categories) if c == 0]
     character_indexes = [i for i, c in enumerate(categories) if c == 4]
     copyright_indexes = [i for i, c in enumerate(categories) if c == 3]
-    return tag_names, general_indexes, character_indexes, copyright_indexes
+    rating_indexes = [i for i, c in enumerate(categories) if c == 9]
+    return tag_names, general_indexes, character_indexes, copyright_indexes, rating_indexes
 
 
 def prepare_image(image, target_size):
@@ -60,7 +61,9 @@ def prepare_image(image, target_size):
 def main():
     model_path, csv_path = sys.argv[1], sys.argv[2]
 
-    tag_names, general_indexes, character_indexes, copyright_indexes = load_labels(csv_path)
+    tag_names, general_indexes, character_indexes, copyright_indexes, rating_indexes = load_labels(
+        csv_path
+    )
     session = rt.InferenceSession(model_path, providers=["CPUExecutionProvider"])
     input_meta = session.get_inputs()[0]
     target_size = input_meta.shape[1]
@@ -91,6 +94,17 @@ def main():
                 score = float(preds[i])
                 if score > COPYRIGHT_THRESHOLD:
                     tags.append({"name": tag_names[i], "score": score, "category": "copyright"})
+            # Ratings (general/sensitive/questionable/explicit) are mutually
+            # exclusive, unlike the categories above - always report the
+            # single highest-scoring one instead of threshold-filtering, so
+            # the caller can always offer an SFW/NSFW suggestion.
+            if rating_indexes:
+                best_rating_index = max(rating_indexes, key=lambda i: preds[i])
+                tags.append({
+                    "name": tag_names[best_rating_index],
+                    "score": float(preds[best_rating_index]),
+                    "category": "rating"
+                })
             tags.sort(key=lambda t: t["score"], reverse=True)
 
             response = {"id": request_id, "tags": tags}

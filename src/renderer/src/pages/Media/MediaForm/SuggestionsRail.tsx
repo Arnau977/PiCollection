@@ -11,6 +11,7 @@ interface SuggestionsRailProps {
   suggestions: MediaFormSuggestions
   input: MediaInput
   saving: boolean
+  onApplyRating: (sfw: boolean) => void
 }
 
 /**
@@ -24,7 +25,12 @@ function defaultCollapsed(): boolean {
   return window.matchMedia('(max-width: 900px)').matches
 }
 
-export function SuggestionsRail({ suggestions, input, saving }: SuggestionsRailProps): JSX.Element {
+export function SuggestionsRail({
+  suggestions,
+  input,
+  saving,
+  onApplyRating
+}: SuggestionsRailProps): JSX.Element {
   const { t } = useTranslation()
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
 
@@ -71,8 +77,10 @@ export function SuggestionsRail({ suggestions, input, saving }: SuggestionsRailP
               wd14Runtime={suggestions.wd14Runtime}
               wd14={suggestions.wd14}
               inputRoute={input.route}
+              inputSfw={input.sfw}
               saving={saving}
               onAddMissing={suggestions.addWd14Suggestion}
+              onApplyRating={onApplyRating}
             />
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { Cpu, Plus } from 'lucide-react'
+import { Cpu, Plus, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { PATH } from '../../../app.routes.const'
 import { titleCaseTagName } from '../../../utils/matchEntityNames'
 import { TagWikiInfo } from '../../../components/TagWikiInfo/TagWikiInfo'
@@ -22,16 +22,20 @@ interface Wd14SuggestionsPanelProps {
   wd14Runtime: MediaFormSuggestions['wd14Runtime']
   wd14: MediaFormSuggestions['wd14']
   inputRoute: string
+  inputSfw: boolean
   saving: boolean
   onAddMissing: MediaFormSuggestions['addWd14Suggestion']
+  onApplyRating: (sfw: boolean) => void
 }
 
 export function Wd14SuggestionsPanel({
   wd14Runtime,
   wd14,
   inputRoute,
+  inputSfw,
   saving,
-  onAddMissing
+  onAddMissing,
+  onApplyRating
 }: Wd14SuggestionsPanelProps): JSX.Element {
   const { t } = useTranslation()
 
@@ -45,6 +49,11 @@ export function Wd14SuggestionsPanel({
   }
 
   const totalMissing = countWd14Missing(wd14.missing)
+  // Only worth surfacing when it would actually change something - hide it
+  // once applying (or the toggle already agreeing on its own) makes the
+  // suggested and current value match.
+  const suggestedSfw = wd14.rating?.name === 'general'
+  const showRatingHint = wd14.status === 'ready' && wd14.rating != null && suggestedSfw !== inputSfw
 
   return (
     <div className="sauce-panel">
@@ -63,6 +72,24 @@ export function Wd14SuggestionsPanel({
         <p role="alert" className="sauce-error">
           {wd14.error}
         </p>
+      )}
+
+      {showRatingHint && wd14.rating && (
+        <div className="sauce-missing-row wd14-rating-row">
+          <span className="sauce-cat-label">{t('wd14.ratingLabel')}</span>
+          <button type="button" className="sauce-add-chip" onClick={() => onApplyRating(suggestedSfw)}>
+            <span className={`badge ${suggestedSfw ? 'badge-neutral' : 'badge-accent'}`}>
+              {suggestedSfw ? <ShieldCheck size={12} /> : <ShieldAlert size={12} />}
+              {t(suggestedSfw ? 'media.sfwBadge' : 'media.nsfwBadge')}
+            </span>
+            <span className="sauce-hint">
+              {t('wd14.ratingDetail', {
+                rating: wd14.rating.name,
+                score: Math.round(wd14.rating.score * 100)
+              })}
+            </span>
+          </button>
+        </div>
       )}
 
       {wd14.status === 'ready' &&

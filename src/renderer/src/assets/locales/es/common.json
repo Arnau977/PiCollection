@@ -359,6 +359,8 @@
     "applied": "Se añadieron {{count}} sugerencias",
     "noSuggestions": "No se encontraron tags con suficiente confianza.",
     "dismiss": "Descartar",
+    "ratingLabel": "Clasificación",
+    "ratingDetail": "WD14: {{rating}} ({{score}}%)",
     "notInstalledHint": "El etiquetado local con IA debe activarse primero.",
     "notInstalledHintLink": "Actívalo en Ajustes"
   },

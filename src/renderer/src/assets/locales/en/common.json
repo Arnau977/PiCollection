@@ -359,6 +359,8 @@
     "applied": "Added {{count}} suggestions",
     "noSuggestions": "No confident tags found.",
     "dismiss": "Dismiss",
+    "ratingLabel": "Rating",
+    "ratingDetail": "WD14: {{rating}} ({{score}}%)",
     "notInstalledHint": "Local AI tagging needs to be enabled first.",
     "notInstalledHintLink": "Enable it in Settings"
   },
