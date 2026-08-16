@@ -1,4 +1,5 @@
 import type { DanbooruTagSuggestion } from '@shared/models'
+import { DANBOORU_USER_AGENT } from './danbooruHttp'
 
 const REQUEST_TIMEOUT_MS = 5000
 const GENERAL_CATEGORY = 0
@@ -21,7 +22,10 @@ export async function autocompleteDanbooruTags(query: string): Promise<DanbooruT
   url.searchParams.set('limit', '10')
 
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      headers: { 'User-Agent': DANBOORU_USER_AGENT }
+    })
     if (!res.ok) return []
 
     const body = await res.json()

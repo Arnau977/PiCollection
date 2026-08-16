@@ -1,6 +1,7 @@
 import { getDb } from '../database/connection'
 import * as tagWikiRepo from '../database/repositories/tagWiki.repository'
 import type { TagWikiEntry } from '@shared/models'
+import { DANBOORU_USER_AGENT } from './danbooruHttp'
 
 const REQUEST_TIMEOUT_MS = 8000
 
@@ -20,7 +21,10 @@ export async function lookupTagWiki(rawTagName: string): Promise<TagWikiEntry | 
 
   let res: Response
   try {
-    res = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
+    res = await fetch(url, {
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      headers: { 'User-Agent': DANBOORU_USER_AGENT }
+    })
   } catch (err) {
     if (err instanceof Error && err.name === 'TimeoutError') {
       throw new Error('Danbooru took too long to respond. Try again.')
