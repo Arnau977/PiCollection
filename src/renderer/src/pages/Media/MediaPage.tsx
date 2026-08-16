@@ -164,15 +164,27 @@ const MediaPage: React.FC = () => {
             <ArrowLeft size={16} />
             {t('gallery.backToGallery')}
           </button>
-          <button type="button" className="btn" onClick={startEditing}>
-            <Pencil size={16} />
-            {t('media.edit')}
-          </button>
-          {media.pendingTagging && (
-            <button type="button" className="btn" onClick={handleMarkResolved}>
-              {t('media.markResolved')}
+
+          <div className="action-bar-spacer" />
+
+          <MediaFileActions route={media.route} type={media.type} />
+
+          <div className="action-divider" />
+
+          <div className="action-group">
+            {media.pendingTagging && (
+              <button type="button" className="btn" onClick={handleMarkResolved}>
+                {t('media.markResolved')}
+              </button>
+            )}
+            <button type="button" className="btn btn-primary" onClick={startEditing}>
+              <Pencil size={16} />
+              {t('media.edit')}
             </button>
-          )}
+          </div>
+
+          <div className="action-divider" />
+
           <button
             type="button"
             className="btn btn-danger"
@@ -182,7 +194,6 @@ const MediaPage: React.FC = () => {
             <Trash2 size={16} />
             {deleting ? t('media.deleting') : t('media.delete')}
           </button>
-          <MediaFileActions route={media.route} type={media.type} />
         </div>
       )}
       {deleteError && (

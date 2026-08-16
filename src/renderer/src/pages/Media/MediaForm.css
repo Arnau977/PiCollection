@@ -49,9 +49,9 @@
   justify-content: space-between;
 }
 
-.media-form-top-actions-left,
 .media-form-top-actions-right {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
 }

@@ -250,6 +250,31 @@ input[type='checkbox'] {
   text-align: center;
 }
 
+/* Groups related buttons in an action bar (e.g. media-page-actions) and
+   separates them from an unrelated cluster with a hairline divider, instead
+   of every button reading as equally related to its neighbors regardless of
+   intent (navigate away vs. the main action vs. something destructive). */
+.action-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.action-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border-color);
+  margin: 0 var(--space-1);
+}
+
+/* Pushes everything after it to the far edge of a flex row - used to keep a
+   "leave this page" action (Volver/Cancelar) clear across the row from
+   whatever else is in the bar, rather than sitting right next to it. */
+.action-bar-spacer {
+  flex: 1 1 auto;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
