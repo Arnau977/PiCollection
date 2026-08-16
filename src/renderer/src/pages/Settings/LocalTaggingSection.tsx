@@ -1,6 +1,8 @@
 import { Cpu } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useWd14Runtime } from '../../hooks/useWd14Runtime'
+import { useWd14NsfwThreshold } from '../../hooks/useWd14NsfwThreshold'
+import type { Wd14NsfwThreshold } from '../../utils/wd14RatingSettings'
 import './LocalTaggingSection.css'
 
 const STEP_LABEL_KEYS = {
@@ -11,9 +13,23 @@ const STEP_LABEL_KEYS = {
   installing: 'settings.localTaggingInstallingPackages'
 } as const
 
+/**
+ * Ordered loosest -> strictest, matching the slider's left-to-right reading
+ * order - the default ("questionable") sits in the middle as the neutral
+ * starting position.
+ */
+const THRESHOLD_STEPS: Wd14NsfwThreshold[] = ['explicit', 'questionable', 'sensitive']
+
+const THRESHOLD_LABEL_KEYS: Record<Wd14NsfwThreshold, string> = {
+  explicit: 'settings.localTaggingNsfwThresholdExplicit',
+  questionable: 'settings.localTaggingNsfwThresholdQuestionable',
+  sensitive: 'settings.localTaggingNsfwThresholdSensitive'
+}
+
 export function LocalTaggingSection(): JSX.Element {
   const { t } = useTranslation()
   const { status, percent, step, errorMessage, install, remove } = useWd14Runtime()
+  const { threshold, setThreshold } = useWd14NsfwThreshold()
 
   return (
     <section className="card">
@@ -42,7 +58,34 @@ export function LocalTaggingSection(): JSX.Element {
       )}
 
       {status === 'installed' && (
-        <p className="settings-version">{t('settings.localTaggingInstalled')}</p>
+        <>
+          <p className="settings-version">{t('settings.localTaggingInstalled')}</p>
+
+          <div className="local-tagging-threshold">
+            <label htmlFor="wd14-nsfw-threshold">
+              {t('settings.localTaggingNsfwThreshold')}
+            </label>
+            <p className="settings-version">{t('settings.localTaggingNsfwThresholdHint')}</p>
+            <input
+              id="wd14-nsfw-threshold"
+              type="range"
+              className="local-tagging-threshold-input"
+              min={0}
+              max={THRESHOLD_STEPS.length - 1}
+              step={1}
+              value={THRESHOLD_STEPS.indexOf(threshold)}
+              onChange={(e) => setThreshold(THRESHOLD_STEPS[Number(e.target.value)])}
+              aria-valuetext={t(THRESHOLD_LABEL_KEYS[threshold])}
+            />
+            <div className="local-tagging-threshold-labels">
+              {THRESHOLD_STEPS.map((option) => (
+                <span key={option} className={option === threshold ? 'is-active' : undefined}>
+                  {t(THRESHOLD_LABEL_KEYS[option])}
+                </span>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
       {status === 'error' && errorMessage && (

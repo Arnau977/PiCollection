@@ -41,6 +41,8 @@ interface UseWd14SuggestionsResult {
   error: string | null
   appliedCount: number
   missing: Record<SuggestionCategory, Wd14MissingSuggestion[]>
+  /** The model's single highest-scoring rating prediction, or null before a run/on error. */
+  rating: Wd14TagSuggestion | null
   run: (route: string) => Promise<void>
   dismiss: (category: SuggestionCategory, name: string) => void
   reset: () => void
@@ -96,6 +98,7 @@ export function useWd14Suggestions({
   const [appliedCount, setAppliedCount] = useState(0)
   const [missing, setMissing] =
     useState<Record<SuggestionCategory, Wd14MissingSuggestion[]>>(EMPTY_WD14_MISSING)
+  const [rating, setRating] = useState<Wd14TagSuggestion | null>(null)
 
   const run = useCallback(
     async (route: string) => {
@@ -158,6 +161,15 @@ export function useWd14Suggestions({
         series: withScores(matched.missing.series, scoreByName)
       })
       setAppliedCount(matched.appliedCount)
+      // Only category the python script ever guarantees at most one of - no
+      // need to pick a "best" one, but guard against future changes anyway.
+      const ratingTags = byCategory(result.data, 'rating')
+      setRating(
+        ratingTags.reduce<Wd14TagSuggestion | null>(
+          (best, tag) => (!best || tag.score > best.score ? tag : best),
+          null
+        )
+      )
       setStatus('ready')
     },
     [status, tags, characters, series, onApplyExisting]
@@ -175,7 +187,8 @@ export function useWd14Suggestions({
     setError(null)
     setAppliedCount(0)
     setMissing(EMPTY_WD14_MISSING)
+    setRating(null)
   }, [])
 
-  return { status, error, appliedCount, missing, run, dismiss, reset }
+  return { status, error, appliedCount, missing, rating, run, dismiss, reset }
 }

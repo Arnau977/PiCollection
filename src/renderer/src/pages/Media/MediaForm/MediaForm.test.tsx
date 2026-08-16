@@ -578,6 +578,76 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
       screen.queryByRole('button', { name: 'What does this tag mean? (new tag)' })
     ).not.toBeInTheDocument()
   })
+
+  it('offers to apply the WD14-suggested rating when it disagrees with the current SFW toggle', async () => {
+    const suggestTags = vi.fn().mockResolvedValue({
+      success: true,
+      data: [{ name: 'explicit', score: 0.91, category: 'rating' }]
+    })
+    setApi({
+      wd14Runtime: {
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'installed' } }),
+        onEvent: vi.fn().mockReturnValue(() => {})
+      },
+      wd14Tagger: { suggestTags }
+    })
+    const user = userEvent.setup()
+    renderForm({ initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' } })
+    expect(screen.getByRole('checkbox', { name: 'Safe for work' })).toBeChecked()
+
+    await user.click(await screen.findByRole('button', { name: 'Suggest tags locally' }))
+    await user.click(await screen.findByRole('button', { name: /NSFW/ }))
+
+    expect(screen.getByRole('checkbox', { name: 'Explicit content' })).not.toBeChecked()
+  })
+
+  it('does not offer a rating suggestion once it already matches the current SFW toggle', async () => {
+    const suggestTags = vi.fn().mockResolvedValue({
+      success: true,
+      data: [{ name: 'general', score: 0.95, category: 'rating' }]
+    })
+    setApi({
+      wd14Runtime: {
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'installed' } }),
+        onEvent: vi.fn().mockReturnValue(() => {})
+      },
+      wd14Tagger: { suggestTags }
+    })
+    const user = userEvent.setup()
+    renderForm({ initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' } })
+
+    await user.click(await screen.findByRole('button', { name: 'Suggest tags locally' }))
+    await screen.findByText('No confident tags found.')
+
+    expect(screen.queryByRole('button', { name: /NSFW/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /SFW/ })).not.toBeInTheDocument()
+  })
+
+  it('treats a "sensitive" rating as still SFW, not just "general"', async () => {
+    // Danbooru's 4-tier rating (general < sensitive < questionable <
+    // explicit) puts mild fanservice under "sensitive", not "general" - it
+    // must not be treated as NSFW here, or every faintly suggestive image
+    // would wrongly flip the toggle.
+    const suggestTags = vi.fn().mockResolvedValue({
+      success: true,
+      data: [{ name: 'sensitive', score: 0.71, category: 'rating' }]
+    })
+    setApi({
+      wd14Runtime: {
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'installed' } }),
+        onEvent: vi.fn().mockReturnValue(() => {})
+      },
+      wd14Tagger: { suggestTags }
+    })
+    const user = userEvent.setup()
+    renderForm({ initialFile: { route: '/pic.png', name: 'pic.png', type: 'image' } })
+
+    await user.click(await screen.findByRole('button', { name: 'Suggest tags locally' }))
+    await screen.findByText('No confident tags found.')
+
+    expect(screen.queryByRole('button', { name: /NSFW/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'Safe for work' })).toBeChecked()
+  })
 })
 
 describe('MediaForm SFW/AI toggles', () => {

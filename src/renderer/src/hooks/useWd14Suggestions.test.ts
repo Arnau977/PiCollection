@@ -34,6 +34,47 @@ describe('useWd14Suggestions', () => {
     const { result } = renderSuggestions()
     expect(result.current.status).toBe('idle')
     expect(result.current.missing).toEqual(EMPTY_MISSING)
+    expect(result.current.rating).toBeNull()
+  })
+
+  it('exposes the single highest-scoring rating tag, separately from missing suggestions', async () => {
+    setApi(
+      vi.fn().mockResolvedValue({
+        success: true,
+        data: [
+          { name: 'landscape', score: 0.9, category: 'general' },
+          { name: 'explicit', score: 0.91, category: 'rating' }
+        ]
+      })
+    )
+    const { result } = renderSuggestions()
+
+    await act(async () => {
+      await result.current.run('/pic.png')
+    })
+
+    expect(result.current.rating).toEqual({ name: 'explicit', score: 0.91, category: 'rating' })
+    expect(result.current.missing).toEqual(EMPTY_MISSING)
+  })
+
+  it('reset clears the rating', async () => {
+    setApi(
+      vi.fn().mockResolvedValue({
+        success: true,
+        data: [{ name: 'explicit', score: 0.9, category: 'rating' }]
+      })
+    )
+    const { result } = renderSuggestions()
+    await act(async () => {
+      await result.current.run('/pic.png')
+    })
+    expect(result.current.rating).not.toBeNull()
+
+    act(() => {
+      result.current.reset()
+    })
+
+    expect(result.current.rating).toBeNull()
   })
 
   it('runs a lookup, applies existing tags once, and exposes missing names sorted by score', async () => {

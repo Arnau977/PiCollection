@@ -253,7 +253,12 @@ export function MediaForm({
           {error && <p role="alert">{error}</p>}
         </form>
 
-        <SuggestionsRail suggestions={suggestions} input={input} saving={saving} />
+        <SuggestionsRail
+          suggestions={suggestions}
+          input={input}
+          saving={saving}
+          onApplyRating={(sfw) => setInput((prev) => ({ ...prev, sfw }))}
+        />
       </div>
     </div>
   )
