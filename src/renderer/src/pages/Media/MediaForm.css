@@ -56,30 +56,8 @@
   gap: var(--space-2);
 }
 
-/* Ties each taxonomy field back to the same color used for it everywhere
-   else in the app (media detail sections, suggestion chips - see
-   --color-artist/series/character/tag in base.css), instead of every field
-   in this form looking identical regardless of what it edits. */
-.media-form-field-accent {
-  border-left: 3px solid var(--field-accent-color, transparent);
-  padding-left: var(--space-3);
-}
-
-.media-form-field-accent-artist {
-  --field-accent-color: var(--color-artist);
-}
-
-.media-form-field-accent-tags {
-  --field-accent-color: var(--color-tag);
-}
-
-.media-form-field-accent-characters {
-  --field-accent-color: var(--color-character);
-}
-
-.media-form-field-accent-series {
-  --field-accent-color: var(--color-series);
-}
+/* Category accent border (.field-accent-*) now lives in main.css - shared
+   with FilterBar, which ties its taxonomy filters back to the same colors. */
 
 .media-form-toggles {
   display: flex;

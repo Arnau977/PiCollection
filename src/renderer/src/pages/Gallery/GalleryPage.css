@@ -29,9 +29,11 @@
   font-weight: 600;
 }
 
-.gallery-page-actions {
+.gallery-page-header {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .gallery-page-error {

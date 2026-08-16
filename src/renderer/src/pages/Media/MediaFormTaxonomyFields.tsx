@@ -45,7 +45,7 @@ export function MediaFormTaxonomyFields({
   return (
     <div className="media-form-group">
       <h2>{t('addMedia.groupTaxonomy')}</h2>
-      <div className="media-form-field-accent media-form-field-accent-tags">
+      <div className="field-accent field-accent-tags">
         <MultiSelectAutocomplete
           name="tags"
           label={t('filters.tags')}
@@ -62,7 +62,7 @@ export function MediaFormTaxonomyFields({
           onCreate={onCreateTag}
         />
       </div>
-      <div className="media-form-field-accent media-form-field-accent-characters">
+      <div className="field-accent field-accent-characters">
         <MultiSelectAutocomplete
           name="characters"
           label={t('filters.characters')}
@@ -79,7 +79,7 @@ export function MediaFormTaxonomyFields({
           onCreate={onCreateCharacter}
         />
       </div>
-      <div className="media-form-field-accent media-form-field-accent-series">
+      <div className="field-accent field-accent-series">
         <MultiSelectAutocomplete
           name="series"
           label={t('manage.series')}
