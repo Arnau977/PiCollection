@@ -75,7 +75,7 @@ describe('HomePage', () => {
 
     await waitFor(() => expect(getFiltered).toHaveBeenCalled())
     expect(getFiltered).toHaveBeenCalledWith(
-      expect.objectContaining({ limit: 12 }),
+      expect.objectContaining({ limit: 40 }),
       expect.objectContaining({ prop: 'createdAt', desc: true })
     )
     expect(await screen.findByText('media-0')).toBeInTheDocument()

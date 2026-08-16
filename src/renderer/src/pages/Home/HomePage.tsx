@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { PATH } from '@renderer/app.routes.const'
@@ -6,10 +6,14 @@ import type { StatsSummary } from '@shared/models'
 import Gallery from '../../components/Gallery'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
+import { itemCountForColumns } from '../../utils/fillRows'
 import { StatsBarList } from './StatsBarList'
 import './HomePage.css'
 
-const RECENT_LIMIT = 12
+// Fetches a generous fixed batch up front - comfortably more than any
+// reasonable window width could fill in 2 rows - so resizing the window
+// only re-slices the already-fetched list instead of refetching.
+const RECENT_FETCH_LIMIT = 40
 const EMPTY_STATS: StatsSummary = { topArtists: [], topTags: [], topCharacters: [], topSeries: [] }
 
 type StatsTab = 'artists' | 'tags' | 'characters' | 'series'
@@ -37,17 +41,45 @@ function useStatsSummary(): { data: StatsSummary; loading: boolean } {
 export default function HomePage(): JSX.Element {
   const { t } = useTranslation()
   const { defaults } = useGalleryDefaults()
-  const recentFilters = useMemo(() => ({ limit: RECENT_LIMIT }), [])
+  const recentFilters = useMemo(() => ({ limit: RECENT_FETCH_LIMIT }), [])
   const recentSorting = useMemo(() => ({ prop: 'createdAt' as const, desc: true }), [])
-  const { data: recentMedia, loading: loadingRecent } = useMediaQuery(recentFilters, recentSorting)
+  const { data: recentMediaAll, loading: loadingRecent } = useMediaQuery(
+    recentFilters,
+    recentSorting
+  )
   const { data: stats, loading: loadingStats } = useStatsSummary()
   const [statsTab, setStatsTab] = useState<StatsTab>('artists')
+
+  const recentSectionRef = useRef<HTMLElement>(null)
+  const [visibleCount, setVisibleCount] = useState<number | null>(null)
+
+  // Sized to end on a fully-filled row (1 or 2) instead of a partial one.
+  // Reads the column count the browser actually laid out for .gallery-grid
+  // (repeat(auto-fill, ...)) rather than reimplementing its responsive
+  // minmax/gap math here - a useLayoutEffect (not useEffect) so the
+  // recalculated slice applies before paint, avoiding a flash of the full
+  // fetched batch. A 0/unmeasurable column count (e.g. before first paint)
+  // is left as "show everything fetched" rather than collapsing to empty.
+  useLayoutEffect(() => {
+    function measure(): void {
+      const grid = recentSectionRef.current?.querySelector<HTMLElement>('.gallery-grid')
+      if (!grid) return
+      const columns = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length
+      if (columns > 0) setVisibleCount(itemCountForColumns(columns))
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    if (recentSectionRef.current) observer.observe(recentSectionRef.current)
+    return (): void => observer.disconnect()
+  }, [recentMediaAll.length])
+
+  const recentMedia = visibleCount === null ? recentMediaAll : recentMediaAll.slice(0, visibleCount)
 
   return (
     <div className="page home-page">
       <h1 className="page-title">{t('home.title')}</h1>
 
-      <section className="home-section">
+      <section className="home-section" ref={recentSectionRef}>
         <div className="home-section-header">
           <h2>{t('home.recentAdditions')}</h2>
           <Link to={PATH.GALLERY} className="btn">
