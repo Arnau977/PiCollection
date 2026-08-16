@@ -86,7 +86,7 @@ export function MediaFormDetailsFields({
         </label>
       </div>
 
-      <div className="media-form-field-accent media-form-field-accent-artist">
+      <div className="field-accent field-accent-artist">
         <Autocomplete
           name="artist"
           label={t('filters.artist')}

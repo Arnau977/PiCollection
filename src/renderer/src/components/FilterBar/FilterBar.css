@@ -12,7 +12,7 @@
   gap: var(--space-4);
 }
 
-.filter-bar-advanced {
+.filter-bar-core {
   padding-top: var(--space-4);
   border-top: 1px solid var(--border-color);
   /* Columns here have different heights (group filters add a button underneath),
@@ -41,53 +41,17 @@
   color: var(--color-text-muted);
 }
 
-.filter-sort-direction {
+.filter-sort-direction,
+.filter-more {
   flex: 0 0 auto;
 }
 
-.filter-advanced-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  align-self: flex-start;
-  background: var(--color-background-mute);
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0.4rem 0.85rem;
-  transition:
-    color var(--transition-base),
-    background-color var(--transition-base),
-    border-color var(--transition-base);
-}
-
-.filter-advanced-toggle:hover {
-  color: var(--color-text);
-  border-color: var(--border-color-strong);
-}
-
-.filter-advanced-toggle svg {
-  transition: transform 150ms ease;
-}
-
-.filter-advanced-toggle svg.chevron-open {
-  transform: rotate(180deg);
-}
-
-.filter-advanced-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.1rem;
-  height: 1.1rem;
-  padding: 0 0.3rem;
-  border-radius: var(--radius-pill);
-  background: var(--accent);
-  color: var(--accent-text);
-  font-size: 0.7rem;
-  font-weight: 700;
+/* The accent wrapper sits between .filter-bar-core and GroupedEntityFilter's
+   own root, which otherwise carries its flex-basis directly - without this,
+   the wrapper (a plain block box) falls back to shrink-to-fit sizing instead
+   of sharing the row evenly with the Artist field. */
+.filter-bar-core > .field-accent {
+  flex: 1 1 240px;
+  min-width: 220px;
 }
 
