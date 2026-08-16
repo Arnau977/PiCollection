@@ -5,7 +5,7 @@ import { app } from 'electron'
 import { join } from 'path'
 import type { Wd14TagSuggestion } from '@shared/models'
 import { resolveThumbnail } from '../thumbnails/thumbnails'
-import { getModelFilePaths, getPythonExecutablePath } from './wd14Runtime.service'
+import { getModelFilePaths, getPythonExecutablePath } from './wd14Runtime/wd14Runtime.service'
 
 const REQUEST_TIMEOUT_MS = 30_000
 

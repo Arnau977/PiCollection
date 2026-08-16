@@ -2,13 +2,13 @@ import { HashRouter as Router, Route, Routes } from 'react-router-dom'
 import HomePage from './pages/Home/HomePage'
 import GalleryPage from './pages/Gallery/GalleryPage'
 import { PATH } from './app.routes.const'
-import MediaPage from './pages/Media/MediaPage'
-import AddMediaPage from './pages/Media/AddMediaPage'
+import MediaPage from './pages/Media/MediaPage/MediaPage'
+import AddMediaPage from './pages/Media/AddMediaPage/AddMediaPage'
 import PendingEntryPage from './pages/Pending/PendingEntryPage'
 import SettingsPage from './pages/Settings/SettingsPage'
 import ManagePage from './pages/Manage/ManagePage'
 import NotFoundPage from './pages/NotFound/NotFoundPage'
-import { AppHeader } from './components/AppHeader'
+import { AppHeader } from './components/AppHeader/AppHeader'
 
 export default function AppRoutes(): JSX.Element {
   return (

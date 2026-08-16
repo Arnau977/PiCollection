@@ -18,7 +18,7 @@ vi.mock('electron', () => ({
 
 const { createBackupZip, restoreBackupZip } = await import('./backupService')
 const { resolveElectronDbPath } = await import('../database/electronDbPath')
-const { sauceNaoSettingsFilePath } = await import('./sauceNaoSettings')
+const { sauceNaoSettingsFilePath } = await import('./sauceNao/sauceNaoSettings')
 const { updaterSettingsFilePath } = await import('../updater/updaterSettings')
 const { sourceFolderSettingsFilePath } = await import('./sourceFolder')
 

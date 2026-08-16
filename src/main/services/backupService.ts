@@ -2,7 +2,7 @@ import AdmZip from 'adm-zip'
 import { existsSync, promises as fs } from 'fs'
 import { closeDb } from '../database/connection'
 import { resolveElectronDbPath } from '../database/electronDbPath'
-import { sauceNaoSettingsFilePath } from './sauceNaoSettings'
+import { sauceNaoSettingsFilePath } from './sauceNao/sauceNaoSettings'
 import { updaterSettingsFilePath } from '../updater/updaterSettings'
 import { sourceFolderSettingsFilePath } from './sourceFolder'
 

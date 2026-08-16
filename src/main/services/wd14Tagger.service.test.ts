@@ -12,7 +12,7 @@ const resolveThumbnailMock = vi.fn(
 )
 
 vi.mock('child_process', () => ({ spawn: (...args: unknown[]) => spawnMock(...args) }))
-vi.mock('./wd14Runtime.service', () => ({
+vi.mock('./wd14Runtime/wd14Runtime.service', () => ({
   getPythonExecutablePath: () => getPythonExecutablePath(),
   getModelFilePaths: () => getModelFilePaths()
 }))
