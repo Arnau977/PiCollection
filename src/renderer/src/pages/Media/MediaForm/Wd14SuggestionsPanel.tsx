@@ -4,6 +4,8 @@ import { Cpu, Plus, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { PATH } from '../../../app.routes.const'
 import { titleCaseTagName } from '../../../utils/matchEntityNames'
 import { TagWikiInfo } from '../../../components/TagWikiInfo/TagWikiInfo'
+import { useWd14NsfwThreshold } from '../../../hooks/useWd14NsfwThreshold'
+import { wd14RatingIsNsfw } from '../../../utils/wd14RatingSettings'
 import { WD14_MISSING_CATEGORIES, countWd14Missing } from './missingSuggestionCounts'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
 
@@ -16,17 +18,6 @@ function wd14ConfidenceClass(score: number): string {
   if (score >= 0.6) return 'wd14-confidence-high'
   if (score >= 0.45) return 'wd14-confidence-medium'
   return 'wd14-confidence-low'
-}
-
-/**
- * Danbooru's 4-tier rating is ordered general < sensitive < questionable <
- * explicit - "sensitive" covers mild fanservice (a swimsuit, a slit dress),
- * not actual explicit content, so it maps to this app's binary flag the
- * same way "general" does. Only the two higher tiers count as NSFW here,
- * matching the toggle's own "Explicit content" label.
- */
-function wd14RatingImpliesSfw(rating: string): boolean {
-  return rating === 'general' || rating === 'sensitive'
 }
 
 interface Wd14SuggestionsPanelProps {
@@ -49,6 +40,7 @@ export function Wd14SuggestionsPanel({
   onApplyRating
 }: Wd14SuggestionsPanelProps): JSX.Element {
   const { t } = useTranslation()
+  const { threshold } = useWd14NsfwThreshold()
 
   if (wd14Runtime.status !== 'installed') {
     return (
@@ -63,7 +55,7 @@ export function Wd14SuggestionsPanel({
   // Only worth surfacing when it would actually change something - hide it
   // once applying (or the toggle already agreeing on its own) makes the
   // suggested and current value match.
-  const suggestedSfw = wd14.rating != null && wd14RatingImpliesSfw(wd14.rating.name)
+  const suggestedSfw = wd14.rating != null && !wd14RatingIsNsfw(wd14.rating.name, threshold)
   const showRatingHint = wd14.status === 'ready' && wd14.rating != null && suggestedSfw !== inputSfw
 
   return (

@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { LocalTaggingSection } from './LocalTaggingSection'
+import { loadWd14NsfwThreshold } from '../../utils/wd14RatingSettings'
 
 const getStatus = vi.fn()
 const install = vi.fn()
@@ -19,6 +20,7 @@ beforeEach(() => {
     writable: true,
     configurable: true
   })
+  window.localStorage.clear()
 })
 
 describe('LocalTaggingSection', () => {
@@ -42,6 +44,26 @@ describe('LocalTaggingSection', () => {
     expect(
       await screen.findByRole('button', { name: 'Disable and remove' })
     ).toBeInTheDocument()
+  })
+
+  it('defaults the NSFW-sensitivity slider to "Questionable and up" once installed', async () => {
+    getStatus.mockResolvedValue({ success: true, data: { state: 'installed' } })
+    render(<LocalTaggingSection />)
+
+    const slider = await screen.findByRole('slider', { name: 'NSFW sensitivity' })
+    expect(slider).toHaveValue('1')
+    expect(slider).toHaveAttribute('aria-valuetext', 'Questionable and up')
+  })
+
+  it('moving the NSFW-sensitivity slider persists the new threshold', async () => {
+    getStatus.mockResolvedValue({ success: true, data: { state: 'installed' } })
+    render(<LocalTaggingSection />)
+
+    const slider = await screen.findByRole('slider', { name: 'NSFW sensitivity' })
+    fireEvent.change(slider, { target: { value: '2' } })
+
+    expect(slider).toHaveAttribute('aria-valuetext', 'Sensitive and up')
+    expect(loadWd14NsfwThreshold()).toBe('sensitive')
   })
 
   it('shows a progress bar reflecting the current percent while installing', async () => {
