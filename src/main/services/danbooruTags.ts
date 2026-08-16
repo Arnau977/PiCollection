@@ -1,5 +1,6 @@
 import { cleanEntityName } from '@shared/utils'
 import type { SauceNaoName } from '@shared/models'
+import { DANBOORU_USER_AGENT } from './danbooruHttp'
 
 const DANBOORU_POST_URL = /^https?:\/\/danbooru\.donmai\.us\/posts\/(\d+)/i
 const MAX_TAGS = 25
@@ -38,7 +39,8 @@ export async function fetchDanbooruTags(sourceUrl: string | undefined): Promise<
 
   try {
     const res = await fetch(`https://danbooru.donmai.us/posts/${match[1]}.json`, {
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      headers: { 'User-Agent': DANBOORU_USER_AGENT }
     })
     if (!res.ok) return []
 
