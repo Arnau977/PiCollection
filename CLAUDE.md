@@ -105,6 +105,10 @@ the task, not a follow-up:
   separate visual blocks - instead of letting it keep growing. See
   `src/renderer/src/pages/Media/MediaForm.tsx` and its sibling
   `useMediaForm*`/`MediaForm*`/`*SuggestionsPanel` files for the pattern.
+- Write all documentation, READMEs, and other written docs in English -
+  regardless of what language the conversation itself is in. This doesn't
+  apply to in-app user-facing strings (`src/renderer/src/assets/locales/`),
+  which stay translated per their own locale.
 
 ## Architecture
 
