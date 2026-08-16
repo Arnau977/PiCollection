@@ -82,6 +82,25 @@ describe('DanbooruTagAutocomplete', () => {
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
   })
 
+  it("renders the suggestion list outside the input's own DOM subtree", async () => {
+    // Regression test: the list used to be an absolutely-positioned child of
+    // the input's own wrapper, which got clipped by an ancestor's
+    // `overflow-y: auto` (e.g. .manage-form-panel) - it must render as a
+    // sibling of the app root (portaled), not nested under the input.
+    autocompleteTags.mockResolvedValue({
+      success: true,
+      data: [{ name: 'cat_ears', postCount: 50000 }]
+    })
+    const user = userEvent.setup()
+    const { container } = render(<Wrapper />)
+
+    await user.type(screen.getByRole('textbox'), 'cat')
+    await waitFor(() => screen.getByText('cat_ears'))
+
+    expect(container.querySelector('.danbooru-tag-autocomplete-list')).not.toBeInTheDocument()
+    expect(document.body.querySelector('.danbooru-tag-autocomplete-list')).toBeInTheDocument()
+  })
+
   it('closes the suggestion list when clicking outside', async () => {
     autocompleteTags.mockResolvedValue({
       success: true,
