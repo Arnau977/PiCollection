@@ -101,7 +101,13 @@ const GalleryPage: React.FC = () => {
 
   return (
     <div className="page gallery-page">
-      <h1 className="page-title">{t('gallery.title')}</h1>
+      <div className="gallery-page-header">
+        <h1 className="page-title">{t('gallery.title')}</h1>
+        <button className="btn btn-primary" onClick={() => navigate(PATH.ADD_MEDIA)}>
+          <Plus size={16} />
+          {t('gallery.addMedia')}
+        </button>
+      </div>
 
       <FilterBar
         filters={filters}
@@ -118,13 +124,6 @@ const GalleryPage: React.FC = () => {
           </button>
         </div>
       )}
-
-      <div className="gallery-page-actions">
-        <button className="btn btn-primary" onClick={() => navigate(PATH.ADD_MEDIA)}>
-          <Plus size={16} />
-          {t('gallery.addMedia')}
-        </button>
-      </div>
 
       <GalleryToolbar
         total={total}

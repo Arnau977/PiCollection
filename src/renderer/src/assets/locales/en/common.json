@@ -185,7 +185,7 @@
     "sortName": "Name",
     "ascending": "Ascending",
     "descending": "Descending",
-    "advanced": "Advanced filters",
+    "more": "More filters",
     "groupTooltip": "Items within a group must all match (AND). Add another group to match that group instead (OR) — e.g. (Ishtar AND Ereshkigal) OR (Rin AND Shirou).",
     "addGroup": "Add OR group",
     "removeGroup": "Remove group",
