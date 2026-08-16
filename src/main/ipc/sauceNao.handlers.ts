@@ -2,8 +2,8 @@ import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { ipcHandler } from './helpers'
 import { IPC } from '@shared/ipc/contracts'
-import { lookupSauceNao } from '../services/sauceNao.service'
-import { readSauceNaoApiKey, writeSauceNaoApiKey } from '../services/sauceNaoSettings'
+import { lookupSauceNao } from '../services/sauceNao/sauceNao.service'
+import { readSauceNaoApiKey, writeSauceNaoApiKey } from '../services/sauceNao/sauceNaoSettings'
 import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
 
 export function registerSauceNaoHandlers(): void {
