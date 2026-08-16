@@ -137,7 +137,6 @@ export function FilterBar({
           >
             <option value="createdAt">{t('filters.sortDate')}</option>
             <option value="name">{t('filters.sortName')}</option>
-            <option value="sfw">{t('filters.sortSfw')}</option>
           </select>
         </label>
 

@@ -6,8 +6,7 @@ import { extractAiToken, parseSearchQuery, type QueryNode } from '@shared/query/
 
 const SORT_COLUMNS: Record<string, keyof MediaTable> = {
   name: 'name',
-  createdAt: 'created_at',
-  sfw: 'sfw'
+  createdAt: 'created_at'
 }
 
 const DEFAULT_LIMIT = 200

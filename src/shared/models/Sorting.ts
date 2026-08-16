@@ -1,4 +1,4 @@
-export type MediaSortableProp = 'name' | 'createdAt' | 'sfw'
+export type MediaSortableProp = 'name' | 'createdAt'
 
 export interface Sorting {
   prop?: MediaSortableProp
