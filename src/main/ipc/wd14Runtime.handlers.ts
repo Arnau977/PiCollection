@@ -7,7 +7,7 @@ import {
   getWd14RuntimeStatus,
   installWd14Runtime,
   removeWd14Runtime
-} from '../services/wd14Runtime.service'
+} from '../services/wd14Runtime/wd14Runtime.service'
 
 let eventWindow: BrowserWindow | null = null
 
