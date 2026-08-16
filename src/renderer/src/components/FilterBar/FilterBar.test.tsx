@@ -5,8 +5,8 @@ import userEvent from '@testing-library/user-event'
 import type { CharacterModel, MediaFilters, SeriesModel, Sorting, TagModel } from '@shared/models'
 import { FilterBar } from './FilterBar'
 
-function advancedPanel(): HTMLElement {
-  return document.querySelector('.filter-bar-advanced') as HTMLElement
+function corePanel(): HTMLElement {
+  return document.querySelector('.filter-bar-core') as HTMLElement
 }
 
 let tagsData: TagModel[] = []
@@ -66,16 +66,22 @@ describe('FilterBar', () => {
     expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, query: 'sunset' })
   })
 
+  it('always shows the artist/tags/characters/series filters, with no collapse toggle', () => {
+    renderFilterBar()
+
+    expect(screen.getByRole('combobox', { name: /artist/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /advanced/i })).not.toBeInTheDocument()
+  })
+
   it('adds a tag to the tags filter group and merges it into the existing filters', async () => {
     tagsData = [{ id: 't1', name: 'landscape' }]
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const { onFiltersChange } = renderFilterBar({ sfw: true })
 
-    await user.click(screen.getByRole('button', { name: /advanced filters/i }))
-    // react-aria combines its own <Label> with our aria-label into e.g. "Tags Tags",
-    // so match positionally (within the advanced panel, after the Artist field)
-    // instead of by exact accessible name.
-    const [, tagsCombobox] = within(advancedPanel()).getAllByRole('combobox')
+    // Combobox order: Artist, Tags, Characters, Series. Scoped to the core
+    // panel so the native Type/Sort-by <select> elements (also exposed with
+    // an implicit "combobox" role) don't shift the index.
+    const [, tagsCombobox] = within(corePanel()).getAllByRole('combobox')
     await user.type(tagsCombobox, 'landscape')
     await user.click(await screen.findByRole('option', { name: 'landscape' }))
 
@@ -88,7 +94,6 @@ describe('FilterBar', () => {
       { id: 't2', name: 'Ereshkigal' }
     ]
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    // an already-active tag group auto-expands Advanced Filters on mount
     const { onFiltersChange } = renderFilterBar({ tagGroups: [['t1'], []] })
 
     const comboboxes = screen.getAllByRole('combobox', { name: /^Tags/ })
@@ -106,47 +111,6 @@ describe('FilterBar', () => {
     await user.click(screen.getByRole('button', { name: 'Descending' }))
 
     expect(onSortingChange).toHaveBeenCalledWith({ prop: 'createdAt', desc: false })
-  })
-
-  it('keeps advanced filters (Artist/Tags/Characters) collapsed by default', () => {
-    renderFilterBar()
-
-    expect(screen.queryByRole('combobox', { name: /artist/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /advanced filters/i })).toHaveAttribute(
-      'aria-expanded',
-      'false'
-    )
-  })
-
-  it('expands advanced filters when the toggle is clicked', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    renderFilterBar()
-
-    await user.click(screen.getByRole('button', { name: /advanced filters/i }))
-
-    expect(screen.getByRole('combobox', { name: /artist/i })).toBeInTheDocument()
-  })
-
-  it('auto-expands advanced filters when an advanced filter is already active', () => {
-    renderFilterBar({ artistId: 'a1' })
-
-    expect(screen.getByRole('combobox', { name: /artist/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /advanced filters/i })).toHaveAttribute(
-      'aria-expanded',
-      'true'
-    )
-  })
-
-  it('shows a badge with the count of active advanced filters', () => {
-    renderFilterBar({ artistId: 'a1', tagGroups: [['t1']] })
-
-    expect(screen.getByRole('button', { name: /advanced filters/i })).toHaveTextContent('2')
-  })
-
-  it('counts noCharacter and noSeries as active advanced filters', () => {
-    renderFilterBar({ noCharacter: true, noSeries: true })
-
-    expect(screen.getByRole('button', { name: /advanced filters/i })).toHaveTextContent('2')
   })
 
   it('shows a "no character" toggle that clears character groups and sets noCharacter, atomically', async () => {
@@ -168,8 +132,8 @@ describe('FilterBar', () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const { onFiltersChange } = renderFilterBar({ noCharacter: true })
 
-    // Combobox order in the advanced panel: Artist, Tags, Characters, Series.
-    const [, , charactersCombobox] = within(advancedPanel()).getAllByRole('combobox')
+    // Combobox order: Artist, Tags, Characters, Series.
+    const [, , charactersCombobox] = within(corePanel()).getAllByRole('combobox')
     expect(charactersCombobox).toBeDisabled()
 
     await user.click(screen.getByRole('button', { name: 'No character assigned' }))
@@ -185,9 +149,8 @@ describe('FilterBar', () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const { onFiltersChange } = renderFilterBar({ sfw: true })
 
-    await user.click(screen.getByRole('button', { name: /advanced filters/i }))
-    // Combobox order in the advanced panel: Artist, Tags, Characters, Series.
-    const [, , , seriesCombobox] = within(advancedPanel()).getAllByRole('combobox')
+    // Combobox order: Artist, Tags, Characters, Series.
+    const [, , , seriesCombobox] = within(corePanel()).getAllByRole('combobox')
     await user.type(seriesCombobox, 'Fate')
     await user.click(await screen.findByRole('option', { name: 'Fate/Grand Order' }))
 
@@ -200,7 +163,6 @@ describe('FilterBar', () => {
       { id: 's2', name: 'Fate/stay night' }
     ]
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    // an already-active series group auto-expands Advanced Filters on mount
     const { onFiltersChange } = renderFilterBar({ seriesGroups: [['s1'], []] })
 
     const comboboxes = screen.getAllByRole('combobox', { name: /^Series/ })
@@ -224,24 +186,19 @@ describe('FilterBar', () => {
   it('disables the series picker while noSeries is checked', () => {
     renderFilterBar({ noSeries: true })
 
-    const [seriesCombobox] = within(advancedPanel()).getAllByRole('combobox', { name: /series/i })
+    const [seriesCombobox] = within(corePanel()).getAllByRole('combobox', { name: /series/i })
     expect(seriesCombobox).toBeDisabled()
   })
 
-  it('counts an active series filter in the advanced filters badge', () => {
-    renderFilterBar({ seriesGroups: [['s1']] })
-
-    expect(screen.getByRole('button', { name: /advanced filters/i })).toHaveTextContent('1')
-  })
-
   it('shows the linked series next to a character option', async () => {
-    charactersData = [{ id: 'c1', name: 'Ishtar', series: [{ id: 's1', name: 'Fate/Grand Order' }] }]
+    charactersData = [
+      { id: 'c1', name: 'Ishtar', series: [{ id: 's1', name: 'Fate/Grand Order' }] }
+    ]
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     renderFilterBar()
 
-    await user.click(screen.getByRole('button', { name: /advanced filters/i }))
-    // Combobox order in the advanced panel: Artist, Tags, Characters, Series.
-    const [, , charactersCombobox] = within(advancedPanel()).getAllByRole('combobox')
+    // Combobox order: Artist, Tags, Characters, Series.
+    const [, , charactersCombobox] = within(corePanel()).getAllByRole('combobox')
     await user.type(charactersCombobox, 'Ishtar')
 
     expect(
@@ -249,27 +206,47 @@ describe('FilterBar', () => {
     ).toBeInTheDocument()
   })
 
-  it('sets isAiGenerated: true when "AI only" is selected', async () => {
-    const { onFiltersChange } = renderFilterBar({ sfw: true })
+  describe('More filters popover (SFW / AI-generated)', () => {
+    it('keeps the SFW/AI selects hidden until "More filters" is opened', () => {
+      renderFilterBar()
 
-    fireEvent.change(screen.getByLabelText('AI'), { target: { value: 'ai' } })
+      expect(screen.queryByLabelText('AI')).not.toBeInTheDocument()
+    })
 
-    expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, isAiGenerated: true })
-  })
+    it('sets isAiGenerated: true when "AI only" is selected', async () => {
+      const user = userEvent.setup()
+      const { onFiltersChange } = renderFilterBar({ sfw: true })
 
-  it('sets isAiGenerated: false when "Exclude AI" is selected', async () => {
-    const { onFiltersChange } = renderFilterBar({ sfw: true })
+      await user.click(screen.getByRole('button', { name: /more filters/i }))
+      fireEvent.change(screen.getByLabelText('AI'), { target: { value: 'ai' } })
 
-    fireEvent.change(screen.getByLabelText('AI'), { target: { value: 'notAi' } })
+      expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, isAiGenerated: true })
+    })
 
-    expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, isAiGenerated: false })
-  })
+    it('sets isAiGenerated: false when "Exclude AI" is selected', async () => {
+      const user = userEvent.setup()
+      const { onFiltersChange } = renderFilterBar({ sfw: true })
 
-  it('clears isAiGenerated when "All" is selected again', async () => {
-    const { onFiltersChange } = renderFilterBar({ sfw: true, isAiGenerated: true })
+      await user.click(screen.getByRole('button', { name: /more filters/i }))
+      fireEvent.change(screen.getByLabelText('AI'), { target: { value: 'notAi' } })
 
-    fireEvent.change(screen.getByLabelText('AI'), { target: { value: 'all' } })
+      expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, isAiGenerated: false })
+    })
 
-    expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, isAiGenerated: undefined })
+    it('clears isAiGenerated when "All" is selected again', async () => {
+      const user = userEvent.setup()
+      const { onFiltersChange } = renderFilterBar({ sfw: true, isAiGenerated: true })
+
+      await user.click(screen.getByRole('button', { name: /more filters/i }))
+      fireEvent.change(screen.getByLabelText('AI'), { target: { value: 'all' } })
+
+      expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, isAiGenerated: undefined })
+    })
+
+    it('shows a badge with the count of active SFW/AI filters', () => {
+      renderFilterBar({ sfw: true, isAiGenerated: false })
+
+      expect(screen.getByRole('button', { name: /more filters/i })).toHaveTextContent('2')
+    })
   })
 })

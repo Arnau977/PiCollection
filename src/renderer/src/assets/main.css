@@ -47,6 +47,7 @@ code {
   color: var(--color-text);
   font-size: 0.88rem;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
   transition:
     background-color 150ms ease,
@@ -248,6 +249,31 @@ input[type='checkbox'] {
   color: var(--color-text-muted);
   padding: var(--space-6) 0;
   text-align: center;
+}
+
+/* Ties a taxonomy field back to the same color used for it everywhere else
+   in the app (media detail sections, suggestion chips, category tabs - see
+   --color-artist/series/character/tag above), instead of every field looking
+   identical regardless of what it edits. Shared by MediaForm and FilterBar. */
+.field-accent {
+  border-left: 3px solid var(--field-accent-color, transparent);
+  padding-left: var(--space-3);
+}
+
+.field-accent-artist {
+  --field-accent-color: var(--color-artist);
+}
+
+.field-accent-tags {
+  --field-accent-color: var(--color-tag);
+}
+
+.field-accent-characters {
+  --field-accent-color: var(--color-character);
+}
+
+.field-accent-series {
+  --field-accent-color: var(--color-series);
 }
 
 .icon-btn {

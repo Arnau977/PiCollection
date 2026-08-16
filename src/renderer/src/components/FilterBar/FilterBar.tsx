@@ -1,12 +1,11 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown } from 'lucide-react'
 import type { ArtistModel, MediaFilters, MediaSortableProp, SeriesModel, Sorting, TagModel } from '@shared/models'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
 import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import { Autocomplete } from '../Autocomplete/Autocomplete'
 import { SearchBar } from '../SearchBar/SearchBar'
 import { GroupedEntityFilter } from './GroupedEntityFilter'
+import { MoreFiltersPopover } from './MoreFiltersPopover'
 import './FilterBar.css'
 
 interface FilterBarProps {
@@ -49,17 +48,6 @@ export function FilterBar({
   const { data: characters } = useCharacters()
   const { data: series } = useSeries()
 
-  const advancedActiveCount = [
-    filters.artistId ? 1 : 0,
-    hasNonEmptyGroup(filters.tagGroups) ? 1 : 0,
-    hasNonEmptyGroup(filters.characterGroups) ? 1 : 0,
-    filters.noCharacter ? 1 : 0,
-    hasNonEmptyGroup(filters.seriesGroups) ? 1 : 0,
-    filters.noSeries ? 1 : 0
-  ].reduce((a, b) => a + b, 0)
-
-  const [showAdvanced, setShowAdvanced] = useState(advancedActiveCount > 0)
-
   return (
     <div className="filter-bar card">
       <SearchBar
@@ -72,42 +60,6 @@ export function FilterBar({
       />
 
       <div className="filter-bar-row">
-        <label className="filter-field">
-          <span className="filter-label">{t('filters.sfw')}</span>
-          <select
-            value={filters.sfw === undefined ? 'all' : filters.sfw ? 'sfw' : 'nsfw'}
-            onChange={(e) => {
-              const selected = e.target.value
-              onFiltersChange({
-                ...filters,
-                sfw: selected === 'all' ? undefined : selected === 'sfw'
-              })
-            }}
-          >
-            <option value="all">{t('filters.sfwAll')}</option>
-            <option value="sfw">{t('filters.sfwOnly')}</option>
-            <option value="nsfw">{t('filters.nsfwOnly')}</option>
-          </select>
-        </label>
-
-        <label className="filter-field">
-          <span className="filter-label">{t('filters.ai')}</span>
-          <select
-            value={filters.isAiGenerated === undefined ? 'all' : filters.isAiGenerated ? 'ai' : 'notAi'}
-            onChange={(e) => {
-              const selected = e.target.value
-              onFiltersChange({
-                ...filters,
-                isAiGenerated: selected === 'all' ? undefined : selected === 'ai'
-              })
-            }}
-          >
-            <option value="all">{t('filters.aiAll')}</option>
-            <option value="ai">{t('filters.aiOnly')}</option>
-            <option value="notAi">{t('filters.aiExcluded')}</option>
-          </select>
-        </label>
-
         <label className="filter-field">
           <span className="filter-label">{t('filters.type')}</span>
           <select
@@ -137,7 +89,6 @@ export function FilterBar({
           >
             <option value="createdAt">{t('filters.sortDate')}</option>
             <option value="name">{t('filters.sortName')}</option>
-            <option value="sfw">{t('filters.sortSfw')}</option>
           </select>
         </label>
 
@@ -151,35 +102,29 @@ export function FilterBar({
             {sorting?.desc ? t('filters.descending') : t('filters.ascending')}
           </button>
         </div>
+
+        <div className="filter-field filter-more">
+          <span className="filter-label">&nbsp;</span>
+          <MoreFiltersPopover filters={filters} onFiltersChange={onFiltersChange} />
+        </div>
       </div>
 
-      <button
-        type="button"
-        className="filter-advanced-toggle"
-        aria-expanded={showAdvanced}
-        onClick={() => setShowAdvanced((v) => !v)}
-      >
-        <ChevronDown size={16} className={showAdvanced ? 'chevron-open' : ''} />
-        {t('filters.advanced')}
-        {advancedActiveCount > 0 && (
-          <span className="filter-advanced-badge">{advancedActiveCount}</span>
-        )}
-      </button>
+      {/* Tag/character/series/artist search is the actual point of a
+          booru-style library - always visible, not a step behind a toggle. */}
+      <div className="filter-bar-row filter-bar-core">
+        <div className="filter-field field-accent field-accent-artist">
+          <Autocomplete
+            name="artist-filter"
+            label={t('filters.artist')}
+            options={artists}
+            getOptionLabel={getArtistLabel}
+            getOptionValue={(artist) => artist.id}
+            selectedKey={filters.artistId ?? null}
+            onSelect={(artist) => onFiltersChange({ ...filters, artistId: artist?.id })}
+          />
+        </div>
 
-      {showAdvanced && (
-        <div className="filter-bar-row filter-bar-advanced">
-          <div className="filter-field">
-            <Autocomplete
-              name="artist-filter"
-              label={t('filters.artist')}
-              options={artists}
-              getOptionLabel={getArtistLabel}
-              getOptionValue={(artist) => artist.id}
-              selectedKey={filters.artistId ?? null}
-              onSelect={(artist) => onFiltersChange({ ...filters, artistId: artist?.id })}
-            />
-          </div>
-
+        <div className="field-accent field-accent-tags">
           <GroupedEntityFilter
             label={t('filters.tags')}
             groups={filters.tagGroups ?? []}
@@ -190,7 +135,9 @@ export function FilterBar({
             getOptionLabel={getTagLabel}
             getOptionValue={(tag) => tag.id}
           />
+        </div>
 
+        <div className="field-accent field-accent-characters">
           <GroupedEntityFilter
             label={t('filters.characters')}
             groups={filters.characterGroups ?? []}
@@ -211,7 +158,9 @@ export function FilterBar({
               label: t('filters.noCharacter')
             }}
           />
+        </div>
 
+        <div className="field-accent field-accent-series">
           <GroupedEntityFilter
             label={t('manage.series')}
             groups={filters.seriesGroups ?? []}
@@ -233,7 +182,7 @@ export function FilterBar({
             }}
           />
         </div>
-      )}
+      </div>
     </div>
   )
 }
