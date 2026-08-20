@@ -258,6 +258,7 @@
     "next": "Next",
     "close": "Close",
     "sendToPending": "Send to pending",
+    "sentToPending": "Sent to Pending.",
     "exitDialogTitle": "Files left to import",
     "exitDialogMessage": "{{count}} file(s) haven't been added yet. What would you like to do with them?",
     "exitDialogAddToPending": "Add remaining to Pending",

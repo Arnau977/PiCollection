@@ -4,6 +4,7 @@ import type { ExpandedMediaFile, MediaModel } from '@shared/models'
 import { deriveMediaName } from '@shared/utils'
 import { MediaForm } from '../MediaForm/MediaForm'
 import { ImportQueueExitDialog } from '../ImportQueueExitDialog/ImportQueueExitDialog'
+import { Toast } from '../../../components/Toast/Toast'
 
 interface ImportQueueProps {
   selection: { files: string[]; folders: string[] }
@@ -25,6 +26,7 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
   // "Siguiente") can still open the item that was actually saved, instead of
   // just closing blindly the way skipping an unsaved item does.
   const [currentSaved, setCurrentSaved] = useState<MediaModel | null>(null)
+  const [showSentToPendingToast, setShowSentToPendingToast] = useState(false)
 
   useEffect((): (() => void) => {
     let cancelled = false
@@ -62,14 +64,27 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
   const current = items[index]
   const remaining = items.length - index
 
-  function advance(): void {
+  function goToNextOrFinish(onFinish: () => void): void {
     if (index + 1 >= items.length) {
-      if (currentSaved) onLastSaved(currentSaved)
-      else onClose()
+      onFinish()
       return
     }
     setCurrentSaved(null)
     setState({ kind: 'ready', items, index: index + 1 })
+  }
+
+  function advance(): void {
+    goToNextOrFinish(() => (currentSaved ? onLastSaved(currentSaved) : onClose()))
+  }
+
+  // Unlike Guardar, sending to Pending is itself a "move on" gesture - it
+  // takes the file out of this editing session immediately instead of
+  // waiting for a separate Siguiente click. On the last item there's nothing
+  // saved-and-ready-to-review the way onLastSaved expects (the whole point
+  // was deferring review), so this just closes the queue instead.
+  function handleSentToPending(): void {
+    setShowSentToPendingToast(true)
+    goToNextOrFinish(onClose)
   }
 
   // Going back re-shows the file's own picked route (`key={current.route}`
@@ -129,7 +144,14 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
         }}
         onCancel={handleCloseClick}
         onSaved={handleSaved}
+        onSentToPending={handleSentToPending}
       />
+      {showSentToPendingToast && (
+        <Toast
+          message={t('importQueue.sentToPending')}
+          onDismiss={() => setShowSentToPendingToast(false)}
+        />
+      )}
       {showExitDialog && (
         <ImportQueueExitDialog
           remaining={remaining}

@@ -22,6 +22,7 @@ interface MediaFormProps {
   queueInfo?: QueueInfo
   onCancel: () => void
   onSaved: (media: MediaModel) => void
+  onSentToPending?: (media: MediaModel) => void
   onMarkResolved?: () => void
 }
 
@@ -58,6 +59,7 @@ export function MediaForm({
   queueInfo,
   onCancel,
   onSaved,
+  onSentToPending,
   onMarkResolved
 }: MediaFormProps): JSX.Element {
   const isEditing = Boolean(media)
@@ -177,7 +179,7 @@ export function MediaForm({
     if (result.success) {
       drafts.refetchCreated()
       await suggestions.linkCharactersToSoleSeries(resolvedSeriesIds, resolvedCharacterIds)
-      onSaved(result.data)
+      ;(onSentToPending ?? onSaved)(result.data)
     } else {
       setError(result.error.message)
     }
