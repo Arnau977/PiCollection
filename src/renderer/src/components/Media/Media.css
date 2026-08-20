@@ -120,12 +120,15 @@
   user-select: text;
 }
 
+/* Column, not row: badges used to sit inline next to a short title (room
+   left on the row) but wrap below a long one (no room left) - inconsistent
+   depending on filename length. Always stacking keeps the badge position
+   predictable regardless of title length. */
 .media-detail-header {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .media-detail-header h1 {
