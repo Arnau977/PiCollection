@@ -1,6 +1,7 @@
 import { cleanEntityName } from '@shared/utils'
 import type { SauceNaoName } from '@shared/models'
-import { DANBOORU_USER_AGENT } from './danbooruHttp'
+import { danbooruFetch } from './danbooruHttp'
+import { readDanbooruCredentials } from './danbooruSettings'
 
 const DANBOORU_POST_URL = /^https?:\/\/danbooru\.donmai\.us\/posts\/(\d+)/i
 const MAX_TAGS = 25
@@ -30,17 +31,19 @@ const TAG_STOPLIST = new Set([
 /**
  * SauceNAO's booru results carry characters/series/artist but no general
  * tag list - when the winning match is a Danbooru post, this fetches its
- * general tags as a follow-up. Returns [] for any non-Danbooru URL, network
- * failure, timeout, or malformed response; never throws.
+ * general tags as a follow-up. Returns [] for any non-Danbooru URL, missing
+ * Danbooru credentials (see Settings - unidentified requests are what got
+ * this app 403'd by Cloudflare in the first place), network failure,
+ * timeout, or malformed response; never throws.
  */
 export async function fetchDanbooruTags(sourceUrl: string | undefined): Promise<SauceNaoName[]> {
   const match = sourceUrl?.match(DANBOORU_POST_URL)
   if (!match) return []
+  if (!readDanbooruCredentials()) return []
 
   try {
-    const res = await fetch(`https://danbooru.donmai.us/posts/${match[1]}.json`, {
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      headers: { 'User-Agent': DANBOORU_USER_AGENT }
+    const res = await danbooruFetch(new URL(`https://danbooru.donmai.us/posts/${match[1]}.json`), {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
     })
     if (!res.ok) return []
 

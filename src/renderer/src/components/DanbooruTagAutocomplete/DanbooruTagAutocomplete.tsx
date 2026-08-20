@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { DanbooruTagSuggestion } from '@shared/models'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
+import { useDanbooruCredentialsConfigured } from '../../hooks/useDanbooruCredentialsConfigured'
 import './DanbooruTagAutocomplete.css'
 
 const MIN_QUERY_LENGTH = 2
@@ -44,10 +45,15 @@ export function DanbooruTagAutocomplete({
   const [position, setPosition] = useState<Position | null>(null)
   const [suggestions, setSuggestions] = useState<DanbooruTagSuggestion[]>([])
   const debouncedValue = useDebouncedValue(value, 200)
+  const hasDanbooruAccount = useDanbooruCredentialsConfigured()
 
   useEffect(() => {
     const query = debouncedValue.trim()
-    if (query.length < MIN_QUERY_LENGTH) {
+    // Keeps the plain text input working either way - only the Danbooru-
+    // backed suggestion dropdown is unavailable without a configured account
+    // (see useDanbooruCredentialsConfigured), same as fetchDanbooruTags and
+    // lookupTagWiki refusing the call on the main-process side.
+    if (query.length < MIN_QUERY_LENGTH || !hasDanbooruAccount) {
       setSuggestions([])
       return
     }
@@ -59,7 +65,7 @@ export function DanbooruTagAutocomplete({
     return (): void => {
       cancelled = true
     }
-  }, [debouncedValue])
+  }, [debouncedValue, hasDanbooruAccount])
 
   useEffect(() => {
     if (!open) return

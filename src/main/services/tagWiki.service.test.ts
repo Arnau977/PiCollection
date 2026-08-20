@@ -1,9 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { promises as fsPromises } from 'fs'
+import { join } from 'path'
+import { tmpdir } from 'os'
 import { initTestDbSingleton } from '../database/testHelpers'
 
+let userDataDir = ''
+
 vi.stubGlobal('fetch', vi.fn())
+vi.mock('electron', () => ({
+  app: { getPath: () => userDataDir, getVersion: () => '1.0.0' }
+}))
 
 const { lookupTagWiki } = await import('./tagWiki.service')
+const { writeDanbooruCredentials, resetDanbooruCredentialsCache } = await import(
+  './danbooruSettings'
+)
+const { resetDanbooruRateLimiterForTests } = await import('./danbooruHttp')
 
 let cleanup: () => Promise<void>
 
@@ -16,6 +28,10 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 beforeEach(async () => {
+  userDataDir = await fsPromises.mkdtemp(join(tmpdir(), 'tag-wiki-service-'))
+  resetDanbooruCredentialsCache()
+  writeDanbooruCredentials({ username: 'arnau', apiKey: 'abc123', userId: 42 })
+  resetDanbooruRateLimiterForTests()
   const testDb = await initTestDbSingleton()
   cleanup = testDb.cleanup
   vi.mocked(fetch).mockReset()
@@ -23,9 +39,36 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await cleanup()
+  await fsPromises.rm(userDataDir, { recursive: true, force: true })
 })
 
 describe('lookupTagWiki', () => {
+  it('throws without calling fetch when no Danbooru credentials are configured', async () => {
+    resetDanbooruCredentialsCache()
+    writeDanbooruCredentials(undefined)
+
+    await expect(lookupTagWiki('cat_ears')).rejects.toThrow('Configure a Danbooru account')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('serves an already-cached entry even without configured credentials', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse([{ title: 'cat_ears', body: 'A character with cat ears.', other_names: [] }])
+    )
+    await lookupTagWiki('cat_ears')
+    resetDanbooruCredentialsCache()
+    writeDanbooruCredentials(undefined)
+
+    const result = await lookupTagWiki('cat_ears')
+
+    expect(result).toEqual({
+      tagName: 'cat_ears',
+      body: 'A character with cat ears.',
+      otherNames: []
+    })
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+
   it('fetches from Danbooru and persists the result on a cache miss', async () => {
     vi.mocked(fetch).mockResolvedValue(
       jsonResponse([

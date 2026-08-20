@@ -31,7 +31,10 @@ function setApi(overrides: Record<string, unknown> = {}): void {
         getEntityThumbnails: vi.fn().mockResolvedValue({ success: true, data: [] })
       },
       danbooru: {
-        autocompleteTags: vi.fn().mockResolvedValue({ success: true, data: [] })
+        autocompleteTags: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        getCredentials: vi
+          .fn()
+          .mockResolvedValue({ success: true, data: { username: 'arnau', apiKey: 'abc123' } })
       },
       tagWiki: {
         lookup: vi.fn().mockResolvedValue({ success: true, data: null })
@@ -267,8 +270,10 @@ describe('TagsManager', () => {
     expect(portraitItem).toHaveTextContent('0')
   })
 
-  it('renders a tag-wiki info button for each tag', () => {
+  it('renders a tag-wiki info button for each tag', async () => {
     render(<TagsManager />)
-    expect(screen.getByLabelText('What does this tag mean? (landscape)')).toBeInTheDocument()
+    expect(
+      await screen.findByLabelText('What does this tag mean? (landscape)')
+    ).toBeInTheDocument()
   })
 })

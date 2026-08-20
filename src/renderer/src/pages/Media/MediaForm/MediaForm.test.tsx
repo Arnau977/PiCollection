@@ -30,6 +30,15 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
     },
     wd14Tagger: {
       suggestTags: vi.fn()
+    },
+    danbooru: {
+      autocompleteTags: vi.fn().mockResolvedValue({ success: true, data: [] }),
+      getCredentials: vi
+        .fn()
+        .mockResolvedValue({ success: true, data: { username: 'arnau', apiKey: 'abc123' } })
+    },
+    tagWiki: {
+      lookup: vi.fn().mockResolvedValue({ success: true, data: null })
     }
   }
   const merged: Record<string, unknown> = {}

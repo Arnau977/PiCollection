@@ -48,6 +48,13 @@ beforeEach(() => {
       series: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
       media: {
         getEntityThumbnails: vi.fn().mockResolvedValue({ success: true, data: [] })
+      },
+      danbooru: {
+        autocompleteTags: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        getCredentials: vi.fn().mockResolvedValue({ success: true, data: undefined })
+      },
+      tagWiki: {
+        lookup: vi.fn().mockResolvedValue({ success: true, data: null })
       }
     },
     writable: true,

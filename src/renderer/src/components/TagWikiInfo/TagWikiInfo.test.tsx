@@ -5,17 +5,29 @@ import userEvent from '@testing-library/user-event'
 import { TagWikiInfo } from './TagWikiInfo'
 
 const lookup = vi.fn()
+const getCredentials = vi.fn()
 
 beforeEach(() => {
   lookup.mockReset()
+  getCredentials
+    .mockReset()
+    .mockResolvedValue({ success: true, data: { username: 'arnau', apiKey: 'abc123' } })
   Object.defineProperty(window, 'api', {
-    value: { tagWiki: { lookup } },
+    value: { tagWiki: { lookup }, danbooru: { getCredentials } },
     writable: true,
     configurable: true
   })
 })
 
 describe('TagWikiInfo', () => {
+  it('does not render when no Danbooru account is configured', async () => {
+    getCredentials.mockResolvedValue({ success: true, data: undefined })
+    render(<TagWikiInfo tagName="cat_ears" />)
+
+    await waitFor(() => expect(getCredentials).toHaveBeenCalled())
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+
   it('fetches and shows the wiki body on click', async () => {
     lookup.mockResolvedValue({
       success: true,
@@ -24,7 +36,7 @@ describe('TagWikiInfo', () => {
     const user = userEvent.setup()
     render(<TagWikiInfo tagName="cat_ears" />)
 
-    await user.click(screen.getByRole('button'))
+    await user.click(await screen.findByRole('button'))
 
     expect(lookup).toHaveBeenCalledWith('cat_ears')
     await waitFor(() => {
@@ -38,7 +50,7 @@ describe('TagWikiInfo', () => {
     const user = userEvent.setup()
     render(<TagWikiInfo tagName="made-up-tag" />)
 
-    await user.click(screen.getByRole('button'))
+    await user.click(await screen.findByRole('button'))
 
     await waitFor(() => {
       expect(screen.getByText('No Danbooru wiki entry found for this tag.')).toBeInTheDocument()
@@ -56,7 +68,7 @@ describe('TagWikiInfo', () => {
     const user = userEvent.setup()
     render(<TagWikiInfo tagName="cat_ears" />)
 
-    await user.click(screen.getByRole('button'))
+    await user.click(await screen.findByRole('button'))
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Could not reach Danbooru')
@@ -71,13 +83,14 @@ describe('TagWikiInfo', () => {
     const user = userEvent.setup()
     render(<TagWikiInfo tagName="cat_ears" />)
 
-    await user.click(screen.getByRole('button'))
+    const button = await screen.findByRole('button')
+    await user.click(button)
     await waitFor(() => expect(screen.getByText('A character with cat ears.')).toBeInTheDocument())
 
-    await user.click(screen.getByRole('button'))
+    await user.click(button)
     expect(screen.queryByText('A character with cat ears.')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button'))
+    await user.click(button)
     expect(screen.getByText('A character with cat ears.')).toBeInTheDocument()
     expect(lookup).toHaveBeenCalledTimes(1)
   })
@@ -95,7 +108,7 @@ describe('TagWikiInfo', () => {
       </div>
     )
 
-    await user.click(screen.getByRole('button', { name: /What does this tag mean/ }))
+    await user.click(await screen.findByRole('button', { name: /What does this tag mean/ }))
     await waitFor(() => expect(screen.getByText('A character with cat ears.')).toBeInTheDocument())
 
     await user.click(screen.getByRole('button', { name: 'elsewhere' }))
@@ -115,7 +128,7 @@ describe('TagWikiInfo', () => {
     const user = userEvent.setup()
     render(<TagWikiInfo tagName="bottomless" />)
 
-    await user.click(screen.getByRole('button'))
+    await user.click(await screen.findByRole('button'))
 
     await waitFor(() => {
       expect(
@@ -132,7 +145,7 @@ describe('TagWikiInfo', () => {
     const user = userEvent.setup()
     render(<TagWikiInfo tagName="ass" />)
 
-    await user.click(screen.getByRole('button'))
+    await user.click(await screen.findByRole('button'))
 
     await waitFor(() => {
       const link = screen.getByRole('link', { name: 'post #8241273' })
@@ -144,12 +157,16 @@ describe('TagWikiInfo', () => {
   it('renders a "pool #N" reference as a link to that Danbooru pool', async () => {
     lookup.mockResolvedValue({
       success: true,
-      data: { tagName: 'cute', body: 'Related pools\n* pool #903: Disgustingly Adorable', otherNames: [] }
+      data: {
+        tagName: 'cute',
+        body: 'Related pools\n* pool #903: Disgustingly Adorable',
+        otherNames: []
+      }
     })
     const user = userEvent.setup()
     render(<TagWikiInfo tagName="cute" />)
 
-    await user.click(screen.getByRole('button'))
+    await user.click(await screen.findByRole('button'))
 
     await waitFor(() => {
       const link = screen.getByRole('link', { name: 'pool #903' })
@@ -169,7 +186,7 @@ describe('TagWikiInfo', () => {
     const user = userEvent.setup()
     render(<TagWikiInfo tagName="cute" />)
 
-    await user.click(screen.getByRole('button'))
+    await user.click(await screen.findByRole('button'))
 
     await waitFor(() => {
       const link = screen.getByRole('link', { name: 'Disgustingly Adorable' })
@@ -188,7 +205,7 @@ describe('TagWikiInfo', () => {
     const user = userEvent.setup()
     render(<TagWikiInfo tagName="ass" />)
 
-    await user.click(screen.getByRole('button'))
+    await user.click(await screen.findByRole('button'))
 
     await waitFor(() => {
       expect(screen.getByText(/- first point/)).toBeInTheDocument()

@@ -7,6 +7,7 @@ import type {
   BackupImportResult,
   CharacterInput,
   CharacterModel,
+  DanbooruCredentials,
   DanbooruTagSuggestion,
   EntitiesChangedEvent,
   ExpandedMediaFile,
@@ -168,7 +169,11 @@ export const api = {
   },
   danbooru: {
     autocompleteTags: (query: string): Promise<IpcResult<DanbooruTagSuggestion[]>> =>
-      ipcRenderer.invoke(IPC.danbooru.autocompleteTags, query)
+      ipcRenderer.invoke(IPC.danbooru.autocompleteTags, query),
+    getCredentials: (): Promise<IpcResult<DanbooruCredentials | undefined>> =>
+      ipcRenderer.invoke(IPC.danbooru.getCredentials),
+    setCredentials: (credentials: DanbooruCredentials | undefined): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.danbooru.setCredentials, credentials)
   },
   tagWiki: {
     lookup: (tagName: string): Promise<IpcResult<TagWikiEntry | null>> =>

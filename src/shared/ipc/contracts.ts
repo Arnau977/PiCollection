@@ -66,6 +66,11 @@ export const IdSchema = z.string().min(1)
 
 export const RouteSchema = z.object({ route: z.string().min(1) })
 
+export const DanbooruCredentialsInputSchema = z.object({
+  username: z.string().min(1),
+  apiKey: z.string().min(1)
+})
+
 export const CacheThumbnailSchema = z.object({
   route: z.string().min(1),
   // Structured-clone-transferred from the renderer, so it survives the IPC
@@ -231,7 +236,9 @@ export const IPC = {
     setApiKey: 'sauce-nao:set-api-key'
   },
   danbooru: {
-    autocompleteTags: 'danbooru:autocomplete-tags'
+    autocompleteTags: 'danbooru:autocomplete-tags',
+    getCredentials: 'danbooru:get-credentials',
+    setCredentials: 'danbooru:set-credentials'
   },
   tagWiki: {
     lookup: 'tag-wiki:lookup'

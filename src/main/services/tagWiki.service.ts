@@ -1,7 +1,8 @@
 import { getDb } from '../database/connection'
 import * as tagWikiRepo from '../database/repositories/tagWiki.repository'
 import type { TagWikiEntry } from '@shared/models'
-import { DANBOORU_USER_AGENT } from './danbooruHttp'
+import { danbooruFetch } from './danbooruHttp'
+import { readDanbooruCredentials } from './danbooruSettings'
 
 const REQUEST_TIMEOUT_MS = 8000
 
@@ -16,15 +17,16 @@ export async function lookupTagWiki(rawTagName: string): Promise<TagWikiEntry | 
   const cached = await tagWikiRepo.findCachedTagWiki(db, tagName)
   if (cached) return toModel(cached.tag_name, cached.body, cached.other_names_json)
 
+  if (!readDanbooruCredentials()) {
+    throw new Error('Configure a Danbooru account in Settings to look up tag descriptions.')
+  }
+
   const url = new URL('https://danbooru.donmai.us/wiki_pages.json')
   url.searchParams.set('search[title]', tagName)
 
   let res: Response
   try {
-    res = await fetch(url, {
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      headers: { 'User-Agent': DANBOORU_USER_AGENT }
-    })
+    res = await danbooruFetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
   } catch (err) {
     if (err instanceof Error && err.name === 'TimeoutError') {
       throw new Error('Danbooru took too long to respond. Try again.')
