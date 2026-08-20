@@ -172,6 +172,10 @@
     "removeCharacters": "Quitar personajes",
     "addSeries": "Añadir series",
     "removeSeries": "Quitar series",
+    "sfwLabel": "SFW / NSFW",
+    "sfwNoChange": "No cambiar",
+    "sfwMarkSfw": "Marcar como SFW",
+    "sfwMarkNsfw": "Marcar como NSFW",
     "apply": "Aplicar",
     "cancel": "Cancelar"
   },

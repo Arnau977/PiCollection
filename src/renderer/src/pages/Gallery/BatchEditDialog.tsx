@@ -14,6 +14,8 @@ export interface BatchEditSelections {
   removeCharacterIds: string[]
   addSeriesIds: string[]
   removeSeriesIds: string[]
+  /** `null` means "don't change" - the only way to represent that for a boolean field. */
+  sfw: boolean | null
 }
 
 const EMPTY_SELECTIONS: BatchEditSelections = {
@@ -22,7 +24,8 @@ const EMPTY_SELECTIONS: BatchEditSelections = {
   addCharacterIds: [],
   removeCharacterIds: [],
   addSeriesIds: [],
-  removeSeriesIds: []
+  removeSeriesIds: [],
+  sfw: null
 }
 
 interface BatchEditDialogProps {
@@ -43,10 +46,22 @@ export function BatchEditDialog({ count, onApply, onCancel }: BatchEditDialogPro
   const series = useSeries()
   const [selections, setSelections] = useState<BatchEditSelections>(EMPTY_SELECTIONS)
 
-  const hasSelection = Object.values(selections).some((list) => list.length > 0)
+  const hasSelection =
+    [
+      selections.addTagIds,
+      selections.removeTagIds,
+      selections.addCharacterIds,
+      selections.removeCharacterIds,
+      selections.addSeriesIds,
+      selections.removeSeriesIds
+    ].some((list) => list.length > 0) || selections.sfw !== null
 
   function updateSelection<K extends keyof BatchEditSelections>(key: K, values: string[]): void {
     setSelections((prev) => ({ ...prev, [key]: values }))
+  }
+
+  function updateSfw(value: boolean | null): void {
+    setSelections((prev) => ({ ...prev, sfw: value }))
   }
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>): void {
@@ -122,6 +137,36 @@ export function BatchEditDialog({ count, onApply, onCancel }: BatchEditDialogPro
               selectedValues={selections.removeSeriesIds}
               onChange={(values) => updateSelection('removeSeriesIds', values)}
             />
+          </div>
+          <div className="batch-edit-section">
+            <span className="filter-label">{t('batchEdit.sfwLabel')}</span>
+            <label className="radio-row">
+              <input
+                type="radio"
+                name="batch-sfw"
+                checked={selections.sfw === null}
+                onChange={() => updateSfw(null)}
+              />
+              {t('batchEdit.sfwNoChange')}
+            </label>
+            <label className="radio-row">
+              <input
+                type="radio"
+                name="batch-sfw"
+                checked={selections.sfw === true}
+                onChange={() => updateSfw(true)}
+              />
+              {t('batchEdit.sfwMarkSfw')}
+            </label>
+            <label className="radio-row">
+              <input
+                type="radio"
+                name="batch-sfw"
+                checked={selections.sfw === false}
+                onChange={() => updateSfw(false)}
+              />
+              {t('batchEdit.sfwMarkNsfw')}
+            </label>
           </div>
         </div>
         <div className="confirm-dialog-actions">
