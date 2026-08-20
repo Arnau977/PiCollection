@@ -318,6 +318,7 @@
     "tagWikiLoading": "Looking up...",
     "tagWikiNotFound": "No Danbooru wiki entry found for this tag.",
     "tagWikiOtherNames": "Also known as",
+    "tagWikiSpoiler": "Spoiler - hover or focus to reveal",
     "parentSeries": "Parent series",
     "parentCharacter": "Parent character",
     "noParentSeries": "No parent (top-level)",

@@ -102,4 +102,32 @@ describe('splitDtextLinks', () => {
       { text: ' for more.' }
     ])
   })
+
+  it('splits out a [spoiler] block as its own spoiler segment, stripping the tags', () => {
+    expect(splitDtextLinks('Dies in [spoiler]chapter 10[/spoiler] of the manga.')).toEqual([
+      { text: 'Dies in ' },
+      { text: 'chapter 10', spoiler: true },
+      { text: ' of the manga.' }
+    ])
+  })
+
+  it('handles multiple spoiler blocks in the same text', () => {
+    expect(splitDtextLinks('[spoiler]A[/spoiler] and [spoiler]B[/spoiler]')).toEqual([
+      { text: 'A', spoiler: true },
+      { text: ' and ' },
+      { text: 'B', spoiler: true }
+    ])
+  })
+
+  it('matches [spoiler] tags case-insensitively', () => {
+    expect(splitDtextLinks('[SPOILER]secret[/SPOILER]')).toEqual([
+      { text: 'secret', spoiler: true }
+    ])
+  })
+
+  it('keeps a post reference inside a spoiler block as plain spoiler text, not a link', () => {
+    expect(splitDtextLinks('[spoiler]see post #123[/spoiler]')).toEqual([
+      { text: 'see post #123', spoiler: true }
+    ])
+  })
 })
