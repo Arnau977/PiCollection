@@ -2,7 +2,7 @@ import { app, type BrowserWindow } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { IPC } from '@shared/ipc/contracts'
 import type { UpdateChannel, UpdaterEvent } from '@shared/models'
-import { extractHighlights, normalizeReleaseNotes } from '@shared/utils'
+import { compareVersions, extractHighlights, normalizeReleaseNotes } from '@shared/utils'
 import { readUpdateChannel, writeUpdateChannel } from './updaterSettings'
 import { logInfo } from '../logging/logger'
 
@@ -51,6 +51,11 @@ export function initAutoUpdater(window: BrowserWindow): void {
 
   autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = true
+  // Switching from a beta build ahead of the latest stable release back to
+  // the stable channel is a legitimate choice (see setChannel) - without
+  // this, electron-updater silently refuses to ever offer a version older
+  // than the one currently installed.
+  autoUpdater.allowDowngrade = true
   applyChannel(readUpdateChannel())
 
   autoUpdater.on('checking-for-update', () => send({ type: 'checking' }))
@@ -58,7 +63,8 @@ export function initAutoUpdater(window: BrowserWindow): void {
     send({
       type: 'available',
       version: info.version,
-      highlights: extractHighlights(normalizeReleaseNotes(info.releaseNotes))
+      highlights: extractHighlights(normalizeReleaseNotes(info.releaseNotes)),
+      isDowngrade: compareVersions(info.version, app.getVersion()) < 0
     })
   )
   autoUpdater.on('update-not-available', () => send({ type: 'not-available' }))
@@ -88,8 +94,21 @@ export function getChannel(): UpdateChannel {
   return readUpdateChannel()
 }
 
-export function setChannel(channel: UpdateChannel): void {
+export async function setChannel(channel: UpdateChannel): Promise<void> {
   writeUpdateChannel(channel)
   logInfo('settings', 'Update channel changed', { channel })
   applyChannel(channel)
+  // Immediately reflects the newly chosen channel's latest version instead
+  // of leaving the last channel's stale status shown until the next
+  // scheduled/manual check. The channel change itself has already
+  // succeeded at this point, so a failed check (network, etc.) must not
+  // make this call look like it failed too - the 'error' event still
+  // reaches the renderer through the normal status stream.
+  if (app.isPackaged) {
+    try {
+      await autoUpdater.checkForUpdates()
+    } catch {
+      // Already reported via the 'error' event listener above.
+    }
+  }
 }

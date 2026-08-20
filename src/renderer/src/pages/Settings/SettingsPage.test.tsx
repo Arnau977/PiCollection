@@ -6,8 +6,10 @@ import i18n from 'i18next'
 import SettingsPage from './SettingsPage'
 import { loadGalleryDefaults } from '../../utils/gallerySettings'
 
+const confirmMock = vi.fn().mockResolvedValue(true)
+
 vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
-  useConfirm: () => vi.fn().mockResolvedValue(true)
+  useConfirm: () => confirmMock
 }))
 
 async function openTab(user: ReturnType<typeof userEvent.setup>, name: string): Promise<void> {
@@ -16,6 +18,7 @@ async function openTab(user: ReturnType<typeof userEvent.setup>, name: string): 
 
 beforeEach(() => {
   window.localStorage.clear()
+  confirmMock.mockReset().mockResolvedValue(true)
   Object.defineProperty(window, 'api', {
     value: {
       system: { getAppVersion: vi.fn().mockResolvedValue({ success: true, data: '1.0.0' }) },
@@ -305,5 +308,159 @@ describe('SettingsPage', () => {
     act(() => emit({ type: 'available', version: '2.0.0', highlights: null }))
 
     expect(screen.queryByText("What's new")).not.toBeInTheDocument()
+  })
+
+  it('shows a downgrade warning when the available update is older than the installed version', async () => {
+    let emit: (event: unknown) => void = () => {}
+    Object.defineProperty(window, 'api', {
+      value: {
+        ...window.api,
+        updater: {
+          ...window.api.updater,
+          onEvent: vi.fn((listener: (event: unknown) => void) => {
+            emit = listener
+            return () => {}
+          })
+        }
+      },
+      writable: true,
+      configurable: true
+    })
+
+    const user = userEvent.setup()
+    render(<SettingsPage />)
+    await openTab(user, 'Advanced')
+
+    act(() =>
+      emit({ type: 'available', version: '1.0.0', highlights: null, isDowngrade: true })
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /older version than the one you're currently running/
+    )
+  })
+
+  it('does not show the downgrade warning for a normal (newer) update', async () => {
+    let emit: (event: unknown) => void = () => {}
+    Object.defineProperty(window, 'api', {
+      value: {
+        ...window.api,
+        updater: {
+          ...window.api.updater,
+          onEvent: vi.fn((listener: (event: unknown) => void) => {
+            emit = listener
+            return () => {}
+          })
+        }
+      },
+      writable: true,
+      configurable: true
+    })
+
+    const user = userEvent.setup()
+    render(<SettingsPage />)
+    await openTab(user, 'Advanced')
+
+    act(() =>
+      emit({ type: 'available', version: '2.0.0', highlights: null, isDowngrade: false })
+    )
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('asks for confirmation before downloading a downgrade, and does nothing if declined', async () => {
+    confirmMock.mockResolvedValueOnce(false)
+    let emit: (event: unknown) => void = () => {}
+    const downloadUpdate = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    Object.defineProperty(window, 'api', {
+      value: {
+        ...window.api,
+        updater: {
+          ...window.api.updater,
+          downloadUpdate,
+          onEvent: vi.fn((listener: (event: unknown) => void) => {
+            emit = listener
+            return () => {}
+          })
+        }
+      },
+      writable: true,
+      configurable: true
+    })
+
+    const user = userEvent.setup()
+    render(<SettingsPage />)
+    await openTab(user, 'Advanced')
+    act(() =>
+      emit({ type: 'available', version: '1.0.0', highlights: null, isDowngrade: true })
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Download update' }))
+
+    expect(confirmMock).toHaveBeenCalled()
+    expect(downloadUpdate).not.toHaveBeenCalled()
+  })
+
+  it('downloads a downgrade once confirmed', async () => {
+    let emit: (event: unknown) => void = () => {}
+    const downloadUpdate = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    Object.defineProperty(window, 'api', {
+      value: {
+        ...window.api,
+        updater: {
+          ...window.api.updater,
+          downloadUpdate,
+          onEvent: vi.fn((listener: (event: unknown) => void) => {
+            emit = listener
+            return () => {}
+          })
+        }
+      },
+      writable: true,
+      configurable: true
+    })
+
+    const user = userEvent.setup()
+    render(<SettingsPage />)
+    await openTab(user, 'Advanced')
+    act(() =>
+      emit({ type: 'available', version: '1.0.0', highlights: null, isDowngrade: true })
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Download update' }))
+
+    expect(downloadUpdate).toHaveBeenCalled()
+  })
+
+  it('downloads a normal update without asking for confirmation', async () => {
+    let emit: (event: unknown) => void = () => {}
+    const downloadUpdate = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    Object.defineProperty(window, 'api', {
+      value: {
+        ...window.api,
+        updater: {
+          ...window.api.updater,
+          downloadUpdate,
+          onEvent: vi.fn((listener: (event: unknown) => void) => {
+            emit = listener
+            return () => {}
+          })
+        }
+      },
+      writable: true,
+      configurable: true
+    })
+
+    const user = userEvent.setup()
+    render(<SettingsPage />)
+    await openTab(user, 'Advanced')
+    act(() =>
+      emit({ type: 'available', version: '2.0.0', highlights: null, isDowngrade: false })
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Download update' }))
+
+    expect(confirmMock).not.toHaveBeenCalled()
+    expect(downloadUpdate).toHaveBeenCalled()
   })
 })

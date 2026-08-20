@@ -4,7 +4,7 @@ import type { UpdateChannel, UpdaterEvent } from '@shared/models'
 export type UpdaterStatus =
   | { state: 'idle' }
   | { state: 'checking' }
-  | { state: 'available'; version: string; highlights: string | null }
+  | { state: 'available'; version: string; highlights: string | null; isDowngrade: boolean }
   | { state: 'not-available' }
   | { state: 'downloading'; percent: number }
   | { state: 'downloaded'; version: string }
@@ -25,7 +25,12 @@ function statusFromEvent(event: UpdaterEvent): UpdaterStatus {
     case 'checking':
       return { state: 'checking' }
     case 'available':
-      return { state: 'available', version: event.version, highlights: event.highlights }
+      return {
+        state: 'available',
+        version: event.version,
+        highlights: event.highlights,
+        isDowngrade: event.isDowngrade
+      }
     case 'not-available':
       return { state: 'not-available' }
     case 'download-progress':
