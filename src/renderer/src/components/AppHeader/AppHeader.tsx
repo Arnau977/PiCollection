@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Home, Images, Inbox, Database, Settings } from 'lucide-react'
@@ -29,7 +30,13 @@ export function AppHeader(): JSX.Element {
   const { status } = useAppUpdater()
   const location = useLocation()
   const navigate = useNavigate()
-  const updateReady = status.state === 'available' || status.state === 'downloaded'
+  // A "downgrade" candidate (e.g. this version's own GitHub release still
+  // flagged pre-release, so a Stable check resolves an older "latest") is
+  // never worth a proactive nudge - that's an explicit, opt-in choice made
+  // from the channel switch in Settings, not something to badge/toast about
+  // in the background.
+  const isNewerUpdate = status.state === 'available' && !status.isDowngrade
+  const updateReady = isNewerUpdate || status.state === 'downloaded'
   useEntityCacheSync()
 
   // The badge stays up for as long as an update is pending, but the toast is
@@ -37,7 +44,7 @@ export function AppHeader(): JSX.Element {
   // timer), it shouldn't come back just because a later background check
   // re-confirms the same update is still available.
   const [updateToastDismissed, setUpdateToastDismissed] = useState(false)
-  const showUpdateToast = status.state === 'available' && !updateToastDismissed
+  const showUpdateToast = isNewerUpdate && !updateToastDismissed
 
   const isMediaDetail = MEDIA_DETAIL_PATTERN.test(location.pathname)
   const fromPendingQueue = Boolean(
@@ -87,17 +94,24 @@ export function AppHeader(): JSX.Element {
         </NavLink>
       </nav>
 
-      {status.state === 'available' && showUpdateToast && (
-        <Toast
-          message={t('settings.updateAvailable', { version: status.version })}
-          actionLabel={t('settings.updateToastView')}
-          onAction={() => {
-            setUpdateToastDismissed(true)
-            navigate(PATH.SETTINGS)
-          }}
-          onDismiss={() => setUpdateToastDismissed(true)}
-        />
-      )}
+      {status.state === 'available' &&
+        showUpdateToast &&
+        createPortal(
+          // Portaled to <body>: .app-sidebar has backdrop-filter, which
+          // creates a new containing block for position:fixed descendants,
+          // so a Toast nested here would anchor to the sidebar's own corner
+          // instead of the viewport's (see Toast.css).
+          <Toast
+            message={t('settings.updateAvailable', { version: status.version })}
+            actionLabel={t('settings.updateToastView')}
+            onAction={() => {
+              setUpdateToastDismissed(true)
+              navigate(PATH.SETTINGS)
+            }}
+            onDismiss={() => setUpdateToastDismissed(true)}
+          />,
+          document.body
+        )}
     </aside>
   )
 }

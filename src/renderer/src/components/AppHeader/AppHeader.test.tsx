@@ -112,6 +112,40 @@ describe('AppHeader', () => {
     expect(screen.queryByText('Version 2.0.0 is available.')).not.toBeInTheDocument()
   })
 
+  it('does not show a badge or toast for a downgrade candidate (e.g. an unpromoted pre-release)', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <AppHeader />
+      </MemoryRouter>
+    )
+
+    act(() =>
+      emit({ type: 'available', version: '1.3.0', highlights: null, isDowngrade: true })
+    )
+
+    expect(container.querySelector('.app-sidebar-badge')).not.toBeInTheDocument()
+    expect(screen.queryByText('Version 1.3.0 is available.')).not.toBeInTheDocument()
+  })
+
+  it("renders the update toast outside the sidebar's own DOM subtree", () => {
+    // Regression test: .app-sidebar has backdrop-filter, which creates a new
+    // containing block for position:fixed descendants - a toast nested
+    // inside it was fixed relative to the sidebar itself (bottom-left of the
+    // screen) instead of the viewport (bottom-right), where a Toast always
+    // means to render (see Toast.css).
+    const { container } = render(
+      <MemoryRouter>
+        <AppHeader />
+      </MemoryRouter>
+    )
+
+    act(() => emit({ type: 'available', version: '2.0.0', highlights: null, isDowngrade: false }))
+
+    expect(container.querySelector('.toast')).not.toBeInTheDocument()
+    expect(document.body.querySelector('.app-sidebar .toast')).not.toBeInTheDocument()
+    expect(document.body.querySelector(':scope > .toast')).toBeInTheDocument()
+  })
+
   it('highlights Gallery when on a media detail page opened without a pending queue', () => {
     render(
       <MemoryRouter initialEntries={['/media/abc']}>
