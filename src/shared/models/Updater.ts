@@ -3,7 +3,7 @@ export type UpdateChannel = 'stable' | 'beta'
 
 export type UpdaterEvent =
   | { type: 'checking' }
-  | { type: 'available'; version: string; highlights: string | null }
+  | { type: 'available'; version: string; highlights: string | null; isDowngrade: boolean }
   | { type: 'not-available' }
   | { type: 'download-progress'; percent: number }
   | { type: 'downloaded'; version: string }
