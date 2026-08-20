@@ -34,6 +34,13 @@ describe('sauceNaoSettings', () => {
     expect(readSauceNaoApiKey()).toBe('abc123')
   })
 
+  it('persists the key across a restart (fresh cache, re-read from disk)', () => {
+    writeSauceNaoApiKey('abc123')
+    resetSauceNaoApiKeyCache()
+
+    expect(readSauceNaoApiKey()).toBe('abc123')
+  })
+
   it('trims whitespace around the key', () => {
     writeSauceNaoApiKey('  abc123  ')
     expect(readSauceNaoApiKey()).toBe('abc123')

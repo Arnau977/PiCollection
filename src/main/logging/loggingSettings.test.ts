@@ -47,6 +47,13 @@ describe('loggingSettings', () => {
     expect(readLoggingEnabled()).toBe(true)
   })
 
+  it('persists the setting across a restart (fresh cache, re-read from disk)', () => {
+    writeLoggingEnabled(true)
+    resetLoggingEnabledCache()
+
+    expect(readLoggingEnabled()).toBe(true)
+  })
+
   it('persists and reloads a disabled setting', () => {
     writeLoggingEnabled(true)
     writeLoggingEnabled(false)
