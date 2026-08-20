@@ -70,12 +70,19 @@ version format, then falls back to the shared `latest.yml` manifest.
 ### Version numbers
 
 Plain `X.Y.Z`, always - no prerelease suffix, ever. `X` bumps for a major/
-breaking change. `Y` bumps for a normal release - new features and bug
-fixes bundled together, no distinction between them. `Z` bumps per cut
-within that `Y` line; it isn't a "beta counter", just an iteration number -
-whether a given `X.Y.Z` ends up promoted to stable or superseded by
-`X.Y.(Z+1)` while still in testing is entirely up to the GitHub Release flag
-in step 5 above, not anything encoded in the number itself.
+breaking change.
+
+- `Z` (patch) bumps for a small release: one or several bug fixes and
+  behavior/UX adjustments bundled together, nothing that amounts to a new
+  feature or a themed batch of work.
+- `Y` (minor) bumps for a bigger release: the culmination of a whole set of
+  adjustments and bug fixes, or a significant new feature/implementation.
+  Resets `Z` back to `0`.
+
+Whether a given `X.Y.Z` ends up promoted to stable or superseded by another
+cut while still in testing is entirely up to the GitHub Release flag in step
+5 above, not anything encoded in the number itself - `Z` is not a "beta
+counter".
 
 Neither platform's build is code-signed yet, so both trigger an OS warning
 on first run:
