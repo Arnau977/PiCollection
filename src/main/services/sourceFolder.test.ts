@@ -38,6 +38,13 @@ describe('readSourceFolder / writeSourceFolder', () => {
     expect(readSourceFolder()).toBe('D:\\Fotos')
   })
 
+  it('persists the path across a restart (fresh cache, re-read from disk)', () => {
+    writeSourceFolder('D:\\Fotos')
+    resetSourceFolderCache()
+
+    expect(readSourceFolder()).toBe('D:\\Fotos')
+  })
+
   it('trims whitespace around the path', () => {
     writeSourceFolder('  D:\\Fotos  ')
     expect(readSourceFolder()).toBe('D:\\Fotos')
