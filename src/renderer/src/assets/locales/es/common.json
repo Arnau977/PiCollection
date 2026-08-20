@@ -40,6 +40,8 @@
     "updateAvailable": "La versión {{version}} está disponible.",
     "updateToastView": "Ver",
     "whatsNew": "Novedades",
+    "updateDowngradeWarning": "Esto instala una versión anterior a la que tienes ahora - algunos datos o ajustes introducidos desde entonces podrían no ser legibles hasta que vuelvas a la versión actual.",
+    "updateDowngradeConfirm": "La versión {{version}} es anterior a la que tienes instalada. Algunos datos o ajustes introducidos desde entonces podrían no ser legibles hasta que vuelvas a esta versión. ¿Continuar?",
     "downloadUpdate": "Descargar actualización",
     "downloadingUpdate": "Descargando actualización... {{percent}}%",
     "updateReady": "La versión {{version}} está lista para instalarse.",
