@@ -4,19 +4,15 @@ import { createJsonSettingsFile } from '../services/jsonSettingsFile'
 
 const SETTINGS_FILE = 'logging-settings.json'
 
-interface SavedLoggingSettings {
-  enabled: boolean
-}
-
 export function loggingSettingsFilePath(): string {
   return join(app.getPath('userData'), SETTINGS_FILE)
 }
 
-const settingsFile = createJsonSettingsFile<boolean>(
-  SETTINGS_FILE,
-  (raw) => (raw as Partial<SavedLoggingSettings>).enabled === true,
-  false
-)
+// write() below persists the flag itself (createJsonSettingsFile stores
+// exactly what it's given, not wrapped in an object), so parse must read
+// the same shape back - not a `{ enabled: ... }` wrapper that was never
+// actually written.
+const settingsFile = createJsonSettingsFile<boolean>(SETTINGS_FILE, (raw) => raw === true, false)
 
 export function readLoggingEnabled(): boolean {
   return settingsFile.read()

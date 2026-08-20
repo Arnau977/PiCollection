@@ -6,20 +6,17 @@ import { createJsonSettingsFile } from './jsonSettingsFile'
 
 const SETTINGS_FILE = 'source-folder-settings.json'
 
-interface SavedSourceFolderSettings {
-  path?: string
-}
-
 export function sourceFolderSettingsFilePath(): string {
   return join(app.getPath('userData'), SETTINGS_FILE)
 }
 
+// write() below persists the path itself (createJsonSettingsFile stores
+// exactly what it's given, not wrapped in an object), so parse must read
+// the same shape back - not a `{ path: ... }` wrapper that was never
+// actually written.
 const settingsFile = createJsonSettingsFile<string | null>(
   SETTINGS_FILE,
-  (raw) => {
-    const path = (raw as Partial<SavedSourceFolderSettings>).path
-    return typeof path === 'string' && path.trim() ? path.trim() : null
-  },
+  (raw) => (typeof raw === 'string' && raw.trim() ? raw.trim() : null),
   null
 )
 

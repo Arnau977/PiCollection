@@ -4,10 +4,6 @@ import { createJsonSettingsFile } from '../jsonSettingsFile'
 
 const SETTINGS_FILE = 'sauce-nao-settings.json'
 
-interface SavedSauceNaoSettings {
-  apiKey?: string
-}
-
 export function sauceNaoSettingsFilePath(): string {
   return join(app.getPath('userData'), SETTINGS_FILE)
 }
@@ -19,12 +15,14 @@ export function sauceNaoSettingsFilePath(): string {
 // also can't round-trip through `JSON.stringify` at the top level (it
 // produces the value `undefined`, not the string `"undefined"`), which
 // would make every write() that clears the key throw.
+//
+// write() below persists the key itself (createJsonSettingsFile stores
+// exactly what it's given, not wrapped in an object), so parse must read
+// the same shape back - not a `{ apiKey: ... }` wrapper that was never
+// actually written.
 const settingsFile = createJsonSettingsFile<string | null>(
   SETTINGS_FILE,
-  (raw) => {
-    const apiKey = (raw as Partial<SavedSauceNaoSettings>).apiKey
-    return typeof apiKey === 'string' && apiKey.trim() ? apiKey.trim() : null
-  },
+  (raw) => (typeof raw === 'string' && raw.trim() ? raw.trim() : null),
   null
 )
 
