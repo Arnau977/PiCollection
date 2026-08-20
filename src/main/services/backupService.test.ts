@@ -16,11 +16,14 @@ vi.mock('electron', () => ({
   }
 }))
 
-const { createBackupZip, restoreBackupZip } = await import('./backupService')
+const { createBackupZip, getBackupBuildKind, restoreBackupZip } = await import('./backupService')
 const { resolveElectronDbPath } = await import('../database/electronDbPath')
 const { sauceNaoSettingsFilePath } = await import('./sauceNao/sauceNaoSettings')
-const { updaterSettingsFilePath } = await import('../updater/updaterSettings')
+const { updaterSettingsFilePath, writeUpdateChannel, resetUpdateChannelCache } = await import(
+  '../updater/updaterSettings'
+)
 const { sourceFolderSettingsFilePath } = await import('./sourceFolder')
+const { danbooruSettingsFilePath } = await import('./danbooruSettings')
 
 let workDir = ''
 let zipPath = ''
@@ -31,10 +34,29 @@ beforeEach(async () => {
   await fs.mkdir(userDataDir, { recursive: true })
   zipPath = join(workDir, 'backup.zip')
   isPackaged = false
+  resetUpdateChannelCache()
 })
 
 afterEach(async () => {
   await fs.rm(workDir, { recursive: true, force: true })
+})
+
+describe('getBackupBuildKind', () => {
+  it('is "dev" when the app is not packaged, regardless of update channel', () => {
+    isPackaged = false
+    expect(getBackupBuildKind()).toBe('dev')
+  })
+
+  it('is "release" when packaged on the stable channel', () => {
+    isPackaged = true
+    expect(getBackupBuildKind()).toBe('release')
+  })
+
+  it('is "pre-release" when packaged on the beta channel', () => {
+    isPackaged = true
+    writeUpdateChannel('beta')
+    expect(getBackupBuildKind()).toBe('pre-release')
+  })
 })
 
 describe('createBackupZip', () => {
@@ -43,6 +65,10 @@ describe('createBackupZip', () => {
     await fs.writeFile(sauceNaoSettingsFilePath(), '{"apiKey":"secret"}')
     await fs.writeFile(updaterSettingsFilePath(), '{"channel":"beta"}')
     await fs.writeFile(sourceFolderSettingsFilePath(), '{"path":"D:\\\\Fotos"}')
+    await fs.writeFile(
+      danbooruSettingsFilePath(),
+      '{"username":"arnau","apiKey":"secret","userId":42}'
+    )
 
     await createBackupZip(zipPath, { density: 'compact' })
 
@@ -54,6 +80,7 @@ describe('createBackupZip', () => {
         'sauce-nao-settings.json',
         'updater-settings.json',
         'source-folder-settings.json',
+        'danbooru-settings.json',
         'gallery-settings.json'
       ])
     )
@@ -72,6 +99,7 @@ describe('createBackupZip', () => {
     expect(entryNames).not.toContain('sauce-nao-settings.json')
     expect(entryNames).not.toContain('updater-settings.json')
     expect(entryNames).not.toContain('source-folder-settings.json')
+    expect(entryNames).not.toContain('danbooru-settings.json')
   })
 })
 
@@ -80,6 +108,10 @@ describe('restoreBackupZip', () => {
     await fs.writeFile(resolveElectronDbPath(), 'original sqlite bytes')
     await fs.writeFile(sauceNaoSettingsFilePath(), '{"apiKey":"secret"}')
     await fs.writeFile(sourceFolderSettingsFilePath(), '{"path":"D:\\\\Fotos"}')
+    await fs.writeFile(
+      danbooruSettingsFilePath(),
+      '{"username":"arnau","apiKey":"secret","userId":42}'
+    )
     await createBackupZip(zipPath, { density: 'large' })
 
     // Simulate restoring onto a different machine/install: a fresh, empty userData dir.
@@ -92,6 +124,9 @@ describe('restoreBackupZip', () => {
     expect(await fs.readFile(sauceNaoSettingsFilePath(), 'utf-8')).toBe('{"apiKey":"secret"}')
     expect(await fs.readFile(sourceFolderSettingsFilePath(), 'utf-8')).toBe(
       '{"path":"D:\\\\Fotos"}'
+    )
+    expect(await fs.readFile(danbooruSettingsFilePath(), 'utf-8')).toBe(
+      '{"username":"arnau","apiKey":"secret","userId":42}'
     )
     expect(result.gallerySettings).toEqual({ density: 'large' })
   })

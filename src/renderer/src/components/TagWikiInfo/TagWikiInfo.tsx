@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { Info } from 'lucide-react'
 import { splitDtextLinks, stripDtext } from '../../utils/dtext'
+import { useDanbooruCredentialsConfigured } from '../../hooks/useDanbooruCredentialsConfigured'
 import './TagWikiInfo.css'
 
 interface TagWikiInfoProps {
@@ -28,8 +29,9 @@ function computePosition(anchor: DOMRect): { top: number; left: number } {
   return { top, left }
 }
 
-export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element {
+export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element | null {
   const { t } = useTranslation()
+  const hasDanbooruAccount = useDanbooruCredentialsConfigured()
   const containerRef = useRef<HTMLSpanElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -89,6 +91,8 @@ export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element {
     setOtherNames(result.data.otherNames)
     setState('loaded')
   }
+
+  if (!hasDanbooruAccount) return null
 
   return (
     <span className="tag-wiki-info" ref={containerRef}>

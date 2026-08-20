@@ -1,13 +1,32 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchDanbooruTags } from './danbooruTags'
+import { promises as fsPromises } from 'fs'
+import { join } from 'path'
+import { tmpdir } from 'os'
+
+let userDataDir = ''
+
+vi.mock('electron', () => ({
+  app: { getPath: () => userDataDir, getVersion: () => '1.0.0' }
+}))
+
+const { fetchDanbooruTags } = await import('./danbooruTags')
+const { writeDanbooruCredentials, resetDanbooruCredentialsCache } = await import(
+  './danbooruSettings'
+)
+const { resetDanbooruRateLimiterForTests } = await import('./danbooruHttp')
 
 const originalFetch = global.fetch
 
-beforeEach(() => {
+beforeEach(async () => {
+  userDataDir = await fsPromises.mkdtemp(join(tmpdir(), 'danbooru-tags-'))
+  resetDanbooruCredentialsCache()
+  writeDanbooruCredentials({ username: 'arnau', apiKey: 'abc123', userId: 42 })
+  resetDanbooruRateLimiterForTests()
   vi.stubGlobal('fetch', vi.fn())
 })
 
-afterEach(() => {
+afterEach(async () => {
+  await fsPromises.rm(userDataDir, { recursive: true, force: true })
   vi.unstubAllGlobals()
   global.fetch = originalFetch
 })
@@ -30,6 +49,14 @@ describe('fetchDanbooruTags', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
+  it('returns an empty array without calling fetch when no Danbooru credentials are configured', async () => {
+    resetDanbooruCredentialsCache()
+    writeDanbooruCredentials(undefined)
+
+    expect(await fetchDanbooruTags('https://danbooru.donmai.us/posts/12345')).toEqual([])
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('fetches the post JSON and returns its cleaned general tags', async () => {
     vi.mocked(fetch).mockResolvedValue(
       jsonResponse({ tag_string_general: 'hatsune_miku 1girl blue_hair' })
@@ -38,7 +65,7 @@ describe('fetchDanbooruTags', () => {
     const tags = await fetchDanbooruTags('https://danbooru.donmai.us/posts/12345')
 
     expect(fetch).toHaveBeenCalledWith(
-      'https://danbooru.donmai.us/posts/12345.json',
+      expect.objectContaining({ href: 'https://danbooru.donmai.us/posts/12345.json' }),
       expect.objectContaining({ signal: expect.anything() })
     )
     expect(tags).toEqual([{ name: 'hatsune miku' }, { name: '1girl' }, { name: 'blue hair' }])

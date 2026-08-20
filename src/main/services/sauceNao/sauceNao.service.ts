@@ -5,9 +5,16 @@ import { readSauceNaoApiKey } from './sauceNaoSettings'
 import { fetchDanbooruTags } from '../danbooruTags'
 import { SauceNaoResponseSchema, pickBestMatch } from './sauceNao.parse'
 import { logError, logInfo } from '../../logging/logger'
+import { createRateLimiter } from '../rateLimiter'
 
 const SEARCH_URL = 'https://saucenao.com/search.php'
 const REQUEST_TIMEOUT_MS = 20_000
+// SauceNAO's exact published quota varies by source/account tier (free
+// accounts have been documented anywhere from 4-8 requests/30s); rather than
+// trust a possibly-stale number, this enforces a conservative floor well
+// under any of them - see danbooruHttp.ts's own limiter for the same idea
+// applied to Danbooru's (better-documented) 1 req/s guidance.
+const rateLimit = createRateLimiter(3000)
 // SauceNAO's bot protection rejects a custom/identifying User-Agent (observed:
 // a "PiCollection (...)" UA got a bare 403) - a realistic browser UA gets through.
 const USER_AGENT =
@@ -125,15 +132,17 @@ export async function lookupSauceNao(route: string): Promise<SauceNaoLookup> {
 
     let res: Response
     try {
-      res = await fetch(url, {
-        method: 'POST',
-        body: form,
-        headers: {
-          'User-Agent': USER_AGENT,
-          Accept: 'application/json, text/plain, */*'
-        },
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
-      })
+      res = await rateLimit(() =>
+        fetch(url, {
+          method: 'POST',
+          body: form,
+          headers: {
+            'User-Agent': USER_AGENT,
+            Accept: 'application/json, text/plain, */*'
+          },
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+        })
+      )
     } catch (err) {
       if (err instanceof Error && err.name === 'TimeoutError') {
         throw new Error('SauceNAO took too long to respond. Try again.')

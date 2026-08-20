@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import i18n from 'i18next'
 import SettingsPage from './SettingsPage'
@@ -22,6 +22,10 @@ beforeEach(() => {
       sauceNao: {
         getApiKey: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         setApiKey: vi.fn().mockResolvedValue({ success: true, data: undefined })
+      },
+      danbooru: {
+        getCredentials: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+        setCredentials: vi.fn().mockResolvedValue({ success: true, data: undefined })
       },
       updater: {
         getChannel: vi.fn().mockResolvedValue({ success: true, data: 'stable' }),
@@ -179,8 +183,9 @@ describe('SettingsPage', () => {
     render(<SettingsPage />)
     await openTab(user, 'Advanced')
 
+    const sauceNaoSection = screen.getByLabelText('SauceNAO API key').closest('section') as HTMLElement
     await user.type(screen.getByLabelText('SauceNAO API key'), 'my-new-key')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await user.click(within(sauceNaoSection).getByRole('button', { name: 'Save' }))
 
     expect(window.api.sauceNao.setApiKey).toHaveBeenCalledWith('my-new-key')
     expect(await screen.findByText('Saved.')).toBeInTheDocument()
@@ -203,7 +208,8 @@ describe('SettingsPage', () => {
     await openTab(user, 'Advanced')
 
     await waitFor(() => expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('saved-key'))
-    await user.click(screen.getByRole('button', { name: 'Clear' }))
+    const sauceNaoSection = screen.getByLabelText('SauceNAO API key').closest('section') as HTMLElement
+    await user.click(within(sauceNaoSection).getByRole('button', { name: 'Clear' }))
 
     expect(window.api.sauceNao.setApiKey).toHaveBeenCalledWith(undefined)
     expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('')

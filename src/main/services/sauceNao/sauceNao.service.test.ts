@@ -6,6 +6,8 @@ const fetchDanbooruTags = vi.fn()
 const readFile = vi.fn()
 const logInfo = vi.fn()
 const logError = vi.fn()
+const rateLimitRun = vi.fn((fn: () => Promise<unknown>) => fn())
+const createRateLimiter = vi.fn((_minIntervalMs: number) => rateLimitRun)
 
 vi.mock('../../thumbnails/thumbnails', () => ({
   resolveThumbnail: (...args: unknown[]) => resolveThumbnail(...args)
@@ -22,6 +24,9 @@ vi.mock('fs', () => ({
 vi.mock('../../logging/logger', () => ({
   logInfo: (...args: unknown[]) => logInfo(...args),
   logError: (...args: unknown[]) => logError(...args)
+}))
+vi.mock('../rateLimiter', () => ({
+  createRateLimiter: (minIntervalMs: number) => createRateLimiter(minIntervalMs)
 }))
 
 const { lookupSauceNao, clearSauceNaoCache } = await import('./sauceNao.service')
@@ -44,6 +49,7 @@ beforeEach(() => {
   fetchDanbooruTags.mockReset().mockResolvedValue([])
   logInfo.mockReset()
   logError.mockReset()
+  rateLimitRun.mockReset().mockImplementation((fn: () => Promise<unknown>) => fn())
   // The result cache is module-scoped state and would otherwise leak
   // between test cases that all resolve to the same mocked thumbnail path.
   clearSauceNaoCache()
@@ -80,6 +86,15 @@ describe('lookupSauceNao', () => {
 
     expect(result.match?.characters).toEqual([{ name: 'Ishtar' }])
     expect(result.remaining).toEqual({ short: 5, long: 99 })
+  })
+
+  it('routes the request through a shared rate limiter', async () => {
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({ header: {}, results: [] }))
+
+    await lookupSauceNao('/library/pic.png')
+
+    expect(createRateLimiter).toHaveBeenCalledWith(3000)
+    expect(rateLimitRun).toHaveBeenCalledTimes(1)
   })
 
   it('rejects without calling fetch when no thumbnail can be produced', async () => {

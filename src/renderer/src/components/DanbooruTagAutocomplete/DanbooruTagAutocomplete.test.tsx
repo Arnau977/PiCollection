@@ -6,11 +6,15 @@ import userEvent from '@testing-library/user-event'
 import { DanbooruTagAutocomplete } from './DanbooruTagAutocomplete'
 
 const autocompleteTags = vi.fn()
+const getCredentials = vi.fn()
 
 beforeEach(() => {
   autocompleteTags.mockReset().mockResolvedValue({ success: true, data: [] })
+  getCredentials
+    .mockReset()
+    .mockResolvedValue({ success: true, data: { username: 'arnau', apiKey: 'abc123' } })
   Object.defineProperty(window, 'api', {
-    value: { danbooru: { autocompleteTags } },
+    value: { danbooru: { autocompleteTags, getCredentials } },
     writable: true,
     configurable: true
   })
@@ -22,6 +26,19 @@ function Wrapper(): JSX.Element {
 }
 
 describe('DanbooruTagAutocomplete', () => {
+  it('still accepts typed input but never queries Danbooru without a configured account', async () => {
+    getCredentials.mockResolvedValue({ success: true, data: undefined })
+    const user = userEvent.setup()
+    render(<Wrapper />)
+
+    await user.type(screen.getByRole('textbox'), 'cat')
+
+    await waitFor(() => expect(getCredentials).toHaveBeenCalled())
+    expect(screen.getByRole('textbox')).toHaveValue('cat')
+    await new Promise((resolve) => setTimeout(resolve, 250))
+    expect(autocompleteTags).not.toHaveBeenCalled()
+  })
+
   it('does not query for a single character', async () => {
     const user = userEvent.setup()
     render(<Wrapper />)
