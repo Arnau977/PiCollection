@@ -56,6 +56,35 @@
   gap: var(--space-2);
 }
 
+.media-form-send-to-pending {
+  max-width: 220px;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width var(--transition-base),
+    opacity var(--transition-fast),
+    padding var(--transition-base),
+    margin var(--transition-base),
+    border-width var(--transition-base);
+}
+
+.media-form-send-to-pending.is-collapsed {
+  max-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: calc(var(--space-2) * -1);
+  margin-right: calc(var(--space-2) * -1);
+  border-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-form-send-to-pending {
+    transition: none;
+  }
+}
+
 /* Category accent border (.field-accent-*) now lives in main.css - shared
    with FilterBar, which ties its taxonomy filters back to the same colors. */
 
