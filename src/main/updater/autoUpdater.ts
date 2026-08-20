@@ -2,9 +2,14 @@ import { app, type BrowserWindow } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { IPC } from '@shared/ipc/contracts'
 import type { UpdateChannel, UpdaterEvent } from '@shared/models'
-import { compareVersions, extractHighlights, normalizeReleaseNotes } from '@shared/utils'
+import {
+  compareVersions,
+  describeUpdaterError,
+  extractHighlights,
+  normalizeReleaseNotes
+} from '@shared/utils'
 import { readUpdateChannel, writeUpdateChannel } from './updaterSettings'
-import { logInfo } from '../logging/logger'
+import { logError, logInfo } from '../logging/logger'
 
 let updaterWindow: BrowserWindow | null = null
 let initialized = false
@@ -72,7 +77,14 @@ export function initAutoUpdater(window: BrowserWindow): void {
     send({ type: 'download-progress', percent: Math.round(progress.percent) })
   )
   autoUpdater.on('update-downloaded', (info) => send({ type: 'downloaded', version: info.version }))
-  autoUpdater.on('error', (err) => send({ type: 'error', message: err.message }))
+  autoUpdater.on('error', (err) => {
+    // electron-updater's own error messages are internal diagnostics (full
+    // HTTP headers, stack traces, local file paths) - never meant for an
+    // end user. Full detail goes to the debug log; the renderer only ever
+    // sees a short, human message (see describeUpdaterError).
+    logError('updater', 'Update check/download failed', err)
+    send({ type: 'error', message: describeUpdaterError(err.message) })
+  })
 }
 
 export async function checkForUpdates(): Promise<void> {
