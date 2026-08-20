@@ -108,6 +108,15 @@
   font-size: 0.9rem;
 }
 
+.update-downgrade-warning {
+  padding: var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-soft);
+  color: var(--color-text);
+  font-size: 0.85rem;
+}
+
 .settings-field-actions {
   display: flex;
   align-items: center;

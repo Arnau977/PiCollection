@@ -6,17 +6,17 @@ import { createJsonSettingsFile } from '../services/jsonSettingsFile'
 const SETTINGS_FILE = 'updater-settings.json'
 const DEFAULT_CHANNEL: UpdateChannel = 'stable'
 
-interface SavedUpdaterSettings {
-  channel: UpdateChannel
-}
-
 export function updaterSettingsFilePath(): string {
   return join(app.getPath('userData'), SETTINGS_FILE)
 }
 
+// write() below persists the channel itself (createJsonSettingsFile stores
+// exactly what it's given, not wrapped in an object), so parse must read
+// the same shape back - not a `{ channel: ... }` wrapper that was never
+// actually written.
 const settingsFile = createJsonSettingsFile<UpdateChannel>(
   SETTINGS_FILE,
-  (raw) => ((raw as Partial<SavedUpdaterSettings>).channel === 'beta' ? 'beta' : DEFAULT_CHANNEL),
+  (raw) => (raw === 'beta' ? 'beta' : DEFAULT_CHANNEL),
   DEFAULT_CHANNEL
 )
 

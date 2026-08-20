@@ -80,6 +80,28 @@ describe('useAppUpdater', () => {
     })
   })
 
+  it('reflects isDowngrade on an available status', async () => {
+    let emit: (event: unknown) => void = () => {}
+    const onEvent = vi.fn((listener: (event: unknown) => void) => {
+      emit = listener
+      return () => {}
+    })
+    setApi({ onEvent })
+
+    const { result } = renderHook(() => useAppUpdater())
+
+    act(() =>
+      emit({ type: 'available', version: '1.3.0', highlights: null, isDowngrade: true })
+    )
+
+    expect(result.current.status).toEqual({
+      state: 'available',
+      version: '1.3.0',
+      highlights: null,
+      isDowngrade: true
+    })
+  })
+
   it('hydrates status from the last known event on mount, not just idle', async () => {
     const getStatus = vi.fn().mockResolvedValue({
       success: true,

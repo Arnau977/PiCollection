@@ -13,6 +13,7 @@ import {
 import type { MediaFilters, MediaSortableProp } from '@shared/models'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { useAppUpdater } from '../../hooks/useAppUpdater'
+import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { LANGUAGES } from '../../i18n'
 import { BackupSection } from './BackupSection'
 import { MissingFilesSection } from './MissingFilesSection'
@@ -88,8 +89,19 @@ export default function SettingsPage(): JSX.Element {
   const { t, i18n } = useTranslation()
   const { defaults, setDefaults } = useGalleryDefaults()
   const updater = useAppUpdater()
+  const confirm = useConfirm()
   const sauceNaoApiKey = useSauceNaoApiKeyField()
   const logging = useLoggingSettings()
+
+  async function handleDownloadUpdate(): Promise<void> {
+    if (updater.status.state === 'available' && updater.status.isDowngrade) {
+      const confirmed = await confirm(
+        t('settings.updateDowngradeConfirm', { version: updater.status.version })
+      )
+      if (!confirmed) return
+    }
+    await updater.downloadUpdate()
+  }
 
   return (
     <div className="page settings-page">
@@ -308,12 +320,18 @@ export default function SettingsPage(): JSX.Element {
               </div>
             )}
 
+            {updater.status.state === 'available' && updater.status.isDowngrade && (
+              <p className="update-downgrade-warning" role="alert">
+                {t('settings.updateDowngradeWarning')}
+              </p>
+            )}
+
             {updater.status.state === 'downloaded' ? (
               <button type="button" className="btn" onClick={updater.quitAndInstall}>
                 {t('settings.restartAndInstall')}
               </button>
             ) : updater.status.state === 'available' ? (
-              <button type="button" className="btn" onClick={updater.downloadUpdate}>
+              <button type="button" className="btn" onClick={handleDownloadUpdate}>
                 {t('settings.downloadUpdate')}
               </button>
             ) : (
