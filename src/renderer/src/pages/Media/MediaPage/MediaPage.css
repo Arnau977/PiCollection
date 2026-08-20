@@ -20,6 +20,13 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* overflow-y: auto alone implicitly promotes overflow-x from its visible
+     default to auto too (per the CSS overflow spec) - so a primary button
+     flush against the right edge (Guardar) grows its box-shadow/transform
+     on hover/press without affecting layout, but that paint-only overflow
+     was enough to trigger a page-wide horizontal scrollbar. Clip it: it's
+     purely decorative ink overflow, nothing meaningful gets cut off. */
+  overflow-x: hidden;
   /* Extra room so the last metadata section doesn't sit flush against the
      window edge / OS taskbar on a maximized window. */
   padding-bottom: var(--space-7);
