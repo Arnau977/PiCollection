@@ -35,7 +35,18 @@ interface UseGallerySessionResult extends GallerySession {
 }
 
 export function useGallerySession(createInitial: () => GallerySession): UseGallerySessionResult {
-  const [state, setState] = useState<GallerySession>(() => session ?? createInitial())
+  const [state, setState] = useState<GallerySession>(() => {
+    // Written through to the shared session immediately, not just on the
+    // first explicit setFilters/setSorting/setPage call - otherwise a
+    // page-load-only default filter (e.g. gallery defaults' "SFW only") is
+    // active in this component's own state and correctly narrows the
+    // gallery grid, but readGallerySession() (used by useAdjacentMedia for
+    // the detail view's prev/next arrows) still sees null and falls back to
+    // no filter at all until the user happens to touch a filter control.
+    if (session) return session
+    session = createInitial()
+    return session
+  })
 
   const update = useCallback((changes: Partial<GallerySession>) => {
     setState((prev) => {
