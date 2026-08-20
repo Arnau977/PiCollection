@@ -885,4 +885,18 @@ describe('media.repository bulk association add/remove', () => {
     const seriesByMedia = await mediaRepo.findSeriesForMediaIds(db, [media.id])
     expect(seriesByMedia.get(media.id)?.map((s) => s.id)).toEqual([seriesB.id])
   })
+
+  it('setMediaSfwBulk sets sfw on every given media id, leaving others untouched', async () => {
+    const mediaA = await insertMedia('a')
+    const mediaB = await insertMedia('b')
+    const mediaC = await insertMedia('c')
+
+    await mediaRepo.setMediaSfwBulk(db, [mediaA.id, mediaB.id], false)
+
+    const rows = await db.selectFrom('media').select(['id', 'sfw']).execute()
+    const sfwById = new Map(rows.map((row) => [row.id, row.sfw]))
+    expect(sfwById.get(mediaA.id)).toBe(0)
+    expect(sfwById.get(mediaB.id)).toBe(0)
+    expect(sfwById.get(mediaC.id)).toBe(1)
+  })
 })

@@ -62,8 +62,41 @@ describe('BatchEditDialog', () => {
       addCharacterIds: [],
       removeCharacterIds: [],
       addSeriesIds: [],
-      removeSeriesIds: []
+      removeSeriesIds: [],
+      sfw: null
     })
+  })
+
+  it('leaves SFW/NSFW at "Don\'t change" by default', () => {
+    render(<BatchEditDialog count={1} onApply={vi.fn()} onCancel={vi.fn()} />)
+
+    expect(screen.getByRole('radio', { name: "Don't change" })).toBeChecked()
+    expect(screen.getByRole('radio', { name: 'Mark as SFW' })).not.toBeChecked()
+    expect(screen.getByRole('radio', { name: 'Mark as NSFW' })).not.toBeChecked()
+  })
+
+  it('enables Apply and calls onApply with sfw: true when Mark as SFW is chosen', async () => {
+    const user = userEvent.setup()
+    const onApply = vi.fn()
+    render(<BatchEditDialog count={1} onApply={onApply} onCancel={vi.fn()} />)
+
+    await user.click(screen.getByRole('radio', { name: 'Mark as SFW' }))
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeEnabled()
+
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    expect(onApply).toHaveBeenCalledWith(expect.objectContaining({ sfw: true }))
+  })
+
+  it('enables Apply and calls onApply with sfw: false when Mark as NSFW is chosen', async () => {
+    const user = userEvent.setup()
+    const onApply = vi.fn()
+    render(<BatchEditDialog count={1} onApply={onApply} onCancel={vi.fn()} />)
+
+    await user.click(screen.getByRole('radio', { name: 'Mark as NSFW' }))
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    expect(onApply).toHaveBeenCalledWith(expect.objectContaining({ sfw: false }))
   })
 
   it('excludes a tag from Remove options once it is selected in Add', async () => {
