@@ -371,6 +371,15 @@
   gap: var(--space-4);
   padding: var(--space-4);
   overflow-y: auto;
+  /* Suggested tag/character/series names often come through as long,
+     underscore-joined strings with no natural break point (Danbooru/WD14
+     both return snake_case). Without this, a single such name doesn't wrap
+     and forces a horizontal scrollbar on the whole rail (overflow-y: auto
+     alone implicitly promotes overflow-x from its visible default to auto
+     too, per the CSS overflow spec) - wrap it instead, and keep overflow-x
+     hidden as a backstop for anything that still doesn't. */
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
 }
 
 .suggestions-rail-section {
