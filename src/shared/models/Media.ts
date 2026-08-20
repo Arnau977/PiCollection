@@ -81,4 +81,6 @@ export interface MediaBatchUpdateAssociationsInput {
   removeCharacterIds: string[]
   addSeriesIds: string[]
   removeSeriesIds: string[]
+  /** Omitted (not `undefined` vs `false`-checked) means "leave unchanged". */
+  sfw?: boolean
 }

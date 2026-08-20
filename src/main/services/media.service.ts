@@ -352,6 +352,9 @@ export const mediaService = {
       await mediaRepo.removeMediaCharactersBulk(trx, input.mediaIds, input.removeCharacterIds)
       await mediaRepo.addMediaSeriesBulk(trx, input.mediaIds, input.addSeriesIds)
       await mediaRepo.removeMediaSeriesBulk(trx, input.mediaIds, input.removeSeriesIds)
+      if (input.sfw !== undefined) {
+        await mediaRepo.setMediaSfwBulk(trx, input.mediaIds, input.sfw)
+      }
     })
 
     const touchedKinds: EntityKind[] = []
