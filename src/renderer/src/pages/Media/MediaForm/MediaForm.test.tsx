@@ -246,6 +246,22 @@ describe('MediaForm queueInfo', () => {
     )
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalledWith({ id: 'm1' }))
   })
+
+  it('calls onSentToPending instead of onSaved when provided', async () => {
+    const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+    setApi({ media: { create: mediaCreate } })
+    const onSentToPending = vi.fn()
+    const { onSaved } = renderForm({
+      initialFile: { route: '/pics/a.png', name: 'a', type: 'image' },
+      queueInfo: { current: 1, total: 3, onNext: vi.fn() },
+      onSentToPending
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send to pending' }))
+
+    await vi.waitFor(() => expect(onSentToPending).toHaveBeenCalledWith({ id: 'm1' }))
+    expect(onSaved).not.toHaveBeenCalled()
+  })
 })
 
 describe('MediaForm hideNames', () => {

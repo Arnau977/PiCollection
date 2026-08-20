@@ -76,8 +76,18 @@ export function MediaFormTopActions({
               {t('media.markResolved')}
             </button>
           )}
-          {queueInfo && !media && !queueSavedMedia && (
-            <button type="button" className="btn" onClick={onSendToPending} disabled={saving}>
+          {/* Stays mounted (collapsed via CSS, not unmounted) once queueSavedMedia
+              is set, so the action bar shrinks smoothly instead of the primary
+              Guardar button jumping left the instant this disappears. */}
+          {queueInfo && !media && (
+            <button
+              type="button"
+              className={`btn media-form-send-to-pending${queueSavedMedia ? ' is-collapsed' : ''}`}
+              onClick={onSendToPending}
+              disabled={saving || Boolean(queueSavedMedia)}
+              aria-hidden={queueSavedMedia ? true : undefined}
+              tabIndex={queueSavedMedia ? -1 : undefined}
+            >
               {t('importQueue.sendToPending')}
             </button>
           )}

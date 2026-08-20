@@ -86,6 +86,44 @@ describe('ImportQueue', () => {
     expect(await screen.findByText('File 2 of 2')).toBeInTheDocument()
   })
 
+  it('sending an item to Pending advances to the next file automatically', async () => {
+    renderQueue()
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send to pending' }))
+
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'a', pendingTagging: true })
+      )
+    )
+    expect(await screen.findByText('File 2 of 2')).toBeInTheDocument()
+  })
+
+  it('sending the last item to Pending closes the queue instead of opening its detail', async () => {
+    const onClose = vi.fn()
+    const onLastSaved = vi.fn()
+    renderQueue(onClose, onLastSaved)
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await screen.findByText('File 2 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send to pending' }))
+
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+    expect(onLastSaved).not.toHaveBeenCalled()
+  })
+
+  it('shows a confirmation toast when an item is sent to Pending', async () => {
+    renderQueue()
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send to pending' }))
+
+    expect(await screen.findByText('Sent to Pending.')).toBeInTheDocument()
+  })
+
   it('hides Previous on the first file and moves back to it from the second, discarding unsaved edits', async () => {
     renderQueue()
     await screen.findByText('File 1 of 2')
