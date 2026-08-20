@@ -223,6 +223,7 @@
     "confirmDelete": "¿Eliminar este archivo? Esta acción no se puede deshacer.",
     "aiGeneratedTitle": "Generado mediante IA",
     "aiGeneratedBadge": "IA",
+    "addedOnTitle": "Añadido el {{date}}",
     "copyLocation": "Copiar ubicación",
     "locationCopied": "¡Copiado!",
     "copyMedia": "Copiar imagen",

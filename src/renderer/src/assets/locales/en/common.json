@@ -223,6 +223,7 @@
     "confirmDelete": "Delete this media? This cannot be undone.",
     "aiGeneratedTitle": "Generated using AI",
     "aiGeneratedBadge": "AI",
+    "addedOnTitle": "Added on {{date}}",
     "copyLocation": "Copy location",
     "locationCopied": "Copied!",
     "copyMedia": "Copy image",
