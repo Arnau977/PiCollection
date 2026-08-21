@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
@@ -27,10 +27,16 @@ const GalleryPage: React.FC = () => {
     page: 0
   }))
   const navigate = useNavigate()
+  const location = useLocation()
   const confirm = useConfirm()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showBatchEdit, setShowBatchEdit] = useState(false)
   const [deletingSelected, setDeletingSelected] = useState(false)
+  // "Back to gallery" passes the media you were viewing so its card can be
+  // scrolled back into view (centered) once the grid re-renders, instead of
+  // leaving you at the top of whatever page you land on.
+  const focusMediaId = (location.state as { focusMediaId?: string } | null)?.focusMediaId
+  const hasScrolledToFocusRef = useRef(false)
 
   const pageSize = defaults.pageSize
   // Pending media lives only under the dedicated Pending tab - always excluded
@@ -46,6 +52,21 @@ const GalleryPage: React.FC = () => {
   useEffect(() => {
     setSelectedIds(new Set())
   }, [filters, sorting])
+
+  // The gallery session already keeps the same page/filters across the round
+  // trip to a media's detail view, so the item is normally already in this
+  // page's list - just needs its card scrolled into view. Runs once per
+  // visit (ref guard) and clears the router state so paging afterwards, or a
+  // refetch, doesn't re-trigger it.
+  useEffect(() => {
+    if (!focusMediaId || loading || hasScrolledToFocusRef.current) return
+    const target = document.querySelector(`[data-media-id="${focusMediaId}"]`)
+    if (!target) return
+    hasScrolledToFocusRef.current = true
+    target.scrollIntoView({ block: 'center' })
+    navigate(location.pathname, { replace: true, state: null })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the loaded media set changes
+  }, [focusMediaId, loading, media])
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const filtersActive = hasActiveFilters(filters)

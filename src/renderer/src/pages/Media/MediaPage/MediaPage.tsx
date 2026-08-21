@@ -52,9 +52,12 @@ const MediaPage: React.FC = () => {
   }
 
   function goBack(): void {
-    // A deep link or direct navigation leaves no in-app history to return to.
-    if (window.history.length > 1) navigate(-1)
-    else navigate(PATH.GALLERY)
+    // Always the gallery itself, never navigate(-1): browsing through one or
+    // more "similar media" links (each its own history entry, unlike the
+    // prev/next zones which replace) would otherwise walk back through them
+    // instead of leaving. The current media's id rides along so the gallery
+    // can scroll it back into view.
+    navigate(PATH.GALLERY, { state: { focusMediaId: media?.id } })
   }
 
   async function handleDelete(mediaId: string): Promise<void> {

@@ -65,7 +65,7 @@ export default function Gallery({
         const blurred = blurNsfw && !item.sfw
         const isSelected = selectedIds?.has(item.id) ?? false
         return (
-          <li key={item.id} className="gallery-tile">
+          <li key={item.id} className="gallery-tile" data-media-id={item.id}>
             {onToggleSelect && (
               <button
                 type="button"

@@ -96,13 +96,17 @@ beforeEach(() => {
 })
 
 describe('MediaPage back navigation', () => {
-  it('navigates to the gallery when the back button is clicked', async () => {
+  it('navigates straight to the gallery when the back button is clicked, regardless of browsing history', async () => {
     const user = userEvent.setup()
     renderMediaPage()
 
     await user.click(screen.getByRole('button', { name: /back to gallery/i }))
 
-    expect(navigateMock).toHaveBeenCalledWith('/gallery')
+    // Not navigate(-1): visiting one or more "similar media" links first
+    // (each its own history entry) must not walk back through them - the
+    // button always lands on the gallery directly, with the current media's
+    // id passed along so the gallery can scroll it back into view.
+    expect(navigateMock).toHaveBeenCalledWith('/gallery', { state: { focusMediaId: '1' } })
   })
 
   it('does not navigate when clicking outside the media/info panels', async () => {

@@ -301,6 +301,44 @@ describe('GalleryPage session persistence', () => {
   })
 })
 
+describe('GalleryPage return-from-media scroll centering', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  it('scrolls the media item you came back from into view, centered', async () => {
+    const scrollIntoViewMock = vi.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+
+    const { container } = render(
+      <MemoryRouter initialEntries={[{ pathname: '/gallery', state: { focusMediaId: '1' } }]}>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(scrollIntoViewMock).toHaveBeenCalled())
+    const target = container.querySelector('[data-media-id="1"]')
+    expect(scrollIntoViewMock.mock.contexts[0]).toBe(target)
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: 'center' })
+  })
+
+  it('does not scroll anything when arriving without a focusMediaId', async () => {
+    const scrollIntoViewMock = vi.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(screen.getByText('Media count: 3')).toBeInTheDocument())
+    expect(scrollIntoViewMock).not.toHaveBeenCalled()
+  })
+})
+
 describe('GalleryPage toolbar', () => {
   beforeEach(() => {
     window.localStorage.clear()
