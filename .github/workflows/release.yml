@@ -21,16 +21,42 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Create draft release with auto-generated notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ github.ref_name }}" \
-            --repo "${{ github.repository }}" \
-            --title "PiCollection ${{ github.ref_name }}" \
-            --generate-notes \
-            --draft \
-            --prerelease
+          # --generate-notes with no explicit start tag lets GitHub auto-pick
+          # the "previous release" - it does so per prerelease-vs-stable
+          # track, not by simple chronological order. Since every tag here
+          # starts out as a prerelease and gets promoted to stable manually
+          # later, that auto-detection kept anchoring on the last release
+          # that was STILL flagged prerelease at creation time, skipping
+          # every stable release promoted in between and re-listing PRs
+          # already shipped and documented there. Pin the actual immediately
+          # preceding tag (by commit ancestry, regardless of its prerelease
+          # status) instead.
+          PREV_TAG=$(git describe --tags --abbrev=0 "${{ github.ref_name }}^" 2>/dev/null || true)
+          if [ -n "$PREV_TAG" ]; then
+            gh release create "${{ github.ref_name }}" \
+              --repo "${{ github.repository }}" \
+              --title "PiCollection ${{ github.ref_name }}" \
+              --generate-notes \
+              --notes-start-tag "$PREV_TAG" \
+              --draft \
+              --prerelease
+          else
+            gh release create "${{ github.ref_name }}" \
+              --repo "${{ github.repository }}" \
+              --title "PiCollection ${{ github.ref_name }}" \
+              --generate-notes \
+              --draft \
+              --prerelease
+          fi
 
       - name: Prepend a Highlights placeholder for manual review
         env:
