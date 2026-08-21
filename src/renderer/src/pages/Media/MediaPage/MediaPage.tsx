@@ -52,9 +52,21 @@ const MediaPage: React.FC = () => {
   }
 
   function goBack(): void {
-    // A deep link or direct navigation leaves no in-app history to return to.
-    if (window.history.length > 1) navigate(-1)
-    else navigate(PATH.GALLERY)
+    // Always the gallery itself, never navigate(-1): browsing through one or
+    // more "similar media" links (each its own history entry, unlike the
+    // prev/next zones which replace) would otherwise walk back through them
+    // instead of leaving. The current media's id (and its position under the
+    // gallery's own filters/sorting, already computed above for the
+    // prev/next arrows) ride along so the gallery can jump to the right page
+    // and scroll it back into view - this also covers arriving here from
+    // Home's "recent additions" grid instead of the gallery itself, which
+    // uses its own unrelated filters/sorting and so may have landed on an
+    // item that isn't on whatever page the gallery last had loaded.
+    // `index` reflects the pending-queue override, not the gallery's own
+    // filters, when arriving via that queue - not a real gallery position.
+    navigate(PATH.GALLERY, {
+      state: { focusMediaId: media?.id, focusIndex: pendingQueue ? undefined : index }
+    })
   }
 
   async function handleDelete(mediaId: string): Promise<void> {
