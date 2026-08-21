@@ -369,6 +369,43 @@ describe('mediaService.batchUpdateAssociations', () => {
     expect(reloadedB?.series?.map((s) => s.id)).toEqual([series.id])
   })
 
+  it('sets sfw for every given media id when provided, leaving others untouched', async () => {
+    const mediaA = await mediaService.addMedia(baseInput({ sfw: true }))
+    const mediaB = await mediaService.addMedia(baseInput({ route: '/b.png', sfw: true }))
+    const mediaC = await mediaService.addMedia(baseInput({ route: '/c.png', sfw: true }))
+
+    await mediaService.batchUpdateAssociations({
+      mediaIds: [mediaA.id, mediaB.id],
+      addTagIds: [],
+      removeTagIds: [],
+      addCharacterIds: [],
+      removeCharacterIds: [],
+      addSeriesIds: [],
+      removeSeriesIds: [],
+      sfw: false
+    })
+
+    expect((await mediaService.getMediaById(mediaA.id))?.sfw).toBe(false)
+    expect((await mediaService.getMediaById(mediaB.id))?.sfw).toBe(false)
+    expect((await mediaService.getMediaById(mediaC.id))?.sfw).toBe(true)
+  })
+
+  it('leaves sfw untouched when omitted', async () => {
+    const media = await mediaService.addMedia(baseInput({ sfw: true }))
+
+    await mediaService.batchUpdateAssociations({
+      mediaIds: [media.id],
+      addTagIds: [(await tagService.createTag({ name: 'only-change' })).id],
+      removeTagIds: [],
+      addCharacterIds: [],
+      removeCharacterIds: [],
+      addSeriesIds: [],
+      removeSeriesIds: []
+    })
+
+    expect((await mediaService.getMediaById(media.id))?.sfw).toBe(true)
+  })
+
   it('rolls back every section if one step fails, applying nothing', async () => {
     const tag = await tagService.createTag({ name: 'sunset' })
     const media = await mediaService.addMedia(baseInput())

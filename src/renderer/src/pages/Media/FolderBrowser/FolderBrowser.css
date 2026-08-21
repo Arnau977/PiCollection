@@ -1,15 +1,15 @@
-/* Fills the remaining viewport height handed down by .add-media-page.is-
-   folder-browsing, so .folder-browser-scroll below can own the scrolling
-   and the actions bar never needs a page scroll to reach (same pattern as
+/* Fills the remaining viewport height handed down by .add-media-page, so
+   .folder-browser-scroll below can own the scrolling and the actions bar
+   never needs a page scroll to reach (same pattern as
    .gallery-scroll-region). */
 .folder-browser {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
-  /* .add-media-page.is-folder-browsing zeroes the page's own bottom padding
-     (same reasoning as .gallery-page/.manage-page), so the actions bar needs
-     its own breathing room from the window edge. */
+  /* .add-media-page zeroes the page's own bottom padding (same reasoning as
+     .gallery-page/.manage-page), so the actions bar needs its own breathing
+     room from the window edge. */
   padding-bottom: var(--space-5);
 }
 

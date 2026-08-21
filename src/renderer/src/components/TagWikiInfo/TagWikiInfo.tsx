@@ -125,6 +125,15 @@ export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element | null {
                         <a key={index} href={segment.href} target="_blank" rel="noreferrer">
                           {segment.text}
                         </a>
+                      ) : segment.spoiler ? (
+                        <span
+                          key={index}
+                          className="tag-wiki-spoiler"
+                          tabIndex={0}
+                          title={t('manage.tagWikiSpoiler')}
+                        >
+                          {segment.text}
+                        </span>
                       ) : (
                         <span key={index}>{segment.text}</span>
                       )
