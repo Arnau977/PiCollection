@@ -18,7 +18,12 @@ import './GalleryPage.css'
 
 // Kept in sync with the CSS animation duration on .gallery-return-highlight
 // (Gallery.css) - the class is removed right as the glow finishes fading.
-const RETURN_HIGHLIGHT_MS = 1500
+const RETURN_HIGHLIGHT_MS = 1700
+// Safety net for starting the highlight if the browser's native `scrollend`
+// never fires (e.g. the target was already in view, so nothing actually
+// scrolled) - otherwise the highlight would wait forever for an event that
+// isn't coming.
+const SCROLL_SETTLE_FALLBACK_MS = 500
 
 const GalleryPage: React.FC = () => {
   const { t } = useTranslation()
@@ -47,12 +52,19 @@ const GalleryPage: React.FC = () => {
   const hasJumpedToFocusPageRef = useRef(false)
   const [returnHighlightId, setReturnHighlightId] = useState<string | undefined>(undefined)
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const scrollSettleCleanupRef = useRef<() => void>()
+  const scrollRegionRef = useRef<HTMLDivElement>(null)
 
   // Own effect (mount/unmount only) so the pending clear-highlight timeout
-  // isn't cancelled by the focus effect below re-running once `navigate`
-  // clears focusMediaId from router state right after scheduling it.
+  // (and the scroll-settle listener/fallback, if the highlight hasn't shown
+  // yet) isn't cancelled by the focus effect below re-running once
+  // `navigate` clears focusMediaId from router state right after scheduling
+  // it.
   useEffect(() => {
-    return (): void => clearTimeout(highlightTimeoutRef.current)
+    return (): void => {
+      clearTimeout(highlightTimeoutRef.current)
+      scrollSettleCleanupRef.current?.()
+    }
   }, [])
 
   const pageSize = defaults.pageSize
@@ -88,11 +100,39 @@ const GalleryPage: React.FC = () => {
       hasScrolledToFocusRef.current = true
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       target.scrollIntoView({ block: 'center', behavior: prefersReducedMotion ? 'auto' : 'smooth' })
-      setReturnHighlightId(focusMediaId)
-      highlightTimeoutRef.current = setTimeout(
-        () => setReturnHighlightId(undefined),
-        RETURN_HIGHLIGHT_MS
-      )
+
+      const showHighlight = (): void => {
+        setReturnHighlightId(focusMediaId)
+        highlightTimeoutRef.current = setTimeout(
+          () => setReturnHighlightId(undefined),
+          RETURN_HIGHLIGHT_MS
+        )
+      }
+
+      if (prefersReducedMotion) {
+        // No scroll animation to wait out.
+        showHighlight()
+      } else {
+        // Starting the glow immediately would mean most of it fades while
+        // the card is still sliding into place off in peripheral vision -
+        // wait for the smooth scroll to actually finish first. The fallback
+        // covers the case where the target was already in view, so no
+        // scroll (and no `scrollend`) ever happens.
+        const region = scrollRegionRef.current
+        let settled = false
+        const onScrollEnd = (): void => {
+          if (settled) return
+          settled = true
+          showHighlight()
+        }
+        region?.addEventListener('scrollend', onScrollEnd)
+        const fallback = setTimeout(onScrollEnd, SCROLL_SETTLE_FALLBACK_MS)
+        scrollSettleCleanupRef.current = (): void => {
+          region?.removeEventListener('scrollend', onScrollEnd)
+          clearTimeout(fallback)
+        }
+      }
+
       navigate(location.pathname, { replace: true, state: null })
       return
     }
@@ -193,7 +233,7 @@ const GalleryPage: React.FC = () => {
         onPageChange={setPage}
       />
 
-      <div className="gallery-scroll-region">
+      <div className="gallery-scroll-region" ref={scrollRegionRef}>
         {error && (
           <p className="gallery-page-error" role="alert">
             {error}

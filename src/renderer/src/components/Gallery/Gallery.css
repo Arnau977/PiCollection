@@ -152,25 +152,33 @@
 
 /* Momentary highlight on the card the user just came back from (see
    GalleryPage's return-from-media handling) - fades out on its own rather
-   than needing a click to dismiss. */
+   than needing a click to dismiss. Against a grid full of colorful
+   thumbnails a static, subtle ring is easy to miss, so this leans on
+   motion (a brief scale pulse) rather than color alone, and holds at full
+   strength for a moment before fading instead of decaying from frame one. */
 .media-card.gallery-return-highlight {
-  animation: gallery-return-glow 1500ms ease-out;
+  animation: gallery-return-glow 1700ms ease-out;
 }
 
 @keyframes gallery-return-glow {
-  from {
+  0%,
+  35% {
     box-shadow:
-      0 0 0 3px var(--gallery-return-glow),
-      0 0 22px 4px var(--gallery-return-glow-soft);
+      0 0 0 4px var(--gallery-return-glow),
+      0 0 28px 8px var(--gallery-return-glow-soft);
+    transform: scale(1.05);
   }
-  to {
-    box-shadow: none;
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    transform: scale(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .media-card.gallery-return-highlight {
     animation: none;
-    box-shadow: 0 0 0 3px var(--gallery-return-glow);
+    box-shadow:
+      0 0 0 4px var(--gallery-return-glow),
+      0 0 28px 8px var(--gallery-return-glow-soft);
   }
 }

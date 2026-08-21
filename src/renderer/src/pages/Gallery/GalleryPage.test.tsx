@@ -351,7 +351,7 @@ describe('GalleryPage return-from-media scroll centering', () => {
     window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
     setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
 
-    render(
+    const { container } = render(
       <MemoryRouter initialEntries={[{ pathname: '/gallery', state: { focusMediaId: '1' } }]}>
         <GalleryPage />
       </MemoryRouter>
@@ -359,9 +359,14 @@ describe('GalleryPage return-from-media scroll centering', () => {
 
     await waitFor(() => expect(scrollIntoViewMock).toHaveBeenCalled())
     expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: 'center', behavior: 'auto' })
+    // Nothing to wait out here - there's no scroll animation, so the highlight
+    // shows right away instead of waiting on a scrollend that'll never fire.
+    expect(container.querySelector('[data-media-id="1"] .media-card')).toHaveClass(
+      'gallery-return-highlight'
+    )
   })
 
-  it('briefly highlights the item you came back from, then clears the highlight', async () => {
+  it('waits for the smooth scroll to settle before highlighting, then clears the highlight', async () => {
     mockPrefersReducedMotion(false)
     window.HTMLElement.prototype.scrollIntoView = vi.fn()
     setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
@@ -371,18 +376,19 @@ describe('GalleryPage return-from-media scroll centering', () => {
         <GalleryPage />
       </MemoryRouter>
     )
+    const card = (): Element | null => container.querySelector('[data-media-id="1"] .media-card')
 
-    await waitFor(() =>
-      expect(container.querySelector('[data-media-id="1"] .media-card')).toHaveClass(
-        'gallery-return-highlight'
-      )
-    )
+    await waitFor(() => expect(card()).toBeInTheDocument())
+    // jsdom never actually scrolls, so no native `scrollend` fires - the
+    // highlight only shows up once the settle fallback kicks in, not on the
+    // same tick as the scrollIntoView call.
+    expect(card()).not.toHaveClass('gallery-return-highlight')
 
-    await vi.advanceTimersByTimeAsync(2000)
+    await waitFor(() => expect(card()).toHaveClass('gallery-return-highlight'))
 
-    expect(container.querySelector('[data-media-id="1"] .media-card')).not.toHaveClass(
-      'gallery-return-highlight'
-    )
+    await vi.advanceTimersByTimeAsync(2500)
+
+    expect(card()).not.toHaveClass('gallery-return-highlight')
   })
 
   it('does not scroll anything when arriving without a focusMediaId', async () => {

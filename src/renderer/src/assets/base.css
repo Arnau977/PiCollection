@@ -59,7 +59,7 @@
      hover/selection on the very same card, so a returning user can tell
      "you just came from here" apart from "this is selected/hovered". */
   --gallery-return-glow: #2dd4bf;
-  --gallery-return-glow-soft: rgba(45, 212, 191, 0.35);
+  --gallery-return-glow-soft: rgba(45, 212, 191, 0.55);
 
   /* Taxonomy category colors - each distinct from every state color above
      and from --accent, so category identity never doubles as system state
