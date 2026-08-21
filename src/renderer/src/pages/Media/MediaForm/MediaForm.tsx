@@ -211,56 +211,58 @@ export function MediaForm({
         onSendToPending={handleSendToPending}
       />
 
-      <div className="media-form-layout">
-        <form id="media-form" className="media-form-card card" onSubmit={handleSubmit}>
-          <MediaFormFileGroup
-            queueInfo={queueInfo}
-            isEditing={isEditing}
-            initialFile={initialFile}
-            media={media}
+      <div className="media-form-scroll-region">
+        <div className="media-form-layout">
+          <form id="media-form" className="media-form-card card" onSubmit={handleSubmit}>
+            <MediaFormFileGroup
+              queueInfo={queueInfo}
+              isEditing={isEditing}
+              initialFile={initialFile}
+              media={media}
+              input={input}
+              duplicateCheck={duplicateCheck}
+              onFileChange={handleFileChange}
+            />
+
+            <MediaFormDetailsFields
+              isEditing={isEditing}
+              hideNames={galleryDefaults.hideNames}
+              input={input}
+              onChange={handleChange}
+              artistOptions={[...artists.data, ...drafts.pendingArtists]}
+              pendingArtists={drafts.pendingArtists}
+              onArtistSelect={(artist) => setInput((prev) => ({ ...prev, artistId: artist?.id }))}
+              onCreateArtist={drafts.createArtist}
+            />
+
+            <MediaFormTaxonomyFields
+              tagOptions={[...tags.data, ...drafts.pendingTags]}
+              pendingTags={drafts.pendingTags}
+              selectedTagIds={input.tagIds ?? []}
+              onTagsChange={(tagIds) => setInput((prev) => ({ ...prev, tagIds }))}
+              onCreateTag={drafts.createTag}
+              characterOptions={sortedCharacterOptions}
+              pendingCharacters={drafts.pendingCharacters}
+              selectedCharacterIds={input.characterIds ?? []}
+              onCharactersChange={suggestions.handleCharactersChange}
+              onCreateCharacter={drafts.createCharacter}
+              seriesOptions={[...series.data, ...drafts.pendingSeries]}
+              pendingSeries={drafts.pendingSeries}
+              selectedSeriesIds={input.seriesIds ?? []}
+              onSeriesChange={(seriesIds) => setInput((prev) => ({ ...prev, seriesIds }))}
+              onCreateSeries={drafts.createSeries}
+            />
+
+            {error && <p role="alert">{error}</p>}
+          </form>
+
+          <SuggestionsRail
+            suggestions={suggestions}
             input={input}
-            duplicateCheck={duplicateCheck}
-            onFileChange={handleFileChange}
+            saving={saving}
+            onApplyRating={(sfw) => setInput((prev) => ({ ...prev, sfw }))}
           />
-
-          <MediaFormDetailsFields
-            isEditing={isEditing}
-            hideNames={galleryDefaults.hideNames}
-            input={input}
-            onChange={handleChange}
-            artistOptions={[...artists.data, ...drafts.pendingArtists]}
-            pendingArtists={drafts.pendingArtists}
-            onArtistSelect={(artist) => setInput((prev) => ({ ...prev, artistId: artist?.id }))}
-            onCreateArtist={drafts.createArtist}
-          />
-
-          <MediaFormTaxonomyFields
-            tagOptions={[...tags.data, ...drafts.pendingTags]}
-            pendingTags={drafts.pendingTags}
-            selectedTagIds={input.tagIds ?? []}
-            onTagsChange={(tagIds) => setInput((prev) => ({ ...prev, tagIds }))}
-            onCreateTag={drafts.createTag}
-            characterOptions={sortedCharacterOptions}
-            pendingCharacters={drafts.pendingCharacters}
-            selectedCharacterIds={input.characterIds ?? []}
-            onCharactersChange={suggestions.handleCharactersChange}
-            onCreateCharacter={drafts.createCharacter}
-            seriesOptions={[...series.data, ...drafts.pendingSeries]}
-            pendingSeries={drafts.pendingSeries}
-            selectedSeriesIds={input.seriesIds ?? []}
-            onSeriesChange={(seriesIds) => setInput((prev) => ({ ...prev, seriesIds }))}
-            onCreateSeries={drafts.createSeries}
-          />
-
-          {error && <p role="alert">{error}</p>}
-        </form>
-
-        <SuggestionsRail
-          suggestions={suggestions}
-          input={input}
-          saving={saving}
-          onApplyRating={(sfw) => setInput((prev) => ({ ...prev, sfw }))}
-        />
+        </div>
       </div>
     </div>
   )

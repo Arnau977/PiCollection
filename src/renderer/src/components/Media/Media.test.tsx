@@ -123,6 +123,14 @@ describe('Media', () => {
     expect(screen.getByTitle('Explicit content')).toBeInTheDocument()
   })
 
+  it('shows the added date as DD/MM/YYYY, with the time on hover', () => {
+    const createdAt = new Date(2026, 0, 5, 14, 5).getTime()
+    render(<Media {...makeMedia({ createdAt })} />)
+
+    expect(screen.getByText('05/01/2026')).toBeInTheDocument()
+    expect(screen.getByTitle('Added on 05/01/2026, 14:05')).toBeInTheDocument()
+  })
+
   it('shows an AI-generated badge only when isAiGenerated is true', () => {
     const { rerender } = render(<Media {...makeMedia({ isAiGenerated: false })} />)
     expect(screen.queryByTitle('Generated using AI')).not.toBeInTheDocument()

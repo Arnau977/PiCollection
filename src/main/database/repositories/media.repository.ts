@@ -306,6 +306,19 @@ export function updateMediaRow(
     .executeTakeFirstOrThrow()
 }
 
+export async function setMediaSfwBulk(
+  db: Kysely<DB>,
+  mediaIds: string[],
+  sfw: boolean
+): Promise<void> {
+  if (!mediaIds.length) return
+  await db
+    .updateTable('media')
+    .set({ sfw: sfw ? 1 : 0 })
+    .where('id', 'in', mediaIds)
+    .execute()
+}
+
 export async function deleteMediaRow(db: Kysely<DB>, id: string): Promise<void> {
   await db.deleteFrom('media').where('id', '=', id).execute()
 }

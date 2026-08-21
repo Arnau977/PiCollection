@@ -154,6 +154,28 @@ describe('TagWikiInfo', () => {
     })
   })
 
+  it('renders a [spoiler] block as hidden-until-revealed text, not literal brackets', async () => {
+    lookup.mockResolvedValue({
+      success: true,
+      data: {
+        tagName: 'ass',
+        body: 'Dies in [spoiler]chapter 10[/spoiler] of the manga.',
+        otherNames: []
+      }
+    })
+    const user = userEvent.setup()
+    render(<TagWikiInfo tagName="ass" />)
+
+    await user.click(await screen.findByRole('button'))
+
+    await waitFor(() => {
+      const spoiler = screen.getByText('chapter 10')
+      expect(spoiler).toHaveClass('tag-wiki-spoiler')
+      expect(spoiler).toHaveAttribute('tabIndex', '0')
+      expect(screen.queryByText(/\[spoiler\]/)).not.toBeInTheDocument()
+    })
+  })
+
   it('renders a "pool #N" reference as a link to that Danbooru pool', async () => {
     lookup.mockResolvedValue({
       success: true,
