@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -302,11 +302,60 @@ describe('GalleryPage session persistence', () => {
 })
 
 describe('GalleryPage return-from-media scroll centering', () => {
+  const matchMediaSpy = window.matchMedia
+
   beforeEach(() => {
     window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
   })
 
-  it('scrolls the media item you came back from into view, centered', async () => {
+  afterEach(() => {
+    window.matchMedia = matchMediaSpy
+    vi.useRealTimers()
+  })
+
+  function mockPrefersReducedMotion(matches: boolean): void {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }))
+  }
+
+  const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect
+
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = originalGetBoundingClientRect
+  })
+
+  function rect(partial: Partial<DOMRect>): DOMRect {
+    return { x: 0, y: 0, toJSON: () => ({}), ...partial } as DOMRect
+  }
+
+  // jsdom never lays anything out (every element defaults to an all-zero
+  // rect), so the "already visible" path needs the scroll region and the
+  // target card stubbed with rects that actually overlap.
+  function mockCardVisibility(mediaId: string, visible: boolean): void {
+    Element.prototype.getBoundingClientRect = function (this: Element): DOMRect {
+      if (this.classList.contains('gallery-scroll-region')) {
+        return rect({ top: 0, bottom: 600, height: 600, left: 0, right: 800, width: 800 })
+      }
+      if (this.getAttribute('data-media-id') === mediaId) {
+        return visible
+          ? rect({ top: 100, bottom: 300, height: 200, left: 0, right: 200, width: 200 })
+          : rect({ top: 5000, bottom: 5200, height: 200, left: 0, right: 200, width: 200 })
+      }
+      return originalGetBoundingClientRect.call(this)
+    }
+  }
+
+  it('scrolls the media item you came back from into view, centered and animated', async () => {
+    mockPrefersReducedMotion(false)
     const scrollIntoViewMock = vi.fn()
     window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
     setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
@@ -320,7 +369,74 @@ describe('GalleryPage return-from-media scroll centering', () => {
     await waitFor(() => expect(scrollIntoViewMock).toHaveBeenCalled())
     const target = container.querySelector('[data-media-id="1"]')
     expect(scrollIntoViewMock.mock.contexts[0]).toBe(target)
-    expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: 'center' })
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' })
+  })
+
+  it('jumps instantly instead of animating when the user prefers reduced motion', async () => {
+    mockPrefersReducedMotion(true)
+    const scrollIntoViewMock = vi.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+
+    const { container } = render(
+      <MemoryRouter initialEntries={[{ pathname: '/gallery', state: { focusMediaId: '1' } }]}>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(scrollIntoViewMock).toHaveBeenCalled())
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: 'center', behavior: 'auto' })
+    // Nothing to wait out here - there's no scroll animation, so the highlight
+    // shows right away instead of waiting on a scrollend that'll never fire.
+    expect(container.querySelector('[data-media-id="1"] .media-card')).toHaveClass(
+      'gallery-return-highlight'
+    )
+  })
+
+  it('waits for the smooth scroll to settle before highlighting, then clears the highlight', async () => {
+    mockPrefersReducedMotion(false)
+    window.HTMLElement.prototype.scrollIntoView = vi.fn()
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+
+    const { container } = render(
+      <MemoryRouter initialEntries={[{ pathname: '/gallery', state: { focusMediaId: '1' } }]}>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+    const card = (): Element | null => container.querySelector('[data-media-id="1"] .media-card')
+
+    await waitFor(() => expect(card()).toBeInTheDocument())
+    // jsdom never actually scrolls, so no native `scrollend` fires - the
+    // highlight only shows up once the settle fallback kicks in, not on the
+    // same tick as the scrollIntoView call.
+    expect(card()).not.toHaveClass('gallery-return-highlight')
+
+    await waitFor(() => expect(card()).toHaveClass('gallery-return-highlight'))
+
+    await vi.advanceTimersByTimeAsync(2500)
+
+    expect(card()).not.toHaveClass('gallery-return-highlight')
+  })
+
+  it('skips the scroll animation when the item is already sufficiently visible, highlighting it right away', async () => {
+    mockPrefersReducedMotion(false)
+    mockCardVisibility('1', true)
+    const scrollIntoViewMock = vi.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+
+    const { container } = render(
+      <MemoryRouter initialEntries={[{ pathname: '/gallery', state: { focusMediaId: '1' } }]}>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() =>
+      expect(container.querySelector('[data-media-id="1"] .media-card')).toHaveClass(
+        'gallery-return-highlight'
+      )
+    )
+    expect(scrollIntoViewMock).not.toHaveBeenCalled()
   })
 
   it('does not scroll anything when arriving without a focusMediaId', async () => {

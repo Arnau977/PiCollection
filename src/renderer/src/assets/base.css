@@ -54,6 +54,13 @@
   --color-artist: #f0a860;
   --color-artist-soft: rgba(240, 168, 96, 0.15);
 
+  /* "You are here" glow (Gallery return-highlight, see Gallery.css) -
+     deliberately cool teal rather than the warm --accent already used for
+     hover/selection on the very same card, so a returning user can tell
+     "you just came from here" apart from "this is selected/hovered". */
+  --gallery-return-glow: #2dd4bf;
+  --gallery-return-glow-soft: rgba(45, 212, 191, 0.55);
+
   /* Taxonomy category colors - each distinct from every state color above
      and from --accent, so category identity never doubles as system state
      (Characters used to alias --color-success, Tags used to alias
