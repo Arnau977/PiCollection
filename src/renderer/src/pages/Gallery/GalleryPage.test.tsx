@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -302,11 +302,33 @@ describe('GalleryPage session persistence', () => {
 })
 
 describe('GalleryPage return-from-media scroll centering', () => {
+  const matchMediaSpy = window.matchMedia
+
   beforeEach(() => {
     window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
   })
 
-  it('scrolls the media item you came back from into view, centered', async () => {
+  afterEach(() => {
+    window.matchMedia = matchMediaSpy
+    vi.useRealTimers()
+  })
+
+  function mockPrefersReducedMotion(matches: boolean): void {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }))
+  }
+
+  it('scrolls the media item you came back from into view, centered and animated', async () => {
+    mockPrefersReducedMotion(false)
     const scrollIntoViewMock = vi.fn()
     window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
     setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
@@ -320,7 +342,47 @@ describe('GalleryPage return-from-media scroll centering', () => {
     await waitFor(() => expect(scrollIntoViewMock).toHaveBeenCalled())
     const target = container.querySelector('[data-media-id="1"]')
     expect(scrollIntoViewMock.mock.contexts[0]).toBe(target)
-    expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: 'center' })
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' })
+  })
+
+  it('jumps instantly instead of animating when the user prefers reduced motion', async () => {
+    mockPrefersReducedMotion(true)
+    const scrollIntoViewMock = vi.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/gallery', state: { focusMediaId: '1' } }]}>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(scrollIntoViewMock).toHaveBeenCalled())
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: 'center', behavior: 'auto' })
+  })
+
+  it('briefly highlights the item you came back from, then clears the highlight', async () => {
+    mockPrefersReducedMotion(false)
+    window.HTMLElement.prototype.scrollIntoView = vi.fn()
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+
+    const { container } = render(
+      <MemoryRouter initialEntries={[{ pathname: '/gallery', state: { focusMediaId: '1' } }]}>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() =>
+      expect(container.querySelector('[data-media-id="1"] .media-card')).toHaveClass(
+        'gallery-return-highlight'
+      )
+    )
+
+    await vi.advanceTimersByTimeAsync(2000)
+
+    expect(container.querySelector('[data-media-id="1"] .media-card')).not.toHaveClass(
+      'gallery-return-highlight'
+    )
   })
 
   it('does not scroll anything when arriving without a focusMediaId', async () => {

@@ -16,6 +16,10 @@ import { hasActiveFilters } from '../../utils/hasActiveFilters'
 import type { GalleryDensity } from '../../utils/gallerySettings'
 import './GalleryPage.css'
 
+// Kept in sync with the CSS animation duration on .gallery-return-highlight
+// (Gallery.css) - the class is removed right as the glow finishes fading.
+const RETURN_HIGHLIGHT_MS = 1500
+
 const GalleryPage: React.FC = () => {
   const { t } = useTranslation()
   const { defaults, setDefaults } = useGalleryDefaults()
@@ -41,6 +45,15 @@ const GalleryPage: React.FC = () => {
   const focusIndex = focusState?.focusIndex
   const hasScrolledToFocusRef = useRef(false)
   const hasJumpedToFocusPageRef = useRef(false)
+  const [returnHighlightId, setReturnHighlightId] = useState<string | undefined>(undefined)
+  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+
+  // Own effect (mount/unmount only) so the pending clear-highlight timeout
+  // isn't cancelled by the focus effect below re-running once `navigate`
+  // clears focusMediaId from router state right after scheduling it.
+  useEffect(() => {
+    return (): void => clearTimeout(highlightTimeoutRef.current)
+  }, [])
 
   const pageSize = defaults.pageSize
   // Pending media lives only under the dedicated Pending tab - always excluded
@@ -73,7 +86,13 @@ const GalleryPage: React.FC = () => {
     const target = document.querySelector(`[data-media-id="${focusMediaId}"]`)
     if (target) {
       hasScrolledToFocusRef.current = true
-      target.scrollIntoView({ block: 'center' })
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      target.scrollIntoView({ block: 'center', behavior: prefersReducedMotion ? 'auto' : 'smooth' })
+      setReturnHighlightId(focusMediaId)
+      highlightTimeoutRef.current = setTimeout(
+        () => setReturnHighlightId(undefined),
+        RETURN_HIGHLIGHT_MS
+      )
       navigate(location.pathname, { replace: true, state: null })
       return
     }
@@ -190,6 +209,7 @@ const GalleryPage: React.FC = () => {
             density={defaults.density}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
+            returnHighlightId={returnHighlightId}
           />
         )}
       </div>

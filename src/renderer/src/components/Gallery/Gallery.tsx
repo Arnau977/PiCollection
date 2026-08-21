@@ -21,6 +21,7 @@ interface GalleryProps {
   density?: GalleryDensity
   selectedIds?: Set<string>
   onToggleSelect?: (id: string) => void
+  returnHighlightId?: string
 }
 
 export default function Gallery({
@@ -29,7 +30,8 @@ export default function Gallery({
   hideNames = false,
   density = 'comfortable',
   selectedIds,
-  onToggleSelect
+  onToggleSelect,
+  returnHighlightId
 }: GalleryProps): JSX.Element {
   const { t } = useTranslation()
 
@@ -84,7 +86,12 @@ export default function Gallery({
                 {isSelected && <Check size={14} aria-hidden="true" />}
               </button>
             )}
-            <Link to={PATH.MEDIA.replace(':id', item.id)} className="media-card">
+            <Link
+              to={PATH.MEDIA.replace(':id', item.id)}
+              className={
+                item.id === returnHighlightId ? 'media-card gallery-return-highlight' : 'media-card'
+              }
+            >
               <div className={blurred ? 'thumb-wrap nsfw-blur' : 'thumb-wrap'}>
                 <MediaThumb type={item.type} route={item.route} alt={item.name} />
                 {blurred && <span className="nsfw-blur-overlay">{t('media.revealNsfw')}</span>}

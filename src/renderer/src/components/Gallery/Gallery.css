@@ -149,3 +149,28 @@
   border-color: var(--accent);
   color: #fff;
 }
+
+/* Momentary highlight on the card the user just came back from (see
+   GalleryPage's return-from-media handling) - fades out on its own rather
+   than needing a click to dismiss. */
+.media-card.gallery-return-highlight {
+  animation: gallery-return-glow 1500ms ease-out;
+}
+
+@keyframes gallery-return-glow {
+  from {
+    box-shadow:
+      0 0 0 3px var(--gallery-return-glow),
+      0 0 22px 4px var(--gallery-return-glow-soft);
+  }
+  to {
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-card.gallery-return-highlight {
+    animation: none;
+    box-shadow: 0 0 0 3px var(--gallery-return-glow);
+  }
+}
