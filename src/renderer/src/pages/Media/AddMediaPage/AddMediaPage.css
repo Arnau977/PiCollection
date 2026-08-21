@@ -8,11 +8,14 @@
   margin-top: var(--space-3);
 }
 
-/* Bounds the page to the viewport when the folder grid is showing, so the
-   "Import selected" bar stays visible without scrolling (same pattern as
-   .gallery-page/.manage-page - see FolderBrowser.css for the inner scroll
-   region this pairs with). */
-.add-media-page.is-folder-browsing {
+/* Bounds the page to the viewport in every tab/state, not just while the
+   folder grid is showing - MediaForm/ImportQueue manage their own scroll
+   region internally now (.media-form-scroll-region), and FolderBrowser
+   already did (see FolderBrowser.css), so the page itself always needs to
+   hand down a real height for those to fill instead of letting the whole
+   page scroll and take the action bar with it (same pattern as
+   .gallery-page/.manage-page). */
+.add-media-page {
   height: 100vh;
   display: flex;
   flex-direction: column;

@@ -32,7 +32,7 @@ export default function AddMediaPage(): JSX.Element {
   const showFolderBrowser = tab === 'folder' && sourceFolder && importSelection === null
 
   return (
-    <div className={`page add-media-page${showFolderBrowser ? ' is-folder-browsing' : ''}`}>
+    <div className="page add-media-page">
       <h1>{t('addMedia.title')}</h1>
 
       <div className="add-media-tabs" role="tablist">

@@ -1,10 +1,18 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react'
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { useCharacters, useSeries } from '../../hooks/useEntityLists'
 import { buildAncestorAwareEntityTree } from '../../utils/buildEntityTree'
+import { formatDate, formatDateTime } from '../../utils/formatDate'
 import { Lightbox } from '../Lightbox/Lightbox'
 import { SimilarMediaPanel } from './SimilarMediaPanel'
 import './Media.css'
@@ -28,6 +36,7 @@ export default function Media({
   type,
   artist,
   route,
+  createdAt,
   previousId = null,
   nextId = null,
   onNavigate
@@ -110,6 +119,13 @@ export default function Media({
                 {t('media.aiGeneratedBadge')}
               </span>
             )}
+            <span
+              className="badge badge-neutral"
+              title={t('media.addedOnTitle', { date: formatDateTime(createdAt) })}
+            >
+              <Calendar size={14} />
+              {formatDate(createdAt)}
+            </span>
           </div>
         </div>
 

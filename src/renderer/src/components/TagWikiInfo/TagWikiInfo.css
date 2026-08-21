@@ -40,6 +40,32 @@
   text-decoration: underline;
 }
 
+/* Redacted bar by default (text and background share a color, so nothing
+   is legible) - hover or keyboard focus reveals it. tabIndex on the span
+   (see TagWikiInfo.tsx) makes the focus path reachable without a mouse. */
+.tag-wiki-spoiler {
+  background: var(--color-text-muted);
+  color: var(--color-text-muted);
+  border-radius: 3px;
+  padding: 0 2px;
+  cursor: help;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.tag-wiki-spoiler:hover,
+.tag-wiki-spoiler:focus-visible {
+  background: transparent;
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tag-wiki-spoiler {
+    transition: none;
+  }
+}
+
 .tag-wiki-info-other-names {
   margin-top: var(--space-2);
   color: var(--color-text-faint);
