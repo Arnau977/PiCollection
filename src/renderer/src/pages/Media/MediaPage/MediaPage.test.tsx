@@ -99,14 +99,24 @@ describe('MediaPage back navigation', () => {
   it('navigates straight to the gallery when the back button is clicked, regardless of browsing history', async () => {
     const user = userEvent.setup()
     renderMediaPage()
+    // Waits for adjacency (and so `index`) to resolve, same as the other
+    // adjacent-navigation tests below - beforeEach's getOrderedIds resolves
+    // ['0', '1', '2'], so id '1' sits at index 1.
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Next image' })).toBeInTheDocument()
+    )
 
     await user.click(screen.getByRole('button', { name: /back to gallery/i }))
 
     // Not navigate(-1): visiting one or more "similar media" links first
     // (each its own history entry) must not walk back through them - the
     // button always lands on the gallery directly, with the current media's
-    // id passed along so the gallery can scroll it back into view.
-    expect(navigateMock).toHaveBeenCalledWith('/gallery', { state: { focusMediaId: '1' } })
+    // id and gallery position passed along so the gallery can jump to the
+    // right page and scroll it back into view (this also covers arriving
+    // from Home's differently-filtered "recent additions" grid).
+    expect(navigateMock).toHaveBeenCalledWith('/gallery', {
+      state: { focusMediaId: '1', focusIndex: 1 }
+    })
   })
 
   it('does not navigate when clicking outside the media/info panels', async () => {

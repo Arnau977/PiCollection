@@ -337,6 +337,32 @@ describe('GalleryPage return-from-media scroll centering', () => {
     await waitFor(() => expect(screen.getByText('Media count: 3')).toBeInTheDocument())
     expect(scrollIntoViewMock).not.toHaveBeenCalled()
   })
+
+  it('jumps to the page containing the focused item when it is not on the loaded one (e.g. arriving from Home instead of the gallery itself), then centers it', async () => {
+    const scrollIntoViewMock = vi.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+    // Default page size is 60 - item at index 65 lives on page 2 (0-based
+    // page 1), not the page 1 the gallery session would otherwise start on.
+    const getFiltered = vi.fn().mockImplementation((filters: { offset?: number }) => {
+      const offset = filters.offset ?? 0
+      return Promise.resolve({
+        success: true,
+        data: { items: makeMedia(60).map((item, i) => ({ ...item, id: String(offset + i) })), total: 130 }
+      })
+    })
+    setApi(getFiltered)
+
+    render(
+      <MemoryRouter
+        initialEntries={[{ pathname: '/gallery', state: { focusMediaId: '65', focusIndex: 65 } }]}
+      >
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(scrollIntoViewMock).toHaveBeenCalled())
+    expect(screen.getByText('Page 2 of 3')).toBeInTheDocument()
+  })
 })
 
 describe('GalleryPage toolbar', () => {
