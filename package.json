@@ -1,6 +1,6 @@
 {
   "name": "picollection",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "A local-first desktop gallery for images, GIFs and videos",
   "main": "./out/main/index.js",
   "author": "Arnau977",
