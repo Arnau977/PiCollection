@@ -24,6 +24,21 @@ const RETURN_HIGHLIGHT_MS = 1700
 // scrolled) - otherwise the highlight would wait forever for an event that
 // isn't coming.
 const SCROLL_SETTLE_FALLBACK_MS = 500
+// How much of the target's height must already be inside the scroll
+// region's viewport to skip the scroll animation entirely - jumping (even
+// smoothly) when the card is already mostly on screen is motion for its
+// own sake.
+const VISIBLE_ENOUGH_RATIO = 0.6
+
+function isMostlyVisible(target: Element, scrollRegion: Element): boolean {
+  const targetRect = target.getBoundingClientRect()
+  if (targetRect.height === 0) return false
+  const regionRect = scrollRegion.getBoundingClientRect()
+  const visibleTop = Math.max(targetRect.top, regionRect.top)
+  const visibleBottom = Math.min(targetRect.bottom, regionRect.bottom)
+  const visibleHeight = Math.max(0, visibleBottom - visibleTop)
+  return visibleHeight / targetRect.height >= VISIBLE_ENOUGH_RATIO
+}
 
 const GalleryPage: React.FC = () => {
   const { t } = useTranslation()
@@ -98,8 +113,6 @@ const GalleryPage: React.FC = () => {
     const target = document.querySelector(`[data-media-id="${focusMediaId}"]`)
     if (target) {
       hasScrolledToFocusRef.current = true
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      target.scrollIntoView({ block: 'center', behavior: prefersReducedMotion ? 'auto' : 'smooth' })
 
       const showHighlight = (): void => {
         setReturnHighlightId(focusMediaId)
@@ -109,27 +122,38 @@ const GalleryPage: React.FC = () => {
         )
       }
 
-      if (prefersReducedMotion) {
-        // No scroll animation to wait out.
+      const region = scrollRegionRef.current
+      if (region && isMostlyVisible(target, region)) {
+        // Already on screen - scrolling at all would just be motion for no
+        // reason, so skip straight to the highlight.
         showHighlight()
       } else {
-        // Starting the glow immediately would mean most of it fades while
-        // the card is still sliding into place off in peripheral vision -
-        // wait for the smooth scroll to actually finish first. The fallback
-        // covers the case where the target was already in view, so no
-        // scroll (and no `scrollend`) ever happens.
-        const region = scrollRegionRef.current
-        let settled = false
-        const onScrollEnd = (): void => {
-          if (settled) return
-          settled = true
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        target.scrollIntoView({
+          block: 'center',
+          behavior: prefersReducedMotion ? 'auto' : 'smooth'
+        })
+
+        if (prefersReducedMotion) {
+          // No scroll animation to wait out.
           showHighlight()
-        }
-        region?.addEventListener('scrollend', onScrollEnd)
-        const fallback = setTimeout(onScrollEnd, SCROLL_SETTLE_FALLBACK_MS)
-        scrollSettleCleanupRef.current = (): void => {
-          region?.removeEventListener('scrollend', onScrollEnd)
-          clearTimeout(fallback)
+        } else {
+          // Starting the glow immediately would mean most of it fades while
+          // the card is still sliding into place off in peripheral vision -
+          // wait for the smooth scroll to actually finish first. The
+          // fallback covers cases where `scrollend` never fires.
+          let settled = false
+          const onScrollEnd = (): void => {
+            if (settled) return
+            settled = true
+            showHighlight()
+          }
+          region?.addEventListener('scrollend', onScrollEnd)
+          const fallback = setTimeout(onScrollEnd, SCROLL_SETTLE_FALLBACK_MS)
+          scrollSettleCleanupRef.current = (): void => {
+            region?.removeEventListener('scrollend', onScrollEnd)
+            clearTimeout(fallback)
+          }
         }
       }
 

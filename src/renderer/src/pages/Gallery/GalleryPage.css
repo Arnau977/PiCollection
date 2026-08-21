@@ -49,6 +49,10 @@
   /* Room for the first row's hover lift (.media-card:hover translateY(-4px))
      and glow, which would otherwise crowd the toolbar right above it. */
   padding-top: var(--space-2);
+  /* Same reasoning, sideways: without it, the return-highlight glow
+     (Gallery.css) on a card in the leftmost/rightmost column gets clipped
+     by this element's own overflow instead of fading out naturally. */
+  padding-inline: var(--space-4);
   /* The container's bottom edge is a hard scroll boundary - whatever row
      lands there looks flush-cut against the window, at any scroll position,
      not just the end of the list. Fading that edge instead of clipping it

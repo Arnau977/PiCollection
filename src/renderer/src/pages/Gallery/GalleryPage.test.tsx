@@ -327,6 +327,33 @@ describe('GalleryPage return-from-media scroll centering', () => {
     }))
   }
 
+  const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect
+
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = originalGetBoundingClientRect
+  })
+
+  function rect(partial: Partial<DOMRect>): DOMRect {
+    return { x: 0, y: 0, toJSON: () => ({}), ...partial } as DOMRect
+  }
+
+  // jsdom never lays anything out (every element defaults to an all-zero
+  // rect), so the "already visible" path needs the scroll region and the
+  // target card stubbed with rects that actually overlap.
+  function mockCardVisibility(mediaId: string, visible: boolean): void {
+    Element.prototype.getBoundingClientRect = function (this: Element): DOMRect {
+      if (this.classList.contains('gallery-scroll-region')) {
+        return rect({ top: 0, bottom: 600, height: 600, left: 0, right: 800, width: 800 })
+      }
+      if (this.getAttribute('data-media-id') === mediaId) {
+        return visible
+          ? rect({ top: 100, bottom: 300, height: 200, left: 0, right: 200, width: 200 })
+          : rect({ top: 5000, bottom: 5200, height: 200, left: 0, right: 200, width: 200 })
+      }
+      return originalGetBoundingClientRect.call(this)
+    }
+  }
+
   it('scrolls the media item you came back from into view, centered and animated', async () => {
     mockPrefersReducedMotion(false)
     const scrollIntoViewMock = vi.fn()
@@ -389,6 +416,27 @@ describe('GalleryPage return-from-media scroll centering', () => {
     await vi.advanceTimersByTimeAsync(2500)
 
     expect(card()).not.toHaveClass('gallery-return-highlight')
+  })
+
+  it('skips the scroll animation when the item is already sufficiently visible, highlighting it right away', async () => {
+    mockPrefersReducedMotion(false)
+    mockCardVisibility('1', true)
+    const scrollIntoViewMock = vi.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+
+    const { container } = render(
+      <MemoryRouter initialEntries={[{ pathname: '/gallery', state: { focusMediaId: '1' } }]}>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() =>
+      expect(container.querySelector('[data-media-id="1"] .media-card')).toHaveClass(
+        'gallery-return-highlight'
+      )
+    )
+    expect(scrollIntoViewMock).not.toHaveBeenCalled()
   })
 
   it('does not scroll anything when arriving without a focusMediaId', async () => {
