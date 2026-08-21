@@ -129,7 +129,8 @@ const GalleryPage: React.FC = () => {
   async function handleBatchEditApply(selections: BatchEditSelections): Promise<void> {
     await window.api.media.batchUpdateAssociations({
       mediaIds: [...selectedIds],
-      ...selections
+      ...selections,
+      sfw: selections.sfw ?? undefined
     })
     setShowBatchEdit(false)
     clearSelection()

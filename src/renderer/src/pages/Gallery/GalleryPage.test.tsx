@@ -631,6 +631,32 @@ describe('GalleryPage batch metadata edit', () => {
     await waitFor(() => expect(getFiltered).toHaveBeenCalledTimes(2))
   })
 
+  it('applies an SFW/NSFW batch change', async () => {
+    const user = userEvent.setup()
+    const getFiltered = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { items: makeMedia(2), total: 2 } })
+    const batchUpdateAssociations = vi.fn().mockResolvedValue({ success: true, data: undefined })
+    setApiWithBatchEdit(getFiltered, batchUpdateAssociations)
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Select media-0' }))
+    await user.click(screen.getByRole('button', { name: 'Edit metadata' }))
+    await user.click(screen.getByRole('radio', { name: 'Mark as NSFW' }))
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    await waitFor(() =>
+      expect(batchUpdateAssociations).toHaveBeenCalledWith(
+        expect.objectContaining({ mediaIds: ['0'], sfw: false })
+      )
+    )
+  })
+
   it('closes the dialog without applying when Cancel is clicked', async () => {
     const user = userEvent.setup()
     const batchUpdateAssociations = vi.fn()

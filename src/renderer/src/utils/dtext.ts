@@ -22,14 +22,21 @@ export interface DtextSegment {
   /** Set when this segment is a post/pool reference - render as a link
    * instead of a bare, unexplained number. */
   href?: string
+  /** Set when this segment was wrapped in [spoiler]...[/spoiler] - render
+   * hidden until hovered/focused instead of as plain prose. Content inside
+   * is treated as plain text, not re-scanned for links - spoilers wrapping
+   * a post/pool reference are rare enough that "not a full DText renderer,
+   * just enough to read as prose" (see stripDtext) still applies here. */
+  spoiler?: boolean
 }
 
 const LINK_PATTERN =
-  /pool #(\d+)|post #(\d+)|\{\{pool:([^}]+)\}\}|"([^"]+)":\s*\[?(https?:\/\/[^\s\]]+)\]?/g
+  /\[spoiler\]([\s\S]*?)\[\/spoiler\]|pool #(\d+)|post #(\d+)|\{\{pool:([^}]+)\}\}|"([^"]+)":\s*\[?(https?:\/\/[^\s\]]+)\]?/gi
 
-/** Splits `stripDtext`'s output around post/pool references and named
- * external links (`"text":url` / `"text":[url]`) so the caller can render
- * each one as an actual link. */
+/** Splits `stripDtext`'s output around post/pool references, named external
+ * links (`"text":url` / `"text":[url]`), and [spoiler] blocks so the caller
+ * can render each one appropriately (a link, or hidden-until-revealed
+ * text). */
 export function splitDtextLinks(text: string): DtextSegment[] {
   const segments: DtextSegment[] = []
   let lastIndex = 0
@@ -40,8 +47,10 @@ export function splitDtextLinks(text: string): DtextSegment[] {
       segments.push({ text: text.slice(lastIndex, index) })
     }
 
-    const [full, poolId, postId, poolName, linkText, linkUrl] = match
-    if (poolId) {
+    const [full, spoilerText, poolId, postId, poolName, linkText, linkUrl] = match
+    if (spoilerText !== undefined) {
+      segments.push({ text: spoilerText, spoiler: true })
+    } else if (poolId) {
       segments.push({ text: full, href: `https://danbooru.donmai.us/pools/${poolId}` })
     } else if (postId) {
       segments.push({ text: full, href: `https://danbooru.donmai.us/posts/${postId}` })
