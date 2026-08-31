@@ -201,9 +201,12 @@ function applyMediaFilters(
     qb = qb.where('media.id', 'not in', db.selectFrom('media_series').select('media_id'))
   }
 
-  if (filters.pendingTagging !== undefined) {
-    qb = qb.where('media.pending_tagging', '=', filters.pendingTagging ? 1 : 0)
-  }
+  // Pending media is only ever surfaced through the dedicated Pending queue,
+  // which asks for it explicitly with `pendingTagging: true`. Every other
+  // query - whether it passes `false` or omits the filter entirely - excludes
+  // it, so an untagged (and possibly unmarked-NSFW) item can't leak into the
+  // gallery, Home, adjacent-media navigation, etc.
+  qb = qb.where('media.pending_tagging', '=', filters.pendingTagging === true ? 1 : 0)
 
   return qb
 }
@@ -613,10 +616,12 @@ const ENTITY_THUMBNAIL_JOIN: Record<
 }
 
 /**
- * One SFW media thumbnail per requested entity id, chosen server-side so the
- * caller never has to fetch (let alone hydrate) more than `ids.length` rows
- * to render a grid of small previews. For `character`, prefers a media item
- * where that character is the only one credited (a solo appearance reads as
+ * One SFW, non-pending media thumbnail per requested entity id, chosen
+ * server-side so the caller never has to fetch (let alone hydrate) more than
+ * `ids.length` rows to render a grid of small previews. Pending media is
+ * excluded so an unfinished item never ends up representing an entity. For
+ * `character`, prefers a media item where that character is the only one
+ * credited (a solo appearance reads as
  * a more useful preview than one cropped out of a group shot) - implemented
  * via a `RANDOM()`-ordered window function partitioned per entity, with a
  * secondary sort key breaking ties toward solo appearances; expressed as raw
@@ -644,7 +649,7 @@ export async function findEntityThumbnails(
           media.type AS type,
           ROW_NUMBER() OVER (PARTITION BY media.artist_id ORDER BY RANDOM()) AS rn
         FROM media
-        WHERE media.artist_id IN (${sql.join(ids)}) AND media.sfw = 1
+        WHERE media.artist_id IN (${sql.join(ids)}) AND media.sfw = 1 AND media.pending_tagging = 0
       ) WHERE rn = 1
     `.execute(db)
     return result.rows
@@ -668,7 +673,7 @@ export async function findEntityThumbnails(
       FROM ${sql.table(table)} j
       JOIN media ON media.id = j.media_id
       ${soloJoin}
-      WHERE j.${sql.ref(column)} IN (${sql.join(ids)}) AND media.sfw = 1
+      WHERE j.${sql.ref(column)} IN (${sql.join(ids)}) AND media.sfw = 1 AND media.pending_tagging = 0
     ) WHERE rn = 1
   `.execute(db)
   return result.rows
@@ -681,10 +686,10 @@ export interface EntityClosurePair {
 }
 
 /**
- * Thumbnails that honour a hierarchy: one SFW thumbnail per *requested ancestor*, drawn from
- * media linked to any id in that ancestor's closure (itself plus every descendant). A parent
- * whose media all live under its children still gets a preview, matching the rolled-up counts
- * the Manage list shows next to it. Used for both series and characters.
+ * Thumbnails that honour a hierarchy: one SFW, non-pending thumbnail per *requested ancestor*,
+ * drawn from media linked to any id in that ancestor's closure (itself plus every descendant). A
+ * parent whose media all live under its children still gets a preview, matching the rolled-up
+ * counts the Manage list shows next to it. Used for both series and characters.
  *
  * `media_series`/`media_character` only store exact links, so the closure has to come from the
  * caller: the (descendant, ancestor) pairs are inlined as a derived table and the window function
@@ -719,7 +724,7 @@ export async function findEntityThumbnailsByClosure(
       FROM closure
       JOIN ${sql.table(table)} j ON j.${sql.ref(column)} = closure.descendant_id
       JOIN media ON media.id = j.media_id
-      WHERE media.sfw = 1
+      WHERE media.sfw = 1 AND media.pending_tagging = 0
     ) WHERE rn = 1
   `.execute(db)
   return result.rows

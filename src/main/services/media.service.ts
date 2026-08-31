@@ -193,7 +193,14 @@ async function findSimilarByPhash(
         return media ? { media, distance: row.distance } : null
       })
     )
-  ).filter((entry): entry is { media: MediaModel; distance: number } => entry !== null)
+  ).filter(
+    (entry): entry is { media: MediaModel; distance: number } =>
+      // Pending media only ever surfaces through the Pending queue - keep it out
+      // of the detail page's "Similar media" panel and the pre-import
+      // near-duplicate warning. Exact duplicates are still caught upstream by
+      // route/content-hash matching, which this phash pass doesn't cover.
+      entry !== null && !entry.media.pendingTagging
+  )
 }
 
 const SIMILAR_MEDIA_LIMIT = 12
