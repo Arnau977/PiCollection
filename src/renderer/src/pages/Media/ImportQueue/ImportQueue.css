@@ -1,0 +1,45 @@
+/* Full-screen block shown while "Add remaining to Pending" is creating rows.
+   Same backdrop treatment as ConfirmDialog so it reads as the same kind of
+   modal interruption - it also has to sit above MediaForm's fixed top action
+   bar (Close/Next/Previous), hence matching that z-index band. */
+.import-queue-busy {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(10, 10, 14, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.import-queue-busy-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: import-queue-spin 0.8s linear infinite;
+}
+
+.import-queue-busy-label {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+@keyframes import-queue-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .import-queue-busy-spinner {
+    animation-duration: 2.4s;
+  }
+}

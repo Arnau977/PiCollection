@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ExpandedMediaFile, MediaModel } from '@shared/models'
 import { deriveMediaName } from '@shared/utils'
 import { MediaForm } from '../MediaForm/MediaForm'
 import { ImportQueueExitDialog } from '../ImportQueueExitDialog/ImportQueueExitDialog'
 import { Toast } from '../../../components/Toast/Toast'
+import './ImportQueue.css'
 
 interface ImportQueueProps {
   selection: { files: string[]; folders: string[] }
@@ -27,6 +28,14 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
   // just closing blindly the way skipping an unsaved item does.
   const [currentSaved, setCurrentSaved] = useState<MediaModel | null>(null)
   const [showSentToPendingToast, setShowSentToPendingToast] = useState(false)
+  // Set for the whole duration of the "add remaining to pending" bulk create.
+  // While it's true a full-screen overlay blocks every control (Close, Next,
+  // Previous, the form itself) so the batch can't be re-triggered or the
+  // queue navigated out from under it - the exact re-entrancy that produced
+  // hundreds of duplicate rows before. `runningRef` guards the synchronous
+  // gap before `busy` re-renders against a double-click.
+  const [busy, setBusy] = useState(false)
+  const runningRef = useRef(false)
 
   useEffect((): (() => void) => {
     let cancelled = false
@@ -74,6 +83,7 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
   }
 
   function advance(): void {
+    if (busy) return
     goToNextOrFinish(() => (currentSaved ? onLastSaved(currentSaved) : onClose()))
   }
 
@@ -92,7 +102,7 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
   // are lost unless "Guardar" was pressed first - same trade-off "Siguiente"
   // already has when skipping an unsaved item.
   function goBack(): void {
-    if (index === 0) return
+    if (busy || index === 0) return
     setCurrentSaved(null)
     setState({ kind: 'ready', items, index: index - 1 })
   }
@@ -102,6 +112,7 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
   }
 
   function handleCloseClick(): void {
+    if (busy) return
     if (remaining > 0) {
       setShowExitDialog(true)
       return
@@ -110,20 +121,29 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
   }
 
   async function handleAddRemainingToPending(): Promise<void> {
+    if (runningRef.current) return
+    runningRef.current = true
+    setBusy(true)
     setShowExitDialog(false)
-    await Promise.all(
-      items.slice(index).map((file) =>
-        window.api.media.create({
-          name: deriveMediaName(file.fileName),
-          type: file.type,
-          route: file.route,
-          sfw: true,
-          isAiGenerated: false,
-          pendingTagging: true
-        })
-      )
+
+    const result = await window.api.media.createMany(
+      items.slice(index).map((file) => ({
+        name: deriveMediaName(file.fileName),
+        type: file.type,
+        route: file.route,
+        sfw: true,
+        isAiGenerated: false,
+        pendingTagging: true
+      }))
     )
-    onClose()
+
+    if (result.success) {
+      onClose()
+      return
+    }
+    runningRef.current = false
+    setBusy(false)
+    setState({ kind: 'error', message: result.error.message })
   }
 
   function handleDiscard(): void {
@@ -159,6 +179,14 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
           onDiscard={handleDiscard}
           onKeepEditing={() => setShowExitDialog(false)}
         />
+      )}
+      {busy && (
+        <div className="import-queue-busy" role="alert" aria-busy="true">
+          <div className="import-queue-busy-spinner" aria-hidden="true" />
+          <p className="import-queue-busy-label">
+            {t('importQueue.addingToPending', { count: remaining })}
+          </p>
+        </div>
       )}
     </>
   )

@@ -60,6 +60,10 @@ export const api = {
       ipcRenderer.invoke(IPC.media.getById, id),
     create: (input: MediaInput): Promise<IpcResult<MediaModel>> =>
       ipcRenderer.invoke(IPC.media.create, input),
+    createMany: (
+      inputs: MediaInput[]
+    ): Promise<IpcResult<{ created: number; skipped: number; createdIds: string[] }>> =>
+      ipcRenderer.invoke(IPC.media.createMany, inputs),
     update: (id: string, input: MediaInput): Promise<IpcResult<MediaModel>> =>
       ipcRenderer.invoke(IPC.media.update, { id, input }),
     batchUpdateAssociations: (input: MediaBatchUpdateAssociationsInput): Promise<IpcResult<void>> =>

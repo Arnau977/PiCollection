@@ -6,18 +6,22 @@ import { ImportQueue } from './ImportQueue'
 
 const expandSelection = vi.fn()
 const mediaCreate = vi.fn()
+const mediaCreateMany = vi.fn()
 const checkDuplicate = vi.fn()
 
 beforeEach(() => {
   expandSelection.mockReset()
   mediaCreate.mockReset().mockResolvedValue({ success: true, data: { id: 'm1' } })
+  mediaCreateMany
+    .mockReset()
+    .mockResolvedValue({ success: true, data: { created: 0, skipped: 0, createdIds: [] } })
   checkDuplicate
     .mockReset()
     .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } })
   Object.defineProperty(window, 'api', {
     value: {
       sourceFolder: { expandSelection },
-      media: { create: mediaCreate, checkDuplicate },
+      media: { create: mediaCreate, createMany: mediaCreateMany, checkDuplicate },
       artist: { create: vi.fn() },
       tag: { create: vi.fn() },
       character: { create: vi.fn() },
@@ -212,9 +216,10 @@ describe('ImportQueue', () => {
 
     expect(onClose).toHaveBeenCalledTimes(1)
     expect(mediaCreate).not.toHaveBeenCalled()
+    expect(mediaCreateMany).not.toHaveBeenCalled()
   })
 
-  it('exit dialog: Add remaining to Pending bulk-creates every unprocessed file with pendingTagging: true, then closes', async () => {
+  it('exit dialog: Add remaining to Pending sends every unprocessed file to createMany in one call, then closes', async () => {
     const onClose = vi.fn()
     renderQueue(onClose)
     await screen.findByText('File 1 of 2')
@@ -223,16 +228,15 @@ describe('ImportQueue', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add remaining to Pending' }))
 
     await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
-    expect(mediaCreate).toHaveBeenCalledTimes(2)
-    expect(mediaCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'a', route: '/src/a.png', pendingTagging: true })
-    )
-    expect(mediaCreate).toHaveBeenCalledWith(
+    expect(mediaCreateMany).toHaveBeenCalledTimes(1)
+    expect(mediaCreateMany).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'a', route: '/src/a.png', pendingTagging: true }),
       expect.objectContaining({ name: 'b', route: '/src/b.png', pendingTagging: true })
-    )
+    ])
+    expect(mediaCreate).not.toHaveBeenCalled()
   })
 
-  it('still opens the exit dialog on the last item, since it is itself unprocessed, and Add to Pending only creates that one', async () => {
+  it('still opens the exit dialog on the last item, since it is itself unprocessed, and Add to Pending only sends that one', async () => {
     const onClose = vi.fn()
     const { container } = renderQueue(onClose)
     await screen.findByText('File 1 of 2')
@@ -244,15 +248,54 @@ describe('ImportQueue', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
 
     expect(screen.getByRole('button', { name: 'Add remaining to Pending' })).toBeInTheDocument()
-    mediaCreate.mockClear()
 
     fireEvent.click(screen.getByRole('button', { name: 'Add remaining to Pending' }))
 
     await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
-    expect(mediaCreate).toHaveBeenCalledTimes(1)
-    expect(mediaCreate).toHaveBeenCalledWith(
+    expect(mediaCreateMany).toHaveBeenCalledTimes(1)
+    expect(mediaCreateMany).toHaveBeenCalledWith([
       expect.objectContaining({ name: 'b', route: '/src/b.png', pendingTagging: true })
+    ])
+  })
+
+  it('blocks the queue with a spinner while the bulk create runs, and ignores repeat Close clicks', async () => {
+    let resolveCreateMany: (v: unknown) => void = () => {}
+    mediaCreateMany.mockReturnValue(
+      new Promise((resolve) => {
+        resolveCreateMany = resolve
+      })
     )
+    const onClose = vi.fn()
+    renderQueue(onClose)
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add remaining to Pending' }))
+
+    expect(await screen.findByText('Adding 2 files to Pending…')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(mediaCreateMany).toHaveBeenCalledTimes(1)
+    expect(onClose).not.toHaveBeenCalled()
+
+    resolveCreateMany({ success: true, data: { created: 2, skipped: 0, createdIds: ['x', 'y'] } })
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+  })
+
+  it('surfaces an error and unblocks when the bulk create fails', async () => {
+    mediaCreateMany.mockResolvedValue({
+      success: false,
+      error: { code: 'INTERNAL', message: 'disk full' }
+    })
+    const onClose = vi.fn()
+    renderQueue(onClose)
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add remaining to Pending' }))
+
+    expect(await screen.findByText('disk full')).toBeInTheDocument()
+    expect(onClose).not.toHaveBeenCalled()
   })
 
   it('shows an error and no form when expandSelection fails', async () => {

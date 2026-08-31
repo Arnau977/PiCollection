@@ -313,6 +313,45 @@ export const mediaService = {
     return created
   },
 
+  /**
+   * Sequential bulk create for batch import's "add remaining to pending".
+   * Runs one `addMedia` at a time (never the concurrent `Promise.all` the
+   * renderer used to fire, which raced its own duplicate check) and treats an
+   * already-present file as a skip, not an error - so a half-finished earlier
+   * attempt, or the same file selected twice, can't produce duplicate rows.
+   * A UNIQUE index on `media.route` is the last line of defence behind this.
+   */
+  async addMediaMany(
+    inputs: MediaInput[]
+  ): Promise<{ created: number; skipped: number; createdIds: string[] }> {
+    const sourceFolder = readSourceFolder()
+    const seenRoutes = new Set<string>()
+    const createdIds: string[] = []
+    let skipped = 0
+
+    for (const input of inputs) {
+      const storageRoute = relativizeRoute(input.route, sourceFolder)
+      if (seenRoutes.has(storageRoute)) {
+        skipped++
+        continue
+      }
+      seenRoutes.add(storageRoute)
+
+      try {
+        const created = await mediaService.addMedia(input)
+        createdIds.push(created.id)
+      } catch (err) {
+        if (err instanceof AppError && err.code === 'DUPLICATE_MEDIA') {
+          skipped++
+          continue
+        }
+        throw err
+      }
+    }
+
+    return { created: createdIds.length, skipped, createdIds }
+  },
+
   async updateMedia(id: string, input: MediaInput): Promise<MediaModel> {
     const db = getDb()
     await assertRelationsExist(db, input)
