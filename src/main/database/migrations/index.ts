@@ -10,6 +10,7 @@ import * as m0008CharacterParent from './0008_character_parent'
 import * as m0009MediaPendingTagging from './0009_media_pending_tagging'
 import * as m0010TagAliases from './0010_tag_aliases'
 import * as m0011TagWikiCache from './0011_tag_wiki_cache'
+import * as m0012MediaRouteUnique from './0012_media_route_unique'
 
 export const migrations: Record<string, Migration> = {
   '0001_initial_schema': m0001InitialSchema,
@@ -22,5 +23,6 @@ export const migrations: Record<string, Migration> = {
   '0008_character_parent': m0008CharacterParent,
   '0009_media_pending_tagging': m0009MediaPendingTagging,
   '0010_tag_aliases': m0010TagAliases,
-  '0011_tag_wiki_cache': m0011TagWikiCache
+  '0011_tag_wiki_cache': m0011TagWikiCache,
+  '0012_media_route_unique': m0012MediaRouteUnique
 }

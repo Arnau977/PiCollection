@@ -39,6 +39,8 @@ export const MediaInputSchema = z.object({
   pendingTagging: z.boolean().optional()
 })
 
+export const MediaCreateManySchema = z.array(MediaInputSchema).min(1)
+
 export const MediaBatchUpdateAssociationsSchema = z
   .object({
     mediaIds: z.array(z.string().min(1)).min(1),
@@ -168,6 +170,7 @@ export const IPC = {
     getEntityThumbnails: 'db:media:get-entity-thumbnails',
     getById: 'db:media:get-by-id',
     create: 'db:media:create',
+    createMany: 'db:media:create-many',
     update: 'db:media:update',
     batchUpdateAssociations: 'db:media:batch-update-associations',
     clearPendingTagging: 'db:media:clear-pending-tagging',
