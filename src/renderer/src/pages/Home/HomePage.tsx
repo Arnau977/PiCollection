@@ -41,6 +41,9 @@ function useStatsSummary(): { data: StatsSummary; loading: boolean } {
 export default function HomePage(): JSX.Element {
   const { t } = useTranslation()
   const { defaults } = useGalleryDefaults()
+  // Pending media is excluded by the query layer's default (only the Pending
+  // queue asks for it explicitly), so untagged - possibly unmarked-NSFW - items
+  // never show up in this grid.
   const recentFilters = useMemo(() => ({ limit: RECENT_FETCH_LIMIT }), [])
   const recentSorting = useMemo(() => ({ prop: 'createdAt' as const, desc: true }), [])
   const { data: recentMediaAll, loading: loadingRecent } = useMediaQuery(

@@ -502,6 +502,20 @@ describe('mediaService.findSimilarMedia', () => {
     expect(result).toEqual([])
   })
 
+  it('omits a visually similar match that is still pending tagging', async () => {
+    const target = await mediaService.addMedia(baseInput({ route: '/a.png' }))
+    const pending = await mediaService.addMedia(
+      baseInput({ route: '/b.png', pendingTagging: true })
+    )
+    const db = getDb()
+    await mediaRepo.setMediaHash(db, target.id, null, '0000000000000000')
+    await mediaRepo.setMediaHash(db, pending.id, null, '1000000000000000')
+
+    const result = await mediaService.findSimilarMedia(target.id)
+
+    expect(result).toEqual([])
+  })
+
   it('respects the limit parameter', async () => {
     const target = await mediaService.addMedia(baseInput({ route: '/a.png' }))
     const db = getDb()

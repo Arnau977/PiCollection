@@ -594,6 +594,14 @@ describe('findEntityThumbnails', () => {
     const tag = await tagRepo.insertTag(db, { id: 't1', name: 'a', aliases_json: '[]', created_at: 1 })
     expect(await mediaRepo.findEntityThumbnails(db, 'tag', [tag.id])).toEqual([])
   })
+
+  it('ignores media still pending tagging', async () => {
+    const tag = await tagRepo.insertTag(db, { id: 't1', name: 'a', aliases_json: '[]', created_at: 1 })
+    const pendingMedia = await baseMediaRow({ id: 'm1', sfw: 1, pending_tagging: 1 })
+    await mediaRepo.setMediaTags(db, pendingMedia.id, [tag.id])
+
+    expect(await mediaRepo.findEntityThumbnails(db, 'tag', [tag.id])).toEqual([])
+  })
 })
 
 describe('findEntityThumbnailsByClosure (series)', () => {
@@ -679,6 +687,19 @@ describe('findEntityThumbnailsByClosure (series)', () => {
     await insertSeriesTree()
     const nsfw = await baseMediaRow({ id: 'm1', route: '/nsfw.png', sfw: 0 })
     await mediaRepo.setMediaSeries(db, nsfw.id, ['child'])
+
+    const result = await mediaRepo.findEntityThumbnailsByClosure(db, 'series', [
+      { descendantId: 'parent', ancestorId: 'parent' },
+      { descendantId: 'child', ancestorId: 'parent' }
+    ])
+
+    expect(result).toEqual([])
+  })
+
+  it('ignores media still pending tagging anywhere in the closure', async () => {
+    await insertSeriesTree()
+    const pendingMedia = await baseMediaRow({ id: 'm1', route: '/child.png', sfw: 1, pending_tagging: 1 })
+    await mediaRepo.setMediaSeries(db, pendingMedia.id, ['child'])
 
     const result = await mediaRepo.findEntityThumbnailsByClosure(db, 'series', [
       { descendantId: 'parent', ancestorId: 'parent' },

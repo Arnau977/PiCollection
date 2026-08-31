@@ -437,6 +437,15 @@ describe('media.repository noCharacter / noSeries filters', () => {
 })
 
 describe('media.repository pendingTagging filter', () => {
+  it('excludes pending media by default when pendingTagging is omitted', async () => {
+    const pending = await insertMedia('pending')
+    await insertMedia('notPending')
+    await db.updateTable('media').set({ pending_tagging: 1 }).where('id', '=', pending.id).execute()
+
+    const rows = await mediaRepo.findMediaRows(db, {}, { prop: 'name' })
+    expect(rows.map((r) => r.name)).toEqual(['notPending'])
+  })
+
   it('filters to only media flagged pending when pendingTagging is true', async () => {
     const pending = await insertMedia('pending')
     await insertMedia('notPending')

@@ -55,7 +55,8 @@ describe('mediaService.addMediaMany', () => {
     const result = await mediaService.addMediaMany(inputs)
 
     expect(result).toEqual({ created: 2, skipped: 0, createdIds: expect.any(Array) })
-    const rows = await mediaService.getMediaFiltered({})
+    // Inputs go in as pending, so they only show up under a pending query now.
+    const rows = await mediaService.getMediaFiltered({ pendingTagging: true })
     expect(rows.total).toBe(2)
   })
 
@@ -67,7 +68,7 @@ describe('mediaService.addMediaMany', () => {
 
     expect(result.created).toBe(1)
     expect(result.skipped).toBe(1)
-    expect((await mediaService.getMediaFiltered({})).total).toBe(2)
+    expect((await mediaService.getMediaFiltered({ pendingTagging: true })).total).toBe(2)
   })
 
   it('creates a repeated route within the same batch only once', async () => {
@@ -76,7 +77,7 @@ describe('mediaService.addMediaMany', () => {
     const result = await mediaService.addMediaMany([input(a), input(a), input(a)])
 
     expect(result).toMatchObject({ created: 1, skipped: 2 })
-    expect((await mediaService.getMediaFiltered({})).total).toBe(1)
+    expect((await mediaService.getMediaFiltered({ pendingTagging: true })).total).toBe(1)
   })
 
   it('skips a same-content file imported under a different path within the batch', async () => {
