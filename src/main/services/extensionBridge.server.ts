@@ -14,9 +14,10 @@ import {
   type ExtensionBridgeLookupType
 } from './extensionBridge.service'
 
-/** Maps AppError codes the capture/lookup path can throw to HTTP statuses; anything else is a 500. */
+/** Maps AppError codes the capture/lookup path can throw to HTTP statuses; an unmapped code is a 500. */
 const ERROR_STATUS: Record<string, number> = {
-  NO_SOURCE_FOLDER: 409
+  NO_SOURCE_FOLDER: 409,
+  DUPLICATE_MEDIA: 409
 }
 
 let currentServer: Server | null = null
@@ -69,7 +70,14 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     }
 
     if (req.method === 'POST' && url.pathname === '/capture') {
-      const parsed = ExtensionBridgeCaptureInputSchema.safeParse(JSON.parse(await readBody(req)))
+      let body: unknown
+      try {
+        body = JSON.parse(await readBody(req))
+      } catch {
+        sendJson(res, 400, { error: 'Invalid JSON body' })
+        return
+      }
+      const parsed = ExtensionBridgeCaptureInputSchema.safeParse(body)
       if (!parsed.success) {
         sendJson(res, 400, { error: parsed.error.message })
         return
@@ -82,7 +90,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     sendJson(res, 404, { error: 'Not found' })
   } catch (err) {
     if (err instanceof AppError) {
-      sendJson(res, ERROR_STATUS[err.code] ?? 400, { error: err.message })
+      sendJson(res, ERROR_STATUS[err.code] ?? 500, { error: err.message })
       return
     }
     sendJson(res, 500, { error: err instanceof Error ? err.message : 'Internal error' })
@@ -102,7 +110,6 @@ export function startExtensionBridgeServer(options: { port?: number } = {}): Pro
   }
 
   const settings = ensureExtensionBridgeToken()
-  writeExtensionBridgeSettings({ ...settings, enabled: true })
   const port = options.port ?? settings.port
 
   return new Promise((resolve, reject) => {
@@ -115,6 +122,10 @@ export function startExtensionBridgeServer(options: { port?: number } = {}): Pro
     server.listen(port, '127.0.0.1', () => {
       server.removeListener('error', reject)
       currentServer = server
+      // Only persist `enabled: true` once the server has actually bound to the
+      // port - if listen() fails (e.g. EADDRINUSE), the settings must not claim
+      // the bridge is enabled with nothing listening.
+      writeExtensionBridgeSettings({ ...readExtensionBridgeSettings(), enabled: true })
       const address = server.address()
       resolve({ port: typeof address === 'object' && address ? address.port : port })
     })

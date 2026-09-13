@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { promises as fs } from 'fs'
+import { createServer as createNetServer } from 'net'
 import { join } from 'path'
 import { tmpdir } from 'os'
 
@@ -101,6 +102,19 @@ describe('extensionBridge.server', () => {
     expect(res.status).toBe(409)
   })
 
+  it('rejects a non-JSON /capture body with 400', async () => {
+    const { port } = await startExtensionBridgeServer({ port: 0 })
+    const { token } = readExtensionBridgeSettings()
+
+    const res = await fetch(`http://127.0.0.1:${port}/capture`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: 'not json'
+    })
+
+    expect(res.status).toBe(400)
+  })
+
   it('rejects a capture body that fails validation', async () => {
     const { port } = await startExtensionBridgeServer({ port: 0 })
     const { token } = readExtensionBridgeSettings()
@@ -142,6 +156,20 @@ describe('extensionBridge.server', () => {
     expect(status.enabled).toBe(false)
     expect(status.running).toBe(false)
     expect(isExtensionBridgeRunning()).toBe(false)
+  })
+
+  it('rejects when the port is already in use, without persisting enabled', async () => {
+    const blocker = createNetServer()
+    await new Promise<void>((resolve) => blocker.listen(0, '127.0.0.1', () => resolve()))
+    const address = blocker.address()
+    const port = typeof address === 'object' && address ? address.port : 0
+
+    try {
+      await expect(startExtensionBridgeServer({ port })).rejects.toThrow()
+      expect(readExtensionBridgeSettings().enabled).toBe(false)
+    } finally {
+      await new Promise<void>((resolve) => blocker.close(() => resolve()))
+    }
   })
 
   it('regenerateExtensionBridgeTokenAction changes the token in the reported status', async () => {
