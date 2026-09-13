@@ -60,7 +60,7 @@ export interface MediaTable {
       action, never as a side effect of a normal update. */
   pending_tagging: number
   /** Set only by capture (browser extension) or manual edit - the original post/page URL, if any. */
-  source_url: string | null
+  source_url?: string | null
 }
 
 export interface MediaTagTable {
