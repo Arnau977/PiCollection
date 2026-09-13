@@ -19,6 +19,9 @@ import { checkForUpdates, initAutoUpdater, setUpdaterWindow } from './updater/au
 import { setWd14RuntimeWindow } from './ipc/wd14Runtime.handlers'
 import { setEntityEventsWindow } from './events/entityEvents'
 import { flushLogBuffer, logError, logInfo } from './logging/logger'
+import { readExtensionBridgeSettings } from './services/extensionBridgeSettings'
+import { startExtensionBridgeServer } from './services/extensionBridge.server'
+import { setTrayWindow, syncAppTray } from './window/tray'
 
 // Two instances writing to the same SQLite file (and racing each other's
 // windowState/settings writes) would corrupt state with no user-visible
@@ -85,6 +88,12 @@ const APP_VERSION: string = require('../../package.json').version
 // app.quit()) fires `before-quit` while the timer has never been created.
 let dailyUpdateCheckTimer: NodeJS.Timeout | undefined
 
+// Set on the way to any real quit path (before-quit) so the window's own
+// `close` handler can tell "the app is quitting" apart from "the user just
+// clicked the window's close button" - only the latter should be intercepted
+// for background mode.
+let isQuitting = false
+
 function createWindow(): BrowserWindow {
   const windowState = createWindowStateKeeper()
 
@@ -108,6 +117,14 @@ function createWindow(): BrowserWindow {
   setUpdaterWindow(mainWindow)
   setEntityEventsWindow(mainWindow)
   setWd14RuntimeWindow(mainWindow)
+
+  mainWindow.on('close', (event) => {
+    if (!isQuitting && readExtensionBridgeSettings().backgroundModeEnabled) {
+      event.preventDefault()
+      mainWindow.hide()
+      syncAppTray(true)
+    }
+  })
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -194,6 +211,7 @@ app.whenReady().then(async () => {
   })
 
   app.on('before-quit', () => {
+    isQuitting = true
     // flushLogBuffer first: it is the call that must never be skipped (on the
     // DB-failure quit path it carries the diagnostic for the crash currently
     // happening). Clearing an unref'd interval during shutdown is comparatively
@@ -228,7 +246,15 @@ app.whenReady().then(async () => {
   registerMediaProtocolHandler()
   registerIpcHandlers()
   const mainWindow = createWindow()
+  setTrayWindow(mainWindow)
   logInfo('lifecycle', 'Main window created')
+
+  if (readExtensionBridgeSettings().enabled) {
+    startExtensionBridgeServer().catch((err) => {
+      console.error('Failed to start extension bridge server', err)
+      logError('lifecycle', 'Failed to start extension bridge server', err)
+    })
+  }
 
   // Fire-and-forget: fills in hash/phash for media added before duplicate
   // detection existed, without delaying the window from showing.
