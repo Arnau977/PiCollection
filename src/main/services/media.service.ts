@@ -97,6 +97,7 @@ async function hydrateMedia(db: Kysely<DB>, rows: MediaTable[]): Promise<MediaMo
       type: row.type as MediaModel['type'],
       route: row.route,
       alias: row.alias ?? undefined,
+      sourceUrl: row.source_url ?? undefined,
       sfw: row.sfw === 1,
       isAiGenerated: row.is_ai_generated === 1,
       createdAt: row.created_at,
@@ -295,6 +296,7 @@ export const mediaService = {
         type: input.type,
         route: relativizeRoute(input.route, sourceFolder),
         alias: input.alias ?? null,
+        source_url: input.sourceUrl ?? null,
         artist_id: input.artistId ?? null,
         created_at: Date.now(),
         hash,
@@ -372,6 +374,7 @@ export const mediaService = {
         type: input.type,
         route: relativizeRoute(input.route, sourceFolder),
         alias: input.alias ?? null,
+        source_url: input.sourceUrl ?? null,
         artist_id: input.artistId ?? null
       })
       await mediaRepo.setMediaTags(trx, id, input.tagIds ?? [])

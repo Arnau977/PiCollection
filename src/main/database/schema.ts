@@ -59,6 +59,8 @@ export interface MediaTable {
       to pending" actions - cleared only via the dedicated clearPendingTagging
       action, never as a side effect of a normal update. */
   pending_tagging: number
+  /** Set only by capture (browser extension) or manual edit - the original post/page URL, if any. */
+  source_url: string | null
 }
 
 export interface MediaTagTable {

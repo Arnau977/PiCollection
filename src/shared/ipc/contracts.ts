@@ -30,6 +30,7 @@ export const MediaInputSchema = z.object({
   type: z.enum(['image', 'video', 'gif']),
   route: z.string().min(1),
   alias: z.string().optional(),
+  sourceUrl: z.string().optional(),
   sfw: z.boolean(),
   isAiGenerated: z.boolean(),
   artistId: z.string().optional(),

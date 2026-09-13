@@ -9,6 +9,7 @@ export interface MediaModel {
   route: string
   name: string
   alias?: string
+  sourceUrl?: string
   sfw: boolean
   isAiGenerated: boolean
   createdAt: number
@@ -64,6 +65,7 @@ export interface MediaInput {
   type: 'image' | 'video' | 'gif'
   route: string
   alias?: string
+  sourceUrl?: string
   sfw: boolean
   isAiGenerated: boolean
   artistId?: string
