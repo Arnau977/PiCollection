@@ -158,6 +158,9 @@ export const SourceFolderExpandSelectionSchema = z.object({
   folders: z.array(z.string())
 })
 
+export const ExtensionBridgeSetEnabledSchema = z.object({ enabled: z.boolean() })
+export const ExtensionBridgeSetBackgroundModeSchema = z.object({ enabled: z.boolean() })
+
 export const MediaUpdateSchema = UpdateByIdSchema(MediaInputSchema)
 export const ArtistUpdateSchema = UpdateByIdSchema(ArtistInputSchema)
 export const CharacterUpdateSchema = UpdateByIdSchema(CharacterInputSchema)
@@ -234,6 +237,12 @@ export const IPC = {
     applyMigration: 'source-folder:apply',
     browse: 'source-folder:browse',
     expandSelection: 'source-folder:expand-selection'
+  },
+  extensionBridge: {
+    getStatus: 'extension-bridge:get-status',
+    setEnabled: 'extension-bridge:set-enabled',
+    setBackgroundMode: 'extension-bridge:set-background-mode',
+    regenerateToken: 'extension-bridge:regenerate-token'
   },
   sauceNao: {
     lookup: 'sauce-nao:lookup',
