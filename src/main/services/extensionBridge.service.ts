@@ -60,6 +60,33 @@ async function findOrCreateByName<T extends { id: string; name: string }>(
   return created.id
 }
 
+/**
+ * Resolves a list of names to ids via findOrCreateByName, one at a time and
+ * deduplicated. Deliberately sequential (not Promise.all): findOrCreateByName
+ * is check-then-act, so running it concurrently over a list containing two
+ * case-identical/duplicate names lets both calls see "no existing match"
+ * before either create() commits - the second create() then either throws a
+ * raw UNIQUE-constraint error (tag/artist/series) or silently creates a
+ * duplicate row (character, which has no unique constraint). Same class of
+ * bug already fixed in media.service.ts's addMediaMany. The result is also
+ * deduplicated: two input names resolving to the same id (e.g. exact repeats
+ * or case-variants of one name) would otherwise produce a duplicate id in
+ * the array, which trips the media_tag/media_character/media_series
+ * composite primary key when addMedia links them.
+ */
+async function resolveNamesSequentially<T extends { id: string; name: string }>(
+  names: string[],
+  getAll: () => Promise<T[]>,
+  create: (name: string) => Promise<T>
+): Promise<string[]> {
+  const ids: string[] = []
+  for (const name of names) {
+    const id = await findOrCreateByName(name, getAll, create)
+    if (!ids.includes(id)) ids.push(id)
+  }
+  return ids
+}
+
 export const extensionBridgeService = {
   async lookup(
     type: ExtensionBridgeLookupType,
@@ -112,38 +139,26 @@ export const extensionBridgeService = {
       : undefined
 
     const tagIds = input.tagNames
-      ? await Promise.all(
-          input.tagNames.map((name) =>
-            findOrCreateByName(
-              name,
-              () => tagService.getAllTags(),
-              (n) => tagService.createTag({ name: n })
-            )
-          )
+      ? await resolveNamesSequentially(
+          input.tagNames,
+          () => tagService.getAllTags(),
+          (n) => tagService.createTag({ name: n })
         )
       : []
 
     const characterIds = input.characterNames
-      ? await Promise.all(
-          input.characterNames.map((name) =>
-            findOrCreateByName(
-              name,
-              () => characterService.getAllCharacters(),
-              (n) => characterService.createCharacter({ name: n })
-            )
-          )
+      ? await resolveNamesSequentially(
+          input.characterNames,
+          () => characterService.getAllCharacters(),
+          (n) => characterService.createCharacter({ name: n })
         )
       : []
 
     const seriesIds = input.seriesNames
-      ? await Promise.all(
-          input.seriesNames.map((name) =>
-            findOrCreateByName(
-              name,
-              () => seriesService.getAllSeries(),
-              (n) => seriesService.createSeries({ name: n })
-            )
-          )
+      ? await resolveNamesSequentially(
+          input.seriesNames,
+          () => seriesService.getAllSeries(),
+          (n) => seriesService.createSeries({ name: n })
         )
       : []
 

@@ -20,6 +20,7 @@ const { initTestDbSingleton } = await import('../database/testHelpers')
 const { extensionBridgeService } = await import('./extensionBridge.service')
 const { writeSourceFolder, resetSourceFolderCache } = await import('./sourceFolder')
 const { artistService } = await import('./artist.service')
+const { tagService } = await import('./tag.service')
 
 let cleanup: () => Promise<void>
 let sourceDir = ''
@@ -87,6 +88,18 @@ describe('extensionBridgeService.capture', () => {
     const artists = await artistService.getAllArtists()
     expect(artists.filter((a) => a.name.toLowerCase() === 'some artist')).toHaveLength(1)
     expect(artists[0].id).toBe(existing.id)
+  })
+
+  it('resolves case-variant duplicate tag names to a single tag, not an error', async () => {
+    writeSourceFolder(sourceDir)
+
+    const result = await extensionBridgeService.capture(
+      baseCapture({ tagNames: ['rating:safe', 'Rating:Safe'] })
+    )
+
+    expect(result.status).toBe('created')
+    const tags = await tagService.getAllTags()
+    expect(tags.filter((t) => t.name.toLowerCase() === 'rating:safe')).toHaveLength(1)
   })
 
   it('returns duplicate status without creating a second row for identical bytes', async () => {
