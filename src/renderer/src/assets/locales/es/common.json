@@ -245,7 +245,9 @@
     "closeLightbox": "Cerrar",
     "previousImage": "Imagen anterior",
     "nextImage": "Imagen siguiente",
-    "similarMedia": "Contenido similar"
+    "similarMedia": "Contenido similar",
+    "sourceUrlBadge": "Origen",
+    "sourceUrlTitle": "Abrir la publicación original"
   },
   "addMedia": {
     "title": "Añadir nuevo media",
@@ -357,7 +359,8 @@
     "descending": "Descendente",
     "sortCount": "Cantidad",
     "viewTree": "Árbol",
-    "viewFlat": "Plana"
+    "viewFlat": "Plana",
+    "sourceUrl": "URL de origen"
   },
   "pending": {
     "allCaughtUp": "¡Todo al día!",

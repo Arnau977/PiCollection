@@ -245,7 +245,9 @@
     "closeLightbox": "Close",
     "previousImage": "Previous image",
     "nextImage": "Next image",
-    "similarMedia": "Similar media"
+    "similarMedia": "Similar media",
+    "sourceUrlBadge": "Source",
+    "sourceUrlTitle": "Open the original post"
   },
   "addMedia": {
     "title": "Add new media",
@@ -357,7 +359,8 @@
     "descending": "Descending",
     "sortCount": "Count",
     "viewTree": "Tree",
-    "viewFlat": "Flat"
+    "viewFlat": "Flat",
+    "sourceUrl": "Source URL"
   },
   "pending": {
     "allCaughtUp": "You're all caught up!",

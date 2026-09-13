@@ -3,6 +3,7 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
   ShieldAlert,
   ShieldCheck,
   Sparkles
@@ -36,6 +37,7 @@ export default function Media({
   type,
   artist,
   route,
+  sourceUrl,
   createdAt,
   previousId = null,
   nextId = null,
@@ -126,6 +128,18 @@ export default function Media({
               <Calendar size={14} />
               {formatDate(createdAt)}
             </span>
+            {sourceUrl && (
+              <a
+                className="badge badge-neutral"
+                href={sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                title={t('media.sourceUrlTitle')}
+              >
+                <ExternalLink size={14} />
+                {t('media.sourceUrlBadge')}
+              </a>
+            )}
           </div>
         </div>
 
