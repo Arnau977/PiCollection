@@ -11,6 +11,7 @@ import type {
   DanbooruTagSuggestion,
   EntitiesChangedEvent,
   ExpandedMediaFile,
+  ExtensionBridgeStatus,
   MediaBatchUpdateAssociationsInput,
   MediaDuplicateCheck,
   MediaDuplicateMatch,
@@ -162,6 +163,16 @@ export const api = {
       folders: string[]
     }): Promise<IpcResult<ExpandedMediaFile[]>> =>
       ipcRenderer.invoke(IPC.sourceFolder.expandSelection, selection)
+  },
+  extensionBridge: {
+    getStatus: (): Promise<IpcResult<ExtensionBridgeStatus>> =>
+      ipcRenderer.invoke(IPC.extensionBridge.getStatus),
+    setEnabled: (enabled: boolean): Promise<IpcResult<ExtensionBridgeStatus>> =>
+      ipcRenderer.invoke(IPC.extensionBridge.setEnabled, { enabled }),
+    setBackgroundMode: (enabled: boolean): Promise<IpcResult<ExtensionBridgeStatus>> =>
+      ipcRenderer.invoke(IPC.extensionBridge.setBackgroundMode, { enabled }),
+    regenerateToken: (): Promise<IpcResult<ExtensionBridgeStatus>> =>
+      ipcRenderer.invoke(IPC.extensionBridge.regenerateToken)
   },
   sauceNao: {
     lookup: (route: string): Promise<IpcResult<SauceNaoLookup>> =>

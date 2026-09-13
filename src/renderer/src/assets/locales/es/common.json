@@ -90,6 +90,17 @@
     "backupImportConfirm": "Esto reemplaza toda tu biblioteca y ajustes con la copia importada. ¿Continuar?",
     "backupImportedNeedsRestart": "Copia importada. Reinicia la app para terminar.",
     "backupRestartNow": "Reiniciar ahora",
+    "extensionBridgeTitle": "Captura desde extensión de navegador",
+    "extensionBridgeHint": "Permite que una extensión de navegador complementaria guarde contenido directamente en PiCollection. Desactivado por defecto: no hay nada escuchando hasta que lo actives.",
+    "extensionBridgeEnable": "Activar captura desde extensión",
+    "extensionBridgeToken": "Token de emparejamiento",
+    "extensionBridgeRunning": "Escuchando en el puerto {{port}}",
+    "extensionBridgeNotRunning": "Activado pero no está funcionando actualmente",
+    "extensionBridgeLoading": "Cargando...",
+    "extensionBridgeCopyToken": "Copiar token",
+    "extensionBridgeRegenerateToken": "Regenerar token",
+    "extensionBridgeCopied": "Copiado.",
+    "extensionBridgeBackgroundMode": "Mantener PiCollection en segundo plano al cerrar la ventana",
     "missingFilesTitle": "Archivos faltantes",
     "missingFilesHint": "Comprueba si cada archivo de media todavía se encuentra en su ruta guardada, y re-enlázalos en bloque si moviste o renombraste una carpeta.",
     "missingFilesCheck": "Comprobar archivos faltantes",
@@ -236,7 +247,9 @@
     "closeLightbox": "Cerrar",
     "previousImage": "Imagen anterior",
     "nextImage": "Imagen siguiente",
-    "similarMedia": "Contenido similar"
+    "similarMedia": "Contenido similar",
+    "sourceUrlBadge": "Origen",
+    "sourceUrlTitle": "Abrir la publicación original"
   },
   "addMedia": {
     "title": "Añadir nuevo media",
@@ -348,7 +361,8 @@
     "descending": "Descendente",
     "sortCount": "Cantidad",
     "viewTree": "Árbol",
-    "viewFlat": "Plana"
+    "viewFlat": "Plana",
+    "sourceUrl": "URL de origen"
   },
   "pending": {
     "allCaughtUp": "¡Todo al día!",

@@ -14,6 +14,7 @@ import { registerWd14TaggerHandlers } from './wd14Tagger.handlers'
 import { registerBackupHandlers } from './backup.handlers'
 import { registerMediaMaintenanceHandlers } from './mediaMaintenance.handlers'
 import { registerSourceFolderHandlers } from './sourceFolder.handlers'
+import { registerExtensionBridgeHandlers } from './extensionBridge.handlers'
 import { registerLoggingHandlers } from './logging.handlers'
 
 export function registerIpcHandlers(): void {
@@ -33,5 +34,6 @@ export function registerIpcHandlers(): void {
   registerBackupHandlers()
   registerMediaMaintenanceHandlers()
   registerSourceFolderHandlers()
+  registerExtensionBridgeHandlers()
   registerLoggingHandlers()
 }

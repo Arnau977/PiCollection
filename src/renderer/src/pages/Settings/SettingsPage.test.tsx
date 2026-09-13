@@ -66,6 +66,15 @@ beforeEach(() => {
         install: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         remove: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         onEvent: vi.fn().mockReturnValue(() => {})
+      },
+      extensionBridge: {
+        getStatus: vi.fn().mockResolvedValue({
+          success: true,
+          data: { enabled: false, running: false, token: null, port: 8934, backgroundModeEnabled: false }
+        }),
+        setEnabled: vi.fn(),
+        setBackgroundMode: vi.fn(),
+        regenerateToken: vi.fn()
       }
     },
     writable: true,

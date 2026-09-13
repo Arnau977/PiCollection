@@ -86,6 +86,18 @@ export function MediaFormDetailsFields({
         </label>
       </div>
 
+      <div className="field">
+        <label htmlFor="media-source-url">{t('manage.sourceUrl')}</label>
+        <input
+          id="media-source-url"
+          type="text"
+          name="sourceUrl"
+          value={input.sourceUrl ?? ''}
+          onChange={onChange}
+          placeholder="https://..."
+        />
+      </div>
+
       <div className="field-accent field-accent-artist">
         <Autocomplete
           name="artist"

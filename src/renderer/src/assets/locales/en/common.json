@@ -90,6 +90,17 @@
     "backupImportConfirm": "This replaces your entire library and settings with the imported backup. Continue?",
     "backupImportedNeedsRestart": "Backup imported. Restart the app to finish.",
     "backupRestartNow": "Restart now",
+    "extensionBridgeTitle": "Browser extension capture",
+    "extensionBridgeHint": "Lets a companion browser extension save media directly into PiCollection. Disabled by default - nothing listens until you turn this on.",
+    "extensionBridgeEnable": "Enable browser extension capture",
+    "extensionBridgeToken": "Pairing token",
+    "extensionBridgeRunning": "Listening on port {{port}}",
+    "extensionBridgeNotRunning": "Enabled but not currently running",
+    "extensionBridgeLoading": "Loading...",
+    "extensionBridgeCopyToken": "Copy token",
+    "extensionBridgeRegenerateToken": "Regenerate token",
+    "extensionBridgeCopied": "Copied.",
+    "extensionBridgeBackgroundMode": "Keep PiCollection running in the background when the window is closed",
     "missingFilesTitle": "Missing files",
     "missingFilesHint": "Check whether every media file can still be found at its saved path, and relink them in bulk if you moved or renamed a folder.",
     "missingFilesCheck": "Check for missing files",
@@ -236,7 +247,9 @@
     "closeLightbox": "Close",
     "previousImage": "Previous image",
     "nextImage": "Next image",
-    "similarMedia": "Similar media"
+    "similarMedia": "Similar media",
+    "sourceUrlBadge": "Source",
+    "sourceUrlTitle": "Open the original post"
   },
   "addMedia": {
     "title": "Add new media",
@@ -348,7 +361,8 @@
     "descending": "Descending",
     "sortCount": "Count",
     "viewTree": "Tree",
-    "viewFlat": "Flat"
+    "viewFlat": "Flat",
+    "sourceUrl": "Source URL"
   },
   "pending": {
     "allCaughtUp": "You're all caught up!",

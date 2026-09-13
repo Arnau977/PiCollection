@@ -32,6 +32,7 @@ function toInput(media?: MediaModel, initialFile?: InitialFile): MediaInput {
       name: media.name,
       type: media.type,
       route: media.route,
+      sourceUrl: media.sourceUrl,
       sfw: media.sfw,
       isAiGenerated: media.isAiGenerated,
       artistId: media.artist?.id,
