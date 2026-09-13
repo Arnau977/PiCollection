@@ -20,6 +20,7 @@ import { MissingFilesSection } from './MissingFilesSection'
 import { SourceFolderSection } from './SourceFolderSection'
 import { LocalTaggingSection } from './LocalTaggingSection'
 import { DanbooruSection } from './DanbooruSection'
+import { ExtensionBridgeSection } from './ExtensionBridgeSection'
 import './SettingsPage.css'
 
 /** Loads/saves the optional SauceNAO API key (raises the free anonymous rate limit). */
@@ -377,6 +378,8 @@ export default function SettingsPage(): JSX.Element {
           </section>
 
           <DanbooruSection />
+
+          <ExtensionBridgeSection />
 
           <section className="card">
             <h2>
