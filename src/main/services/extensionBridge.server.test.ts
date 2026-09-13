@@ -18,17 +18,22 @@ vi.mock('electron', () => ({
 
 const { initTestDbSingleton } = await import('../database/testHelpers')
 const { writeSourceFolder, resetSourceFolderCache } = await import('./sourceFolder')
-const { readExtensionBridgeSettings, resetExtensionBridgeSettingsCache } = await import(
-  './extensionBridgeSettings'
-)
+const {
+  readExtensionBridgeSettings,
+  writeExtensionBridgeSettings,
+  resetExtensionBridgeSettingsCache
+} = await import('./extensionBridgeSettings')
 const {
   startExtensionBridgeServer,
   stopExtensionBridgeServer,
   isExtensionBridgeRunning,
   getExtensionBridgeStatus,
   setExtensionBridgeEnabled,
-  regenerateExtensionBridgeTokenAction
+  regenerateExtensionBridgeTokenAction,
+  setMaxBodyBytesForTesting
 } = await import('./extensionBridge.server')
+
+const DEFAULT_MAX_BODY_BYTES = 256 * 1024 * 1024
 
 let cleanup: () => Promise<void>
 let sourceDir = ''
@@ -44,6 +49,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
+  setMaxBodyBytesForTesting(DEFAULT_MAX_BODY_BYTES)
   await stopExtensionBridgeServer()
   await cleanup()
   await fs.rm(sourceDir, { recursive: true, force: true })
@@ -59,6 +65,37 @@ describe('extensionBridge.server', () => {
     })
 
     expect(res.status).toBe(401)
+  })
+
+  it('rejects an empty bearer token even if the stored token is somehow empty', async () => {
+    const { port } = await startExtensionBridgeServer({ port: 0 })
+    writeExtensionBridgeSettings({ ...readExtensionBridgeSettings(), token: '' })
+
+    const res = await fetch(`http://127.0.0.1:${port}/lookup?type=tag&query=`, {
+      headers: { Authorization: 'Bearer ' }
+    })
+
+    expect(res.status).toBe(401)
+  })
+
+  it('responds 413 when the request body exceeds the size cap', async () => {
+    setMaxBodyBytesForTesting(10)
+    const { port } = await startExtensionBridgeServer({ port: 0 })
+    const { token } = readExtensionBridgeSettings()
+
+    const res = await fetch(`http://127.0.0.1:${port}/capture`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileDataBase64: Buffer.from('this body is longer than ten bytes').toString('base64'),
+        fileName: 'post.jpg',
+        mediaType: 'image',
+        sourceUrl: 'https://example.com/post/1',
+        sourceSite: 'danbooru'
+      })
+    })
+
+    expect(res.status).toBe(413)
   })
 
   it('creates media from a valid capture request', async () => {

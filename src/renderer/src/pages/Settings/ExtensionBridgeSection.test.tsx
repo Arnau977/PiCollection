@@ -10,7 +10,13 @@ function setApi(overrides: Record<string, unknown> = {}): void {
       extensionBridge: {
         getStatus: vi.fn().mockResolvedValue({
           success: true,
-          data: { enabled: false, running: false, token: null, port: 8934, backgroundModeEnabled: false }
+          data: {
+            enabled: false,
+            running: false,
+            token: null,
+            port: 8934,
+            backgroundModeEnabled: false
+          }
         }),
         setEnabled: vi.fn(),
         setBackgroundMode: vi.fn(),
@@ -38,7 +44,13 @@ describe('ExtensionBridgeSection', () => {
     setApi({
       setEnabled: vi.fn().mockResolvedValue({
         success: true,
-        data: { enabled: true, running: true, token: 'abc123', port: 8934, backgroundModeEnabled: false }
+        data: {
+          enabled: true,
+          running: true,
+          token: 'abc123',
+          port: 8934,
+          backgroundModeEnabled: false
+        }
       })
     })
     const user = userEvent.setup()
@@ -56,11 +68,23 @@ describe('ExtensionBridgeSection', () => {
     setApi({
       getStatus: vi.fn().mockResolvedValue({
         success: true,
-        data: { enabled: true, running: true, token: 'abc123', port: 8934, backgroundModeEnabled: false }
+        data: {
+          enabled: true,
+          running: true,
+          token: 'abc123',
+          port: 8934,
+          backgroundModeEnabled: false
+        }
       }),
       regenerateToken: vi.fn().mockResolvedValue({
         success: true,
-        data: { enabled: true, running: true, token: 'new-token', port: 8934, backgroundModeEnabled: false }
+        data: {
+          enabled: true,
+          running: true,
+          token: 'new-token',
+          port: 8934,
+          backgroundModeEnabled: false
+        }
       })
     })
     const user = userEvent.setup()
@@ -69,5 +93,43 @@ describe('ExtensionBridgeSection', () => {
     await user.click(await screen.findByRole('button', { name: 'Regenerate token' }))
 
     expect(await screen.findByDisplayValue('new-token')).toBeInTheDocument()
+  })
+
+  it('shows an error and leaves the checkbox reflecting the persisted state when setEnabled fails', async () => {
+    setApi({
+      setEnabled: vi.fn().mockResolvedValue({
+        success: false,
+        error: { code: 'PORT_IN_USE', message: 'Port already in use' }
+      })
+    })
+    const user = userEvent.setup()
+    render(<ExtensionBridgeSection />)
+
+    const checkbox = await screen.findByRole('checkbox', {
+      name: 'Enable browser extension capture'
+    })
+    await user.click(checkbox)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Port already in use')
+    expect(checkbox).not.toBeChecked()
+    expect(checkbox).not.toBeDisabled()
+  })
+
+  it('shows a not-running indicator when enabled but not actually listening', async () => {
+    setApi({
+      getStatus: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          enabled: true,
+          running: false,
+          token: 'abc123',
+          port: 8934,
+          backgroundModeEnabled: false
+        }
+      })
+    })
+    render(<ExtensionBridgeSection />)
+
+    expect(await screen.findByText('Enabled but not currently running')).toBeInTheDocument()
   })
 })

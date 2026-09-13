@@ -70,6 +70,35 @@ describe('extensionBridgeService.capture', () => {
     expect(files[0]).toMatch(/post\.jpg$/)
   })
 
+  it('sanitizes a path-traversal sourceSite instead of escaping the source folder', async () => {
+    writeSourceFolder(sourceDir)
+
+    const result = await extensionBridgeService.capture(baseCapture({ sourceSite: '../../evil' }))
+
+    expect(result.status).toBe('created')
+    const webImportsDir = join(sourceDir, 'Web Imports')
+    const siteDirs = await fs.readdir(webImportsDir)
+    // A single sanitized directory landed inside Web Imports/ - the '/'
+    // separators were replaced, so this can't be interpreted as '..' by
+    // the filesystem even though the dots survive the allowlist.
+    expect(siteDirs).toEqual(['.._.._evil'])
+    const files = await fs.readdir(join(webImportsDir, '.._.._evil'))
+    expect(files).toHaveLength(1)
+  })
+
+  it('cleans up the written file if a failure occurs after it lands on disk', async () => {
+    writeSourceFolder(sourceDir)
+    const { mediaService } = await import('./media.service')
+    const addMediaSpy = vi.spyOn(mediaService, 'addMedia').mockRejectedValueOnce(new Error('boom'))
+
+    await expect(extensionBridgeService.capture(baseCapture())).rejects.toThrow('boom')
+
+    const files = await fs.readdir(join(sourceDir, 'Web Imports', 'danbooru')).catch(() => [])
+    expect(files).toHaveLength(0)
+
+    addMediaSpy.mockRestore()
+  })
+
   it('creates a new artist when the name has no existing match', async () => {
     writeSourceFolder(sourceDir)
 
@@ -100,6 +129,18 @@ describe('extensionBridgeService.capture', () => {
     expect(result.status).toBe('created')
     const tags = await tagService.getAllTags()
     expect(tags.filter((t) => t.name.toLowerCase() === 'rating:safe')).toHaveLength(1)
+  })
+
+  it('drops whitespace-only tag names instead of creating blank tags', async () => {
+    writeSourceFolder(sourceDir)
+
+    const result = await extensionBridgeService.capture(
+      baseCapture({ tagNames: ['   ', 'realtag'] })
+    )
+
+    expect(result.status).toBe('created')
+    const tags = await tagService.getAllTags()
+    expect(tags.map((t) => t.name)).toEqual(['realtag'])
   })
 
   it('returns duplicate status without creating a second row for identical bytes', async () => {
@@ -156,6 +197,27 @@ describe('ExtensionBridgeCaptureInputSchema', () => {
   it('rejects a payload missing required fields', async () => {
     const { ExtensionBridgeCaptureInputSchema } = await import('./extensionBridge.service')
     const result = ExtensionBridgeCaptureInputSchema.safeParse({ fileName: 'a.jpg' })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects a literal empty string in tagNames/characterNames/seriesNames', async () => {
+    const { ExtensionBridgeCaptureInputSchema } = await import('./extensionBridge.service')
+    expect(
+      ExtensionBridgeCaptureInputSchema.safeParse(baseCapture({ tagNames: [''] })).success
+    ).toBe(false)
+    expect(
+      ExtensionBridgeCaptureInputSchema.safeParse(baseCapture({ characterNames: [''] })).success
+    ).toBe(false)
+    expect(
+      ExtensionBridgeCaptureInputSchema.safeParse(baseCapture({ seriesNames: [''] })).success
+    ).toBe(false)
+  })
+
+  it('rejects a non-http(s) sourceUrl', async () => {
+    const { ExtensionBridgeCaptureInputSchema } = await import('./extensionBridge.service')
+    const result = ExtensionBridgeCaptureInputSchema.safeParse(
+      baseCapture({ sourceUrl: 'javascript:alert(1)' })
+    )
     expect(result.success).toBe(false)
   })
 })

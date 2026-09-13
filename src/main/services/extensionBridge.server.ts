@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'crypto'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'http'
 import type { ExtensionBridgeStatus } from '@shared/models'
 import { AppError } from '../errors'
+import { logError } from '../logging/logger'
 import {
   ensureExtensionBridgeToken,
   readExtensionBridgeSettings,
@@ -17,10 +18,21 @@ import {
 /** Maps AppError codes the capture/lookup path can throw to HTTP statuses; an unmapped code is a 500. */
 const ERROR_STATUS: Record<string, number> = {
   NO_SOURCE_FOLDER: 409,
-  DUPLICATE_MEDIA: 409
+  DUPLICATE_MEDIA: 409,
+  PAYLOAD_TOO_LARGE: 413
 }
 
 let currentServer: Server | null = null
+
+// 256 MB is generous for any real video capture over base64. Exposed as a
+// mutable `let` (with a test-only setter below) so tests can exercise the
+// 413 path without actually sending a quarter-gigabyte body over HTTP.
+let maxBodyBytes = 256 * 1024 * 1024
+
+/** Test-only: temporarily override the request body size cap. */
+export function setMaxBodyBytesForTesting(bytes: number): void {
+  maxBodyBytes = bytes
+}
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { 'Content-Type': 'application/json' })
@@ -30,13 +42,33 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = ''
-    req.on('data', (chunk) => (data += chunk))
-    req.on('end', () => resolve(data))
+    let bytes = 0
+    let rejected = false
+    req.on('data', (chunk) => {
+      // Once over the cap, stop retaining further chunks (the memory-safety
+      // goal) but keep draining the stream instead of req.destroy()'ing it -
+      // destroying the request tears down the underlying socket immediately,
+      // which drops the connection before the 413 response below can be
+      // written back, so the client sees a raw socket error instead of a
+      // clean HTTP error.
+      if (rejected) return
+      bytes += chunk.length
+      if (bytes > maxBodyBytes) {
+        rejected = true
+        reject(new AppError('PAYLOAD_TOO_LARGE', 'Request body too large'))
+        return
+      }
+      data += chunk
+    })
+    req.on('end', () => {
+      if (!rejected) resolve(data)
+    })
     req.on('error', reject)
   })
 }
 
 function isAuthorized(req: IncomingMessage, token: string): boolean {
+  if (!token) return false
   const header = req.headers['authorization']
   if (typeof header !== 'string' || !header.startsWith('Bearer ')) return false
   const provided = Buffer.from(header.slice('Bearer '.length))
@@ -70,9 +102,13 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     }
 
     if (req.method === 'POST' && url.pathname === '/capture') {
+      // readBody's own rejections (e.g. PAYLOAD_TOO_LARGE) must propagate to
+      // the outer try/catch's AppError handling, not be swallowed here as
+      // "Invalid JSON body" - only JSON.parse failures belong to this catch.
+      const rawBody = await readBody(req)
       let body: unknown
       try {
-        body = JSON.parse(await readBody(req))
+        body = JSON.parse(rawBody)
       } catch {
         sendJson(res, 400, { error: 'Invalid JSON body' })
         return
@@ -121,6 +157,14 @@ export function startExtensionBridgeServer(options: { port?: number } = {}): Pro
     server.once('error', reject)
     server.listen(port, '127.0.0.1', () => {
       server.removeListener('error', reject)
+      // A later socket-level error with no 'error' handler at all becomes an
+      // unhandled event -> uncaughtException -> fatal error dialog in this
+      // app (see index.ts). A background feature failing shouldn't be able
+      // to crash the whole app, so keep a persistent handler for the rest of
+      // this server's life.
+      server.on('error', (err) => {
+        logError('extensionBridge', 'Extension bridge server error', err)
+      })
       currentServer = server
       // Only persist `enabled: true` once the server has actually bound to the
       // port - if listen() fails (e.g. EADDRINUSE), the settings must not claim

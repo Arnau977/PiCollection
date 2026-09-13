@@ -207,6 +207,7 @@ app.whenReady().then(async () => {
     const [mainWindow] = BrowserWindow.getAllWindows()
     if (!mainWindow) return
     if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.show()
     mainWindow.focus()
   })
 
@@ -279,8 +280,15 @@ app.whenReady().then(async () => {
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    // dock icon is clicked and there are no other windows open. But a
+    // window can also already exist and simply be hidden (background mode's
+    // close interception), in which case it needs to be shown, not skipped.
+    const [mainWindow] = BrowserWindow.getAllWindows()
+    if (!mainWindow) {
+      createWindow()
+    } else {
+      mainWindow.show()
+    }
   })
 })
 

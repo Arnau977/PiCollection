@@ -21,12 +21,12 @@ export const ExtensionBridgeCaptureInputSchema = z.object({
   fileDataBase64: z.string().min(1),
   fileName: z.string().min(1),
   mediaType: z.enum(['image', 'gif', 'video']),
-  sourceUrl: z.string().min(1),
+  sourceUrl: z.string().regex(/^https?:\/\//, 'sourceUrl must be an http(s) URL'),
   sourceSite: z.string().min(1),
   artistName: z.string().optional(),
-  tagNames: z.array(z.string()).optional(),
-  characterNames: z.array(z.string()).optional(),
-  seriesNames: z.array(z.string()).optional(),
+  tagNames: z.array(z.string().min(1)).optional(),
+  characterNames: z.array(z.string().min(1)).optional(),
+  seriesNames: z.array(z.string().min(1)).optional(),
   sfw: z.boolean().optional(),
   isAiGenerated: z.boolean().optional(),
   pendingTagging: z.boolean().optional()
@@ -46,6 +46,25 @@ const FALLBACK_EXTENSION: Record<ExtensionBridgeCaptureInput['mediaType'], strin
 
 function sanitizeFileName(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100)
+}
+
+/**
+ * `sourceSite` reaches this module as arbitrary attacker-controlled input
+ * (the capture request body) and is used to build a filesystem path -
+ * without sanitizing, a value like `../../../etc` would escape the intended
+ * `Web Imports/` subtree. Same character-allowlist policy as
+ * sanitizeFileName, just with a shorter cap since this is a directory
+ * segment, not a filename.
+ */
+function sanitizeSiteName(site: string): string {
+  return site.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60) || 'unknown'
+}
+
+/** Drops blank and whitespace-only entries; `.min(1)` on the schema already
+ * rejects a literal empty string, this additionally catches things like
+ * `"   "` that survive that check but are meaningless after trimming. */
+function cleanNames(names?: string[]): string[] {
+  return (names ?? []).map((n) => n.trim()).filter((n) => n.length > 0)
 }
 
 async function findOrCreateByName<T extends { id: string; name: string }>(
@@ -114,7 +133,7 @@ export const extensionBridgeService = {
       throw new AppError('NO_SOURCE_FOLDER', 'Configure a source folder in PiCollection first.')
     }
 
-    const siteDir = join(sourceFolder, 'Web Imports', input.sourceSite || 'unknown')
+    const siteDir = join(sourceFolder, 'Web Imports', sanitizeSiteName(input.sourceSite))
     await mkdir(siteDir, { recursive: true })
 
     const extension = extname(input.fileName) || FALLBACK_EXTENSION[input.mediaType]
@@ -124,58 +143,61 @@ export const extensionBridgeService = {
     const absolutePath = join(siteDir, `${Date.now()}-${baseName}${extension}`)
     await writeFile(absolutePath, Buffer.from(input.fileDataBase64, 'base64'))
 
-    const duplicateCheck = await mediaService.checkDuplicate(absolutePath)
-    if (duplicateCheck.exactMatch) {
-      await unlink(absolutePath)
-      return { status: 'duplicate', mediaId: duplicateCheck.exactMatch.id }
+    try {
+      const duplicateCheck = await mediaService.checkDuplicate(absolutePath)
+      if (duplicateCheck.exactMatch) {
+        // A clean duplicate response shouldn't turn into a 500 just because
+        // the leftover file couldn't be removed.
+        await unlink(absolutePath).catch(() => {})
+        return { status: 'duplicate', mediaId: duplicateCheck.exactMatch.id }
+      }
+
+      const artistId = input.artistName
+        ? await findOrCreateByName(
+            input.artistName,
+            () => artistService.getAllArtists(),
+            (name) => artistService.createArtist({ name })
+          )
+        : undefined
+
+      const tagIds = await resolveNamesSequentially(
+        cleanNames(input.tagNames),
+        () => tagService.getAllTags(),
+        (n) => tagService.createTag({ name: n })
+      )
+
+      const characterIds = await resolveNamesSequentially(
+        cleanNames(input.characterNames),
+        () => characterService.getAllCharacters(),
+        (n) => characterService.createCharacter({ name: n })
+      )
+
+      const seriesIds = await resolveNamesSequentially(
+        cleanNames(input.seriesNames),
+        () => seriesService.getAllSeries(),
+        (n) => seriesService.createSeries({ name: n })
+      )
+
+      const created = await mediaService.addMedia({
+        name: input.fileName,
+        type: input.mediaType,
+        route: absolutePath,
+        sfw: input.sfw ?? true,
+        isAiGenerated: input.isAiGenerated ?? false,
+        artistId,
+        tagIds,
+        characterIds,
+        seriesIds,
+        pendingTagging: input.pendingTagging ?? true,
+        sourceUrl: input.sourceUrl
+      })
+
+      return { status: 'created', mediaId: created.id }
+    } catch (err) {
+      // The file already landed on disk before this point - don't leave it
+      // orphaned in the user's source folder if anything after that fails.
+      await unlink(absolutePath).catch(() => {})
+      throw err
     }
-
-    const artistId = input.artistName
-      ? await findOrCreateByName(
-          input.artistName,
-          () => artistService.getAllArtists(),
-          (name) => artistService.createArtist({ name })
-        )
-      : undefined
-
-    const tagIds = input.tagNames
-      ? await resolveNamesSequentially(
-          input.tagNames,
-          () => tagService.getAllTags(),
-          (n) => tagService.createTag({ name: n })
-        )
-      : []
-
-    const characterIds = input.characterNames
-      ? await resolveNamesSequentially(
-          input.characterNames,
-          () => characterService.getAllCharacters(),
-          (n) => characterService.createCharacter({ name: n })
-        )
-      : []
-
-    const seriesIds = input.seriesNames
-      ? await resolveNamesSequentially(
-          input.seriesNames,
-          () => seriesService.getAllSeries(),
-          (n) => seriesService.createSeries({ name: n })
-        )
-      : []
-
-    const created = await mediaService.addMedia({
-      name: input.fileName,
-      type: input.mediaType,
-      route: absolutePath,
-      sfw: input.sfw ?? true,
-      isAiGenerated: input.isAiGenerated ?? false,
-      artistId,
-      tagIds,
-      characterIds,
-      seriesIds,
-      pendingTagging: input.pendingTagging ?? true,
-      sourceUrl: input.sourceUrl
-    })
-
-    return { status: 'created', mediaId: created.id }
   }
 }
