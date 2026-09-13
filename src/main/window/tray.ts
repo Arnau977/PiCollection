@@ -16,13 +16,13 @@ function buildTray(): Tray {
     Menu.buildFromTemplate([
       {
         label: 'Open PiCollection',
-        click: () => {
+        click: (): void => {
           trayWindow?.show()
           trayWindow?.focus()
         }
       },
       { type: 'separator' },
-      { label: 'Quit', click: () => app.quit() }
+      { label: 'Quit', click: (): void => app.quit() }
     ])
   )
   created.on('click', () => {
