@@ -134,9 +134,8 @@ export function MediaForm({
     setInput((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
   }
 
-  async function handleSubmit(e: React.FormEvent): Promise<void> {
-    e.preventDefault()
-    if (duplicateCheck?.exactMatch) return
+  /** Persists the form as-is; null (with the error shown) when that failed. */
+  async function saveForm(): Promise<MediaModel | null> {
     setError(null)
     setSaving(true)
 
@@ -146,7 +145,7 @@ export function MediaForm({
     } catch (err) {
       setSaving(false)
       setError(err instanceof Error ? err.message : 'Failed to save')
-      return
+      return null
     }
     const { resolvedInput, resolvedSeriesIds, resolvedCharacterIds } = resolution
 
@@ -155,15 +154,22 @@ export function MediaForm({
       ? await window.api.media.update(existingMedia.id, resolvedInput)
       : await window.api.media.create(resolvedInput)
     setSaving(false)
-    if (result.success) {
-      drafts.refetchCreated()
-      if (!result.data.pendingTagging)
-        await suggestions.linkCharactersToSoleSeries(resolvedSeriesIds, resolvedCharacterIds)
-      if (!media) setQueueSavedMedia(result.data)
-      onSaved(result.data)
-    } else {
+    if (!result.success) {
       setError(result.error.message)
+      return null
     }
+    drafts.refetchCreated()
+    if (!result.data.pendingTagging)
+      await suggestions.linkCharactersToSoleSeries(resolvedSeriesIds, resolvedCharacterIds)
+    if (!media) setQueueSavedMedia(result.data)
+    return result.data
+  }
+
+  async function handleSubmit(e: React.FormEvent): Promise<void> {
+    e.preventDefault()
+    if (duplicateCheck?.exactMatch) return
+    const saved = await saveForm()
+    if (saved) onSaved(saved)
   }
 
   async function handleSendToPending(): Promise<void> {
@@ -190,10 +196,18 @@ export function MediaForm({
     }
   }
 
+  // Resolving used to only clear the pending flag, silently dropping whatever
+  // was tagged in the form but not saved first - so it saves, then resolves.
+  // A failed save stops here with the form (and its error) still on screen.
   async function handleMarkResolved(): Promise<void> {
     if (!media || !onMarkResolved) return
+    const saved = await saveForm()
+    if (!saved) return
+    setSaving(true)
     const result = await window.api.media.clearPendingTagging(media.id)
+    setSaving(false)
     if (result.success) onMarkResolved()
+    else setError(result.error.message)
   }
 
   const sortedCharacterOptions = sortCharactersByRelevance(

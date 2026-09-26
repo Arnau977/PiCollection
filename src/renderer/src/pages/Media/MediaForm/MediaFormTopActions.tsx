@@ -81,8 +81,13 @@ export function MediaFormTopActions({
         )}
         <div className="action-group">
           {media?.pendingTagging && onMarkResolved && (
-            <button type="button" className="btn" onClick={onMarkResolvedClick} disabled={deleting}>
-              {t('media.markResolved')}
+            <button
+              type="button"
+              className="btn"
+              onClick={onMarkResolvedClick}
+              disabled={deleting || saving || hasExactDuplicate}
+            >
+              {t('media.saveAndResolve')}
             </button>
           )}
           {/* Stays mounted (collapsed via CSS, not unmounted) once queueSavedMedia

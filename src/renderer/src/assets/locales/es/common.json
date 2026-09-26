@@ -259,6 +259,7 @@
     "deleting": "Eliminando...",
     "saving": "Guardando...",
     "markResolved": "Dar por válido",
+    "saveAndResolve": "Guardar y dar por válido",
     "confirmDelete": "¿Quitar este medio de PiCollection? El archivo no se borrará del disco.",
     "aiGeneratedTitle": "Generado mediante IA",
     "aiGeneratedBadge": "IA",
