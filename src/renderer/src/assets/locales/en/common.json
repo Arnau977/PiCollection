@@ -350,6 +350,7 @@
   },
   "manage": {
     "title": "Metadata",
+    "showInGallery": "Show the {{count}} media with {{name}} in the gallery",
     "artists": "Artists",
     "tags": "Tags",
     "characters": "Characters",

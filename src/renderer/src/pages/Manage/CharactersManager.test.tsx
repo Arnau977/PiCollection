@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import type { CharacterModel, SeriesModel } from '@shared/models'
 import { CharactersManager } from './CharactersManager'
@@ -74,7 +75,7 @@ beforeEach(() => {
 
 describe('CharactersManager', () => {
   it('renders existing characters with their series', () => {
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('Alice')).toBeInTheDocument()
     // 'Wonderland' also appears as an <option> in the series filter select added in
     // this task, so scope the match to the list item's series-meta span.
@@ -85,7 +86,7 @@ describe('CharactersManager', () => {
     const user = userEvent.setup()
     const create = vi.fn().mockResolvedValue({ success: true, data: {} })
     setApi({ create })
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByLabelText('Name'), 'Bob')
 
@@ -118,7 +119,7 @@ describe('CharactersManager', () => {
       writable: true,
       configurable: true
     })
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     const [seriesInput] = screen.getAllByRole('combobox')
     await user.type(seriesInput, 'Show A')
@@ -131,7 +132,7 @@ describe('CharactersManager', () => {
     const user = userEvent.setup()
     const update = vi.fn().mockResolvedValue({ success: true, data: {} })
     setApi({ update })
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Alice' }))
     const nameInput = screen.getByDisplayValue('Alice')
@@ -149,7 +150,7 @@ describe('CharactersManager', () => {
 
   it('shows the editing panel title with the character being edited', async () => {
     const user = userEvent.setup()
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Alice' }))
 
@@ -158,7 +159,7 @@ describe('CharactersManager', () => {
 
   it('cancels editing without saving', async () => {
     const user = userEvent.setup()
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Alice' }))
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
@@ -171,7 +172,7 @@ describe('CharactersManager', () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Delete Alice' }))
 
@@ -184,7 +185,7 @@ describe('CharactersManager', () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Delete Peter Pan' }))
 
@@ -195,13 +196,13 @@ describe('CharactersManager', () => {
 
   it('shows an empty state when there are no characters', () => {
     charactersData = []
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('Nothing here yet.')).toBeInTheDocument()
   })
 
   it('disables the Add button until a name is entered', async () => {
     const user = userEvent.setup()
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled()
 
@@ -212,7 +213,7 @@ describe('CharactersManager', () => {
 
   it('filters the list by search query', async () => {
     const user = userEvent.setup()
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByRole('searchbox'), 'ali')
 
@@ -225,13 +226,13 @@ describe('CharactersManager', () => {
   it('persists the chosen sort order and re-applies it on next render', async () => {
     const user = userEvent.setup()
     window.localStorage.clear()
-    const { unmount } = render(<CharactersManager />)
+    const { unmount } = render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.selectOptions(screen.getByLabelText('Sort by'), 'createdAt')
     await user.click(screen.getByRole('button', { name: 'Ascending' }))
 
     unmount()
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     expect(screen.getByLabelText('Sort by')).toHaveValue('createdAt')
     expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
@@ -239,7 +240,7 @@ describe('CharactersManager', () => {
 
   it('filters the list to characters linked to the selected series', async () => {
     const user = userEvent.setup()
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     // The add/edit form's MultiSelectAutocomplete series picker also resolves to an
     // accessible name of exactly "Series" for its combobox input and hidden
@@ -252,7 +253,7 @@ describe('CharactersManager', () => {
   })
 
   it('shows character aliases in the list', () => {
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('Ali')).toBeInTheDocument()
   })
 
@@ -261,7 +262,7 @@ describe('CharactersManager', () => {
       { id: 'c1', name: 'Alice', series: [], aliases: [], createdAt: 1700000000000, mediaCount: 29000 },
       { id: 'c2', name: 'Peter Pan', series: [], aliases: [], createdAt: 1700000001000, mediaCount: 0 }
     ]
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     const aliceItem = screen.getByText('Alice').closest('li')
     const peterItem = screen.getByText('Peter Pan').closest('li')
@@ -273,7 +274,7 @@ describe('CharactersManager', () => {
     const user = userEvent.setup()
     const create = vi.fn().mockResolvedValue({ success: true, data: {} })
     setApi({ create })
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByLabelText('Name'), 'Elizabeth Bathory (Brave)')
     const parentInput = screen.getByRole('combobox', { name: /Parent character/ })
@@ -302,7 +303,7 @@ describe('CharactersManager', () => {
         mediaCount: 5
       }
     ]
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     const parentItem = screen.getByText('Alice').closest('li')
     const childItem = screen.getByText('Alice (Alt)').closest('li')
@@ -324,7 +325,7 @@ describe('CharactersManager', () => {
         mediaCount: 5
       }
     ]
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByRole('searchbox'), 'Alt')
 
@@ -349,7 +350,7 @@ describe('CharactersManager', () => {
         mediaCount: 5
       }
     ]
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     const childItem = screen.getByText('Alice (child form)').closest('li')
     expect(childItem?.className).toContain('depth-1')
@@ -369,7 +370,7 @@ describe('CharactersManager', () => {
         mediaCount: 5
       }
     ]
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Flat' }))
 
@@ -411,7 +412,7 @@ describe('CharactersManager', () => {
         mediaCount: 2
       }
     ]
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.selectOptions(screen.getByLabelText('Sort by'), 'count')
 
@@ -436,11 +437,11 @@ describe('CharactersManager', () => {
         mediaCount: 5
       }
     ]
-    const { unmount } = render(<CharactersManager />)
+    const { unmount } = render(<CharactersManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Flat' }))
     unmount()
-    render(<CharactersManager />)
+    render(<CharactersManager />, { wrapper: MemoryRouter })
 
     const childItem = screen.getByText('Alice (child form)').closest('li')
     expect(childItem?.className).toContain('depth-0')

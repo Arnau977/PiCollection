@@ -18,7 +18,7 @@ import {
   type ManageSort
 } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
-import { formatCompactCount } from '../../utils/formatCompactCount'
+import { EntityCountButton } from '../../components/EntityCountButton/EntityCountButton'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 
 interface TagFormValues {
@@ -183,9 +183,12 @@ export function TagsManager(): JSX.Element {
                     )}
                   </div>
                   <TagWikiInfo tagName={tag.name} />
-                  <span className="manage-item-count">
-                    {formatCompactCount(tag.mediaCount ?? 0)}
-                  </span>
+                  <EntityCountButton
+                    kind="tag"
+                    id={tag.id}
+                    name={tag.name}
+                    count={tag.mediaCount ?? 0}
+                  />
                   <button
                     type="button"
                     className="icon-btn"

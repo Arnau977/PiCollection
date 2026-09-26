@@ -30,7 +30,8 @@ required.
 ## Features
 
 - **Tagging** — attach Artists, Tags, Characters and Series to each item, with
-  Characters/Series linked many-to-many.
+  Characters/Series linked many-to-many. On the Metadata page, clicking an
+  entry's media count opens the gallery filtered to it.
 - **Gallery search** — a single text field that suggests tags/characters/
   series/artists and supports `AND` (space), `OR`, `-exclude` and
   `(parentheses)` for grouping, e.g. `(Ishtar OR Ereshkigal) -Fujimaru`.

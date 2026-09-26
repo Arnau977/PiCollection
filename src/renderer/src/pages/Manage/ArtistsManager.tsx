@@ -9,7 +9,7 @@ import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
 import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
-import { formatCompactCount } from '../../utils/formatCompactCount'
+import { EntityCountButton } from '../../components/EntityCountButton/EntityCountButton'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { ArtistModel } from '@shared/models'
 
@@ -229,9 +229,12 @@ export function ArtistsManager(): JSX.Element {
                     loading={!thumbnails.has(artist.id)}
                   />
                   <span className="manage-item-name">{artist.name}</span>
-                  <span className="manage-item-count">
-                    {formatCompactCount(artist.mediaCount ?? 0)}
-                  </span>
+                  <EntityCountButton
+                    kind="artist"
+                    id={artist.id}
+                    name={artist.name}
+                    count={artist.mediaCount ?? 0}
+                  />
                   <button
                     type="button"
                     className="icon-btn"

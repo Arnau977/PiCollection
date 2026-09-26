@@ -1,0 +1,23 @@
+/* Looks like the plain count next to it until hovered, so rows stay calm. */
+.entity-count-button {
+  min-width: 32px;
+  min-height: 24px;
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.entity-count-button:hover {
+  background: var(--color-surface-hover);
+  color: var(--accent-fg);
+}
+
+.entity-count-button:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}

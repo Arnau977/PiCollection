@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import type { TagModel } from '@shared/models'
 import { TagsManager } from './TagsManager'
@@ -58,13 +59,13 @@ beforeEach(() => {
 
 describe('TagsManager', () => {
   it('renders existing tags', () => {
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('landscape')).toBeInTheDocument()
     expect(screen.getByText('portrait')).toBeInTheDocument()
   })
 
   it('shows "Add new" in the form panel by default', () => {
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('Add new')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument()
   })
@@ -73,7 +74,7 @@ describe('TagsManager', () => {
     const user = userEvent.setup()
     const create = vi.fn().mockResolvedValue({ success: true, data: { id: 't3', name: 'new-tag' } })
     setApi({ create })
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByLabelText('Name'), 'new-tag')
     await user.click(screen.getByRole('button', { name: 'Add' }))
@@ -86,7 +87,7 @@ describe('TagsManager', () => {
     const user = userEvent.setup()
     const create = vi.fn().mockResolvedValue({ success: true, data: { id: 't3', name: 'new-tag' } })
     setApi({ create })
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByLabelText('Name'), 'new-tag')
     await user.type(screen.getByLabelText('Aliases'), 'synonym')
@@ -98,7 +99,7 @@ describe('TagsManager', () => {
 
   it('switches the panel into edit mode and pre-fills the fields', async () => {
     const user = userEvent.setup()
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit landscape' }))
 
@@ -113,7 +114,7 @@ describe('TagsManager', () => {
     const user = userEvent.setup()
     const update = vi.fn().mockResolvedValue({ success: true, data: { id: 't1', name: 'renamed' } })
     setApi({ update })
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit landscape' }))
     const input = screen.getByLabelText('Name')
@@ -126,13 +127,13 @@ describe('TagsManager', () => {
   })
 
   it('shows tag aliases in the list', () => {
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('scenery')).toBeInTheDocument()
   })
 
   it('filters the list by alias match', async () => {
     const user = userEvent.setup()
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByRole('searchbox'), 'scenery')
 
@@ -144,7 +145,7 @@ describe('TagsManager', () => {
 
   it('returns to the add-new form when editing is cancelled', async () => {
     const user = userEvent.setup()
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit landscape' }))
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
@@ -155,7 +156,7 @@ describe('TagsManager', () => {
 
   it('highlights the item currently being edited in the list', async () => {
     const user = userEvent.setup()
-    const { container } = render(<TagsManager />)
+    const { container } = render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit landscape' }))
 
@@ -168,7 +169,7 @@ describe('TagsManager', () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Delete landscape' }))
 
@@ -182,7 +183,7 @@ describe('TagsManager', () => {
     const user = userEvent.setup()
     const del = vi.fn()
     setApi({ delete: del })
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Delete landscape' }))
 
@@ -193,7 +194,7 @@ describe('TagsManager', () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Delete portrait' }))
 
@@ -204,13 +205,13 @@ describe('TagsManager', () => {
 
   it('shows an empty state when there are no tags', () => {
     tagsData = []
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('Nothing here yet.')).toBeInTheDocument()
   })
 
   it('disables the Add button until a name is entered', async () => {
     const user = userEvent.setup()
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled()
 
@@ -221,7 +222,7 @@ describe('TagsManager', () => {
 
   it('filters the list by search query', async () => {
     const user = userEvent.setup()
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByRole('searchbox'), 'land')
 
@@ -233,7 +234,7 @@ describe('TagsManager', () => {
 
   it('shows a no-results message when the search matches nothing', async () => {
     const user = userEvent.setup()
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByRole('searchbox'), 'nonexistent')
 
@@ -245,13 +246,13 @@ describe('TagsManager', () => {
   it('persists the chosen sort order and re-applies it on next render', async () => {
     const user = userEvent.setup()
     window.localStorage.clear()
-    const { unmount } = render(<TagsManager />)
+    const { unmount } = render(<TagsManager />, { wrapper: MemoryRouter })
 
     await user.selectOptions(screen.getByLabelText('Sort by'), 'createdAt')
     await user.click(screen.getByRole('button', { name: 'Ascending' }))
 
     unmount()
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     expect(screen.getByLabelText('Sort by')).toHaveValue('createdAt')
     expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
@@ -262,7 +263,7 @@ describe('TagsManager', () => {
       { id: 't1', name: 'landscape', createdAt: 1700000000000, mediaCount: 29000 },
       { id: 't2', name: 'portrait', createdAt: 1700000001000, mediaCount: 0 }
     ]
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
 
     const landscapeItem = screen.getByText('landscape').closest('li')
     const portraitItem = screen.getByText('portrait').closest('li')
@@ -271,7 +272,7 @@ describe('TagsManager', () => {
   })
 
   it('renders a tag-wiki info button for each tag', async () => {
-    render(<TagsManager />)
+    render(<TagsManager />, { wrapper: MemoryRouter })
     expect(
       await screen.findByLabelText('What does this tag mean? (landscape)')
     ).toBeInTheDocument()

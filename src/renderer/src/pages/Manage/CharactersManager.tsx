@@ -25,7 +25,7 @@ import {
   buildEntityTree,
   computeRolledUpCounts
 } from '../../utils/buildEntityTree'
-import { formatCompactCount } from '../../utils/formatCompactCount'
+import { EntityCountButton } from '../../components/EntityCountButton/EntityCountButton'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { CharacterModel, SeriesModel } from '@shared/models'
 
@@ -287,7 +287,12 @@ export function CharactersManager(): JSX.Element {
                       <span className="manage-item-aliases">{character.aliases.join(', ')}</span>
                     )}
                   </div>
-                  <span className="manage-item-count">{formatCompactCount(rolledUpCount)}</span>
+                  <EntityCountButton
+                    kind="character"
+                    id={character.id}
+                    name={character.name}
+                    count={rolledUpCount}
+                  />
                   <button
                     type="button"
                     className="icon-btn"

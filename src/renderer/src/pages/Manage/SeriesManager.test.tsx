@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import type { SeriesModel } from '@shared/models'
 import { SeriesManager } from './SeriesManager'
@@ -56,7 +57,7 @@ beforeEach(() => {
 
 describe('SeriesManager', () => {
   it('renders existing series', () => {
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('Wonderland')).toBeInTheDocument()
     expect(screen.getByText('Neverland')).toBeInTheDocument()
   })
@@ -67,7 +68,7 @@ describe('SeriesManager', () => {
       .fn()
       .mockResolvedValue({ success: true, data: { id: 's3', name: 'new-series' } })
     setApi({ create })
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByLabelText('Name'), 'new-series')
     await user.type(screen.getByLabelText('Aliases'), 'alt-title')
@@ -79,7 +80,7 @@ describe('SeriesManager', () => {
 
   it('switches the panel into edit mode and pre-fills the fields', async () => {
     const user = userEvent.setup()
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Wonderland' }))
 
@@ -92,7 +93,7 @@ describe('SeriesManager', () => {
     const user = userEvent.setup()
     const update = vi.fn().mockResolvedValue({ success: true, data: { id: 's1', name: 'renamed' } })
     setApi({ update })
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Wonderland' }))
     const input = screen.getByLabelText('Name')
@@ -109,7 +110,7 @@ describe('SeriesManager', () => {
 
   it('returns to the add-new form when editing is cancelled', async () => {
     const user = userEvent.setup()
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Wonderland' }))
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
@@ -122,7 +123,7 @@ describe('SeriesManager', () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Delete Wonderland' }))
 
@@ -135,7 +136,7 @@ describe('SeriesManager', () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Delete Neverland' }))
 
@@ -165,7 +166,7 @@ describe('SeriesManager', () => {
         mediaCount: 5
       }
     ]
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     const parentItem = screen.getByText('Parent Series').closest('li') as HTMLElement
     expect(parentItem).toHaveTextContent('5') // the displayed count is the rolled-up one
@@ -179,13 +180,13 @@ describe('SeriesManager', () => {
 
   it('shows an empty state when there are no series', () => {
     seriesData = []
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('Nothing here yet.')).toBeInTheDocument()
   })
 
   it('disables the Add button until a name is entered', async () => {
     const user = userEvent.setup()
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled()
 
@@ -196,7 +197,7 @@ describe('SeriesManager', () => {
 
   it('filters the list by search query', async () => {
     const user = userEvent.setup()
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByRole('searchbox'), 'wonder')
 
@@ -209,20 +210,20 @@ describe('SeriesManager', () => {
   it('persists the chosen sort order and re-applies it on next render', async () => {
     const user = userEvent.setup()
     window.localStorage.clear()
-    const { unmount } = render(<SeriesManager />)
+    const { unmount } = render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.selectOptions(screen.getByLabelText('Sort by'), 'createdAt')
     await user.click(screen.getByRole('button', { name: 'Ascending' }))
 
     unmount()
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     expect(screen.getByLabelText('Sort by')).toHaveValue('createdAt')
     expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
   })
 
   it('shows series aliases in the list', () => {
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('Alice in Wonderland')).toBeInTheDocument()
   })
 
@@ -230,7 +231,7 @@ describe('SeriesManager', () => {
     const user = userEvent.setup()
     const create = vi.fn().mockResolvedValue({ success: true, data: { id: 's3', name: 'child' } })
     setApi({ create })
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByLabelText('Name'), 'child')
     const [parentInput] = screen.getAllByRole('combobox')
@@ -253,7 +254,7 @@ describe('SeriesManager', () => {
       }
     ]
     const user = userEvent.setup()
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Alice in Wonderland (1951)' }))
 
@@ -274,7 +275,7 @@ describe('SeriesManager', () => {
         mediaCount: 5
       }
     ]
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByRole('searchbox'), 'Star Rail')
 
@@ -297,7 +298,7 @@ describe('SeriesManager', () => {
         mediaCount: 5
       }
     ]
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     const parentItem = screen.getByText('Wonderland').closest('li')
     const childItem = screen.getByText('Alice in Wonderland (1951)').closest('li')
@@ -318,7 +319,7 @@ describe('SeriesManager', () => {
         mediaCount: 5
       }
     ]
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     const childItem = screen.getByText('Alice in Wonderland (1951)').closest('li')
     expect(childItem?.className).toContain('depth-1')
@@ -337,7 +338,7 @@ describe('SeriesManager', () => {
         mediaCount: 5
       }
     ]
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Flat' }))
 
@@ -364,7 +365,7 @@ describe('SeriesManager', () => {
       },
       { id: 's3', name: 'Small Root', aliases: [], createdAt: 1700000002000, mediaCount: 2 }
     ]
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.selectOptions(screen.getByLabelText('Sort by'), 'count')
 
@@ -389,11 +390,11 @@ describe('SeriesManager', () => {
         mediaCount: 5
       }
     ]
-    const { unmount } = render(<SeriesManager />)
+    const { unmount } = render(<SeriesManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Flat' }))
     unmount()
-    render(<SeriesManager />)
+    render(<SeriesManager />, { wrapper: MemoryRouter })
 
     const childItem = screen.getByText('Alice in Wonderland (1951)').closest('li')
     expect(childItem?.className).toContain('depth-0')
