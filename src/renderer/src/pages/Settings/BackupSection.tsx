@@ -5,6 +5,8 @@ import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
 import { Toast } from '../../components/Toast/Toast'
 import { loadGalleryDefaults, saveGalleryDefaults } from '../../utils/gallerySettings'
+import type { UseAutoBackup } from '../../hooks/useAutoBackup'
+import { AutoBackupRows } from './AutoBackupRows'
 
 type Status =
   | { kind: 'idle' }
@@ -12,7 +14,7 @@ type Status =
   | { kind: 'exported' }
   | { kind: 'importedNeedsRestart' }
 
-export function BackupSection(): JSX.Element {
+export function BackupSection({ autoBackup }: { autoBackup: UseAutoBackup }): JSX.Element {
   const { t } = useTranslation()
   const confirm = useConfirm()
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
@@ -74,6 +76,8 @@ export function BackupSection(): JSX.Element {
           {t('settings.backupImport')}
         </button>
       </SettingsRow>
+
+      <AutoBackupRows autoBackup={autoBackup} />
 
       {status.kind === 'error' && <p role="alert">{status.message}</p>}
       {status.kind === 'importedNeedsRestart' && (

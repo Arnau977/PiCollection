@@ -42,6 +42,8 @@ required.
   most-tagged artists/tags/characters/series.
 - **Window state** — remembers the app window's size and position between
   launches.
+- **Start with Windows** — optional; starts hidden in the system tray when
+  you sign in (installed builds on Windows/macOS).
 - **Auto-update** — checks GitHub Releases for new versions, with an opt-in
   beta channel; see [`docs/auto-update.md`](docs/auto-update.md).
 - **Tag suggestions** — on the add/edit media form, "Suggest tags" sends a
@@ -61,6 +63,12 @@ required.
   full replace on any install. A separate "Missing files" tool detects media
   whose files moved and bulk-relinks them to a new folder in one step,
   without ever needing to re-copy the files themselves.
+- **Automatic backups** — optionally back up the database and settings daily,
+  weekly or monthly to a folder of your choice (e.g. a synced or external
+  drive), keeping the last 5–30 copies. Runs while the app is open or in the
+  tray, catches up after time off, skips unchanged libraries, and flags a
+  failed run on the Settings "Data" tab. Restore with the same "Import
+  backup"; gallery preferences are only in manual exports.
 - **Duplicate detection** — adding media checks the new file's path and
   content against what's already in the library: an exact match (same file,
   even from a different path) blocks the add, and a visually similar file

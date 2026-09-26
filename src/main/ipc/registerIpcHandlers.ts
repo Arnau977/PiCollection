@@ -12,6 +12,7 @@ import { registerTagWikiHandlers } from './tagWiki.handlers'
 import { registerWd14RuntimeHandlers } from './wd14Runtime.handlers'
 import { registerWd14TaggerHandlers } from './wd14Tagger.handlers'
 import { registerBackupHandlers } from './backup.handlers'
+import { registerAutoBackupHandlers } from './autoBackup.handlers'
 import { registerMediaMaintenanceHandlers } from './mediaMaintenance.handlers'
 import { registerSourceFolderHandlers } from './sourceFolder.handlers'
 import { registerExtensionBridgeHandlers } from './extensionBridge.handlers'
@@ -32,6 +33,7 @@ export function registerIpcHandlers(): void {
   registerWd14RuntimeHandlers()
   registerWd14TaggerHandlers()
   registerBackupHandlers()
+  registerAutoBackupHandlers()
   registerMediaMaintenanceHandlers()
   registerSourceFolderHandlers()
   registerExtensionBridgeHandlers()

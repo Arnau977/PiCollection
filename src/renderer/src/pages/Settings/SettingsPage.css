@@ -62,6 +62,26 @@
   background: var(--accent);
 }
 
+/* The last automatic backup failed - see AutoBackupRows. */
+.settings-tab-badge-danger {
+  background: var(--color-danger);
+}
+
+/* Its first row follows the manual export row across a wrapper, which the
+   SettingsRow sibling divider can't reach. */
+.auto-backup-rows {
+  border-top: 1px solid var(--border-color);
+}
+
+/* Filesystem paths are long and have no spaces to break on. */
+.auto-backup-rows .settings-row-description {
+  overflow-wrap: anywhere;
+}
+
+.auto-backup-error {
+  color: var(--color-danger);
+}
+
 /* A multi-column card grid was tried here and reverted - with a handful of
    cards per tab whose content length varies a lot (a single checkbox next
    to a multi-field form), auto-fit/auto-fill either leaves ragged empty

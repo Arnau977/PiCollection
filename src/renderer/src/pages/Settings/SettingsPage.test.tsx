@@ -27,6 +27,23 @@ beforeEach(() => {
           .fn()
           .mockResolvedValue({ success: true, data: { supported: true, enabled: false } })
       },
+      autoBackup: {
+        getStatus: vi.fn().mockResolvedValue({
+          success: true,
+          data: {
+            enabled: false,
+            frequency: 'daily',
+            keepCount: 10,
+            folder: null,
+            resolvedFolder: 'C:\backups',
+            lastSuccessAt: null,
+            lastError: null,
+            nextDueAt: null,
+            running: false
+          }
+        }),
+        onChanged: vi.fn().mockReturnValue(() => {})
+      },
       sauceNao: {
         getApiKey: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         setApiKey: vi.fn().mockResolvedValue({ success: true, data: undefined })

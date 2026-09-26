@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatDateTime } from './formatDate'
+import { formatDate, formatDateTime, formatRelativeTime } from './formatDate'
 
 describe('formatDate', () => {
   it('formats as zero-padded DD/MM/YYYY regardless of locale', () => {
@@ -22,5 +22,17 @@ describe('formatDateTime', () => {
   it('zero-pads single-digit hours and minutes', () => {
     const epoch = new Date(2026, 0, 5, 9, 3).getTime()
     expect(formatDateTime(epoch)).toBe('05/01/2026, 09:03')
+  })
+})
+
+describe('formatRelativeTime', () => {
+  const now = new Date(2026, 8, 26, 12, 0).getTime()
+  const HOUR = 60 * 60 * 1000
+
+  it('picks the largest fitting unit, past and future', () => {
+    expect(formatRelativeTime(now - 20 * 1000, now, 'en')).toBe('now')
+    expect(formatRelativeTime(now - 3 * HOUR, now, 'en')).toBe('3 hours ago')
+    expect(formatRelativeTime(now + 24 * HOUR, now, 'en')).toBe('tomorrow')
+    expect(formatRelativeTime(now + 6 * 24 * HOUR, now, 'es')).toBe('dentro de 6 días')
   })
 })
