@@ -280,6 +280,7 @@
     "file": "Archivo",
     "submit": "Añadir",
     "groupFile": "Archivo",
+    "fileLocation": "Ubicación",
     "groupDetails": "Detalles",
     "groupTaxonomy": "Taxonomía",
     "tabSingle": "Un archivo",
@@ -296,6 +297,12 @@
     "suggestionsCollapse": "Ocultar panel de sugerencias",
     "suggestionsSauceNaoTitle": "Coincidencia SauceNAO",
     "suggestionsWd14Title": "Etiquetado local con IA"
+  },
+  "sourceSuggestions": {
+    "title": "Del sitio de origen",
+    "titleWithSite": "De {{site}}",
+    "hint": "Lo que tenía el post original y aún no está en tu biblioteca. No se añade nada hasta que lo pulses.",
+    "nothingMissing": "Todo lo que tenía el sitio de origen ya está en tu biblioteca."
   },
   "autocomplete": {
     "noResults": "Sin resultados",

@@ -280,6 +280,7 @@
     "file": "File",
     "submit": "Add",
     "groupFile": "File",
+    "fileLocation": "Location",
     "groupDetails": "Details",
     "groupTaxonomy": "Taxonomy",
     "tabSingle": "Single file",
@@ -296,6 +297,12 @@
     "suggestionsCollapse": "Hide suggestions panel",
     "suggestionsSauceNaoTitle": "SauceNAO match",
     "suggestionsWd14Title": "Local AI tagging"
+  },
+  "sourceSuggestions": {
+    "title": "From the source site",
+    "titleWithSite": "From {{site}}",
+    "hint": "What the original post had that isn't in your library yet. Nothing is added until you click it.",
+    "nothingMissing": "Everything the source site had is already in your library."
   },
   "autocomplete": {
     "noResults": "No results",

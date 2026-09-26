@@ -3,8 +3,32 @@ import { useTranslation } from 'react-i18next'
 import type { MediaDuplicateCheck, MediaInput, MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { Lightbox } from '../../../components/Lightbox/Lightbox'
+import { MediaFileActions } from '../../../components/MediaFileActions/MediaFileActions'
 import { MediaHoverPreview } from '../../../components/MediaHoverPreview/MediaHoverPreview'
 import type { InitialFile, QueueInfo } from './MediaForm.types'
+
+/**
+ * Where the file lives on disk - file name first (what the user recognizes),
+ * folder second, both truncated with the full path on hover. Routes may be
+ * stored relative to the source folder; the actions resolve that themselves.
+ */
+function MediaFileLocation({ route, type }: { route: string; type: MediaModel['type'] }): JSX.Element {
+  const { t } = useTranslation()
+  const lastSeparator = Math.max(route.lastIndexOf('/'), route.lastIndexOf('\\'))
+  const fileName = route.slice(lastSeparator + 1)
+  const folder = lastSeparator > 0 ? route.slice(0, lastSeparator) : ''
+
+  return (
+    <div className="media-form-file-location">
+      <div className="media-form-file-location-text" title={route}>
+        <span className="media-form-file-location-label">{t('addMedia.fileLocation')}</span>
+        <span className="media-form-file-location-name">{fileName}</span>
+        {folder && <span className="media-form-file-location-folder">{folder}</span>}
+      </div>
+      <MediaFileActions route={route} type={type} />
+    </div>
+  )
+}
 
 interface MediaFormFileGroupProps {
   queueInfo?: QueueInfo
@@ -74,6 +98,7 @@ export function MediaFormFileGroup({
           )}
         </div>
       )}
+      {isEditing && media && <MediaFileLocation route={media.route} type={media.type} />}
       {lightboxOpen && previewMedia && (
         <Lightbox
           src={previewMedia.src}

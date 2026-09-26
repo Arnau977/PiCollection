@@ -26,11 +26,31 @@ import type {
   MediaFilters,
   MediaInput,
   MediaModel,
+  MediaSourceMetadata,
   SeriesModel,
   Sorting,
   TagModel
 } from '@shared/models'
 import type { DB, MediaTable } from '../database/schema'
+
+/** A malformed value (hand-edited DB, future shape) just hides the source info. */
+function parseSourceMetadata(raw: string | null | undefined): MediaSourceMetadata | undefined {
+  if (!raw) return undefined
+  try {
+    const parsed = JSON.parse(raw) as Partial<MediaSourceMetadata>
+    const names = (value: unknown): string[] =>
+      Array.isArray(value) ? value.filter((n): n is string => typeof n === 'string') : []
+    return {
+      site: typeof parsed.site === 'string' ? parsed.site : undefined,
+      artist: typeof parsed.artist === 'string' ? parsed.artist : undefined,
+      tags: names(parsed.tags),
+      characters: names(parsed.characters),
+      series: names(parsed.series)
+    }
+  } catch {
+    return undefined
+  }
+}
 
 async function hydrateMedia(db: Kysely<DB>, rows: MediaTable[]): Promise<MediaModel[]> {
   if (!rows.length) return []
@@ -105,7 +125,8 @@ async function hydrateMedia(db: Kysely<DB>, rows: MediaTable[]): Promise<MediaMo
       tags,
       characters,
       series,
-      pendingTagging: row.pending_tagging === 1
+      pendingTagging: row.pending_tagging === 1,
+      sourceMetadata: parseSourceMetadata(row.source_metadata)
     }
   })
 }
@@ -269,7 +290,11 @@ export const mediaService = {
     return getMediaModelById(getDb(), id)
   },
 
-  async addMedia(input: MediaInput): Promise<MediaModel> {
+  /** `sourceMetadata` is capture-only, so it's kept out of the IPC-facing MediaInput. */
+  async addMedia(
+    input: MediaInput,
+    options: { sourceMetadata?: MediaSourceMetadata } = {}
+  ): Promise<MediaModel> {
     const db = getDb()
     await assertRelationsExist(db, input)
     const sourceFolder = readSourceFolder()
@@ -301,7 +326,8 @@ export const mediaService = {
         created_at: Date.now(),
         hash,
         phash,
-        pending_tagging: input.pendingTagging ? 1 : 0
+        pending_tagging: input.pendingTagging ? 1 : 0,
+        source_metadata: options.sourceMetadata ? JSON.stringify(options.sourceMetadata) : null
       })
       if (input.tagIds?.length) await mediaRepo.setMediaTags(trx, id, input.tagIds)
       if (input.characterIds?.length)

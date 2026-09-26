@@ -93,7 +93,8 @@ export function MediaForm({
     tags,
     characters,
     series,
-    drafts
+    drafts,
+    sourceMetadata: media?.sourceMetadata
   })
 
   useEffect((): (() => void) | void => {

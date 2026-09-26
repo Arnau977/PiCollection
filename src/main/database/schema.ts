@@ -61,6 +61,9 @@ export interface MediaTable {
   pending_tagging: number
   /** Set only by capture (browser extension) or manual edit - the original post/page URL, if any. */
   source_url?: string | null
+  /** JSON `MediaSourceMetadata`: the raw names the source site had, set only by
+      capture. Informational - never applied as the media's own tags. */
+  source_metadata?: string | null
 }
 
 export interface MediaTagTable {

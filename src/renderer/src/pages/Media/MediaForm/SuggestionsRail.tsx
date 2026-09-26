@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import type { MediaInput } from '@shared/models'
-import { countSauceMissing, countWd14Missing } from './missingSuggestionCounts'
+import { countSauceMissing, countSourceMissing, countWd14Missing } from './missingSuggestionCounts'
 import { SauceNaoSuggestionsPanel } from './SauceNaoSuggestionsPanel'
+import { SourceSuggestionsPanel } from './SourceSuggestionsPanel'
 import { Wd14SuggestionsPanel } from './Wd14SuggestionsPanel'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
 
@@ -35,7 +36,9 @@ export function SuggestionsRail({
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
 
   const totalMissing =
-    countSauceMissing(suggestions.sauce.missing) + countWd14Missing(suggestions.wd14.missing)
+    countSauceMissing(suggestions.sauce.missing) +
+    countWd14Missing(suggestions.wd14.missing) +
+    countSourceMissing(suggestions.source.missing)
 
   return (
     <aside className={`suggestions-rail${collapsed ? ' is-collapsed' : ''}`}>
@@ -55,6 +58,21 @@ export function SuggestionsRail({
 
       {!collapsed && (
         <div className="suggestions-rail-body">
+          {/* First: it needs no lookup and is the post the user chose to save. */}
+          {suggestions.source.available && (
+            <div className="suggestions-rail-section">
+              <span className="suggestions-rail-section-title">
+                {suggestions.source.site
+                  ? t('sourceSuggestions.titleWithSite', { site: suggestions.source.site })
+                  : t('sourceSuggestions.title')}
+              </span>
+              <SourceSuggestionsPanel
+                source={suggestions.source}
+                onAdd={suggestions.addSourceSuggestion}
+              />
+            </div>
+          )}
+
           <div className="suggestions-rail-section">
             <span className="suggestions-rail-section-title">
               {t('addMedia.suggestionsSauceNaoTitle')}
