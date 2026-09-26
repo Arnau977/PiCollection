@@ -13,4 +13,6 @@ export interface QueueInfo {
   onNext: () => void
   /** Moves back to the previous item; omitted entirely on the first item of a queue. */
   onPrevious?: () => void
+  /** Batch import only: sends this item and every one after it to Pending without reviewing them. */
+  onSendRemainingToPending?: () => void
 }
