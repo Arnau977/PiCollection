@@ -166,6 +166,8 @@
 
 .update-highlights ul {
   margin: 0;
+  /* base.css resets every ul to list-style: none; these are real bullet points. */
+  list-style: disc;
   padding-left: 1.2rem;
   font-size: 0.9rem;
 }
