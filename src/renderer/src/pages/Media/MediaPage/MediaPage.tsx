@@ -74,7 +74,12 @@ const MediaPage: React.FC = () => {
     if (!ok) return
     setDeleting(true)
     const result = await window.api.media.delete(mediaId)
-    if (result.success) {
+    if (result.success && pendingQueue) {
+      // Deleting from the pending queue moves on like "Siguiente" does
+      // instead of dropping the user out of the queue.
+      setDeleting(false)
+      advanceQueue()
+    } else if (result.success) {
       navigate(PATH.GALLERY)
     } else {
       setDeleteError(result.error.message)
@@ -229,6 +234,8 @@ const MediaPage: React.FC = () => {
               }
             }}
             onMarkResolved={advanceQueue}
+            onDelete={pendingQueue ? (): Promise<void> => handleDelete(media.id) : undefined}
+            deleting={deleting}
           />
         ) : (
           <Media {...media} previousId={previousId} nextId={nextId} onNavigate={goToMedia} />

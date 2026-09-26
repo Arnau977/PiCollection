@@ -24,6 +24,9 @@ interface MediaFormProps {
   onSaved: (media: MediaModel) => void
   onSentToPending?: (media: MediaModel) => void
   onMarkResolved?: () => void
+  /** Removes the media from the app (never the file on disk); pending media only. */
+  onDelete?: () => void
+  deleting?: boolean
 }
 
 function toInput(media?: MediaModel, initialFile?: InitialFile): MediaInput {
@@ -61,7 +64,9 @@ export function MediaForm({
   onCancel,
   onSaved,
   onSentToPending,
-  onMarkResolved
+  onMarkResolved,
+  onDelete,
+  deleting
 }: MediaFormProps): JSX.Element {
   const isEditing = Boolean(media)
   const artists = useArtists()
@@ -205,11 +210,13 @@ export function MediaForm({
         queueSavedMedia={queueSavedMedia}
         isEditing={isEditing}
         saving={saving}
+        deleting={deleting}
         hasExactDuplicate={Boolean(duplicateCheck?.exactMatch)}
         onCancel={onCancel}
         onMarkResolved={onMarkResolved}
         onMarkResolvedClick={handleMarkResolved}
         onSendToPending={handleSendToPending}
+        onDelete={onDelete}
       />
 
       <div className="media-form-scroll-region">

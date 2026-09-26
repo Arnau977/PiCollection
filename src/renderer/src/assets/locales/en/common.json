@@ -160,7 +160,7 @@
     "clearSelection": "Clear selection",
     "deleteSelected": "Delete selected",
     "editMetadata": "Edit metadata",
-    "confirmDeleteSelected": "Delete {{count}} selected media? This cannot be undone.",
+    "confirmDeleteSelected": "Remove {{count}} selected media from PiCollection? The files on disk won't be deleted.",
     "pagination": {
       "previous": "Previous",
       "next": "Next",
@@ -236,7 +236,7 @@
     "deleting": "Deleting...",
     "saving": "Saving...",
     "markResolved": "Mark resolved",
-    "confirmDelete": "Delete this media? This cannot be undone.",
+    "confirmDelete": "Remove this media from PiCollection? The file on disk won't be deleted.",
     "aiGeneratedTitle": "Generated using AI",
     "aiGeneratedBadge": "AI",
     "addedOnTitle": "Added on {{date}}",

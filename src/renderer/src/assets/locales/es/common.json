@@ -160,7 +160,7 @@
     "clearSelection": "Deseleccionar todo",
     "deleteSelected": "Eliminar seleccionados",
     "editMetadata": "Editar metadatos",
-    "confirmDeleteSelected": "¿Eliminar {{count}} archivos seleccionados? Esta acción no se puede deshacer.",
+    "confirmDeleteSelected": "¿Quitar {{count}} medios seleccionados de PiCollection? Los archivos no se borrarán del disco.",
     "pagination": {
       "previous": "Anterior",
       "next": "Siguiente",
@@ -236,7 +236,7 @@
     "deleting": "Eliminando...",
     "saving": "Guardando...",
     "markResolved": "Dar por válido",
-    "confirmDelete": "¿Eliminar este archivo? Esta acción no se puede deshacer.",
+    "confirmDelete": "¿Quitar este medio de PiCollection? El archivo no se borrará del disco.",
     "aiGeneratedTitle": "Generado mediante IA",
     "aiGeneratedBadge": "IA",
     "addedOnTitle": "Añadido el {{date}}",
