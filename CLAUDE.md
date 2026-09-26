@@ -15,11 +15,11 @@ validation at the IPC boundary, Vitest + Testing Library for tests. See
 ```bash
 npm install          # also builds better-sqlite3 for Electron's ABI (postinstall)
 npm run dev           # electron-vite dev, hot reload; db at userData/picollection.dev.sqlite
-npm test              # full vitest suite (see ABI note below)
+npm test              # full vitest suite (prefer the verify skill)
 npm run test:watch    # watch mode
 npx vitest run <path>                       # single file
 npx vitest run <path> -t "<test name>"      # single test
-npm run lint           # eslint --fix (see line-ending caution below)
+npm run lint           # eslint --fix, repo-wide - avoid on this checkout (see verify skill)
 npm run typecheck       # tsc, node config + web config
 npm run build            # typecheck + electron-vite build
 npm run build:win|mac|linux   # + electron-builder installer
@@ -27,20 +27,13 @@ npm run migrate:create <name>   # scaffold a migration
 npm run migrate:up / migrate:down   # apply/roll back against .data/picollection.dev.sqlite
 ```
 
-**better-sqlite3 ABI:** the native module is compiled for one runtime at a
-time. `npm test`'s `pretest`/`posttest` hooks rebuild it for plain Node, then
-back for Electron, automatically. If you invoke `npx vitest run` directly
-(bypassing `npm test`) and it wasn't already rebuilt for Node, DB-touching
-tests fail with a `NODE_MODULE_VERSION` mismatch (often surfacing as
-`cleanup is not a function` in `afterEach`, which masks the real error) — fix
-with `npm rebuild better-sqlite3`. Before running the Electron app again
-afterwards, flip it back with `npm run rebuild`.
-
-**Lint caution on Windows checkouts:** if `core.autocrlf=true` and no
-`.gitattributes` pins line endings, a bare `npm run lint` (repo-wide,
-`--fix`) can rewrite CRLF→LF across most of the tree as an unrelated side
-effect. Prefer linting just the files you touched, e.g.
-`npx eslint --no-fix <changed files>`, before running the full autofix.
+**Verifying a change:** use the `verify` skill
+(`bash .claude/skills/verify/verify.sh`). It handles the better-sqlite3 ABI
+flip between Node (tests) and Electron (app), lints only the changed files
+without this checkout's CRLF noise (never run the bare `npm run lint`), and
+recognizes the known port-8934 test failures while the app is open. For
+commits/PRs and releases, the `pr-flow`, `docs-sync` and `release` skills
+hold the conventions.
 
 ## UI/UX & performance
 
