@@ -56,7 +56,11 @@ export const characterService = {
       hydrateCharacters(db, rows),
       characterRepo.countMediaPerCharacter(db)
     ])
-    return characters.map((character) => ({ ...character, mediaCount: counts[character.id] ?? 0 }))
+    return characters.map((character) => ({
+      ...character,
+      mediaCount: counts[character.id]?.library ?? 0,
+      pendingMediaCount: counts[character.id]?.pending ?? 0
+    }))
   },
 
   async getCharacterById(id: string): Promise<CharacterModel | null> {

@@ -1,6 +1,7 @@
 import type { Kysely } from 'kysely'
 import type { DB } from '../schema'
 
+// Home's "most used" lists count library media only - pending isn't part of it yet.
 export interface EntityCountRow {
   id: string
   name: string
@@ -14,6 +15,7 @@ export async function topArtistsByMediaCount(
   const rows = await db
     .selectFrom('media')
     .innerJoin('artist', 'artist.id', 'media.artist_id')
+    .where('media.pending_tagging', '=', 0)
     .select(['artist.id as id', 'artist.name as name'])
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .groupBy(['artist.id', 'artist.name'])
@@ -30,6 +32,8 @@ export async function topTagsByMediaCount(
   const rows = await db
     .selectFrom('media_tag')
     .innerJoin('tag', 'tag.id', 'media_tag.tag_id')
+    .innerJoin('media', 'media.id', 'media_tag.media_id')
+    .where('media.pending_tagging', '=', 0)
     .select(['tag.id as id', 'tag.name as name'])
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .groupBy(['tag.id', 'tag.name'])
@@ -46,6 +50,8 @@ export async function topCharactersByMediaCount(
   const rows = await db
     .selectFrom('media_character')
     .innerJoin('character', 'character.id', 'media_character.character_id')
+    .innerJoin('media', 'media.id', 'media_character.media_id')
+    .where('media.pending_tagging', '=', 0)
     .select(['character.id as id', 'character.name as name'])
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .groupBy(['character.id', 'character.name'])
@@ -62,6 +68,8 @@ export async function topSeriesByMediaCount(
   const rows = await db
     .selectFrom('media_series')
     .innerJoin('series', 'series.id', 'media_series.series_id')
+    .innerJoin('media', 'media.id', 'media_series.media_id')
+    .where('media.pending_tagging', '=', 0)
     .select(['series.id as id', 'series.name as name'])
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .groupBy(['series.id', 'series.name'])

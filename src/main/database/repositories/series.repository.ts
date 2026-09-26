@@ -1,4 +1,5 @@
 import type { Kysely } from 'kysely'
+import { libraryCountExpr, pendingCountExpr, toCountsById, type MediaCounts } from './mediaCounts'
 import type { DB, SeriesTable } from '../schema'
 
 export function findAllSeries(db: Kysely<DB>): Promise<SeriesTable[]> {
@@ -18,15 +19,15 @@ export async function findSeriesHierarchy(
 }
 
 /** Direct (non-hierarchy-expanded) media_series link count per series, 0 for series with none. */
-export async function countMediaPerSeries(db: Kysely<DB>): Promise<Record<string, number>> {
+export async function countMediaPerSeries(db: Kysely<DB>): Promise<Record<string, MediaCounts>> {
   const rows = await db
     .selectFrom('series')
     .leftJoin('media_series', 'media_series.series_id', 'series.id')
-    .select(['series.id as id'])
-    .select((eb) => eb.fn.count('media_series.media_id').as('count'))
+    .leftJoin('media', 'media.id', 'media_series.media_id')
+    .select(['series.id as id', libraryCountExpr.as('library'), pendingCountExpr.as('pending')])
     .groupBy('series.id')
     .execute()
-  return Object.fromEntries(rows.map((row) => [row.id, Number(row.count)]))
+  return toCountsById(rows)
 }
 
 export function insertSeries(db: Kysely<DB>, series: SeriesTable): Promise<SeriesTable> {

@@ -1,4 +1,5 @@
 import type { Kysely } from 'kysely'
+import { libraryCountExpr, pendingCountExpr, toCountsById, type MediaCounts } from './mediaCounts'
 import type { ArtistSocialLinkTable, ArtistTable, DB } from '../schema'
 
 export function findAllArtists(db: Kysely<DB>): Promise<ArtistTable[]> {
@@ -36,15 +37,14 @@ export async function deleteArtist(db: Kysely<DB>, id: string): Promise<void> {
 }
 
 /** Media linked per artist (direct media.artist_id FK), 0 for artists with none. */
-export async function countMediaPerArtist(db: Kysely<DB>): Promise<Record<string, number>> {
+export async function countMediaPerArtist(db: Kysely<DB>): Promise<Record<string, MediaCounts>> {
   const rows = await db
     .selectFrom('artist')
     .leftJoin('media', 'media.artist_id', 'artist.id')
-    .select(['artist.id as id'])
-    .select((eb) => eb.fn.count('media.id').as('count'))
+    .select(['artist.id as id', libraryCountExpr.as('library'), pendingCountExpr.as('pending')])
     .groupBy('artist.id')
     .execute()
-  return Object.fromEntries(rows.map((row) => [row.id, Number(row.count)]))
+  return toCountsById(rows)
 }
 
 export function findSocialLinksForArtistIds(

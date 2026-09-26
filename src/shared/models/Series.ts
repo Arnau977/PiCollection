@@ -4,7 +4,10 @@ export interface SeriesModel {
   aliases?: string[]
   createdAt?: number
   parentId?: string | null
+  /** Media in the library (pending excluded). */
   mediaCount?: number
+  /** Pending media still linked to it - only matters when deleting it. */
+  pendingMediaCount?: number
 }
 
 export interface SeriesInput {
