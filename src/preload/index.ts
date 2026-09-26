@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type {
   ArtistInput,
   ArtistModel,
+  AutoStartStatus,
   BackupExportResult,
   BackupImportResult,
   CharacterInput,
@@ -131,7 +132,11 @@ export const api = {
     copyLocationToClipboard: (route: string): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.system.copyLocationToClipboard, route),
     getAppVersion: (): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.system.getAppVersion),
-    restartApp: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.system.restartApp)
+    restartApp: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.system.restartApp),
+    getAutoStart: (): Promise<IpcResult<AutoStartStatus>> =>
+      ipcRenderer.invoke(IPC.system.getAutoStart),
+    setAutoStart: (enabled: boolean): Promise<IpcResult<AutoStartStatus>> =>
+      ipcRenderer.invoke(IPC.system.setAutoStart, enabled)
   },
   backup: {
     export: (gallerySettings: unknown): Promise<IpcResult<BackupExportResult>> =>

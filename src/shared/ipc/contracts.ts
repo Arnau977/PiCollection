@@ -218,7 +218,9 @@ export const IPC = {
     copyImageToClipboard: 'system:copy-image-to-clipboard',
     copyLocationToClipboard: 'system:copy-location-to-clipboard',
     getAppVersion: 'system:get-app-version',
-    restartApp: 'system:restart-app'
+    restartApp: 'system:restart-app',
+    getAutoStart: 'system:get-auto-start',
+    setAutoStart: 'system:set-auto-start'
   },
   backup: {
     export: 'backup:export',

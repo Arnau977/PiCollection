@@ -21,7 +21,12 @@ beforeEach(() => {
   confirmMock.mockReset().mockResolvedValue(true)
   Object.defineProperty(window, 'api', {
     value: {
-      system: { getAppVersion: vi.fn().mockResolvedValue({ success: true, data: '1.0.0' }) },
+      system: {
+        getAppVersion: vi.fn().mockResolvedValue({ success: true, data: '1.0.0' }),
+        getAutoStart: vi
+          .fn()
+          .mockResolvedValue({ success: true, data: { supported: true, enabled: false } })
+      },
       sauceNao: {
         getApiKey: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         setApiKey: vi.fn().mockResolvedValue({ success: true, data: undefined })
