@@ -32,7 +32,7 @@ npm run migrate:up / migrate:down   # apply/roll back against .data/picollection
 flip between Node (tests) and Electron (app), lints only the changed files
 without this checkout's CRLF noise (never run the bare `npm run lint`), and
 recognizes the known port-8934 test failures while the app is open. For
-commits/PRs and releases, the `pr-flow`, `docs-sync` and `release` skills
+commits/PRs and releases, the `pr-flow`, `docs-sync` and `cut-release` skills
 hold the conventions.
 
 ## UI/UX & performance
