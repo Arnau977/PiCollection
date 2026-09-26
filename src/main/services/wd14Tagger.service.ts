@@ -5,6 +5,7 @@ import { app } from 'electron'
 import { join } from 'path'
 import type { Wd14TagSuggestion } from '@shared/models'
 import { resolveThumbnail } from '../thumbnails/thumbnails'
+import { AppError } from '../errors'
 import { getModelFilePaths, getPythonExecutablePath } from './wd14Runtime/wd14Runtime.service'
 
 const REQUEST_TIMEOUT_MS = 30_000
@@ -102,7 +103,7 @@ function runPrediction(imagePath: string): Promise<Wd14Tag[]> {
  */
 export async function suggestTags(imagePath: string): Promise<Wd14Tag[]> {
   const thumbPath = await resolveThumbnail(imagePath)
-  if (!thumbPath) throw new Error('Could not read that file to tag.')
+  if (!thumbPath) throw new AppError('NO_THUMBNAIL', 'Could not read that file to tag.')
   return runPrediction(thumbPath)
 }
 

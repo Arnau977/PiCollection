@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react'
+import { withVideoFrameFallback } from '../utils/withVideoFrameFallback'
 import type {
   CharacterModel,
+  MediaModel,
   SauceNaoName,
   SeriesModel,
   TagModel,
@@ -43,7 +45,8 @@ interface UseWd14SuggestionsResult {
   missing: Record<SuggestionCategory, Wd14MissingSuggestion[]>
   /** The model's single highest-scoring rating prediction, or null before a run/on error. */
   rating: Wd14TagSuggestion | null
-  run: (route: string) => Promise<void>
+  /** `type` lets a video fall back to a frame captured here when the OS can't thumbnail it. */
+  run: (route: string, type?: MediaModel['type']) => Promise<void>
   dismiss: (category: SuggestionCategory, name: string) => void
   reset: () => void
 }
@@ -101,12 +104,14 @@ export function useWd14Suggestions({
   const [rating, setRating] = useState<Wd14TagSuggestion | null>(null)
 
   const run = useCallback(
-    async (route: string) => {
+    async (route: string, type?: MediaModel['type']) => {
       if (status === 'loading') return
       setStatus('loading')
       setError(null)
 
-      const result = await window.api.wd14Tagger.suggestTags(route)
+      const result = await withVideoFrameFallback(route, type, () =>
+        window.api.wd14Tagger.suggestTags(route)
+      )
       if (!result.success) {
         setStatus('error')
         setError(result.error.message)

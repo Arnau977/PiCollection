@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs'
 import type { SauceNaoLookup } from '@shared/models'
 import { resolveThumbnail } from '../../thumbnails/thumbnails'
+import { AppError } from '../../errors'
 import { readSauceNaoApiKey } from './sauceNaoSettings'
 import { fetchDanbooruTags } from '../danbooruTags'
 import { SauceNaoResponseSchema, pickBestMatch } from './sauceNao.parse'
@@ -95,7 +96,7 @@ export async function lookupSauceNao(route: string): Promise<SauceNaoLookup> {
   // no per-type branching needed here.
   const thumbPath = await resolveThumbnail(route)
   if (!thumbPath) {
-    throw new Error('Could not read that file to search with.')
+    throw new AppError('NO_THUMBNAIL', 'Could not read that file to search with.')
   }
 
   const cached = resultCache.get(thumbPath)
