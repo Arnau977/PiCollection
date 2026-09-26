@@ -1,7 +1,8 @@
-# Patterns and trends researched outside the project
+# Patterns, anti-patterns and trends researched outside the project
 
-References found on the web, so the same research isn't repeated. Patterns
-already decided *in* PiCollection go in `patterns-project.md`, not here.
+References found on the web, so the same research isn't repeated. What was
+decided or learned *in* PiCollection goes in `patterns-project.md`, not
+here.
 
 ## Rules for this file
 
@@ -14,21 +15,29 @@ already decided *in* PiCollection go in `patterns-project.md`, not here.
   Treat Dribbble-style showcases as inspiration, not evidence.
 - One entry per pattern, specific enough to act on. No generic "best
   practices".
+- When researching a pattern, also look for its known **anti-patterns**
+  (what the same sources warn against, documented usability failures, dark
+  patterns) and record them. They are usually the quickest check against a
+  proposal.
 - Every entry has a source and the date it was checked. Trends older than
   12 months get re-checked before being relied on.
 
 ## Entry format
 
 ```markdown
-### <Pattern or trend name>
-- Kind: pattern | trend
-- Use when / avoid when: ...
+### <Pattern, anti-pattern or trend name>
+- Kind: pattern | anti-pattern | trend
+- Use when / avoid when: ...          (anti-pattern: why it fails, what to do instead)
 - Takeaway for PiCollection: ...
 - Source: <title> - <url>
 - Checked: YYYY-MM-DD
 ```
 
 ## Patterns
+
+(none recorded yet)
+
+## Anti-patterns
 
 (none recorded yet)
 

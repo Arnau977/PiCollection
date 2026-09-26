@@ -26,10 +26,11 @@ Read `patterns-project.md` in this folder:
 ## 2. Outside references and current trends
 
 Read `patterns-external.md` in this folder:
-- If the problem type is already covered there, use it.
+- If the problem type is already covered there, use it, and check the
+  proposal against its recorded **anti-patterns** too.
 - If it isn't, research it (desktop-first sources: Fluent 2 / Windows, Apple
-  HIG, Nielsen Norman Group) and **record** the finding in that file before
-  deciding.
+  HIG, Nielsen Norman Group), including what those sources warn against,
+  and **record** both the patterns and the anti-patterns before deciding.
 - **Trend check** - for a new screen or a redesign, or when the recorded
   trends are more than 12 months old: search for current desktop and
   collection-app UI trends, and record the relevant ones with their date.
@@ -80,7 +81,8 @@ Output the council as a short table, and reuse it as the PR's
 
 - A new pattern decided here goes into `patterns-project.md`, with its file.
 - A bug or redo caused by a design choice goes in as an anti-pattern.
-- Research and trends go into `patterns-external.md`, with source and date.
+- Researched patterns, anti-patterns and trends go into
+  `patterns-external.md`, with source and date.
 
 ## Rules that apply to every renderer change
 
