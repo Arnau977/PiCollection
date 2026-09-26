@@ -565,6 +565,26 @@ describe('MediaPage pending queue', () => {
     })
   })
 
+  it('Delete removes the pending item and advances to the next one', async () => {
+    mediaData = { ...sampleMedia, pendingTagging: true }
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
+        <MediaPage />
+      </MemoryRouter>
+    )
+    await screen.findByText('File 2 of 3')
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(confirmMock).toHaveBeenCalledWith(expect.objectContaining({ danger: true }))
+    await waitFor(() => expect(window.api.media.delete).toHaveBeenCalledWith('1'))
+    expect(navigateMock).toHaveBeenCalledWith('/media/2', {
+      state: { pendingQueue: true },
+      replace: true
+    })
+  })
+
   it('Previous navigates to the previous pending item', async () => {
     Object.defineProperty(window, 'api', {
       value: {
