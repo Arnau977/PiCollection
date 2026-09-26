@@ -95,6 +95,7 @@ export function SuggestionsRail({
               wd14Runtime={suggestions.wd14Runtime}
               wd14={suggestions.wd14}
               inputRoute={input.route}
+              inputType={input.type}
               inputSfw={input.sfw}
               saving={saving}
               onAddMissing={suggestions.addWd14Suggestion}

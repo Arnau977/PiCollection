@@ -1,7 +1,9 @@
 import { useCallback, useState } from 'react'
+import { withVideoFrameFallback } from '../utils/withVideoFrameFallback'
 import type {
   ArtistModel,
   CharacterModel,
+  MediaModel,
   SauceNaoMatch,
   SeriesModel,
   TagModel
@@ -33,7 +35,8 @@ interface UseSauceNaoSuggestionsResult {
   remaining: { short: number; long: number } | null
   appliedCount: number
   missing: Record<SuggestionCategory, string[]>
-  run: (route: string) => Promise<void>
+  /** `type` lets a video fall back to a frame captured here when the OS can't thumbnail it. */
+  run: (route: string, type?: MediaModel['type']) => Promise<void>
   dismiss: (category: SuggestionCategory, name: string) => void
   reset: () => void
 }
@@ -58,12 +61,14 @@ export function useSauceNaoSuggestions({
   // a later re-render, so a background refetch of the entity lists can't
   // make an applied/missing chip flicker away mid-interaction.
   const run = useCallback(
-    async (route: string) => {
+    async (route: string, type?: MediaModel['type']) => {
       if (status === 'loading') return
       setStatus('loading')
       setError(null)
 
-      const result = await window.api.sauceNao.lookup(route)
+      const result = await withVideoFrameFallback(route, type, () =>
+        window.api.sauceNao.lookup(route)
+      )
       if (!result.success) {
         setStatus('error')
         setError(result.error.message)

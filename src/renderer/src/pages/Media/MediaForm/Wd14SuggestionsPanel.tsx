@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { Cpu, Plus, ShieldAlert, ShieldCheck } from 'lucide-react'
+import type { MediaInput } from '@shared/models'
 import { PATH } from '../../../app.routes.const'
 import { titleCaseTagName } from '../../../utils/matchEntityNames'
 import { TagWikiInfo } from '../../../components/TagWikiInfo/TagWikiInfo'
@@ -24,6 +25,7 @@ interface Wd14SuggestionsPanelProps {
   wd14Runtime: MediaFormSuggestions['wd14Runtime']
   wd14: MediaFormSuggestions['wd14']
   inputRoute: string
+  inputType: MediaInput['type']
   inputSfw: boolean
   saving: boolean
   onAddMissing: MediaFormSuggestions['addWd14Suggestion']
@@ -34,6 +36,7 @@ export function Wd14SuggestionsPanel({
   wd14Runtime,
   wd14,
   inputRoute,
+  inputType,
   inputSfw,
   saving,
   onAddMissing,
@@ -63,7 +66,7 @@ export function Wd14SuggestionsPanel({
       <button
         type="button"
         className="btn"
-        onClick={() => wd14.run(inputRoute)}
+        onClick={() => wd14.run(inputRoute, inputType)}
         disabled={!inputRoute || saving || wd14.status === 'loading'}
       >
         <Cpu size={16} />
@@ -80,7 +83,11 @@ export function Wd14SuggestionsPanel({
       {showRatingHint && wd14.rating && (
         <div className="sauce-missing-row wd14-rating-row">
           <span className="sauce-cat-label">{t('wd14.ratingLabel')}</span>
-          <button type="button" className="sauce-add-chip" onClick={() => onApplyRating(suggestedSfw)}>
+          <button
+            type="button"
+            className="sauce-add-chip"
+            onClick={() => onApplyRating(suggestedSfw)}
+          >
             <span className={`badge ${suggestedSfw ? 'badge-neutral' : 'badge-accent'}`}>
               {suggestedSfw ? <ShieldCheck size={12} /> : <ShieldAlert size={12} />}
               {t(suggestedSfw ? 'media.sfwBadge' : 'media.nsfwBadge')}

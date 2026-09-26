@@ -39,7 +39,7 @@ export function SauceNaoSuggestionsPanel({
       <button
         type="button"
         className="btn"
-        onClick={() => sauce.run(inputRoute)}
+        onClick={() => sauce.run(inputRoute, inputType)}
         disabled={!inputRoute || saving || sauce.status === 'loading'}
       >
         <ScanSearch size={16} />
