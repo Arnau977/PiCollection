@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
 import type { MediaModel } from '@shared/models'
 import type { QueueInfo } from './MediaForm.types'
 
@@ -9,11 +9,13 @@ interface MediaFormTopActionsProps {
   queueSavedMedia?: MediaModel
   isEditing: boolean
   saving: boolean
+  deleting?: boolean
   hasExactDuplicate: boolean
   onCancel: () => void
   onMarkResolved?: () => void
   onMarkResolvedClick: () => void
   onSendToPending: () => void
+  onDelete?: () => void
 }
 
 /**
@@ -30,6 +32,11 @@ interface MediaFormTopActionsProps {
  * only ever applies to one of the two entry points (existing pending media
  * vs. a brand-new queued file), so they share a slot next to the primary
  * Guardar instead of each needing their own case.
+ *
+ * Eliminar is only offered for pending media (the pending queue opens
+ * straight into this form, so it never shows MediaPage's view-mode bar) and
+ * sits last behind a divider, mirroring where that bar keeps its own
+ * destructive action.
  */
 export function MediaFormTopActions({
   media,
@@ -37,11 +44,13 @@ export function MediaFormTopActions({
   queueSavedMedia,
   isEditing,
   saving,
+  deleting = false,
   hasExactDuplicate,
   onCancel,
   onMarkResolved,
   onMarkResolvedClick,
-  onSendToPending
+  onSendToPending,
+  onDelete
 }: MediaFormTopActionsProps): JSX.Element {
   const { t } = useTranslation()
 
@@ -72,7 +81,7 @@ export function MediaFormTopActions({
         )}
         <div className="action-group">
           {media?.pendingTagging && onMarkResolved && (
-            <button type="button" className="btn" onClick={onMarkResolvedClick}>
+            <button type="button" className="btn" onClick={onMarkResolvedClick} disabled={deleting}>
               {t('media.markResolved')}
             </button>
           )}
@@ -95,7 +104,7 @@ export function MediaFormTopActions({
             type="submit"
             form="media-form"
             className="btn btn-primary"
-            disabled={saving || hasExactDuplicate}
+            disabled={saving || deleting || hasExactDuplicate}
           >
             {saving
               ? t('media.saving')
@@ -104,6 +113,20 @@ export function MediaFormTopActions({
                 : t('addMedia.submit')}
           </button>
         </div>
+        {media?.pendingTagging && onDelete && (
+          <>
+            <div className="action-divider" />
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={onDelete}
+              disabled={saving || deleting}
+            >
+              <Trash2 size={16} />
+              {deleting ? t('media.deleting') : t('media.delete')}
+            </button>
+          </>
+        )}
       </div>
     </div>
   )

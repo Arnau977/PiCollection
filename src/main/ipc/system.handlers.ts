@@ -4,6 +4,7 @@ import { ipcHandler } from './helpers'
 import { IPC } from '@shared/ipc/contracts'
 import { loadImageForClipboard } from '../services/system.service'
 import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
+import { getAutoStartStatus, setAutoStart } from '../window/autoStart'
 
 export function registerSystemHandlers(): void {
   ipcMain.handle(
@@ -55,5 +56,15 @@ export function registerSystemHandlers(): void {
       app.relaunch()
       app.exit()
     })
+  )
+
+  ipcMain.handle(
+    IPC.system.getAutoStart,
+    ipcHandler(IPC.system.getAutoStart, z.void(), async () => getAutoStartStatus())
+  )
+
+  ipcMain.handle(
+    IPC.system.setAutoStart,
+    ipcHandler(IPC.system.setAutoStart, z.boolean(), async (enabled) => setAutoStart(enabled))
   )
 }

@@ -100,6 +100,16 @@ the task, not a follow-up:
   functional behavior consistent across pages (spacing, empty/error/loading
   states, button placement, pagination behavior, etc.).
 
+## Changes made from other projects
+
+Some changes here are made from Claude Code sessions opened in other
+projects (e.g. the PiCollection Capture extension in
+`C:\MyProjects\PiCollection_Researcher`). They're logged, with origin,
+purpose, files and release-note bullets, in `docs/external-changes.md`.
+Check it when you find unexplained uncommitted changes or when preparing
+release notes. Any session editing this repo from elsewhere adds an entry
+there.
+
 ## Working style
 
 - Use tokens/context economically: don't re-read files already seen in the

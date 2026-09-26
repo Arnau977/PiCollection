@@ -67,15 +67,75 @@ function cleanNames(names?: string[]): string[] {
   return (names ?? []).map((n) => n.trim()).filter((n) => n.length > 0)
 }
 
-async function findOrCreateByName<T extends { id: string; name: string }>(
+type Named = { id: string; name: string; aliases?: string[] }
+
+interface MatchOptions {
+  /** Also try the name without a trailing "(...)" qualifier - only safe for characters, where Danbooru's `sylphiette_(mushoku_tensei)` means `Sylphiette`; on general tags the qualifier is what tells e.g. `bow_(weapon)` apart from `bow`. */
+  stripQualifier?: boolean
+}
+
+/** Booru underscores become spaces. */
+function displayName(name: string): string {
+  return name.replace(/_/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+/** The form a new tag/character/series is created with, matching the library's `Closed eyes` style. Artists keep their own casing - handles are often stylized lowercase. */
+function capitalizedName(name: string): string {
+  const display = displayName(name)
+  return display.charAt(0).toUpperCase() + display.slice(1)
+}
+
+/** Booru sites write `closed_eyes` where the library has `Closed eyes` - names compare on a key that ignores case, underscores and spacing. */
+function nameKey(name: string): string {
+  return displayName(name).toLowerCase()
+}
+
+function keysOf(item: Named): string[] {
+  return [item.name, ...(item.aliases ?? [])].map(nameKey)
+}
+
+/** Finds an existing entity by name or alias; with stripQualifier, falls back to the name minus its trailing "(...)". */
+function findExisting<T extends Named>(name: string, all: T[], options: MatchOptions = {}): T | undefined {
+  const key = nameKey(name)
+  if (!key) return undefined
+  const exact = all.find((item) => keysOf(item).includes(key))
+  if (exact || !options.stripQualifier) return exact
+  const bare = key.replace(/\s*\([^)]*\)$/, '').trim()
+  if (!bare || bare === key) return undefined
+  return all.find((item) => keysOf(item).includes(bare))
+}
+
+async function findOrCreateByName<T extends Named>(
   name: string,
   getAll: () => Promise<T[]>,
-  create: (name: string) => Promise<T>
+  create: (name: string) => Promise<T>,
+  options: MatchOptions = {}
 ): Promise<string> {
-  const normalized = name.trim().toLowerCase()
-  const existing = (await getAll()).find((item) => item.name.trim().toLowerCase() === normalized)
+  const existing = findExisting(name, await getAll(), options)
   if (existing) return existing.id
-  const created = await create(name.trim())
+  const created = await create(capitalizedName(name))
+  return created.id
+}
+
+/**
+ * A media has a single artist, but booru posts can credit several - the
+ * extension sends them comma-joined. Links the first one already in the
+ * library; only when none is known does it create one, from the first name,
+ * rather than inventing an artist literally called "a, b".
+ */
+async function resolveArtist(rawName: string): Promise<string | undefined> {
+  const names = rawName
+    .split(',')
+    .map((n) => n.trim())
+    .filter((n) => n.length > 0)
+  if (names.length === 0) return undefined
+
+  const all = await artistService.getAllArtists()
+  for (const name of names) {
+    const existing = findExisting(name, all)
+    if (existing) return existing.id
+  }
+  const created = await artistService.createArtist({ name: displayName(names[0]) })
   return created.id
 }
 
@@ -93,14 +153,15 @@ async function findOrCreateByName<T extends { id: string; name: string }>(
  * the array, which trips the media_tag/media_character/media_series
  * composite primary key when addMedia links them.
  */
-async function resolveNamesSequentially<T extends { id: string; name: string }>(
+async function resolveNamesSequentially<T extends Named>(
   names: string[],
   getAll: () => Promise<T[]>,
-  create: (name: string) => Promise<T>
+  create: (name: string) => Promise<T>,
+  options: MatchOptions = {}
 ): Promise<string[]> {
   const ids: string[] = []
   for (const name of names) {
-    const id = await findOrCreateByName(name, getAll, create)
+    const id = await findOrCreateByName(name, getAll, create, options)
     if (!ids.includes(id)) ids.push(id)
   }
   return ids
@@ -110,8 +171,8 @@ export const extensionBridgeService = {
   async lookup(
     type: ExtensionBridgeLookupType,
     query: string
-  ): Promise<{ id: string; name: string }[]> {
-    const all: { id: string; name: string }[] =
+  ): Promise<{ id: string; name: string; exact?: boolean }[]> {
+    const all: Named[] =
       type === 'artist'
         ? await artistService.getAllArtists()
         : type === 'tag'
@@ -120,11 +181,17 @@ export const extensionBridgeService = {
             ? await seriesService.getAllSeries()
             : await characterService.getAllCharacters()
 
-    const normalized = query.trim().toLowerCase()
-    const matches = normalized
-      ? all.filter((item) => item.name.toLowerCase().includes(normalized))
-      : all
-    return matches.slice(0, 20).map((item) => ({ id: item.id, name: item.name }))
+    const key = nameKey(query)
+    if (!key) return all.slice(0, 20).map((item) => ({ id: item.id, name: item.name }))
+
+    // `exact` is the entity capture() would link this name to, so the
+    // extension's "exists / new" badge agrees with what saving will do.
+    const exact = findExisting(query, all, { stripQualifier: type === 'character' })
+    const matches = all.filter((item) => item !== exact && keysOf(item).some((k) => k.includes(key)))
+    const ordered = exact ? [exact, ...matches] : matches
+    return ordered
+      .slice(0, 20)
+      .map((item) => ({ id: item.id, name: item.name, exact: item === exact }))
   },
 
   async capture(input: ExtensionBridgeCaptureInput): Promise<ExtensionBridgeCaptureResult> {
@@ -152,13 +219,7 @@ export const extensionBridgeService = {
         return { status: 'duplicate', mediaId: duplicateCheck.exactMatch.id }
       }
 
-      const artistId = input.artistName
-        ? await findOrCreateByName(
-            input.artistName,
-            () => artistService.getAllArtists(),
-            (name) => artistService.createArtist({ name })
-          )
-        : undefined
+      const artistId = input.artistName ? await resolveArtist(input.artistName) : undefined
 
       const tagIds = await resolveNamesSequentially(
         cleanNames(input.tagNames),
@@ -169,7 +230,8 @@ export const extensionBridgeService = {
       const characterIds = await resolveNamesSequentially(
         cleanNames(input.characterNames),
         () => characterService.getAllCharacters(),
-        (n) => characterService.createCharacter({ name: n })
+        (n) => characterService.createCharacter({ name: n }),
+        { stripQualifier: true }
       )
 
       const seriesIds = await resolveNamesSequentially(
