@@ -35,6 +35,12 @@
   --accent-hover: #b15971;
   --accent-text: #ffffff;
   --accent-soft: rgba(155, 67, 88, 0.16);
+  /* --accent itself is ~2.7:1 on our dark surfaces - fine as a background
+     (with --accent-text) or border, but fails WCAG AA as a text/icon color
+     on --color-background/--color-surface. Lightened same-hue variant for
+     that role, verified >=4.5:1 against every real backdrop it appears on
+     (background, surface, and the flattened --accent-soft chip). */
+  --accent-fg: #c27285;
 
   /* Semantic aliases used by react-aria-components based CSS */
   --text-color: var(--color-text);

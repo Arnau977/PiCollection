@@ -31,7 +31,7 @@
 }
 
 .tag-wiki-info-body a {
-  color: var(--accent);
+  color: var(--accent-fg);
   text-decoration: none;
 }
 

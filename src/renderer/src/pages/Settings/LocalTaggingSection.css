@@ -40,6 +40,6 @@
 }
 
 .local-tagging-threshold-labels .is-active {
-  color: var(--accent);
+  color: var(--accent-fg);
   font-weight: 600;
 }

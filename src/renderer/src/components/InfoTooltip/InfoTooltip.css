@@ -9,7 +9,7 @@
 
 .info-tooltip:hover,
 .info-tooltip:focus-visible {
-  color: var(--accent);
+  color: var(--accent-fg);
   outline: none;
 }
 

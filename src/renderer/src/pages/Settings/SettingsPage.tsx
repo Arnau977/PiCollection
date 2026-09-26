@@ -14,6 +14,7 @@ import type { MediaFilters, MediaSortableProp } from '@shared/models'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { useAppUpdater } from '../../hooks/useAppUpdater'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
+import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
 import { LANGUAGES } from '../../i18n'
 import { BackupSection } from './BackupSection'
 import { MissingFilesSection } from './MissingFilesSection'
@@ -93,6 +94,8 @@ export default function SettingsPage(): JSX.Element {
   const confirm = useConfirm()
   const sauceNaoApiKey = useSauceNaoApiKeyField()
   const logging = useLoggingSettings()
+  const updateReady =
+    updater.status.state === 'available' || updater.status.state === 'downloaded'
 
   async function handleDownloadUpdate(): Promise<void> {
     if (updater.status.state === 'available' && updater.status.isDowngrade) {
@@ -120,64 +123,61 @@ export default function SettingsPage(): JSX.Element {
             {t('settings.tabData')}
           </Tab>
           <Tab id="advanced" className="settings-tab">
-            {t('settings.tabAdvanced')}
+            <span className="settings-tab-label">
+              {t('settings.tabAdvanced')}
+              {updateReady && <span className="settings-tab-badge" aria-hidden="true" />}
+            </span>
           </Tab>
         </TabList>
 
         <TabPanel id="general" className="settings-sections">
           <section className="card">
-            <h2>
-              <Languages size={16} aria-hidden="true" />
-              {t('settings.language')}
-            </h2>
-            <label className="radio-row">
-              <input
-                type="radio"
-                name="language"
-                checked={i18n.language.startsWith(LANGUAGES.ENGLISH)}
-                onChange={() => i18n.changeLanguage(LANGUAGES.ENGLISH)}
-              />
-              {t('settings.languageEnglish')}
-            </label>
-            <label className="radio-row">
-              <input
-                type="radio"
-                name="language"
-                checked={i18n.language.startsWith(LANGUAGES.SPANISH)}
-                onChange={() => i18n.changeLanguage(LANGUAGES.SPANISH)}
-              />
-              {t('settings.languageSpanish')}
-            </label>
-          </section>
+            <SettingsRow icon={<Languages size={16} aria-hidden="true" />} title={t('settings.language')}>
+              <label className="radio-row">
+                <input
+                  type="radio"
+                  name="language"
+                  checked={i18n.language.startsWith(LANGUAGES.ENGLISH)}
+                  onChange={() => i18n.changeLanguage(LANGUAGES.ENGLISH)}
+                />
+                {t('settings.languageEnglish')}
+              </label>
+              <label className="radio-row">
+                <input
+                  type="radio"
+                  name="language"
+                  checked={i18n.language.startsWith(LANGUAGES.SPANISH)}
+                  onChange={() => i18n.changeLanguage(LANGUAGES.SPANISH)}
+                />
+                {t('settings.languageSpanish')}
+              </label>
+            </SettingsRow>
 
-          <section className="card">
-            <h2>
-              <EyeOff size={16} aria-hidden="true" />
-              {t('settings.nsfwBlur')}
-            </h2>
-            <label className="checkbox-row">
+            <SettingsRow
+              icon={<EyeOff size={16} aria-hidden="true" />}
+              title={t('settings.nsfwBlur')}
+              description={t('settings.nsfwBlurHint')}
+            >
               <input
                 type="checkbox"
+                aria-label={t('settings.nsfwBlur')}
                 checked={defaults.blurNsfw}
                 onChange={(e) => setDefaults({ ...defaults, blurNsfw: e.target.checked })}
               />
-              {t('settings.nsfwBlurHint')}
-            </label>
-          </section>
+            </SettingsRow>
 
-          <section className="card">
-            <h2>
-              <Type size={16} aria-hidden="true" />
-              {t('settings.hideNames')}
-            </h2>
-            <label className="checkbox-row">
+            <SettingsRow
+              icon={<Type size={16} aria-hidden="true" />}
+              title={t('settings.hideNames')}
+              description={t('settings.hideNamesHint')}
+            >
               <input
                 type="checkbox"
+                aria-label={t('settings.hideNames')}
                 checked={defaults.hideNames}
                 onChange={(e) => setDefaults({ ...defaults, hideNames: e.target.checked })}
               />
-              {t('settings.hideNamesHint')}
-            </label>
+            </SettingsRow>
           </section>
         </TabPanel>
 
@@ -188,9 +188,9 @@ export default function SettingsPage(): JSX.Element {
               {t('settings.defaultFilters')}
             </h2>
 
-            <label className="field">
-              <span>{t('filters.sfw')}</span>
+            <SettingsRow title={t('filters.sfw')}>
               <select
+                aria-label={t('filters.sfw')}
                 value={defaults.sfw === undefined ? 'all' : defaults.sfw ? 'sfw' : 'nsfw'}
                 onChange={(e) => {
                   const selected = e.target.value
@@ -204,11 +204,11 @@ export default function SettingsPage(): JSX.Element {
                 <option value="sfw">{t('filters.sfwOnly')}</option>
                 <option value="nsfw">{t('filters.nsfwOnly')}</option>
               </select>
-            </label>
+            </SettingsRow>
 
-            <label className="field">
-              <span>{t('filters.type')}</span>
+            <SettingsRow title={t('filters.type')}>
               <select
+                aria-label={t('filters.type')}
                 value={defaults.type ?? 'all'}
                 onChange={(e) => {
                   const selected = e.target.value
@@ -223,11 +223,11 @@ export default function SettingsPage(): JSX.Element {
                 <option value="video">{t('filters.typeVideo')}</option>
                 <option value="gif">{t('filters.typeGif')}</option>
               </select>
-            </label>
+            </SettingsRow>
 
-            <label className="field">
-              <span>{t('filters.sortBy')}</span>
+            <SettingsRow title={t('filters.sortBy')}>
               <select
+                aria-label={t('filters.sortBy')}
                 value={defaults.sortProp}
                 onChange={(e) =>
                   setDefaults({ ...defaults, sortProp: e.target.value as MediaSortableProp })
@@ -236,15 +236,14 @@ export default function SettingsPage(): JSX.Element {
                 <option value="createdAt">{t('filters.sortDate')}</option>
                 <option value="name">{t('filters.sortName')}</option>
               </select>
-            </label>
-
-            <button
-              type="button"
-              className="btn"
-              onClick={() => setDefaults({ ...defaults, sortDesc: !defaults.sortDesc })}
-            >
-              {defaults.sortDesc ? t('filters.descending') : t('filters.ascending')}
-            </button>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setDefaults({ ...defaults, sortDesc: !defaults.sortDesc })}
+              >
+                {defaults.sortDesc ? t('filters.descending') : t('filters.ascending')}
+              </button>
+            </SettingsRow>
           </section>
         </TabPanel>
 
@@ -358,12 +357,14 @@ export default function SettingsPage(): JSX.Element {
             <label className="field">
               <span>{t('settings.sauceNaoApiKey')}</span>
               <input
-                type="password"
+                type="text"
+                className="field-sensitive-input"
                 value={sauceNaoApiKey.value}
                 onChange={(e) => sauceNaoApiKey.onChange(e.target.value)}
                 autoComplete="off"
               />
             </label>
+            <span className="field-sensitive-hint">{t('settings.sensitiveFieldHint')}</span>
             <div className="settings-field-actions">
               <button type="button" className="btn btn-primary" onClick={sauceNaoApiKey.save}>
                 {t('settings.sauceNaoApiKeySave')}
@@ -382,15 +383,19 @@ export default function SettingsPage(): JSX.Element {
           <ExtensionBridgeSection />
 
           <section className="card">
-            <h2>
-              <Bug size={16} aria-hidden="true" />
-              {t('settings.loggingTitle')}
-            </h2>
-            <p className="settings-version">{t('settings.loggingHint')}</p>
-            <label className="checkbox-row">
-              <input type="checkbox" checked={logging.enabled} onChange={logging.toggle} />
-              {t('settings.loggingEnable')}
-            </label>
+            <SettingsRow
+              titleAs="h2"
+              icon={<Bug size={16} aria-hidden="true" />}
+              title={t('settings.loggingTitle')}
+              description={t('settings.loggingHint')}
+            >
+              <input
+                type="checkbox"
+                aria-label={t('settings.loggingEnable')}
+                checked={logging.enabled}
+                onChange={logging.toggle}
+              />
+            </SettingsRow>
             <button type="button" className="btn" onClick={logging.openFolder}>
               {t('settings.loggingOpenFolder')}
             </button>

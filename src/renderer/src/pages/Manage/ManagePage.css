@@ -329,7 +329,7 @@
 
 .manage-social-list a {
   flex: 1;
-  color: var(--accent);
+  color: var(--accent-fg);
   font-size: 0.85rem;
   overflow: hidden;
   text-overflow: ellipsis;

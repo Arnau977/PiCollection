@@ -128,7 +128,7 @@ describe('SettingsPage', () => {
     const user = userEvent.setup()
     render(<SettingsPage />)
 
-    const blurCheckbox = screen.getByRole('checkbox', { name: /blurred/i })
+    const blurCheckbox = screen.getByRole('checkbox', { name: /blur nsfw thumbnails/i })
     expect(blurCheckbox).toBeChecked()
 
     await user.click(blurCheckbox)
@@ -140,7 +140,7 @@ describe('SettingsPage', () => {
     const user = userEvent.setup()
     render(<SettingsPage />)
 
-    const hideNamesCheckbox = screen.getByRole('checkbox', { name: /hide each media/i })
+    const hideNamesCheckbox = screen.getByRole('checkbox', { name: /^hide names$/i })
     expect(hideNamesCheckbox).not.toBeChecked()
 
     await user.click(hideNamesCheckbox)

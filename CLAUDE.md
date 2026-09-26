@@ -62,7 +62,18 @@ explícitamente si lo haces):
   viewports estrechos, fricción real del usuario, qué es lo primero que
   debería ver/hacer.
 - **Accesibilidad (20%)** — contraste, foco de teclado visible, roles ARIA,
-  tamaño de objetivo de click, `prefers-reduced-motion`.
+  tamaño de objetivo de click, `prefers-reduced-motion`. Para contraste,
+  valida cada par texto/fondo contra el umbral WCAG AA (4.5:1 texto normal,
+  3:1 texto grande ≥18.66px bold/24px regular o icono/componente UI) — usa el
+  [Adobe Color Contrast Analyzer](https://color.adobe.com/es/create/color-contrast-analyzer)
+  o el mismo cálculo de luminancia relativa WCAG 2.x aplicado directamente a
+  los tokens de `src/renderer/src/assets/base.css` (más práctico para
+  comprobar muchos pares a la vez que la UI interactiva). No asumas que un
+  color pasa por "verse bien" en un fondo oscuro — p.ej. `--accent` en sí
+  (~2.7:1 sobre `--color-background`/`--color-surface`) falla como color de
+  texto/icono aunque funcione bien como fondo de botón con `--accent-text`;
+  para texto/iconos sobre superficies oscuras usa `--accent-fg`, la variante
+  ya verificada ≥4.5:1.
 - **Estructura de apps de escritorio (20%)** — específicamente Electron y
   apps de gestión de archivos/colecciones: qué es "nativo" en ese contexto
   frente a un patrón web trasplantado sin pensar, y consistencia con

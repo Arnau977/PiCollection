@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Home, Images, Inbox, Database, Settings } from 'lucide-react'
@@ -87,17 +88,23 @@ export function AppHeader(): JSX.Element {
         </NavLink>
       </nav>
 
-      {status.state === 'available' && showUpdateToast && (
-        <Toast
-          message={t('settings.updateAvailable', { version: status.version })}
-          actionLabel={t('settings.updateToastView')}
-          onAction={() => {
-            setUpdateToastDismissed(true)
-            navigate(PATH.SETTINGS)
-          }}
-          onDismiss={() => setUpdateToastDismissed(true)}
-        />
-      )}
+      {status.state === 'available' &&
+        showUpdateToast &&
+        // Portaled to <body>: .app-sidebar's backdrop-filter makes it a
+        // containing block for `position: fixed` descendants, which would
+        // pin the toast to the sidebar's own box instead of the viewport.
+        createPortal(
+          <Toast
+            message={t('settings.updateAvailable', { version: status.version })}
+            actionLabel={t('settings.updateToastView')}
+            onAction={() => {
+              setUpdateToastDismissed(true)
+              navigate(PATH.SETTINGS)
+            }}
+            onDismiss={() => setUpdateToastDismissed(true)}
+          />,
+          document.body
+        )}
     </aside>
   )
 }
