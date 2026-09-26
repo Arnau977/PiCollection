@@ -737,15 +737,18 @@ describe('findEntityThumbnailsByClosure (series)', () => {
     // so the pairs table must not be a `SELECT ... UNION ALL` chain. 600 flat
     // series is only ~600 series in a real library - well within reach.
     const seriesCount = 600
-    for (let i = 0; i < seriesCount; i++) {
-      await seriesRepo.insertSeries(db, {
-        id: `s${i}`,
-        name: `Series ${i}`,
-        aliases_json: '[]',
-        created_at: 1,
-        parent_id: null
-      })
-    }
+    // One transaction: 600 separately-committed inserts took >5s on CI.
+    await db.transaction().execute(async (trx) => {
+      for (let i = 0; i < seriesCount; i++) {
+        await seriesRepo.insertSeries(trx, {
+          id: `s${i}`,
+          name: `Series ${i}`,
+          aliases_json: '[]',
+          created_at: 1,
+          parent_id: null
+        })
+      }
+    })
     const media = await baseMediaRow({ id: 'm1', route: '/s42.png', sfw: 1 })
     await mediaRepo.setMediaSeries(db, media.id, ['s42'])
 
