@@ -110,8 +110,8 @@ files below are a complete, working reference to diff against.
    needed here since `rating` is already a plain number both sides).
 
 6. **Renderer** — read `media.rating` wherever you render `MediaModel`
-   (`src/renderer/src/components/Media.tsx`), and add a control for it to
-   `src/renderer/src/pages/Media/MediaForm.tsx` (the single form used for both
+   (`src/renderer/src/components/Media/Media.tsx`), and add a control for it to
+   `src/renderer/src/pages/Media/MediaForm/MediaForm.tsx` (the single form used for both
    create and edit), following the pattern of the existing `isAiGenerated`
    checkbox.
 
@@ -190,7 +190,7 @@ add a `Location` entity, taggable on media the same way.
     Artists/Tags/Characters/Series as tabs of one "Metadata" page, not separate
     routes — add `'locations'` to the `ManageTab` union, a tab button, and a
     `<div hidden={tab !== 'locations'}>` panel next to the existing ones). Add
-    a `MultiSelectAutocomplete` field to `MediaForm.tsx` and the gallery
+    a `MultiSelectAutocomplete` field to `MediaFormTaxonomyFields.tsx` and the gallery
     `FilterBar` if it should be filterable, following the existing Tags wiring
     in both.
 
@@ -218,4 +218,6 @@ add a `Location` entity, taggable on media the same way.
 | Pages/components | `src/renderer/src/pages/`, `src/renderer/src/components/` |
 | Auto-update | `src/main/updater/` (see [`docs/auto-update.md`](auto-update.md)) |
 | Debug logging (settings, rotation, logger) | `src/main/logging/` |
-| SauceNAO tag suggestions | `src/main/services/sauceNao.*.ts` — the only module making outbound network calls for user content, and only on an explicit button press (see `src/renderer/src/pages/Media/MediaForm.tsx`) |
+| SauceNAO tag suggestions | `src/main/services/sauceNao/` — the only module that sends user content (a thumbnail) off the machine, and only on an explicit button press (see `src/renderer/src/pages/Media/MediaForm/SauceNaoSuggestionsPanel.tsx`) |
+| Local AI tagging (WD14) | `src/main/services/wd14Tagger.service.ts` + `wd14Runtime/` — runs on-device; the runtime/model are downloaded once, on request |
+| Browser extension bridge | `src/main/services/extensionBridge.*.ts` — local HTTP API on 127.0.0.1 for PiCollection Capture |

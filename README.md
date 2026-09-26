@@ -3,9 +3,9 @@
 A local-first desktop gallery for images, GIFs and videos, built with Electron,
 React and TypeScript. Media stays on disk exactly where it already is —
 PiCollection only indexes it in a local SQLite database, so you can tag,
-browse and filter a personal collection without uploading anything anywhere,
-with one explicit, opt-in exception: the "Suggest tags" button (see below)
-sends a thumbnail to saucenao.com only when you press it.
+browse and filter a personal collection without uploading anything anywhere.
+The one exception is explicit and opt-in: the "Suggest tags" button (see
+below) sends a thumbnail to saucenao.com, and only when you press it.
 
 ## For users
 
@@ -17,21 +17,35 @@ required.
   and run it. The app checks for new versions itself afterwards
   (**Settings → Updates**), with an optional beta channel.
 - **What it does**: see [Features](#features) below for the full list -
-  tagging, gallery search, NSFW handling, backup/restore, duplicate
-  detection, and tag suggestions (both an online one via SauceNAO and an
-  offline one that runs entirely on your machine).
+  tagging, gallery search, a Pending queue for media you'll tag later,
+  batch import from folders, NSFW handling, backup/restore, duplicate
+  detection, a browser extension, and tag suggestions (both an online one
+  via SauceNAO and an offline one that runs entirely on your machine).
 - **Your data stays local**: your media files never move or get uploaded.
-  The only network activity tied to your content is opt-in: pressing
-  "Suggest tags" sends a thumbnail to SauceNAO, and enabling local tag
-  suggestions downloads a one-time tagging runtime the first time you use
-  it. Everything else (browsing, tagging, search, backups) never leaves
-  your machine.
+  The only thing that ever sends your content anywhere is pressing
+  "Suggest tags", which sends a thumbnail to SauceNAO. Other network use,
+  all without your media:
+  - checking GitHub for app updates;
+  - a one-time download of the local tagging runtime and model, when you
+    enable it;
+  - Danbooru lookups by tag name: the tag-info button, tag autocomplete (only
+    if you add a Danbooru account), and the tags of a post SauceNAO matched.
+
+  Browsing, tagging, search and backups never leave your machine.
 
 ## Features
 
 - **Tagging** — attach Artists, Tags, Characters and Series to each item, with
   Characters/Series linked many-to-many. On the Metadata page, clicking an
   entry's media count opens the gallery filtered to it.
+- **Pending queue** — media you add now and tag later (single files, the
+  rest of a batch import in one click, or browser-extension captures).
+  Pending media stays out of the gallery, Metadata counts and Home stats
+  until you press "Save & mark resolved". It counts as added from that
+  moment, and its characters get linked to its series then.
+- **Batch import** — pick files and folders from your source folder and
+  step through them one by one (Previous/Next, Save, Send to pending), or
+  send all the remaining ones to Pending at once.
 - **Gallery search** — a single text field that suggests tags/characters/
   series/artists and supports `AND` (space), `OR`, `-exclude` and
   `(parentheses)` for grouping, e.g. `(Ishtar OR Ereshkigal) -Fujimaru`.
@@ -50,8 +64,9 @@ required.
 - **Tag suggestions** — on the add/edit media form, "Suggest tags" sends a
   thumbnail to [SauceNAO](https://saucenao.com) to find the source artwork
   and pre-fill its known artist/characters/series/tags. Works on images,
-  GIFs and videos (via the same poster-frame/first-frame thumbnail already
-  used elsewhere). Suggestions that match an existing character/series by
+  GIFs and videos (via the same thumbnail the gallery uses, or a frame
+  captured by the app when Windows can't thumbnail a video, e.g. in a
+  cloud-synced folder). Suggestions that match an existing character/series by
   name or alias are applied silently instead of being offered again. The
   matched post's URL fills an empty "Source URL" field; if you already typed
   a different one, it's offered as a one-click replacement instead. When
@@ -60,9 +75,15 @@ required.
   Requires a free SauceNAO API key set in Settings — SauceNAO no longer
   allows anonymous API access at all, so the suggestions button doesn't
   appear at all until a key is configured. This is the only feature that
-  sends anything off your machine, and only on that explicit button press.
-- **Browser extension captures** — the PiCollection Capture extension saves
-  the post you're viewing straight to the pending queue. It only links tags,
+  sends any of your media off your machine, and only on that explicit
+  button press.
+- **Local AI tagging** — "Suggest tags locally" runs a WD14 tagger entirely
+  on your device (no upload): tags, characters, series and a SFW/NSFW
+  hint. The runtime and model are downloaded once, from Settings.
+- **Browser extension captures** — the PiCollection Capture extension
+  (paired from Settings, over a local-only connection) saves the post
+  you're viewing straight to the pending queue. With it enabled, closing
+  the window keeps PiCollection running in the system tray. It only links tags,
   characters, series and artists you already have, and never creates new
   ones; everything the site had is kept as source info. When you tag the
   media, the names you don't have yet show up in the suggestions panel ("From
@@ -84,7 +105,10 @@ required.
 - **Duplicate detection** — adding media checks the new file's path and
   content against what's already in the library: an exact match (same file,
   even from a different path) blocks the add, and a visually similar file
-  (e.g. a recompressed or resized copy) shows a non-blocking warning.
+  (e.g. a recompressed or resized copy) shows a non-blocking warning. The
+  edit form and the detail page list visually similar media too; while
+  editing, that includes other pending items, so duplicates inside an
+  import batch show up.
 
 ## For developers
 
@@ -162,9 +186,10 @@ testing is available via `npm run build:unpack`.
 
 #### Releases & auto-update
 
-Pushing a `v*` tag (e.g. `v1.2.0`, or `v1.2.0-beta.1` for a beta) triggers
+Pushing a `v*` tag (plain `vX.Y.Z`, never a `-beta` suffix) triggers
 `.github/workflows/release.yml`, which builds Windows/macOS/Linux installers
-and publishes them to a GitHub Release. The app checks that same repo for
+into a draft GitHub Release. Publishing it as a pre-release makes it reach the
+beta channel; promoting it to "Latest" makes it reach stable. The app checks that same repo for
 updates and lets the user download/install from **Settings → Updates**, with
 a stable/beta channel choice. See [`docs/auto-update.md`](docs/auto-update.md)
 for the full flow.
