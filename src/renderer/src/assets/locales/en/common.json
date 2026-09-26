@@ -292,6 +292,8 @@
     "duplicateExact": "This file is already in the library as \"{{name}}\".",
     "duplicateSimilar": "This looks similar to media already in the library:",
     "duplicateSimilarMatch": "{{distance}}/64 difference",
+    "similarToExisting": "This looks similar to media already in the app:",
+    "similarPendingBadge": "pending",
     "duplicatePreviewLabel": "Preview \"{{name}}\"",
     "suggestionsTitle": "Suggestions",
     "suggestionsExpand": "Show suggestions panel",

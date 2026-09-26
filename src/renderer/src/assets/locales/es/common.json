@@ -292,6 +292,8 @@
     "duplicateExact": "Este archivo ya está en la biblioteca como \"{{name}}\".",
     "duplicateSimilar": "Se parece a media que ya está en la biblioteca:",
     "duplicateSimilarMatch": "{{distance}}/64 de diferencia",
+    "similarToExisting": "Se parece a media que ya están en la app:",
+    "similarPendingBadge": "en pending",
     "duplicatePreviewLabel": "Vista previa de \"{{name}}\"",
     "suggestionsTitle": "Sugerencias",
     "suggestionsExpand": "Mostrar panel de sugerencias",
