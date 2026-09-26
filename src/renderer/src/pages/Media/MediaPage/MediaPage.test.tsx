@@ -796,7 +796,7 @@ describe('MediaPage mark resolved', () => {
     expect(refetchMock).toHaveBeenCalled()
   })
 
-  it('clicking Mark resolved inside the pending queue navigates to the next pending item', async () => {
+  it('saving & resolving inside the pending queue navigates to the next pending item', async () => {
     mediaData = { ...sampleMedia, pendingTagging: true }
     const user = userEvent.setup()
     Object.defineProperty(window, 'api', {
@@ -830,7 +830,7 @@ describe('MediaPage mark resolved', () => {
       </MemoryRouter>
     )
     await screen.findByRole('button', { name: 'Save' })
-    await user.click(screen.getByRole('button', { name: 'Mark resolved' }))
+    await user.click(screen.getByRole('button', { name: 'Save & mark resolved' }))
 
     await waitFor(() =>
       expect(navigateMock).toHaveBeenCalledWith('/media/2', {

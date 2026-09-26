@@ -319,34 +319,70 @@ describe('MediaForm onMarkResolved', () => {
     pendingTagging: true
   }
 
-  it('shows Mark resolved when editing pending media with the callback provided', () => {
+  it('shows Save & mark resolved when editing pending media with the callback provided', () => {
     renderForm({ media: pendingMedia, onMarkResolved: vi.fn() })
 
-    expect(screen.getByRole('button', { name: 'Mark resolved' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save & mark resolved' })).toBeInTheDocument()
   })
 
-  it('does not show Mark resolved when the media is not pending', () => {
+  it('does not show Save & mark resolved when the media is not pending', () => {
     renderForm({ media: { ...pendingMedia, pendingTagging: false }, onMarkResolved: vi.fn() })
 
-    expect(screen.queryByRole('button', { name: 'Mark resolved' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Save & mark resolved' })).not.toBeInTheDocument()
   })
 
-  it('does not show Mark resolved when no onMarkResolved callback is provided', () => {
+  it('does not show Save & mark resolved when no onMarkResolved callback is provided', () => {
     renderForm({ media: pendingMedia })
 
-    expect(screen.queryByRole('button', { name: 'Mark resolved' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Save & mark resolved' })).not.toBeInTheDocument()
   })
 
-  it('calls onMarkResolved without submitting the form', async () => {
-    const mediaUpdate = vi.fn()
-    setApi({ media: { update: mediaUpdate } })
+  it('saves what was tagged in the form before resolving it', async () => {
+    tagsData = [{ id: 't1', name: 'Landscape' }]
+    const calls: string[] = []
+    const mediaUpdate = vi.fn().mockImplementation(async () => {
+      calls.push('update')
+      return { success: true, data: { ...pendingMedia, tags: tagsData } }
+    })
+    const clearPendingTagging = vi.fn().mockImplementation(async () => {
+      calls.push('resolve')
+      return { success: true, data: { ...pendingMedia, pendingTagging: false } }
+    })
+    setApi({ media: { update: mediaUpdate, clearPendingTagging } })
     const onMarkResolved = vi.fn()
+    const user = userEvent.setup()
     renderForm({ media: pendingMedia, onMarkResolved })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Mark resolved' }))
+    const [, tagsInput] = screen.getAllByRole('combobox')
+    await user.type(tagsInput, 'Lands')
+    await user.click(await screen.findByRole('option', { name: 'Landscape' }))
+    await user.click(screen.getByRole('button', { name: 'Save & mark resolved' }))
 
     await vi.waitFor(() => expect(onMarkResolved).toHaveBeenCalledTimes(1))
-    expect(mediaUpdate).not.toHaveBeenCalled()
+    expect(mediaUpdate).toHaveBeenCalledWith('m1', expect.objectContaining({ tagIds: ['t1'] }))
+    expect(calls).toEqual(['update', 'resolve'])
+  })
+
+  it('does not resolve when saving the form fails', async () => {
+    const clearPendingTagging = vi.fn()
+    setApi({
+      media: {
+        update: vi.fn().mockResolvedValue({
+          success: false,
+          error: { code: 'INTERNAL', message: 'Disk full' }
+        }),
+        clearPendingTagging
+      }
+    })
+    const onMarkResolved = vi.fn()
+    const user = userEvent.setup()
+    renderForm({ media: pendingMedia, onMarkResolved })
+
+    await user.click(screen.getByRole('button', { name: 'Save & mark resolved' }))
+
+    expect(await screen.findByText('Disk full')).toBeInTheDocument()
+    expect(clearPendingTagging).not.toHaveBeenCalled()
+    expect(onMarkResolved).not.toHaveBeenCalled()
   })
 })
 

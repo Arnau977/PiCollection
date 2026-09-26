@@ -259,6 +259,7 @@
     "deleting": "Deleting...",
     "saving": "Saving...",
     "markResolved": "Mark resolved",
+    "saveAndResolve": "Save & mark resolved",
     "confirmDelete": "Remove this media from PiCollection? The file on disk won't be deleted.",
     "aiGeneratedTitle": "Generated using AI",
     "aiGeneratedBadge": "AI",
