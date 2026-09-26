@@ -69,6 +69,11 @@ export const MediaBatchUpdateAssociationsSchema = z
 
 export const IdSchema = z.string().min(1)
 
+export const FindSimilarSchema = z.object({
+  id: IdSchema,
+  includePending: z.boolean().optional()
+})
+
 export const RouteSchema = z.object({ route: z.string().min(1) })
 
 export const DanbooruCredentialsInputSchema = z.object({

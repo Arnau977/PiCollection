@@ -5,6 +5,7 @@ import { ipcHandler } from './helpers'
 import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
 import {
   CacheThumbnailSchema,
+  FindSimilarSchema,
   IPC,
   IdSchema,
   MediaBatchUpdateAssociationsSchema,
@@ -63,7 +64,9 @@ export function registerMediaHandlers(): void {
   )
   ipcMain.handle(
     IPC.media.clearPendingTagging,
-    ipcHandler(IPC.media.clearPendingTagging, IdSchema, (id) => mediaService.clearPendingTagging(id))
+    ipcHandler(IPC.media.clearPendingTagging, IdSchema, (id) =>
+      mediaService.clearPendingTagging(id)
+    )
   )
   ipcMain.handle(
     IPC.media.delete,
@@ -87,6 +90,8 @@ export function registerMediaHandlers(): void {
   )
   ipcMain.handle(
     IPC.media.findSimilar,
-    ipcHandler(IPC.media.findSimilar, IdSchema, (id) => mediaService.findSimilarMedia(id))
+    ipcHandler(IPC.media.findSimilar, FindSimilarSchema, ({ id, includePending }) =>
+      mediaService.findSimilarMedia(id, undefined, includePending)
+    )
   )
 }

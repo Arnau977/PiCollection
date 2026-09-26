@@ -79,8 +79,11 @@ export const api = {
       ipcRenderer.invoke(IPC.media.cacheThumbnail, { route, png }),
     checkDuplicate: (route: string): Promise<IpcResult<MediaDuplicateCheck>> =>
       ipcRenderer.invoke(IPC.media.checkDuplicate, { route }),
-    findSimilar: (mediaId: string): Promise<IpcResult<MediaDuplicateMatch[]>> =>
-      ipcRenderer.invoke(IPC.media.findSimilar, mediaId)
+    findSimilar: (
+      mediaId: string,
+      options: { includePending?: boolean } = {}
+    ): Promise<IpcResult<MediaDuplicateMatch[]>> =>
+      ipcRenderer.invoke(IPC.media.findSimilar, { id: mediaId, ...options })
   },
   artist: {
     getAll: (): Promise<IpcResult<ArtistModel[]>> => ipcRenderer.invoke(IPC.artist.getAll),

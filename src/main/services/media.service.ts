@@ -198,7 +198,8 @@ async function findSimilarByPhash(
   db: Kysely<DB>,
   phash: string,
   excludeId: string | null,
-  limit: number
+  limit: number,
+  includePending = false
 ): Promise<{ media: MediaModel; distance: number }[]> {
   const candidates = await mediaRepo.listAllMediaHashes(db)
   const scored = candidates
@@ -217,11 +218,12 @@ async function findSimilarByPhash(
     )
   ).filter(
     (entry): entry is { media: MediaModel; distance: number } =>
-      // Pending media only ever surfaces through the Pending queue - keep it out
+      // Pending media only ever surfaces through the Pending queue (or, on
+      // request, the pending edit form's own similar list) - keep it out
       // of the detail page's "Similar media" panel and the pre-import
       // near-duplicate warning. Exact duplicates are still caught upstream by
       // route/content-hash matching, which this phash pass doesn't cover.
-      entry !== null && !entry.media.pendingTagging
+      entry !== null && (includePending || !entry.media.pendingTagging)
   )
 }
 
@@ -246,12 +248,14 @@ export const mediaService = {
 
   async findSimilarMedia(
     mediaId: string,
-    limit: number = SIMILAR_MEDIA_LIMIT
+    limit: number = SIMILAR_MEDIA_LIMIT,
+    /** The pending edit form wants other pending items too (duplicates within an import batch). */
+    includePending = false
   ): Promise<{ media: MediaModel; distance: number }[]> {
     const db = getDb()
     const row = await mediaRepo.findMediaRowById(db, mediaId)
     if (!row?.phash) return []
-    return findSimilarByPhash(db, row.phash, mediaId, limit)
+    return findSimilarByPhash(db, row.phash, mediaId, limit, includePending)
   },
 
   async getMediaFiltered(filters: MediaFilters, sorting?: Sorting): Promise<MediaFilteredResult> {
@@ -282,7 +286,13 @@ export const mediaService = {
     const characterClosures = flatCharacterIds.length
       ? buildClosureMap(await characterRepo.findCharacterHierarchy(db), flatCharacterIds)
       : undefined
-    const rows = await mediaRepo.findMediaIds(db, filters, sorting, seriesClosures, characterClosures)
+    const rows = await mediaRepo.findMediaIds(
+      db,
+      filters,
+      sorting,
+      seriesClosures,
+      characterClosures
+    )
     return rows.map((row) => row.id)
   },
 
@@ -434,7 +444,8 @@ export const mediaService = {
 
     const touchedKinds: EntityKind[] = []
     if (input.addTagIds.length || input.removeTagIds.length) touchedKinds.push('tag')
-    if (input.addCharacterIds.length || input.removeCharacterIds.length) touchedKinds.push('character')
+    if (input.addCharacterIds.length || input.removeCharacterIds.length)
+      touchedKinds.push('character')
     if (input.addSeriesIds.length || input.removeSeriesIds.length) touchedKinds.push('series')
     if (touchedKinds.length) notifyEntitiesChanged(touchedKinds)
   },
@@ -462,7 +473,8 @@ export const mediaService = {
 
     await db.transaction().execute(async (trx) => {
       await mediaRepo.updateMediaRow(trx, id, { pending_tagging: 0, created_at: Date.now() })
-      if (linksCharacters) await characterRepo.addSeriesToCharacters(trx, characterIds, seriesIds[0])
+      if (linksCharacters)
+        await characterRepo.addSeriesToCharacters(trx, characterIds, seriesIds[0])
     })
     if (linksCharacters) notifyEntitiesChanged(['character'])
 

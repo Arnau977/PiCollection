@@ -4,15 +4,21 @@ import type { MediaDuplicateCheck, MediaInput, MediaModel } from '@shared/models
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { Lightbox } from '../../../components/Lightbox/Lightbox'
 import { MediaFileActions } from '../../../components/MediaFileActions/MediaFileActions'
-import { MediaHoverPreview } from '../../../components/MediaHoverPreview/MediaHoverPreview'
 import type { InitialFile, QueueInfo } from './MediaForm.types'
+import { EditedMediaSimilarWarning, SimilarMediaWarning } from './SimilarMediaWarning'
 
 /**
  * Where the file lives on disk - file name first (what the user recognizes),
  * folder second, both truncated with the full path on hover. Routes may be
  * stored relative to the source folder; the actions resolve that themselves.
  */
-function MediaFileLocation({ route, type }: { route: string; type: MediaModel['type'] }): JSX.Element {
+function MediaFileLocation({
+  route,
+  type
+}: {
+  route: string
+  type: MediaModel['type']
+}): JSX.Element {
   const { t } = useTranslation()
   const lastSeparator = Math.max(route.lastIndexOf('/'), route.lastIndexOf('\\'))
   const fileName = route.slice(lastSeparator + 1)
@@ -114,19 +120,13 @@ export function MediaFormFileGroup({
           {t('addMedia.duplicateExact', { name: duplicateCheck.exactMatch.name })}
         </p>
       )}
-      {!duplicateCheck?.exactMatch && duplicateCheck && duplicateCheck.similar.length > 0 && (
-        <div className="duplicate-warning">
-          <p>{t('addMedia.duplicateSimilar')}</p>
-          <ul className="chip-list">
-            {duplicateCheck.similar.map(({ media: similarMedia, distance }) => (
-              <li key={similarMedia.id}>
-                <MediaHoverPreview media={similarMedia}>{similarMedia.name}</MediaHoverPreview> (
-                {t('addMedia.duplicateSimilarMatch', { distance })})
-              </li>
-            ))}
-          </ul>
-        </div>
+      {!duplicateCheck?.exactMatch && duplicateCheck && (
+        <SimilarMediaWarning
+          matches={duplicateCheck.similar}
+          title={t('addMedia.duplicateSimilar')}
+        />
       )}
+      {isEditing && media && <EditedMediaSimilarWarning mediaId={media.id} />}
     </div>
   )
 }
