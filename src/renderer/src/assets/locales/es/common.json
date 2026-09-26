@@ -410,6 +410,8 @@
     "videoHint": "Funciona mejor con arte original; puede que no reconozca clips de un anime o episodio.",
     "similarity": "{{value}}% de coincidencia",
     "viewSource": "Ver fuente",
+    "sourceUrlLabel": "URL de origen",
+    "useSourceUrl": "Usar la URL de este post",
     "applied": "Se añadieron {{count}} sugerencias",
     "noMatch": "No se encontró ninguna coincidencia fiable.",
     "dismiss": "Descartar",

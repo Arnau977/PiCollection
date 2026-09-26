@@ -52,7 +52,9 @@ required.
   and pre-fill its known artist/characters/series/tags. Works on images,
   GIFs and videos (via the same poster-frame/first-frame thumbnail already
   used elsewhere). Suggestions that match an existing character/series by
-  name or alias are applied silently instead of being offered again. When
+  name or alias are applied silently instead of being offered again. The
+  matched post's URL fills an empty "Source URL" field; if you already typed
+  a different one, it's offered as a one-click replacement instead. When
   the match includes a known artist social profile (Pixiv, Twitter/X), it's
   linked automatically if you create that artist from the suggestion.
   Requires a free SauceNAO API key set in Settings — SauceNAO no longer

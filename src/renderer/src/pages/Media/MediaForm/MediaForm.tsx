@@ -268,6 +268,7 @@ export function MediaForm({
             input={input}
             saving={saving}
             onApplyRating={(sfw) => setInput((prev) => ({ ...prev, sfw }))}
+            onApplySourceUrl={(sourceUrl) => setInput((prev) => ({ ...prev, sourceUrl }))}
           />
         </div>
       </div>

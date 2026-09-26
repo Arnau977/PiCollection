@@ -77,7 +77,8 @@ describe('useSauceNaoSuggestions', () => {
       artistId: 'a1',
       tagIds: ['t1'],
       characterIds: ['c1'],
-      seriesIds: ['s1']
+      seriesIds: ['s1'],
+      sourceUrl: 'https://danbooru.donmai.us/posts/1'
     })
     expect(result.current.missing).toEqual({
       artist: [],
