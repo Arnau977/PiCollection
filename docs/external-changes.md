@@ -11,6 +11,10 @@ When an entry ships in a release, move it under that version's heading
 
 ## Unreleased
 
+(nothing yet)
+
+## 1.6.0
+
 ### Extension capture: link booru names to existing library entries
 
 - **Date:** 2026-09-26
