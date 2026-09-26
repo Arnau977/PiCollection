@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import ManagePage from './ManagePage'
 
@@ -64,13 +65,13 @@ beforeEach(() => {
 
 describe('ManagePage', () => {
   it('shows the artists tab by default', () => {
-    render(<ManagePage />)
+    render(<ManagePage />, { wrapper: MemoryRouter })
     expect(screen.getByText('Jane Doe')).toBeInTheDocument()
   })
 
   it('switches to the tags tab', async () => {
     const user = userEvent.setup()
-    render(<ManagePage />)
+    render(<ManagePage />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('tab', { name: 'Tags' }))
 
@@ -80,7 +81,7 @@ describe('ManagePage', () => {
 
   it('switches to the characters tab', async () => {
     const user = userEvent.setup()
-    render(<ManagePage />)
+    render(<ManagePage />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('tab', { name: 'Characters' }))
 
@@ -89,7 +90,7 @@ describe('ManagePage', () => {
 
   it('switches to the series tab', async () => {
     const user = userEvent.setup()
-    render(<ManagePage />)
+    render(<ManagePage />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('tab', { name: 'Series' }))
 
@@ -100,7 +101,7 @@ describe('ManagePage', () => {
 
   it('preserves a draft name after switching tabs away and back', async () => {
     const user = userEvent.setup()
-    render(<ManagePage />)
+    render(<ManagePage />, { wrapper: MemoryRouter })
 
     await user.type(within(activePanel()).getByLabelText('Name'), 'Draft Artist')
     await user.click(screen.getByRole('tab', { name: 'Tags' }))

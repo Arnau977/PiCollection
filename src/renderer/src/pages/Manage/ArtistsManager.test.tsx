@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import type { ArtistModel } from '@shared/models'
 import { ArtistsManager } from './ArtistsManager'
@@ -57,7 +58,7 @@ beforeEach(() => {
 
 describe('ArtistsManager', () => {
   it('renders existing artists', () => {
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('Jane Doe')).toBeInTheDocument()
     expect(screen.getByText('John Smith')).toBeInTheDocument()
   })
@@ -66,7 +67,7 @@ describe('ArtistsManager', () => {
     const user = userEvent.setup()
     const create = vi.fn().mockResolvedValue({ success: true, data: {} })
     setApi({ create })
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByLabelText('Name'), 'New Artist')
     await user.click(screen.getByRole('button', { name: 'Add' }))
@@ -76,13 +77,13 @@ describe('ArtistsManager', () => {
   })
 
   it('does not show a social links section while creating a new artist', () => {
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
     expect(screen.queryByText('Social links')).not.toBeInTheDocument()
   })
 
   it('switches the panel into edit mode, pre-filling the name and showing its social links', async () => {
     const user = userEvent.setup()
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Jane Doe' }))
 
@@ -96,7 +97,7 @@ describe('ArtistsManager', () => {
     const user = userEvent.setup()
     const update = vi.fn().mockResolvedValue({ success: true, data: {} })
     setApi({ update })
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Jane Doe' }))
     const input = screen.getByLabelText('Name')
@@ -110,7 +111,7 @@ describe('ArtistsManager', () => {
 
   it('returns to the add-new form when editing is cancelled', async () => {
     const user = userEvent.setup()
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Jane Doe' }))
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
@@ -123,7 +124,7 @@ describe('ArtistsManager', () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Delete Jane Doe' }))
 
@@ -140,7 +141,7 @@ describe('ArtistsManager', () => {
     const user = userEvent.setup()
     const del = vi.fn().mockResolvedValue({ success: true, data: undefined })
     setApi({ delete: del })
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Delete John Smith' }))
 
@@ -153,7 +154,7 @@ describe('ArtistsManager', () => {
     const user = userEvent.setup()
     const addSocialLink = vi.fn().mockResolvedValue({ success: true, data: {} })
     setApi({ addSocialLink })
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Jane Doe' }))
     await user.type(screen.getByLabelText('Label'), 'Instagram')
@@ -171,7 +172,7 @@ describe('ArtistsManager', () => {
     const user = userEvent.setup()
     const removeSocialLink = vi.fn().mockResolvedValue({ success: true, data: {} })
     setApi({ removeSocialLink })
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     await user.click(screen.getByRole('button', { name: 'Edit Jane Doe' }))
     await user.click(screen.getByRole('button', { name: 'Delete Twitter' }))
@@ -182,13 +183,13 @@ describe('ArtistsManager', () => {
 
   it('shows an empty state when there are no artists', () => {
     artistsData = []
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
     expect(screen.getByText('Nothing here yet.')).toBeInTheDocument()
   })
 
   it('disables the Add button until a name is entered', async () => {
     const user = userEvent.setup()
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled()
 
@@ -199,7 +200,7 @@ describe('ArtistsManager', () => {
 
   it('filters the list by search query', async () => {
     const user = userEvent.setup()
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     await user.type(screen.getByRole('searchbox'), 'jane')
 
@@ -212,13 +213,13 @@ describe('ArtistsManager', () => {
   it('persists the chosen sort order and re-applies it on next render', async () => {
     const user = userEvent.setup()
     window.localStorage.clear()
-    const { unmount } = render(<ArtistsManager />)
+    const { unmount } = render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     await user.selectOptions(screen.getByLabelText('Sort by'), 'createdAt')
     await user.click(screen.getByRole('button', { name: 'Ascending' }))
 
     unmount()
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     expect(screen.getByLabelText('Sort by')).toHaveValue('createdAt')
     expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
@@ -229,7 +230,7 @@ describe('ArtistsManager', () => {
       { id: 'a1', name: 'Jane Doe', createdAt: 1700000000000, socials: [], mediaCount: 29000 },
       { id: 'a2', name: 'John Smith', createdAt: 1700000001000, socials: [], mediaCount: 0 }
     ]
-    render(<ArtistsManager />)
+    render(<ArtistsManager />, { wrapper: MemoryRouter })
 
     const janeItem = screen.getByText('Jane Doe').closest('li')
     const johnItem = screen.getByText('John Smith').closest('li')

@@ -24,7 +24,7 @@ import {
   buildEntityTree,
   computeRolledUpCounts
 } from '../../utils/buildEntityTree'
-import { formatCompactCount } from '../../utils/formatCompactCount'
+import { EntityCountButton } from '../../components/EntityCountButton/EntityCountButton'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { SeriesModel } from '@shared/models'
 
@@ -171,7 +171,7 @@ export function SeriesManager(): JSX.Element {
             <span className="manage-item-aliases">{series.aliases.join(', ')}</span>
           )}
         </div>
-        <span className="manage-item-count">{formatCompactCount(count)}</span>
+        <EntityCountButton kind="series" id={series.id} name={series.name} count={count} />
         <button
           type="button"
           className="icon-btn"
