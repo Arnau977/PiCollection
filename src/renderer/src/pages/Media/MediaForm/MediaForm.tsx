@@ -88,7 +88,6 @@ export function MediaForm({
 
   const drafts = useMediaFormDrafts({ input, setInput, artists, tags, characters, series })
   const suggestions = useMediaFormSuggestions({
-    input,
     setInput,
     artists,
     tags,
@@ -157,7 +156,8 @@ export function MediaForm({
     setSaving(false)
     if (result.success) {
       drafts.refetchCreated()
-      await suggestions.linkCharactersToSoleSeries(resolvedSeriesIds, resolvedCharacterIds)
+      if (!result.data.pendingTagging)
+        await suggestions.linkCharactersToSoleSeries(resolvedSeriesIds, resolvedCharacterIds)
       if (!media) setQueueSavedMedia(result.data)
       onSaved(result.data)
     } else {
@@ -178,13 +178,11 @@ export function MediaForm({
       setError(err instanceof Error ? err.message : 'Failed to save')
       return
     }
-    const { resolvedInput, resolvedSeriesIds, resolvedCharacterIds } = resolution
-
-    const result = await window.api.media.create(resolvedInput)
+    // Character/series links wait until the media is marked resolved.
+    const result = await window.api.media.create(resolution.resolvedInput)
     setSaving(false)
     if (result.success) {
       drafts.refetchCreated()
-      await suggestions.linkCharactersToSoleSeries(resolvedSeriesIds, resolvedCharacterIds)
       ;(onSentToPending ?? onSaved)(result.data)
     } else {
       setError(result.error.message)

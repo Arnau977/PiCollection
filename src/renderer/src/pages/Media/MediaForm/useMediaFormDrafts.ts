@@ -30,7 +30,7 @@ export interface MediaFormDrafts {
   pendingSeries: SeriesModel[]
   createArtist: (name: string, social?: { name: string; url: string }) => void
   createTag: (name: string) => void
-  createCharacter: (name: string, seriesIds?: string[]) => void
+  createCharacter: (name: string) => void
   createSeries: (name: string) => string
   /**
    * A "missing" series chip isn't always actually missing - a SauceNAO series
@@ -67,7 +67,6 @@ export function useMediaFormDrafts({
   const [pendingSeries, setPendingSeries] = useState<SeriesModel[]>([])
   const [pendingCharacters, setPendingCharacters] = useState<CharacterModel[]>([])
   const [pendingArtists, setPendingArtists] = useState<ArtistModel[]>([])
-  const pendingCharacterSeriesIds = useRef(new Map<string, string[]>())
   const pendingArtistSocials = useRef(new Map<string, { name: string; url: string }>())
 
   function createArtist(name: string, social?: { name: string; url: string }): void {
@@ -83,11 +82,12 @@ export function useMediaFormDrafts({
     setInput((prev) => ({ ...prev, tagIds: [...(prev.tagIds ?? []), tag.id] }))
   }
 
-  function createCharacter(name: string, seriesIds?: string[]): void {
+  // A new character starts with no series of its own: its series is only
+  // derived from what the media actually ends up tagged with (see
+  // linkCharactersToSoleSeries), never from a suggestion the user didn't accept.
+  function createCharacter(name: string): void {
     const draft: CharacterModel = { id: crypto.randomUUID(), name, series: [] }
     setPendingCharacters((prev) => [...prev, draft])
-    if (seriesIds && seriesIds.length > 0)
-      pendingCharacterSeriesIds.current.set(draft.id, seriesIds)
     setInput((prev) => ({
       ...prev,
       characterIds: [...(prev.characterIds ?? []), draft.id]
@@ -139,11 +139,7 @@ export function useMediaFormDrafts({
   }
 
   async function resolvePendingSeriesIds(): Promise<Map<string, string>> {
-    const referenced = new Set([
-      ...(input.seriesIds ?? []),
-      ...pendingCharacters.flatMap((c) => pendingCharacterSeriesIds.current.get(c.id) ?? [])
-    ])
-    const toResolve = pendingSeries.filter((draft) => referenced.has(draft.id))
+    const toResolve = pendingSeries.filter((draft) => (input.seriesIds ?? []).includes(draft.id))
     if (toResolve.length === 0) return new Map()
 
     const freshResult = await window.api.series.getAll()
@@ -179,9 +175,7 @@ export function useMediaFormDrafts({
     return result.data.id
   }
 
-  async function resolvePendingCharacterIds(
-    seriesIdMap: Map<string, string>
-  ): Promise<Map<string, string>> {
+  async function resolvePendingCharacterIds(): Promise<Map<string, string>> {
     const toResolve = pendingCharacters.filter((draft) =>
       (input.characterIds ?? []).includes(draft.id)
     )
@@ -195,10 +189,7 @@ export function useMediaFormDrafts({
         const match = freshCharacters.find((c) => c.name.toLowerCase() === draft.name.toLowerCase())
         if (match) return [draft.id, match.id] as const
 
-        const seriesIds = (pendingCharacterSeriesIds.current.get(draft.id) ?? []).map(
-          (id) => seriesIdMap.get(id) ?? id
-        )
-        const result = await window.api.character.create({ name: draft.name, seriesIds })
+        const result = await window.api.character.create({ name: draft.name, seriesIds: [] })
         if (!result.success) throw new Error(result.error.message)
         return [draft.id, result.data.id] as const
       })
@@ -207,12 +198,12 @@ export function useMediaFormDrafts({
   }
 
   async function resolveForSave(overrides?: Partial<MediaInput>): Promise<MediaFormSaveResolution> {
-    const [seriesIdMap, tagIdMap, resolvedArtistId] = await Promise.all([
+    const [seriesIdMap, tagIdMap, resolvedArtistId, characterIdMap] = await Promise.all([
       resolvePendingSeriesIds(),
       resolvePendingTagIds(),
-      resolvePendingArtistId()
+      resolvePendingArtistId(),
+      resolvePendingCharacterIds()
     ])
-    const characterIdMap = await resolvePendingCharacterIds(seriesIdMap)
 
     const resolvedSeriesIds = (input.seriesIds ?? []).map((id) => seriesIdMap.get(id) ?? id)
     const resolvedCharacterIds = (input.characterIds ?? []).map(

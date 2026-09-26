@@ -17,7 +17,6 @@ interface EntityListWithRefetch<T> extends EntityList<T> {
 }
 
 interface UseMediaFormSuggestionsArgs {
-  input: MediaInput
   setInput: Dispatch<SetStateAction<MediaInput>>
   artists: EntityList<ArtistModel>
   tags: EntityList<TagModel>
@@ -48,7 +47,9 @@ export interface MediaFormSuggestions {
    * updated to include it - the reverse of the existing "picking a character
    * with exactly one series implies that series" rule, and works regardless
    * of whether the characters/series were picked manually or via a
-   * suggestion.
+   * suggestion. Skipped for pending media, whose tagging is unconfirmed - the
+   * main process applies the same rule when it's marked resolved
+   * (media.service clearPendingTagging).
    */
   linkCharactersToSoleSeries: (seriesIds: string[], characterIds: string[]) => Promise<void>
 }
@@ -59,7 +60,6 @@ export interface MediaFormSuggestions {
  * hand or accepted from a suggestion chip.
  */
 export function useMediaFormSuggestions({
-  input,
   setInput,
   artists,
   tags,
@@ -136,31 +136,6 @@ export function useMediaFormSuggestions({
     })
   }
 
-  /**
-   * A new character should link to its series the same way manually picking
-   * an existing single-series character already does (see `withImpliedSeries`
-   * above). If the only suggested series is itself still unconfirmed (a
-   * "missing" chip, not yet created), create/attach it now instead of
-   * leaving the character unlinked until the user separately clicks that
-   * chip too - there's nothing ambiguous to resolve when only one candidate
-   * exists. (If a series suggestion *was* auto-applied, `input.seriesIds` is
-   * already non-empty by the time this runs, so the check below never needs
-   * to separately count applied + missing suggestions.)
-   */
-  async function resolveSoleMissingSeries(
-    missingSeriesNames: string[],
-    dismissSeries: (name: string) => void
-  ): Promise<string[]> {
-    const current = input.seriesIds ?? []
-    if (current.length > 0) return current
-    if (missingSeriesNames.length !== 1) return current
-
-    const soleSeriesName = missingSeriesNames[0]
-    const seriesId = drafts.attachExistingOrCreateSeries(soleSeriesName)
-    dismissSeries(soleSeriesName)
-    return [seriesId]
-  }
-
   async function addMissingSuggestion(category: SuggestionCategory, name: string): Promise<void> {
     if (category === 'artist') {
       const artist = sauce.match?.artist
@@ -170,12 +145,10 @@ export function useMediaFormSuggestions({
           : undefined
       drafts.createArtist(name, social)
     } else if (category === 'tags') drafts.createTag(name)
-    else if (category === 'characters') {
-      const seriesIds = await resolveSoleMissingSeries(sauce.missing.series, (seriesName) =>
-        sauce.dismiss('series', seriesName)
-      )
-      drafts.createCharacter(name, seriesIds)
-    } else drafts.attachExistingOrCreateSeries(name)
+    // Accepting a character never accepts a suggested series along with it -
+    // that series chip stays for the user to accept or ignore on its own.
+    else if (category === 'characters') drafts.createCharacter(name)
+    else drafts.attachExistingOrCreateSeries(name)
     sauce.dismiss(category, name)
   }
 
@@ -189,11 +162,7 @@ export function useMediaFormSuggestions({
       // wiki or to dismiss it from the suggestion list below.
       drafts.createTag(titleCaseTagName(name))
     } else if (category === 'characters') {
-      const missingSeriesNames = wd14.missing.series.map((entry) => entry.name)
-      const seriesIds = await resolveSoleMissingSeries(missingSeriesNames, (seriesName) =>
-        wd14.dismiss('series', seriesName)
-      )
-      drafts.createCharacter(name, seriesIds)
+      drafts.createCharacter(name)
     } else {
       drafts.attachExistingOrCreateSeries(name)
     }
@@ -204,11 +173,15 @@ export function useMediaFormSuggestions({
     seriesIds: string[],
     characterIds: string[]
   ): Promise<void> {
-    if (seriesIds.length !== 1) return
+    if (seriesIds.length !== 1 || characterIds.length === 0) return
     const [soleSeriesId] = seriesIds
 
+    // Fetched fresh rather than read from `characters.data`: a character
+    // created by this same save isn't in that list yet.
+    const fresh = await window.api.character.getAll()
+    const allCharacters = fresh.success ? fresh.data : characters.data
     const toUpdate = characterIds
-      .map((id) => characters.data.find((character) => character.id === id))
+      .map((id) => allCharacters.find((character) => character.id === id))
       .filter(
         (character): character is CharacterModel =>
           character != null && !character.series.some((linked) => linked.id === soleSeriesId)

@@ -119,7 +119,11 @@ there.
   redundant or low-value cases. This is about how many tests get written,
   not about skipping test runs - still run the full suite before anything
   high-stakes (a release, pushing to an open PR).
-- Don't spawn subagents - do the work directly in this session.
+- Don't spawn subagents - do the work directly in this session. Only
+  exception: work spanning more than one repo (e.g. this app plus the
+  PiCollection Capture extension) may use subagents to parallelize, but the
+  plan must say so explicitly (which repo/part each subagent takes) and the
+  user must approve it before any subagent is launched.
 - Keep files human-readable: no need to force files tiny, but when one grows
   large enough to become hard to navigate (a component/hook mixing several
   distinct concerns), split it - extract hooks for logic and components for

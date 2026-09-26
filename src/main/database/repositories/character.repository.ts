@@ -71,6 +71,20 @@ export async function setCharacterSeries(
   }
 }
 
+/** Links each character to `seriesId`, leaving existing links untouched. */
+export async function addSeriesToCharacters(
+  db: Kysely<DB>,
+  characterIds: string[],
+  seriesId: string
+): Promise<void> {
+  if (!characterIds.length) return
+  await db
+    .insertInto('character_series')
+    .values(characterIds.map((characterId) => ({ character_id: characterId, series_id: seriesId })))
+    .onConflict((oc) => oc.doNothing())
+    .execute()
+}
+
 export async function findSeriesForCharacterIds(
   db: Kysely<DB>,
   characterIds: string[]

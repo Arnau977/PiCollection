@@ -412,7 +412,7 @@ describe('AddMediaPage', () => {
     expect(tagCreate).not.toHaveBeenCalled()
   })
 
-  it('resolves a pending character with an implied still-pending series to real ids on save', async () => {
+  it('saves an accepted suggested character without the suggested series it never accepted', async () => {
     const lookup = vi.fn().mockResolvedValue({
       success: true,
       data: {
@@ -451,20 +451,18 @@ describe('AddMediaPage', () => {
 
     const addChip = await screen.findByRole('button', { name: 'Alice' })
     await user.click(addChip)
-    await screen.findByText('Wonderland (new)')
+    await screen.findByText('Alice (new)')
 
     const form = container.querySelector('form') as HTMLFormElement
     fireEvent.submit(form)
 
-    await vi.waitFor(() => expect(seriesCreate).toHaveBeenCalledWith({ name: 'Wonderland' }))
-    await vi.waitFor(() =>
-      expect(characterCreate).toHaveBeenCalledWith({ name: 'Alice', seriesIds: ['s-real'] })
-    )
     await vi.waitFor(() =>
       expect(mediaCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ characterIds: ['c-real'], seriesIds: ['s-real'] })
+        expect.objectContaining({ characterIds: ['c-real'], seriesIds: [] })
       )
     )
+    expect(characterCreate).toHaveBeenCalledWith({ name: 'Alice', seriesIds: [] })
+    expect(seriesCreate).not.toHaveBeenCalled()
   })
 
   it('does not attach the pending social link when the artist resolves via an existing match', async () => {
@@ -642,7 +640,7 @@ describe('AddMediaPage SauceNAO suggestions', () => {
     expect(await screen.findByText('New Character (new)')).toBeInTheDocument()
   })
 
-  it('capitalizes a suggested character name and stages the sole suggested series as pending, linked locally', async () => {
+  it('capitalizes a suggested character name without also accepting the sole suggested series', async () => {
     const lookup = vi.fn().mockResolvedValue({
       success: true,
       data: {
@@ -676,9 +674,11 @@ describe('AddMediaPage SauceNAO suggestions', () => {
     const addChip = await screen.findByRole('button', { name: 'New character' })
     await user.click(addChip)
 
+    expect(await screen.findByText('New character (new)')).toBeInTheDocument()
     expect(seriesCreate).not.toHaveBeenCalled()
     expect(characterCreate).not.toHaveBeenCalled()
-    expect(await screen.findByText('New series (new)')).toBeInTheDocument()
+    expect(screen.queryByText('New series (new)')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New series' })).toBeInTheDocument()
   })
 
   it('does not guess a series link when more than one series is suggested', async () => {
@@ -787,7 +787,11 @@ describe('AddMediaPage sole-series character linking', () => {
     const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
     setApi({
       media: { create: mediaCreate },
-      character: { create: vi.fn(), update: characterUpdate }
+      character: {
+        create: vi.fn(),
+        update: characterUpdate,
+        getAll: vi.fn().mockResolvedValue({ success: true, data: charactersData })
+      }
     })
     const user = userEvent.setup()
     const { container } = renderPage()

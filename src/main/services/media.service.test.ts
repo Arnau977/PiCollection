@@ -158,6 +158,43 @@ describe('mediaService pendingTagging', () => {
     const refetched = await mediaService.getMediaById(created.id)
     expect(refetched?.pendingTagging).toBe(false)
   })
+
+  it('clearPendingTagging makes the resolve time the added date', async () => {
+    const created = await mediaService.addMedia(baseInput({ pendingTagging: true }))
+    await mediaRepo.updateMediaRow(getDb(), created.id, { created_at: 1000 })
+
+    const before = Date.now()
+    const cleared = await mediaService.clearPendingTagging(created.id)
+
+    expect(cleared.createdAt).toBeGreaterThanOrEqual(before)
+  })
+
+  it('clearPendingTagging links the characters to the sole series only on resolve', async () => {
+    const hololive = await seriesService.createSeries({ name: 'Hololive' })
+    const pekora = await characterService.createCharacter({ name: 'Pekora', seriesIds: [] })
+    const created = await mediaService.addMedia(
+      baseInput({ pendingTagging: true, characterIds: [pekora.id], seriesIds: [hololive.id] })
+    )
+    expect((await characterService.getCharacterById(pekora.id))?.series).toEqual([])
+
+    await mediaService.clearPendingTagging(created.id)
+
+    const linked = await characterService.getCharacterById(pekora.id)
+    expect(linked?.series.map((s) => s.id)).toEqual([hololive.id])
+  })
+
+  it('clearPendingTagging leaves characters unlinked when the media has several series', async () => {
+    const a = await seriesService.createSeries({ name: 'Series A' })
+    const b = await seriesService.createSeries({ name: 'Series B' })
+    const character = await characterService.createCharacter({ name: 'Ann', seriesIds: [] })
+    const created = await mediaService.addMedia(
+      baseInput({ pendingTagging: true, characterIds: [character.id], seriesIds: [a.id, b.id] })
+    )
+
+    await mediaService.clearPendingTagging(created.id)
+
+    expect((await characterService.getCharacterById(character.id))?.series).toEqual([])
+  })
 })
 
 describe('mediaService.getMediaById / updateMedia / deleteMedia', () => {
