@@ -13,6 +13,7 @@ interface SuggestionsRailProps {
   input: MediaInput
   saving: boolean
   onApplyRating: (sfw: boolean) => void
+  onApplySourceUrl: (url: string) => void
 }
 
 /**
@@ -30,7 +31,8 @@ export function SuggestionsRail({
   suggestions,
   input,
   saving,
-  onApplyRating
+  onApplyRating,
+  onApplySourceUrl
 }: SuggestionsRailProps): JSX.Element {
   const { t } = useTranslation()
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
@@ -82,8 +84,10 @@ export function SuggestionsRail({
               sauce={suggestions.sauce}
               inputRoute={input.route}
               inputType={input.type}
+              inputSourceUrl={input.sourceUrl}
               saving={saving}
               onAddMissing={suggestions.addMissingSuggestion}
+              onUseSourceUrl={onApplySourceUrl}
             />
           </div>
 

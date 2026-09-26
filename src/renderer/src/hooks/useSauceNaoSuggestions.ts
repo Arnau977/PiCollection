@@ -89,7 +89,7 @@ export function useSauceNaoSuggestions({
       setMatch(found)
 
       const matched = matchSuggestionCandidate(found, { artists, tags, characters, series })
-      onApplyExisting(matched.applied)
+      onApplyExisting({ ...matched.applied, sourceUrl: found.sourceUrl })
       setMissing(matched.missing)
       setAppliedCount(matched.appliedCount)
       setStatus('ready')
