@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Inbox } from 'lucide-react'
 import type { MediaDuplicateCheck, MediaInput, MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { Lightbox } from '../../../components/Lightbox/Lightbox'
@@ -73,9 +74,21 @@ export function MediaFormFileGroup({
     <div className="media-form-group">
       <h2>{t('addMedia.groupFile')}</h2>
       {queueInfo && (
-        <p className="import-queue-progress">
-          {t('importQueue.progress', { current: queueInfo.current, total: queueInfo.total })}
-        </p>
+        <div className="import-queue-progress">
+          <span>
+            {t('importQueue.progress', { current: queueInfo.current, total: queueInfo.total })}
+          </span>
+          {/* A whole-batch action, so it sits with the batch's progress rather
+              than in the top bar, whose buttons all act on the current file. */}
+          {queueInfo.onSendRemainingToPending && (
+            <button type="button" className="btn" onClick={queueInfo.onSendRemainingToPending}>
+              <Inbox size={14} />
+              {t('importQueue.sendRemainingToPending', {
+                count: queueInfo.total - queueInfo.current + 1
+              })}
+            </button>
+          )}
+        </div>
       )}
 
       {!isEditing && !initialFile && (

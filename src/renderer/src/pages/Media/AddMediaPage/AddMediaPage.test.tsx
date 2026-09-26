@@ -26,6 +26,10 @@ let tagsData: TagModel[] = []
 let seriesData: SeriesModel[] = []
 let charactersData: CharacterModel[] = []
 
+vi.mock('../../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => vi.fn().mockResolvedValue(true)
+}))
+
 vi.mock('../../../hooks/useEntityLists', () => ({
   useArtists: () => ({ data: artistsData, loading: false, error: null, refetch: refetchArtists }),
   useTags: () => ({ data: tagsData, loading: false, error: null, refetch: refetchTags }),

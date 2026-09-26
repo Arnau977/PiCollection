@@ -8,6 +8,11 @@ const expandSelection = vi.fn()
 const mediaCreate = vi.fn()
 const mediaCreateMany = vi.fn()
 const checkDuplicate = vi.fn()
+const confirmMock = vi.fn()
+
+vi.mock('../../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => confirmMock
+}))
 
 beforeEach(() => {
   expandSelection.mockReset()
@@ -82,7 +87,9 @@ describe('ImportQueue', () => {
     const form = container.querySelector('form') as HTMLFormElement
     fireEvent.submit(form)
 
-    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' })))
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' }))
+    )
     expect(screen.getByText('File 1 of 2')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
@@ -160,7 +167,9 @@ describe('ImportQueue', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     await screen.findByText('File 2 of 2')
     fireEvent.submit(container.querySelector('form') as HTMLFormElement)
-    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'b' })))
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'b' }))
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
@@ -180,6 +189,32 @@ describe('ImportQueue', () => {
 
     expect(onClose).toHaveBeenCalledTimes(1)
     expect(onLastSaved).not.toHaveBeenCalled()
+  })
+
+  it('sends every remaining file to Pending from the queue itself, after confirming', async () => {
+    confirmMock.mockResolvedValueOnce(true)
+    const onClose = vi.fn()
+    renderQueue(onClose)
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send the remaining 2 to Pending' }))
+
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+    expect(mediaCreateMany).toHaveBeenCalledWith([
+      expect.objectContaining({ route: '/src/a.png', pendingTagging: true }),
+      expect.objectContaining({ route: '/src/b.png', pendingTagging: true })
+    ])
+  })
+
+  it('does nothing when the send-remaining confirmation is declined', async () => {
+    confirmMock.mockResolvedValueOnce(false)
+    renderQueue()
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send the remaining 2 to Pending' }))
+
+    await vi.waitFor(() => expect(confirmMock).toHaveBeenCalled())
+    expect(mediaCreateMany).not.toHaveBeenCalled()
   })
 
   it('opens the exit dialog instead of closing when Close is clicked with items remaining', async () => {
@@ -242,7 +277,9 @@ describe('ImportQueue', () => {
     await screen.findByText('File 1 of 2')
 
     fireEvent.submit(container.querySelector('form') as HTMLFormElement)
-    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' })))
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' }))
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     await screen.findByText('File 2 of 2')
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))

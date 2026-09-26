@@ -5,6 +5,7 @@ import { deriveMediaName } from '@shared/utils'
 import { MediaForm } from '../MediaForm/MediaForm'
 import { ImportQueueExitDialog } from '../ImportQueueExitDialog/ImportQueueExitDialog'
 import { Toast } from '../../../components/Toast/Toast'
+import { useConfirm } from '../../../components/ConfirmDialog/ConfirmDialogContext'
 import './ImportQueue.css'
 
 interface ImportQueueProps {
@@ -18,8 +19,13 @@ type QueueState =
   | { kind: 'ready'; items: ExpandedMediaFile[]; index: number }
   | { kind: 'error'; message: string }
 
-export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProps): JSX.Element | null {
+export function ImportQueue({
+  selection,
+  onClose,
+  onLastSaved
+}: ImportQueueProps): JSX.Element | null {
   const { t } = useTranslation()
+  const confirm = useConfirm()
   const [state, setState] = useState<QueueState>({ kind: 'loading' })
   const [showExitDialog, setShowExitDialog] = useState(false)
   // "Guardar" persists the current item but no longer advances the queue by
@@ -54,7 +60,8 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (state.kind === 'loading') return <p className="settings-version">{t('importQueue.loading')}</p>
+  if (state.kind === 'loading')
+    return <p className="settings-version">{t('importQueue.loading')}</p>
   if (state.kind === 'error') return <p role="alert">{state.message}</p>
 
   const { items, index } = state
@@ -146,6 +153,17 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
     setState({ kind: 'error', message: result.error.message })
   }
 
+  // The same bulk send as the exit dialog's, reachable without leaving the
+  // queue. It skips review for every remaining file, so it asks first.
+  async function handleSendRemainingToPending(): Promise<void> {
+    if (busy) return
+    const ok = await confirm({
+      message: t('importQueue.sendRemainingConfirm', { count: remaining }),
+      confirmLabel: t('importQueue.sendRemainingToPending', { count: remaining })
+    })
+    if (ok) await handleAddRemainingToPending()
+  }
+
   function handleDiscard(): void {
     setShowExitDialog(false)
     onClose()
@@ -155,12 +173,17 @@ export function ImportQueue({ selection, onClose, onLastSaved }: ImportQueueProp
     <>
       <MediaForm
         key={current.route}
-        initialFile={{ route: current.route, name: deriveMediaName(current.fileName), type: current.type }}
+        initialFile={{
+          route: current.route,
+          name: deriveMediaName(current.fileName),
+          type: current.type
+        }}
         queueInfo={{
           current: index + 1,
           total: items.length,
           onNext: advance,
-          onPrevious: index > 0 ? goBack : undefined
+          onPrevious: index > 0 ? goBack : undefined,
+          onSendRemainingToPending: handleSendRemainingToPending
         }}
         onCancel={handleCloseClick}
         onSaved={handleSaved}
