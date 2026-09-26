@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { AUTO_BACKUP_KEEP_COUNT_OPTIONS } from '../models/Backup'
 
 export type IpcResult<T> =
   | { success: true; data: T }
@@ -135,6 +136,17 @@ export const MediaGetEntityThumbnailsSchema = z.object({
 })
 
 export const BackupExportSchema = z.object({ gallerySettings: z.unknown() })
+export const AutoBackupConfigPatchSchema = z
+  .object({
+    enabled: z.boolean(),
+    frequency: z.enum(['daily', 'weekly', 'monthly']),
+    keepCount: z
+      .number()
+      .int()
+      .refine((n) => (AUTO_BACKUP_KEEP_COUNT_OPTIONS as readonly number[]).includes(n))
+  })
+  .partial()
+  .strict()
 export const RelinkMissingFilesSchema = z.object({
   oldRoot: z.string().min(1),
   newRoot: z.string().min(1)
@@ -225,6 +237,15 @@ export const IPC = {
   backup: {
     export: 'backup:export',
     import: 'backup:import'
+  },
+  autoBackup: {
+    getStatus: 'auto-backup:get-status',
+    updateConfig: 'auto-backup:update-config',
+    pickFolder: 'auto-backup:pick-folder',
+    openFolder: 'auto-backup:open-folder',
+    runNow: 'auto-backup:run-now',
+    /** main -> renderer push (webContents.send), not an invoke channel. */
+    changed: 'auto-backup:changed'
   },
   maintenance: {
     checkMissingFiles: 'maintenance:check-missing-files',

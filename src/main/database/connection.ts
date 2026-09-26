@@ -53,6 +53,22 @@ export async function closeDb(): Promise<void> {
   if (sqlite?.open) sqlite.close()
 }
 
+/**
+ * Writes a consistent snapshot of the live singleton database to `destPath`
+ * through SQLite's online backup API - safe while writes are in flight,
+ * unlike copying the file itself. Returns false (writing nothing) when no
+ * connection is open, e.g. mid-restore after closeDb().
+ */
+export function isDbOpen(): boolean {
+  return Boolean(sqliteInstance?.open)
+}
+
+export async function backupDatabaseTo(destPath: string): Promise<boolean> {
+  if (!sqliteInstance?.open) return false
+  await sqliteInstance.backup(destPath)
+  return true
+}
+
 export function getDb(): Kysely<DB> {
   if (!dbInstance) {
     throw new Error('Database has not been initialized. Call initDb() first.')

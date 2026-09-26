@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type {
   ArtistInput,
   ArtistModel,
+  AutoBackupConfig,
+  AutoBackupStatus,
   AutoStartStatus,
   BackupExportResult,
   BackupImportResult,
@@ -142,6 +144,26 @@ export const api = {
     export: (gallerySettings: unknown): Promise<IpcResult<BackupExportResult>> =>
       ipcRenderer.invoke(IPC.backup.export, { gallerySettings }),
     import: (): Promise<IpcResult<BackupImportResult>> => ipcRenderer.invoke(IPC.backup.import)
+  },
+  autoBackup: {
+    getStatus: (): Promise<IpcResult<AutoBackupStatus>> =>
+      ipcRenderer.invoke(IPC.autoBackup.getStatus),
+    updateConfig: (
+      patch: Partial<Omit<AutoBackupConfig, 'folder'>>
+    ): Promise<IpcResult<AutoBackupStatus>> =>
+      ipcRenderer.invoke(IPC.autoBackup.updateConfig, patch),
+    /** Resolves with the unchanged status when the dialog is cancelled. */
+    pickFolder: (): Promise<IpcResult<AutoBackupStatus>> =>
+      ipcRenderer.invoke(IPC.autoBackup.pickFolder),
+    openFolder: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.autoBackup.openFolder),
+    runNow: (): Promise<IpcResult<AutoBackupStatus>> => ipcRenderer.invoke(IPC.autoBackup.runNow),
+    /** Subscribes to status pushes from scheduled runs; returns an unsubscribe function. */
+    onChanged: (listener: (status: AutoBackupStatus) => void): (() => void) => {
+      const handler = (_event: IpcRendererEvent, payload: AutoBackupStatus): void =>
+        listener(payload)
+      ipcRenderer.on(IPC.autoBackup.changed, handler)
+      return () => ipcRenderer.removeListener(IPC.autoBackup.changed, handler)
+    }
   },
   maintenance: {
     checkMissingFiles: (): Promise<IpcResult<MissingFilesCheck>> =>

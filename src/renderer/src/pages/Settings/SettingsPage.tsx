@@ -13,6 +13,7 @@ import {
 import type { MediaFilters, MediaSortableProp } from '@shared/models'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { useAppUpdater } from '../../hooks/useAppUpdater'
+import { useAutoBackup } from '../../hooks/useAutoBackup'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
 import { LANGUAGES } from '../../i18n'
@@ -95,6 +96,8 @@ export default function SettingsPage(): JSX.Element {
   const confirm = useConfirm()
   const sauceNaoApiKey = useSauceNaoApiKeyField()
   const logging = useLoggingSettings()
+  const autoBackup = useAutoBackup()
+  const autoBackupFailed = Boolean(autoBackup.status?.enabled && autoBackup.status.lastError)
   const updateReady =
     updater.status.state === 'available' || updater.status.state === 'downloaded'
 
@@ -121,7 +124,12 @@ export default function SettingsPage(): JSX.Element {
             {t('settings.tabFilters')}
           </Tab>
           <Tab id="data" className="settings-tab">
-            {t('settings.tabData')}
+            <span className="settings-tab-label">
+              {t('settings.tabData')}
+              {autoBackupFailed && (
+                <span className="settings-tab-badge settings-tab-badge-danger" aria-hidden="true" />
+              )}
+            </span>
           </Tab>
           <Tab id="advanced" className="settings-tab">
             <span className="settings-tab-label">
@@ -251,7 +259,7 @@ export default function SettingsPage(): JSX.Element {
         </TabPanel>
 
         <TabPanel id="data" className="settings-sections">
-          <BackupSection />
+          <BackupSection autoBackup={autoBackup} />
           <MissingFilesSection />
           <SourceFolderSection />
         </TabPanel>

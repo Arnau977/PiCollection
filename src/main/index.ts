@@ -23,6 +23,8 @@ import { readExtensionBridgeSettings } from './services/extensionBridgeSettings'
 import { startExtensionBridgeServer } from './services/extensionBridge.server'
 import { setTrayWindow, syncAppTray } from './window/tray'
 import { isHiddenLaunch } from './window/autoStart'
+import { setAutoBackupEventsWindow } from './events/autoBackupEvents'
+import { startAutoBackupScheduler, stopAutoBackupScheduler } from './services/autoBackup.service'
 
 // Two instances writing to the same SQLite file (and racing each other's
 // windowState/settings writes) would corrupt state with no user-visible
@@ -118,6 +120,7 @@ function createWindow(): BrowserWindow {
   setUpdaterWindow(mainWindow)
   setEntityEventsWindow(mainWindow)
   setWd14RuntimeWindow(mainWindow)
+  setAutoBackupEventsWindow(mainWindow)
 
   mainWindow.on('close', (event) => {
     if (!isQuitting && readExtensionBridgeSettings().backgroundModeEnabled) {
@@ -227,6 +230,7 @@ app.whenReady().then(async () => {
     // unimportant, and the timer may not exist yet on that same path.
     flushLogBuffer()
     if (dailyUpdateCheckTimer) clearInterval(dailyUpdateCheckTimer)
+    stopAutoBackupScheduler()
   })
 
   try {
@@ -271,6 +275,9 @@ app.whenReady().then(async () => {
     console.error('Media hash backfill failed', err)
     logError('lifecycle', 'Media hash backfill failed', err)
   })
+
+  // Checks are cheap no-ops unless automatic backups are on and one is due.
+  startAutoBackupScheduler()
 
   initAutoUpdater(mainWindow)
   // A quiet startup check - the renderer surfaces the result and lets the

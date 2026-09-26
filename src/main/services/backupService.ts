@@ -1,7 +1,9 @@
 import AdmZip from 'adm-zip'
 import { app } from 'electron'
 import { existsSync, promises as fs } from 'fs'
-import { closeDb } from '../database/connection'
+import { tmpdir } from 'os'
+import { join } from 'path'
+import { backupDatabaseTo, closeDb } from '../database/connection'
 import { resolveElectronDbPath } from '../database/electronDbPath'
 import { sauceNaoSettingsFilePath } from './sauceNao/sauceNaoSettings'
 import { readUpdateChannel, updaterSettingsFilePath } from '../updater/updaterSettings'
@@ -34,12 +36,33 @@ export function getBackupBuildKind(): BackupBuildKind {
  * Bundles everything PiCollection persists locally - the database, the
  * small settings files (when they exist), and the renderer-supplied gallery
  * preferences blob (localStorage-backed, so it can't be read from here) -
- * into a single zip at `destPath`.
+ * into a single zip at `destPath`. Automatic backups run without the
+ * renderer and pass `undefined`, which leaves the blob out entirely (restore
+ * then keeps the current preferences).
  */
-export async function createBackupZip(destPath: string, gallerySettings: unknown): Promise<void> {
+export async function createBackupZip(
+  destPath: string,
+  gallerySettings: unknown | undefined
+): Promise<void> {
   const zip = new AdmZip()
-  zip.addLocalFile(resolveElectronDbPath(), '', DB_ENTRY)
+  // The live connection's online-backup snapshot when one is open; copying
+  // the raw file is only a fallback for when it isn't (nothing is writing).
+  const snapshotDir = await fs.mkdtemp(join(tmpdir(), 'picollection-backup-'))
+  try {
+    const snapshotPath = join(snapshotDir, DB_ENTRY)
+    const snapshotted = await backupDatabaseTo(snapshotPath)
+    zip.addLocalFile(snapshotted ? snapshotPath : resolveElectronDbPath(), '', DB_ENTRY)
+    await addSettingsAndWrite(zip, destPath, gallerySettings)
+  } finally {
+    await fs.rm(snapshotDir, { recursive: true, force: true })
+  }
+}
 
+async function addSettingsAndWrite(
+  zip: AdmZip,
+  destPath: string,
+  gallerySettings: unknown | undefined
+): Promise<void> {
   const sauceNaoPath = sauceNaoSettingsFilePath()
   if (existsSync(sauceNaoPath)) zip.addLocalFile(sauceNaoPath, '', SAUCE_NAO_ENTRY)
 
@@ -52,7 +75,9 @@ export async function createBackupZip(destPath: string, gallerySettings: unknown
   const danbooruPath = danbooruSettingsFilePath()
   if (existsSync(danbooruPath)) zip.addLocalFile(danbooruPath, '', DANBOORU_ENTRY)
 
-  zip.addFile(GALLERY_SETTINGS_ENTRY, Buffer.from(JSON.stringify(gallerySettings ?? {})))
+  if (gallerySettings !== undefined) {
+    zip.addFile(GALLERY_SETTINGS_ENTRY, Buffer.from(JSON.stringify(gallerySettings ?? {})))
+  }
 
   zip.writeZip(destPath)
 }

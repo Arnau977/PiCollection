@@ -3,12 +3,23 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BackupSection } from './BackupSection'
+import type { UseAutoBackup } from '../../hooks/useAutoBackup'
 
 const confirmMock = vi.fn().mockResolvedValue(true)
 
 vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
   useConfirm: () => confirmMock
 }))
+
+const autoBackupStub: UseAutoBackup = {
+  status: null,
+  pending: false,
+  error: null,
+  update: vi.fn(),
+  pickFolder: vi.fn(),
+  openFolder: vi.fn(),
+  runNow: vi.fn()
+}
 
 function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
   Object.defineProperty(window, 'api', {
@@ -36,7 +47,7 @@ beforeEach(() => {
 describe('BackupSection', () => {
   it('exports and shows a success message', async () => {
     const user = userEvent.setup()
-    render(<BackupSection />)
+    render(<BackupSection autoBackup={autoBackupStub} />)
 
     await user.click(screen.getByRole('button', { name: 'Export...' }))
 
@@ -49,7 +60,7 @@ describe('BackupSection', () => {
       backup: { export: vi.fn().mockResolvedValue({ success: true, data: { cancelled: true } }) }
     })
     const user = userEvent.setup()
-    render(<BackupSection />)
+    render(<BackupSection autoBackup={autoBackupStub} />)
 
     await user.click(screen.getByRole('button', { name: 'Export...' }))
 
@@ -65,7 +76,7 @@ describe('BackupSection', () => {
       }
     })
     const user = userEvent.setup()
-    render(<BackupSection />)
+    render(<BackupSection autoBackup={autoBackupStub} />)
 
     await user.click(screen.getByRole('button', { name: 'Export...' }))
 
@@ -75,7 +86,7 @@ describe('BackupSection', () => {
   it('asks for confirmation before importing, and does nothing if declined', async () => {
     confirmMock.mockResolvedValueOnce(false)
     const user = userEvent.setup()
-    render(<BackupSection />)
+    render(<BackupSection autoBackup={autoBackupStub} />)
 
     await user.click(screen.getByRole('button', { name: 'Import...' }))
 
@@ -93,7 +104,7 @@ describe('BackupSection', () => {
       }
     })
     const user = userEvent.setup()
-    render(<BackupSection />)
+    render(<BackupSection autoBackup={autoBackupStub} />)
 
     await user.click(screen.getByRole('button', { name: 'Import...' }))
 
@@ -106,7 +117,7 @@ describe('BackupSection', () => {
   it('restarts the app when the restart button is clicked', async () => {
     confirmMock.mockResolvedValueOnce(true)
     const user = userEvent.setup()
-    render(<BackupSection />)
+    render(<BackupSection autoBackup={autoBackupStub} />)
 
     await user.click(screen.getByRole('button', { name: 'Import...' }))
     await user.click(await screen.findByRole('button', { name: 'Restart now' }))
