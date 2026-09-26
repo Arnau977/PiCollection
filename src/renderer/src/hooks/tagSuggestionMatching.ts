@@ -16,6 +16,8 @@ export type SuggestionCategory = 'artist' | 'tags' | 'characters' | 'series'
 
 export interface ApplyPayload {
   artistId?: string
+  /** The matched post's URL (SauceNAO only) - fills the source URL field only while it's empty. */
+  sourceUrl?: string
   tagIds: string[]
   characterIds: string[]
   seriesIds: string[]

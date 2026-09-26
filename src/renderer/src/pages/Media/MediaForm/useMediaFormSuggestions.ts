@@ -8,7 +8,10 @@ import type {
   TagModel
 } from '@shared/models'
 import { useSauceNaoApiKey } from '../../../hooks/useSauceNaoApiKey'
-import { useSauceNaoSuggestions, type SuggestionCategory } from '../../../hooks/useSauceNaoSuggestions'
+import {
+  useSauceNaoSuggestions,
+  type SuggestionCategory
+} from '../../../hooks/useSauceNaoSuggestions'
 import { useSourceSuggestions } from '../../../hooks/useSourceSuggestions'
 import { useWd14Runtime } from '../../../hooks/useWd14Runtime'
 import { useWd14Suggestions } from '../../../hooks/useWd14Suggestions'
@@ -92,7 +95,7 @@ export function useMediaFormSuggestions({
     tags: [...tags.data, ...drafts.pendingTags],
     characters: [...characters.data, ...drafts.pendingCharacters],
     series: [...series.data, ...drafts.pendingSeries],
-    onApplyExisting: ({ artistId, tagIds, characterIds, seriesIds }) => {
+    onApplyExisting: ({ artistId, tagIds, characterIds, seriesIds, sourceUrl }) => {
       setInput((prev) => {
         const nextCharacterIds = Array.from(
           new Set([...(prev.characterIds ?? []), ...characterIds])
@@ -105,6 +108,7 @@ export function useMediaFormSuggestions({
           ...prev,
           // Suggestions only ever add - never overwrite a choice already made.
           artistId: prev.artistId ?? artistId,
+          sourceUrl: prev.sourceUrl?.trim() ? prev.sourceUrl : (sourceUrl ?? prev.sourceUrl),
           tagIds: Array.from(new Set([...(prev.tagIds ?? []), ...tagIds])),
           characterIds: nextCharacterIds,
           seriesIds: withImpliedSeries(characters.data, addedCharacterIds, nextSeriesIds)

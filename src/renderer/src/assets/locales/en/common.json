@@ -410,6 +410,8 @@
     "videoHint": "Works best on original artwork; may not recognize clips from a show or episode.",
     "similarity": "{{value}}% match",
     "viewSource": "View source",
+    "sourceUrlLabel": "Source URL",
+    "useSourceUrl": "Use this post's URL",
     "applied": "Added {{count}} suggestions",
     "noMatch": "No confident match found.",
     "dismiss": "Dismiss",

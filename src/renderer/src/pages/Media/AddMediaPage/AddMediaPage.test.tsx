@@ -469,12 +469,10 @@ describe('AddMediaPage', () => {
     const user = userEvent.setup()
     const artistCreate = vi.fn()
     const addSocialLink = vi.fn()
-    const artistGetAll = vi
-      .fn()
-      .mockResolvedValue({
-        success: true,
-        data: [{ id: 'existing-artist', name: 'Kyoto Animation' }]
-      })
+    const artistGetAll = vi.fn().mockResolvedValue({
+      success: true,
+      data: [{ id: 'existing-artist', name: 'Kyoto Animation' }]
+    })
     const mediaCreate = vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
     setApi({
       artist: { create: artistCreate, getAll: artistGetAll, addSocialLink },
@@ -559,6 +557,59 @@ describe('AddMediaPage SauceNAO suggestions', () => {
   it('disables the Suggest tags button until a file is chosen', async () => {
     renderPage()
     expect(await screen.findByRole('button', { name: 'Suggest tags' })).toBeDisabled()
+  })
+
+  function lookupWithSource(sourceUrl: string): ReturnType<typeof vi.fn> {
+    return vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        match: {
+          similarity: 90,
+          indexName: 'Danbooru',
+          sourceUrl,
+          artist: null,
+          characters: [],
+          series: [],
+          seriesHints: [],
+          tags: []
+        },
+        remaining: { short: 5, long: 90 }
+      }
+    })
+  }
+
+  it("fills an empty source URL with the matched post's URL", async () => {
+    setApi({ sauceNao: { lookup: lookupWithSource('https://danbooru.donmai.us/posts/1') } })
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.upload(
+      document.querySelector('input[type="file"]') as HTMLInputElement,
+      makeFile('a.png')
+    )
+    await user.click(screen.getByRole('button', { name: 'Suggest tags' }))
+
+    await vi.waitFor(() =>
+      expect(screen.getByLabelText('Source URL')).toHaveValue('https://danbooru.donmai.us/posts/1')
+    )
+  })
+
+  it('keeps a source URL already typed in, offering the match as a replacement', async () => {
+    setApi({ sauceNao: { lookup: lookupWithSource('https://danbooru.donmai.us/posts/1') } })
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.upload(
+      document.querySelector('input[type="file"]') as HTMLInputElement,
+      makeFile('a.png')
+    )
+    await user.type(screen.getByLabelText('Source URL'), 'https://pixiv.net/1')
+    await user.click(screen.getByRole('button', { name: 'Suggest tags' }))
+
+    const use = await screen.findByRole('button', { name: "Use this post's URL" })
+    expect(screen.getByLabelText('Source URL')).toHaveValue('https://pixiv.net/1')
+    await user.click(use)
+    expect(screen.getByLabelText('Source URL')).toHaveValue('https://danbooru.donmai.us/posts/1')
   })
 
   it('calls the SauceNAO lookup with the selected file path when clicked', async () => {

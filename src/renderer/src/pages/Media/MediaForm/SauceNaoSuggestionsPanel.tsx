@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { ExternalLink, Plus, ScanSearch } from 'lucide-react'
+import { ExternalLink, Link2, Plus, ScanSearch } from 'lucide-react'
 import type { MediaInput } from '@shared/models'
 import { PATH } from '../../../app.routes.const'
 import { SAUCE_MISSING_CATEGORIES } from './missingSuggestionCounts'
@@ -11,8 +11,10 @@ interface SauceNaoSuggestionsPanelProps {
   sauce: MediaFormSuggestions['sauce']
   inputRoute: string
   inputType: MediaInput['type']
+  inputSourceUrl?: string
   saving: boolean
   onAddMissing: MediaFormSuggestions['addMissingSuggestion']
+  onUseSourceUrl: (url: string) => void
 }
 
 export function SauceNaoSuggestionsPanel({
@@ -20,10 +22,13 @@ export function SauceNaoSuggestionsPanel({
   sauce,
   inputRoute,
   inputType,
+  inputSourceUrl,
   saving,
-  onAddMissing
+  onAddMissing,
+  onUseSourceUrl
 }: SauceNaoSuggestionsPanelProps): JSX.Element {
   const { t } = useTranslation()
+  const matchUrl = sauce.match?.sourceUrl
 
   if (!hasApiKey) {
     return (
@@ -86,6 +91,23 @@ export function SauceNaoSuggestionsPanel({
             </button>
           </div>
           <p className="sauce-hint">{t('sauceNao.applied', { count: sauce.appliedCount })}</p>
+
+          {/* An empty field is filled on its own (see useMediaFormSuggestions); a
+              different URL already typed in is only replaced on request. */}
+          {matchUrl && inputSourceUrl?.trim() && inputSourceUrl.trim() !== matchUrl && (
+            <div className="sauce-missing-row">
+              <span className="sauce-cat-label">{t('sauceNao.sourceUrlLabel')}</span>
+              <button
+                type="button"
+                className="sauce-add-chip"
+                title={matchUrl}
+                onClick={() => onUseSourceUrl(matchUrl)}
+              >
+                <Link2 size={12} />
+                {t('sauceNao.useSourceUrl')}
+              </button>
+            </div>
+          )}
 
           {SAUCE_MISSING_CATEGORIES.map(
             ({ category, labelKey }) =>
