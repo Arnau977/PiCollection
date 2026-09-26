@@ -747,3 +747,46 @@ describe('MediaForm suggestions rail responsive default', () => {
     expect(container.querySelector('.suggestions-rail')).toHaveClass('is-collapsed')
   })
 })
+
+describe('MediaForm source-site suggestions', () => {
+  const capturedMedia = {
+    id: 'm1',
+    name: 'post.jpg',
+    type: 'image' as const,
+    route: 'Web Imports/danbooru/123-post.jpg',
+    sfw: true,
+    isAiGenerated: false,
+    createdAt: Date.now(),
+    pendingTagging: true,
+    sourceMetadata: {
+      site: 'danbooru',
+      tags: ['closed_eyes', 'rabbit_ears'],
+      characters: [],
+      series: []
+    }
+  }
+
+  it('offers only the source names missing from the library, staging one on click', async () => {
+    tagsData = [{ id: 't1', name: 'Closed eyes' }]
+    const tagCreate = vi.fn()
+    setApi({ tag: { create: tagCreate } })
+    const user = userEvent.setup()
+    renderForm({ media: capturedMedia })
+
+    expect(screen.getByText('From danbooru')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Closed Eyes' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Rabbit Ears' }))
+
+    expect(await screen.findByText('Rabbit Ears (new)')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Rabbit Ears' })).not.toBeInTheDocument()
+    expect(tagCreate).not.toHaveBeenCalled()
+  })
+
+  it('shows the file name and folder of the edited media', () => {
+    renderForm({ media: capturedMedia })
+
+    expect(screen.getByText('123-post.jpg')).toBeInTheDocument()
+    expect(screen.getByText('Web Imports/danbooru')).toBeInTheDocument()
+  })
+})

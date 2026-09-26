@@ -1,7 +1,15 @@
 import type { Dispatch, SetStateAction } from 'react'
-import type { ArtistModel, CharacterModel, MediaInput, SeriesModel, TagModel } from '@shared/models'
+import type {
+  ArtistModel,
+  CharacterModel,
+  MediaInput,
+  MediaSourceMetadata,
+  SeriesModel,
+  TagModel
+} from '@shared/models'
 import { useSauceNaoApiKey } from '../../../hooks/useSauceNaoApiKey'
 import { useSauceNaoSuggestions, type SuggestionCategory } from '../../../hooks/useSauceNaoSuggestions'
+import { useSourceSuggestions } from '../../../hooks/useSourceSuggestions'
 import { useWd14Runtime } from '../../../hooks/useWd14Runtime'
 import { useWd14Suggestions } from '../../../hooks/useWd14Suggestions'
 import { titleCaseTagName } from '../../../utils/matchEntityNames'
@@ -23,6 +31,8 @@ interface UseMediaFormSuggestionsArgs {
   characters: EntityListWithRefetch<CharacterModel>
   series: EntityList<SeriesModel>
   drafts: MediaFormDrafts
+  /** Set on media captured by the browser extension - what its source site had. */
+  sourceMetadata?: MediaSourceMetadata
 }
 
 export interface MediaFormSuggestions {
@@ -30,6 +40,8 @@ export interface MediaFormSuggestions {
   sauce: ReturnType<typeof useSauceNaoSuggestions>
   wd14Runtime: ReturnType<typeof useWd14Runtime>
   wd14: ReturnType<typeof useWd14Suggestions>
+  source: ReturnType<typeof useSourceSuggestions>
+  addSourceSuggestion: (category: SuggestionCategory, name: string) => void
   addMissingSuggestion: (category: SuggestionCategory, name: string) => Promise<void>
   addWd14Suggestion: (
     category: Extract<SuggestionCategory, 'tags' | 'characters' | 'series'>,
@@ -55,7 +67,7 @@ export interface MediaFormSuggestions {
 }
 
 /**
- * Wires up the SauceNAO and WD14 suggestion sources, and the character/series
+ * Wires up the SauceNAO, WD14 and source-site suggestion sources, and the character/series
  * implication rules that apply regardless of whether an entity was picked by
  * hand or accepted from a suggestion chip.
  */
@@ -65,7 +77,8 @@ export function useMediaFormSuggestions({
   tags,
   characters,
   series,
-  drafts
+  drafts,
+  sourceMetadata
 }: UseMediaFormSuggestionsArgs): MediaFormSuggestions {
   const hasSauceNaoApiKey = useSauceNaoApiKey()
 
@@ -169,6 +182,22 @@ export function useMediaFormSuggestions({
     wd14.dismiss(category, name)
   }
 
+  const source = useSourceSuggestions({
+    metadata: sourceMetadata,
+    artists: [...artists.data, ...drafts.pendingArtists],
+    tags: [...tags.data, ...drafts.pendingTags],
+    characters: [...characters.data, ...drafts.pendingCharacters],
+    series: [...series.data, ...drafts.pendingSeries]
+  })
+
+  function addSourceSuggestion(category: SuggestionCategory, name: string): void {
+    if (category === 'artist') drafts.createArtist(name)
+    else if (category === 'tags') drafts.createTag(titleCaseTagName(name))
+    else if (category === 'characters') drafts.createCharacter(name)
+    else drafts.attachExistingOrCreateSeries(name)
+    source.dismiss(category, name)
+  }
+
   async function linkCharactersToSoleSeries(
     seriesIds: string[],
     characterIds: string[]
@@ -205,8 +234,10 @@ export function useMediaFormSuggestions({
     sauce,
     wd14Runtime,
     wd14,
+    source,
     addMissingSuggestion,
     addWd14Suggestion,
+    addSourceSuggestion,
     handleCharactersChange,
     linkCharactersToSoleSeries
   }

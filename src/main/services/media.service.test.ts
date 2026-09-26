@@ -169,6 +169,15 @@ describe('mediaService pendingTagging', () => {
     expect(cleared.createdAt).toBeGreaterThanOrEqual(before)
   })
 
+  it('keeps capture source metadata through a normal edit', async () => {
+    const sourceMetadata = { site: 'danbooru', tags: ['closed_eyes'], characters: [], series: [] }
+    const created = await mediaService.addMedia(baseInput(), { sourceMetadata })
+
+    const updated = await mediaService.updateMedia(created.id, baseInput({ name: 'renamed' }))
+
+    expect(updated.sourceMetadata).toEqual(sourceMetadata)
+  })
+
   it('clearPendingTagging links the characters to the sole series only on resolve', async () => {
     const hololive = await seriesService.createSeries({ name: 'Hololive' })
     const pekora = await characterService.createCharacter({ name: 'Pekora', seriesIds: [] })

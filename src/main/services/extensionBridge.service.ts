@@ -8,6 +8,7 @@ import { mediaService } from './media.service'
 import { readSourceFolder } from './sourceFolder'
 import { seriesService } from './series.service'
 import { tagService } from './tag.service'
+import type { MediaSourceMetadata } from '@shared/models'
 
 export type ExtensionBridgeLookupType = 'artist' | 'tag' | 'series' | 'character'
 
@@ -29,7 +30,16 @@ export const ExtensionBridgeCaptureInputSchema = z.object({
   seriesNames: z.array(z.string().min(1)).optional(),
   sfw: z.boolean().optional(),
   isAiGenerated: z.boolean().optional(),
-  pendingTagging: z.boolean().optional()
+  pendingTagging: z.boolean().optional(),
+  /** Everything the site had, raw - stored as informational source metadata. */
+  sourceMetadata: z
+    .object({
+      artist: z.string().optional(),
+      tags: z.array(z.string()).default([]),
+      characters: z.array(z.string()).default([]),
+      series: z.array(z.string()).default([])
+    })
+    .optional()
 })
 
 export type ExtensionBridgeCaptureInput = z.infer<typeof ExtensionBridgeCaptureInputSchema>
@@ -79,12 +89,6 @@ function displayName(name: string): string {
   return name.replace(/_/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-/** The form a new tag/character/series is created with, matching the library's `Closed eyes` style. Artists keep their own casing - handles are often stylized lowercase. */
-function capitalizedName(name: string): string {
-  const display = displayName(name)
-  return display.charAt(0).toUpperCase() + display.slice(1)
-}
-
 /** Booru sites write `closed_eyes` where the library has `Closed eyes` - names compare on a key that ignores case, underscores and spacing. */
 function nameKey(name: string): string {
   return displayName(name).toLowerCase()
@@ -105,25 +109,12 @@ function findExisting<T extends Named>(name: string, all: T[], options: MatchOpt
   return all.find((item) => keysOf(item).includes(bare))
 }
 
-async function findOrCreateByName<T extends Named>(
-  name: string,
-  getAll: () => Promise<T[]>,
-  create: (name: string) => Promise<T>,
-  options: MatchOptions = {}
-): Promise<string> {
-  const existing = findExisting(name, await getAll(), options)
-  if (existing) return existing.id
-  const created = await create(capitalizedName(name))
-  return created.id
-}
-
 /**
  * A media has a single artist, but booru posts can credit several - the
  * extension sends them comma-joined. Links the first one already in the
- * library; only when none is known does it create one, from the first name,
- * rather than inventing an artist literally called "a, b".
+ * library, or none.
  */
-async function resolveArtist(rawName: string): Promise<string | undefined> {
+async function findExistingArtist(rawName: string): Promise<string | undefined> {
   const names = rawName
     .split(',')
     .map((n) => n.trim())
@@ -135,36 +126,50 @@ async function resolveArtist(rawName: string): Promise<string | undefined> {
     const existing = findExisting(name, all)
     if (existing) return existing.id
   }
-  const created = await artistService.createArtist({ name: displayName(names[0]) })
-  return created.id
+  return undefined
 }
 
 /**
- * Resolves a list of names to ids via findOrCreateByName, one at a time and
- * deduplicated. Deliberately sequential (not Promise.all): findOrCreateByName
- * is check-then-act, so running it concurrently over a list containing two
- * case-identical/duplicate names lets both calls see "no existing match"
- * before either create() commits - the second create() then either throws a
- * raw UNIQUE-constraint error (tag/artist/series) or silently creates a
- * duplicate row (character, which has no unique constraint). Same class of
- * bug already fixed in media.service.ts's addMediaMany. The result is also
- * deduplicated: two input names resolving to the same id (e.g. exact repeats
- * or case-variants of one name) would otherwise produce a duplicate id in
- * the array, which trips the media_tag/media_character/media_series
- * composite primary key when addMedia links them.
+ * Ids of the library entities these names match; unknown names are skipped.
+ * Deduplicated: two names resolving to the same entity (repeats, case
+ * variants, an alias) would otherwise trip the media_tag/media_character/
+ * media_series composite primary key when addMedia links them.
  */
-async function resolveNamesSequentially<T extends Named>(
+function findExistingIds<T extends Named>(
   names: string[],
-  getAll: () => Promise<T[]>,
-  create: (name: string) => Promise<T>,
+  all: T[],
   options: MatchOptions = {}
-): Promise<string[]> {
+): string[] {
   const ids: string[] = []
   for (const name of names) {
-    const id = await findOrCreateByName(name, getAll, create, options)
-    if (!ids.includes(id)) ids.push(id)
+    const id = findExisting(name, all, options)?.id
+    if (id && !ids.includes(id)) ids.push(id)
   }
   return ids
+}
+
+/**
+ * Older extension builds send no `sourceMetadata` - fall back to the names
+ * they did send, so the ones that no longer get created aren't just lost.
+ */
+function toSourceMetadata(input: ExtensionBridgeCaptureInput): MediaSourceMetadata | undefined {
+  const raw = input.sourceMetadata ?? {
+    artist: input.artistName,
+    tags: input.tagNames ?? [],
+    characters: input.characterNames ?? [],
+    series: input.seriesNames ?? []
+  }
+  const metadata: MediaSourceMetadata = {
+    site: input.sourceSite,
+    artist: raw.artist?.trim() || undefined,
+    tags: cleanNames(raw.tags),
+    characters: cleanNames(raw.characters),
+    series: cleanNames(raw.series)
+  }
+  const isEmpty =
+    !metadata.artist &&
+    metadata.tags.length + metadata.characters.length + metadata.series.length === 0
+  return isEmpty ? undefined : metadata
 }
 
 export const extensionBridgeService = {
@@ -219,40 +224,38 @@ export const extensionBridgeService = {
         return { status: 'duplicate', mediaId: duplicateCheck.exactMatch.id }
       }
 
-      const artistId = input.artistName ? await resolveArtist(input.artistName) : undefined
-
-      const tagIds = await resolveNamesSequentially(
-        cleanNames(input.tagNames),
-        () => tagService.getAllTags(),
-        (n) => tagService.createTag({ name: n })
-      )
-
-      const characterIds = await resolveNamesSequentially(
+      // The extension is a quick inbox, not a tagging tool: it only links
+      // names that already exist in the library and never creates entities.
+      // Everything the site had is kept as source metadata instead, for the
+      // user to pick from when they tag the media in the app.
+      const artistId = input.artistName ? await findExistingArtist(input.artistName) : undefined
+      const tagIds = findExistingIds(cleanNames(input.tagNames), await tagService.getAllTags())
+      const characterIds = findExistingIds(
         cleanNames(input.characterNames),
-        () => characterService.getAllCharacters(),
-        (n) => characterService.createCharacter({ name: n }),
+        await characterService.getAllCharacters(),
         { stripQualifier: true }
       )
-
-      const seriesIds = await resolveNamesSequentially(
+      const seriesIds = findExistingIds(
         cleanNames(input.seriesNames),
-        () => seriesService.getAllSeries(),
-        (n) => seriesService.createSeries({ name: n })
+        await seriesService.getAllSeries()
       )
 
-      const created = await mediaService.addMedia({
-        name: input.fileName,
-        type: input.mediaType,
-        route: absolutePath,
-        sfw: input.sfw ?? true,
-        isAiGenerated: input.isAiGenerated ?? false,
-        artistId,
-        tagIds,
-        characterIds,
-        seriesIds,
-        pendingTagging: input.pendingTagging ?? true,
-        sourceUrl: input.sourceUrl
-      })
+      const created = await mediaService.addMedia(
+        {
+          name: input.fileName,
+          type: input.mediaType,
+          route: absolutePath,
+          sfw: input.sfw ?? true,
+          isAiGenerated: input.isAiGenerated ?? false,
+          artistId,
+          tagIds,
+          characterIds,
+          seriesIds,
+          pendingTagging: input.pendingTagging ?? true,
+          sourceUrl: input.sourceUrl
+        },
+        { sourceMetadata: toSourceMetadata(input) }
+      )
 
       return { status: 'created', mediaId: created.id }
     } catch (err) {

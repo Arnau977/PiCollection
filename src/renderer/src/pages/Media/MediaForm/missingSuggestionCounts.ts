@@ -22,6 +22,10 @@ export function countSauceMissing(missing: MediaFormSuggestions['sauce']['missin
   return SAUCE_MISSING_CATEGORIES.reduce((sum, { category }) => sum + missing[category].length, 0)
 }
 
+export function countSourceMissing(missing: MediaFormSuggestions['source']['missing']): number {
+  return SAUCE_MISSING_CATEGORIES.reduce((sum, { category }) => sum + missing[category].length, 0)
+}
+
 export function countWd14Missing(missing: MediaFormSuggestions['wd14']['missing']): number {
   return WD14_MISSING_CATEGORIES.reduce((sum, { category }) => sum + missing[category].length, 0)
 }

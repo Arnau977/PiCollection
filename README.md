@@ -58,6 +58,15 @@ required.
   allows anonymous API access at all, so the suggestions button doesn't
   appear at all until a key is configured. This is the only feature that
   sends anything off your machine, and only on that explicit button press.
+- **Browser extension captures** — the PiCollection Capture extension saves
+  the post you're viewing straight to the pending queue. It only links tags,
+  characters, series and artists you already have, and never creates new
+  ones; everything the site had is kept as source info. When you tag the
+  media, the names you don't have yet show up in the suggestions panel ("From
+  danbooru") to create with one click. Nothing from the site gets added
+  unless you pick it.
+- **File location** — the edit form shows the file's name and folder, with
+  copy and "open in file explorer" actions.
 - **Backup & Restore** — export the whole library (database, tags, settings,
   gallery preferences) to a single `.zip` from Settings, and restore it as a
   full replace on any install. A separate "Missing files" tool detects media

@@ -12,6 +12,7 @@ import * as m0010TagAliases from './0010_tag_aliases'
 import * as m0011TagWikiCache from './0011_tag_wiki_cache'
 import * as m0012MediaRouteUnique from './0012_media_route_unique'
 import * as m0013MediaSourceUrl from './0013_media_source_url'
+import * as m0014MediaSourceMetadata from './0014_media_source_metadata'
 
 export const migrations: Record<string, Migration> = {
   '0001_initial_schema': m0001InitialSchema,
@@ -26,5 +27,6 @@ export const migrations: Record<string, Migration> = {
   '0010_tag_aliases': m0010TagAliases,
   '0011_tag_wiki_cache': m0011TagWikiCache,
   '0012_media_route_unique': m0012MediaRouteUnique,
-  '0013_media_source_url': m0013MediaSourceUrl
+  '0013_media_source_url': m0013MediaSourceUrl,
+  '0014_media_source_metadata': m0014MediaSourceMetadata
 }

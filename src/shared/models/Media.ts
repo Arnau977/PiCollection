@@ -18,6 +18,17 @@ export interface MediaModel {
   characters?: CharacterModel[]
   series?: SeriesModel[]
   pendingTagging: boolean
+  /** What the source site had, as captured by the browser extension. Informational only. */
+  sourceMetadata?: MediaSourceMetadata
+}
+
+/** Raw names from a capture's source site (booru style, e.g. `closed_eyes`). */
+export interface MediaSourceMetadata {
+  site?: string
+  artist?: string
+  tags: string[]
+  characters: string[]
+  series: string[]
 }
 
 export interface MediaFilters {
