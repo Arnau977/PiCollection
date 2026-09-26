@@ -1,7 +1,7 @@
 # Changes made from other projects
 
 Changes to this repo made from a Claude Code session opened in a *different*
-project (mostly `C:\MyProjects\PiCollection_Researcher`, the PiCollection
+project (mostly `C:\MyProjects\PiCollection_Capture`, the PiCollection
 Capture browser extension). Each entry records where the change came from,
 why, and which files it touched, plus a ready-to-use bullet for the GitHub
 release notes.

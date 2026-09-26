@@ -104,11 +104,15 @@ the task, not a follow-up:
 
 Some changes here are made from Claude Code sessions opened in other
 projects (e.g. the PiCollection Capture extension in
-`C:\MyProjects\PiCollection_Researcher`). They're logged, with origin,
+`C:\MyProjects\PiCollection_Capture`). They're logged, with origin,
 purpose, files and release-note bullets, in `docs/external-changes.md`.
 Check it when you find unexplained uncommitted changes or when preparing
 release notes. Any session editing this repo from elsewhere adds an entry
 there.
+
+The opposite direction is logged too: a session here that edits the
+extension adds an entry to `C:\MyProjects\PiCollection_Capture\docs\external-changes.md`
+(that repo has no git history yet, so the log is its only record).
 
 ## Working style
 
@@ -128,7 +132,7 @@ there.
   large enough to become hard to navigate (a component/hook mixing several
   distinct concerns), split it - extract hooks for logic and components for
   separate visual blocks - instead of letting it keep growing. See
-  `src/renderer/src/pages/Media/MediaForm.tsx` and its sibling
+  `src/renderer/src/pages/Media/MediaForm/MediaForm.tsx` and its sibling
   `useMediaForm*`/`MediaForm*`/`*SuggestionsPanel` files for the pattern.
 - Everything public is written in English, regardless of what language the
   conversation itself is in: code, code comments, commit messages, PR
@@ -181,9 +185,11 @@ Key invariants:
 - **Migrations are append-only.** Once shipped, a migration file in
   `src/main/database/migrations/` is immutable — schema changes are always a
   new migration, registered in `migrations/index.ts`, even for one column.
-- **Not everything is request/response.** The auto-updater is the one place
-  main pushes to the renderer unprompted over `updater:event`
-  (`ipcRenderer.on`, not `invoke`) — see `docs/auto-update.md`.
+- **Not everything is request/response.** A few channels are pushed from
+  main to the renderer unprompted (`webContents.send` / `ipcRenderer.on`,
+  not `invoke`): `updater:event` (see `docs/auto-update.md`),
+  `entities:changed` (`src/main/events/entityEvents.ts` — refetch hints for
+  entity lists), `auto-backup:changed` and `wd14-runtime:event`.
 - Tests don't need an Electron runtime: `initTestDbSingleton()`
   (`src/main/database/testHelpers.ts`) spins up a real temporary SQLite file
   per test, migrated the same way the app migrates on startup.
@@ -197,10 +203,19 @@ parsed by `src/shared/query/searchQuery.ts` (AND via space, `OR`, `-exclude`,
 `(grouping)`) matched against tag/character/series/artist/media names.
 Selecting a specific tag/character/series suggestion from the search bar
 applies it as a structured group filter instead of inserting text — this
-matters for series in particular, since only the structured `seriesGroups`
-path expands through the parent/child series hierarchy (a filter on a parent
-series also matches media tagged only with a descendant series, via
-`buildSeriesClosureMap` in `src/main/database/repositories/seriesHierarchy.ts`).
+matters for series and characters, since only the structured
+`seriesGroups`/`characterGroups` paths expand through the parent/child
+hierarchy (a filter on a parent also matches media tagged only with a
+descendant, via `buildClosureMap` in
+`src/main/database/repositories/entityHierarchy.ts`).
+
+Pending media (`pending_tagging = 1`) is a staging area, not library
+content: the gallery, entity thumbnails, similar-media panel, Metadata
+counts (`mediaCount`; `pendingMediaCount` exists only for delete
+confirmations) and Home rankings all exclude it. Duplicate detection,
+missing-file checks and backups include it. Resolving it
+(`clearPendingTagging`) resets its added date and links its characters to
+its sole series.
 
 ### Where things live
 
@@ -219,4 +234,5 @@ series also matches media tagged only with a descendant series, via
 | Pages/components | `src/renderer/src/pages/`, `src/renderer/src/components/` |
 | Auto-update | `src/main/updater/` (see `docs/auto-update.md`) |
 | Debug logging (settings, rotation, logger) | `src/main/logging/` |
-| SauceNAO tag suggestions | `src/main/services/sauceNao.*.ts` — the only module making outbound network calls for user content, and only on an explicit button press |
+| SauceNAO tag suggestions | `src/main/services/sauceNao/` — the only module that sends user content (a thumbnail) off the machine, and only on an explicit button press. Other outbound calls: update checks (GitHub), the one-time local-AI runtime download, and Danbooru text lookups (tag wiki, optional account-based autocomplete, a SauceNAO-matched post's tags) |
+| Browser extension bridge | `src/main/services/extensionBridge.*.ts` — local HTTP API on 127.0.0.1 for PiCollection Capture; captures never create entities |

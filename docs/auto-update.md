@@ -14,7 +14,7 @@ publish installers.
   once a day for sessions left running (`DAILY_UPDATE_CHECK_INTERVAL_MS`),
   and the user can trigger one manually from **Settings → Updates**.
 - When an update is available or ready to install, the sidebar shows a small
-  badge next to Settings (`src/renderer/src/components/AppHeader.tsx`) so
+  badge next to Settings (`src/renderer/src/components/AppHeader/AppHeader.tsx`) so
   it's noticeable without having to visit the Settings page first.
 - Downloading and installing are always explicit user actions
   (`autoDownload = false`) - a check only reports that an update exists; the
@@ -48,24 +48,30 @@ version format, then falls back to the shared `latest.yml` manifest.
 
 | `package.json` version | Tag to push | Channel(s) that see it |
 |---|---|---|
-| `1.3.0` (any version) | `v1.3.0` | beta immediately; stable once promoted (see "Cutting a release" below) |
+| `1.3.0` (any version) | `v1.3.0` | beta once the draft is published; stable once promoted (see "Cutting a release" below) |
 
 ## Cutting a release
 
-1. Bump the version and commit: `npm version 1.3.0` (plain `X.Y.Z`, never a
-   `-beta.N` suffix - see below for what the digits mean).
-2. Push the tag: `git push --follow-tags`.
-3. `.github/workflows/release.yml` creates the release as a GitHub
-   **pre-release** by default (safe default - nothing reaches stable-channel
-   users by accident), builds Windows/macOS/Linux installers, and uploads
-   them to it.
-4. Before publishing, edit the draft release on GitHub and replace the
-   `## Highlights` placeholder with 2-3 bullet points of user-facing
-   changes.
-5. Once you've confirmed the build is good (beta users have it automatically,
-   since it's now a published pre-release), promote it to stable:
+1. On a `release/X.Y.Z` branch, bump the version and commit:
+   `npm version X.Y.Z --no-git-tag-version` (plain `X.Y.Z`, never a
+   `-beta.N` suffix - see below for what the digits mean). Open a PR for it
+   so `master` ends up on the same version.
+2. Tag that branch's head commit and push the tag:
+   `git tag -a vX.Y.Z -m "X.Y.Z" && git push origin vX.Y.Z`.
+3. `.github/workflows/release.yml` builds Windows/macOS/Linux installers into
+   a **draft pre-release**. Nobody gets a draft yet, so nothing reaches any
+   channel by accident.
+4. Edit the draft and replace the `## Highlights` placeholder with 2-3
+   user-facing bullet points. Write them as a Markdown list (`- ...`): the
+   app's update panel shows that section as a bulleted list.
+5. Publish it (still flagged as pre-release): beta-channel users get it.
+   Once it's confirmed good, promote it to stable:
    `gh release edit vX.Y.Z --prerelease=false --latest`. This one command is
    the entire "promote to stable" step - no separate workflow.
+
+Never delete a published release to "replace" it - installs already on that
+version keep working, but its page, installers and tag disappear. Ship the
+fix as the next patch version instead.
 
 ### Version numbers
 
