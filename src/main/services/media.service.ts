@@ -420,9 +420,26 @@ export const mediaService = {
     notifyEntitiesChanged(['tag', 'character', 'series', 'artist'])
   },
 
+  /**
+   * Resolving is when a pending media becomes real library content: it counts
+   * as added now (not when it was queued), and only now do its characters get
+   * linked to its series - the same "exactly one series" rule the form
+   * applies on a normal save, deferred because pending tagging is unconfirmed.
+   */
   async clearPendingTagging(id: string): Promise<MediaModel> {
     const db = getDb()
-    await mediaRepo.updateMediaRow(db, id, { pending_tagging: 0 })
+    const pending = await getMediaModelById(db, id)
+    if (!pending) throw new Error('Media not found')
+    const seriesIds = pending.series?.map((s) => s.id) ?? []
+    const characterIds = pending.characters?.map((c) => c.id) ?? []
+    const linksCharacters = seriesIds.length === 1 && characterIds.length > 0
+
+    await db.transaction().execute(async (trx) => {
+      await mediaRepo.updateMediaRow(trx, id, { pending_tagging: 0, created_at: Date.now() })
+      if (linksCharacters) await characterRepo.addSeriesToCharacters(trx, characterIds, seriesIds[0])
+    })
+    if (linksCharacters) notifyEntitiesChanged(['character'])
+
     const updated = await getMediaModelById(db, id)
     if (!updated) throw new Error('Failed to load updated media')
     return updated

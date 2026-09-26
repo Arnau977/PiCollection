@@ -18,7 +18,7 @@ When an entry ships in a release, move it under that version's heading
 ### Extension capture: link booru names to existing library entries
 
 - **Date:** 2026-09-26
-- **Origin:** session in `PiCollection_Researcher` (PiCollection Capture
+- **Origin:** session in `PiCollection_Capture` (then named `PiCollection_Researcher`; PiCollection Capture
   extension), while testing captures from Danbooru against the 1.5.0 build.
 - **Problem:** `/capture` matched names by exact case-insensitive string
   only. Booru names (`closed_eyes`, `sylphiette_(mushoku_tensei)`) never
