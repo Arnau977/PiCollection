@@ -21,6 +21,7 @@ const { extensionBridgeService } = await import('./extensionBridge.service')
 const { writeSourceFolder, resetSourceFolderCache } = await import('./sourceFolder')
 const { artistService } = await import('./artist.service')
 const { tagService } = await import('./tag.service')
+const { characterService } = await import('./character.service')
 
 let cleanup: () => Promise<void>
 let sourceDir = ''
@@ -140,7 +141,7 @@ describe('extensionBridgeService.capture', () => {
 
     expect(result.status).toBe('created')
     const tags = await tagService.getAllTags()
-    expect(tags.map((t) => t.name)).toEqual(['realtag'])
+    expect(tags.map((t) => t.name)).toEqual(['Realtag'])
   })
 
   it('returns duplicate status without creating a second row for identical bytes', async () => {
@@ -178,6 +179,90 @@ describe('extensionBridgeService.lookup', () => {
     const matches = await extensionBridgeService.lookup('artist', 'amano')
 
     expect(matches.map((m) => m.name)).toEqual(['Yoshitaka Amano'])
+  })
+
+  it('flags the entity capture would link, ignoring booru underscores', async () => {
+    writeSourceFolder(sourceDir)
+    await tagService.createTag({ name: 'Closed eyes' })
+
+    const matches = await extensionBridgeService.lookup('tag', 'closed_eyes')
+
+    expect(matches).toEqual([expect.objectContaining({ name: 'Closed eyes', exact: true })])
+  })
+
+  it('flags a character stored without the Danbooru series qualifier', async () => {
+    writeSourceFolder(sourceDir)
+    await characterService.createCharacter({ name: 'Sylphiette' })
+
+    const matches = await extensionBridgeService.lookup('character', 'sylphiette_(mushoku_tensei)')
+
+    expect(matches).toEqual([expect.objectContaining({ name: 'Sylphiette', exact: true })])
+  })
+})
+
+describe('extensionBridgeService.capture name matching', () => {
+  it('links booru-style tags to existing ones instead of creating duplicates', async () => {
+    writeSourceFolder(sourceDir)
+    const existing = await tagService.createTag({ name: 'Closed eyes' })
+
+    await extensionBridgeService.capture(baseCapture({ tagNames: ['closed_eyes'] }))
+
+    const tags = await tagService.getAllTags()
+    expect(tags.map((t) => t.id)).toEqual([existing.id])
+  })
+
+  it('matches tags by alias', async () => {
+    writeSourceFolder(sourceDir)
+    const existing = await tagService.createTag({ name: 'Nude', aliases: ['completely_nude'] })
+
+    await extensionBridgeService.capture(baseCapture({ tagNames: ['completely_nude'] }))
+
+    expect((await tagService.getAllTags()).map((t) => t.id)).toEqual([existing.id])
+  })
+
+  it('creates new tags capitalized, with spaces instead of underscores', async () => {
+    writeSourceFolder(sourceDir)
+
+    await extensionBridgeService.capture(baseCapture({ tagNames: ['anime_coloring'] }))
+
+    expect((await tagService.getAllTags()).map((t) => t.name)).toEqual(['Anime coloring'])
+  })
+
+  it('does not strip qualifiers from general tags', async () => {
+    writeSourceFolder(sourceDir)
+    await tagService.createTag({ name: 'Bow' })
+
+    await extensionBridgeService.capture(baseCapture({ tagNames: ['bow_(weapon)'] }))
+
+    expect((await tagService.getAllTags()).map((t) => t.name).sort()).toEqual(['Bow', 'Bow (weapon)'])
+  })
+
+  it('links a qualified character to the unqualified existing one', async () => {
+    writeSourceFolder(sourceDir)
+    const existing = await characterService.createCharacter({ name: 'Sylphiette' })
+
+    await extensionBridgeService.capture(
+      baseCapture({ characterNames: ['sylphiette_(mushoku_tensei)'] })
+    )
+
+    expect((await characterService.getAllCharacters()).map((c) => c.id)).toEqual([existing.id])
+  })
+
+  it('links the first known artist of a comma-joined list', async () => {
+    writeSourceFolder(sourceDir)
+    const known = await artistService.createArtist({ name: 'sketchdrif' })
+
+    await extensionBridgeService.capture(baseCapture({ artistName: 'keihh, sketchdrif' }))
+
+    expect((await artistService.getAllArtists()).map((a) => a.id)).toEqual([known.id])
+  })
+
+  it('creates only the first artist when none of a comma-joined list is known', async () => {
+    writeSourceFolder(sourceDir)
+
+    await extensionBridgeService.capture(baseCapture({ artistName: 'keihh, sketchdrif' }))
+
+    expect((await artistService.getAllArtists()).map((a) => a.name)).toEqual(['keihh'])
   })
 })
 
