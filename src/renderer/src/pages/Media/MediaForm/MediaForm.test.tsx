@@ -14,7 +14,8 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
       checkDuplicate: vi
         .fn()
         .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } }),
-      clearPendingTagging: vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } })
+      clearPendingTagging: vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } }),
+      findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] })
     },
     artist: { create: vi.fn() },
     tag: { create: vi.fn(), getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
@@ -95,7 +96,9 @@ describe('MediaForm initialFile', () => {
 
     renderForm({ initialFile: { route: '/pics/sunset.png', name: 'sunset', type: 'image' } })
 
-    expect(await screen.findByText('This file is already in the library as "Existing pic".')).toBeInTheDocument()
+    expect(
+      await screen.findByText('This file is already in the library as "Existing pic".')
+    ).toBeInTheDocument()
     expect(checkDuplicate).toHaveBeenCalledWith('/pics/sunset.png')
   })
 })
@@ -174,7 +177,9 @@ describe('MediaForm queueInfo', () => {
     const form = container.querySelector('form') as HTMLFormElement
     fireEvent.submit(form)
 
-    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' })))
+    await vi.waitFor(() =>
+      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' }))
+    )
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalled())
     expect(onNext).not.toHaveBeenCalled()
   })
@@ -193,7 +198,9 @@ describe('MediaForm queueInfo', () => {
     await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledTimes(1))
 
     fireEvent.submit(form)
-    await vi.waitFor(() => expect(mediaUpdate).toHaveBeenCalledWith('m1', expect.objectContaining({ name: 'a' })))
+    await vi.waitFor(() =>
+      expect(mediaUpdate).toHaveBeenCalledWith('m1', expect.objectContaining({ name: 'a' }))
+    )
     expect(mediaCreate).toHaveBeenCalledTimes(1)
   })
 
@@ -251,7 +258,9 @@ describe('MediaForm queueInfo', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send to pending' }))
 
     await vi.waitFor(() =>
-      expect(mediaCreate).toHaveBeenCalledWith(expect.objectContaining({ name: 'a', pendingTagging: true }))
+      expect(mediaCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'a', pendingTagging: true })
+      )
     )
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalledWith({ id: 'm1' }))
   })
@@ -387,7 +396,7 @@ describe('MediaForm onMarkResolved', () => {
 })
 
 describe('MediaForm remount on media change', () => {
-  it('discards the previous item\'s loaded fields (e.g. tags) when re-keyed for a different media item', () => {
+  it("discards the previous item's loaded fields (e.g. tags) when re-keyed for a different media item", () => {
     const mediaA = {
       id: 'a',
       name: 'First picture',
@@ -453,7 +462,7 @@ describe('MediaForm character picker', () => {
     ).toBeInTheDocument()
   })
 
-  it('surfaces characters linked to the media\'s selected series first in the browse list', async () => {
+  it("surfaces characters linked to the media's selected series first in the browse list", async () => {
     const wonderland = { id: 's1', name: 'Wonderland' }
     charactersData = [
       { id: 'c1', name: 'Aardvark', series: [] },
@@ -524,7 +533,10 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
 
     await vi.waitFor(() => expect(tagCreate).toHaveBeenCalledWith({ name: 'landscape' }))
     await vi.waitFor(() =>
-      expect(mediaUpdate).toHaveBeenCalledWith('m1', expect.objectContaining({ tagIds: ['t-real'] }))
+      expect(mediaUpdate).toHaveBeenCalledWith(
+        'm1',
+        expect.objectContaining({ tagIds: ['t-real'] })
+      )
     )
   })
 
@@ -824,5 +836,47 @@ describe('MediaForm source-site suggestions', () => {
 
     expect(screen.getByText('123-post.jpg')).toBeInTheDocument()
     expect(screen.getByText('Web Imports/danbooru')).toBeInTheDocument()
+  })
+})
+
+describe('MediaForm similar media while editing', () => {
+  it('lists similar media, other pending items included and marked', async () => {
+    const findSimilar = vi.fn().mockResolvedValue({
+      success: true,
+      data: [
+        {
+          media: {
+            id: 'm2',
+            name: 'twin.png',
+            type: 'image',
+            route: '/b.png',
+            sfw: true,
+            isAiGenerated: false,
+            createdAt: 1,
+            pendingTagging: true
+          },
+          distance: 2
+        }
+      ]
+    })
+    setApi({ media: { findSimilar } })
+    renderForm({
+      media: {
+        id: 'm1',
+        name: 'a.png',
+        type: 'image',
+        route: '/a.png',
+        sfw: true,
+        isAiGenerated: false,
+        createdAt: 1,
+        pendingTagging: true
+      }
+    })
+
+    expect(
+      await screen.findByText('This looks similar to media already in the app:')
+    ).toBeInTheDocument()
+    expect(screen.getByText(/2\/64 difference · pending/)).toBeInTheDocument()
+    expect(findSimilar).toHaveBeenCalledWith('m1', { includePending: true })
   })
 })

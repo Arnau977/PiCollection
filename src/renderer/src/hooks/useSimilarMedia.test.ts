@@ -59,9 +59,9 @@ describe('useSimilarMedia', () => {
     setApi({ media: { findSimilar } })
 
     const { rerender } = renderHook(({ id }) => useSimilarMedia(id), { initialProps: { id: '1' } })
-    await waitFor(() => expect(findSimilar).toHaveBeenCalledWith('1'))
+    await waitFor(() => expect(findSimilar).toHaveBeenCalledWith('1', { includePending: false }))
 
     rerender({ id: '2' })
-    await waitFor(() => expect(findSimilar).toHaveBeenCalledWith('2'))
+    await waitFor(() => expect(findSimilar).toHaveBeenCalledWith('2', { includePending: false }))
   })
 })

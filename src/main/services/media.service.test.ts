@@ -548,7 +548,7 @@ describe('mediaService.findSimilarMedia', () => {
     expect(result).toEqual([])
   })
 
-  it('omits a visually similar match that is still pending tagging', async () => {
+  it('omits a visually similar pending match unless asked to include pending', async () => {
     const target = await mediaService.addMedia(baseInput({ route: '/a.png' }))
     const pending = await mediaService.addMedia(
       baseInput({ route: '/b.png', pendingTagging: true })
@@ -557,9 +557,9 @@ describe('mediaService.findSimilarMedia', () => {
     await mediaRepo.setMediaHash(db, target.id, null, '0000000000000000')
     await mediaRepo.setMediaHash(db, pending.id, null, '1000000000000000')
 
-    const result = await mediaService.findSimilarMedia(target.id)
-
-    expect(result).toEqual([])
+    expect(await mediaService.findSimilarMedia(target.id)).toEqual([])
+    const withPending = await mediaService.findSimilarMedia(target.id, undefined, true)
+    expect(withPending.map((r) => r.media.id)).toEqual([pending.id])
   })
 
   it('respects the limit parameter', async () => {
