@@ -1,0 +1,102 @@
+# Patterns found in this project
+
+Decisions already made in PiCollection, with where they live. Reuse these
+before inventing anything. Everything here comes from this codebase and its
+history; ideas from outside go in `patterns-external.md`.
+
+Entry format: **Pattern** - when to use / when not - where (file) - origin.
+
+## Layout
+
+- **Page-owned scroll region instead of `position: sticky`.** The page is
+  bounded to the viewport, and only an inner `*-scroll-region` scrolls, so
+  action bars, pagination and errors never scroll out of view. Sticky was
+  rejected because translucent sticky elements let content show through.
+  Where: `.gallery-page` / `.manage-page` / `.add-media-page` /
+  `MediaPage.css`, rationale in `src/renderer/src/pages/Manage/ManagePage.css`.
+- **Fixed top action bar in the edit form.** It stays in the same spot
+  whatever the item's tag count, so buttons don't jump between queue items.
+  Where: `src/renderer/src/pages/Media/MediaForm/MediaFormTopActions.tsx`.
+- **Suggestions rail: side column on wide screens, above the fields and
+  collapsed below 900px.** Where:
+  `src/renderer/src/pages/Media/MediaForm/SuggestionsRail.tsx`.
+
+## Actions
+
+- **Group buttons by intent, separated by `.action-divider`.** The only
+  discarding action (Cancel/Close) stands alone; Previous/Next stay paired;
+  the primary action sits last. Where: `MediaFormTopActions.tsx`,
+  `.action-group` / `.action-divider` / `.action-bar-spacer` in
+  `src/renderer/src/assets/main.css`.
+- **Place an action with what it acts on.** Per-item actions go in the top
+  bar; whole-batch actions go next to the batch context (e.g. "Send the
+  remaining N to Pending" beside "File N of M"). Where:
+  `src/renderer/src/pages/Media/MediaForm/MediaFormFileGroup.tsx` (#92).
+- **Primary actions save first.** A button that ends the task ("Save & mark
+  resolved") persists the form before moving on, and stays put with the
+  error shown if saving fails. Where: `MediaForm.tsx` `saveForm()` (#90).
+- **Confirm before bulk or destructive actions** with the shared dialog
+  (`useConfirm`); name the count in the message and on the button. Where:
+  `src/renderer/src/components/ConfirmDialog/ConfirmDialogContext.tsx`.
+- **Block the UI during bulk async work**: a full-screen busy overlay with a
+  spinner, plus a ref guard against double clicks. It was added after
+  re-entrancy created hundreds of duplicate rows. Where:
+  `src/renderer/src/pages/Media/ImportQueue/ImportQueue.tsx`.
+
+## Suggestions and metadata
+
+- **Suggestions never apply silently unless they match something already in
+  the library.** Existing matches are applied; everything else becomes a
+  "create" chip (`.sauce-add-chip`) that does nothing until clicked. That
+  goes for SauceNAO, WD14 and source-site tags. A suggestion only fills an
+  empty field, and offers a one-click replacement otherwise. Where:
+  `SauceNaoSuggestionsPanel.tsx`, `Wd14SuggestionsPanel.tsx`,
+  `SourceSuggestionsPanel.tsx` (#83, #88).
+- **Category colors per metadata type**: `--color-artist` /
+  `--color-tag` / `--color-character` / `--color-series`, shown as the
+  `.field-accent-*` left bar on form fields. Where: `main.css`.
+- **A count is a drill-down.** A media count opens the gallery filtered to
+  that entity, keeping the SFW default. Zero stays plain text. Where:
+  `src/renderer/src/components/EntityCountButton/EntityCountButton.tsx` (#84).
+- **Non-blocking "looks similar" lists** with hover previews and the
+  "N/64 difference". Where:
+  `src/renderer/src/pages/Media/MediaForm/SimilarMediaWarning.tsx` (#91).
+
+## Media
+
+- **Lightbox only for images/GIFs**, never over a playing video (that
+  started a second playback). Where: `MediaFormFileGroup.tsx`.
+- **Video frame fallback**: when the OS can't produce a thumbnail (e.g.
+  cloud-synced folders), capture a frame with a `<video>` element and cache
+  it. Where: `src/renderer/src/components/MediaThumb/captureVideoFrame.ts`
+  (#89).
+
+## Shared components to reach for first
+
+`ConfirmDialog` (via `useConfirm`), `Toast`, `EmptyState`, `Pagination`,
+`SettingsRow`, `InfoTooltip`, `TagWikiInfo`, `MediaHoverPreview`,
+`MediaFileActions`, `EntityCountButton`, `EntityThumbnail`, `Autocomplete`,
+`ManageSortControl`, `FilterBar`, `Lightbox`. All live in
+`src/renderer/src/components/`.
+
+# Anti-patterns learned here
+
+Each one cost a bug or a redo in this repo. Check the proposal against all
+of them.
+
+- **A primary action that drops unsaved input.** "Mark resolved" cleared
+  the pending flag without saving the form, and 112 media lost their tags.
+  A test even asserted it. Any action that leaves the view must save first
+  or ask (#90).
+- **A useful bulk action hidden in an exit dialog.** "Add remaining to
+  Pending" only appeared after pressing Close, so the user thought it didn't
+  exist (#92).
+- **Accent-colored text on hover/raised surfaces.** `--accent-fg` on
+  `--color-surface-hover` is 4.22:1 and fails AA. Check hover states with
+  the contrast-check skill (fixed in #95).
+- **`position: sticky` over translucent layers.** Content bleeds through;
+  use a scroll region instead (see ManagePage.css).
+- **Unguarded async buttons.** Double clicks during a bulk create produced
+  hundreds of duplicate rows; disable the trigger and use a ref guard.
+- **Trusting the OS for video thumbnails.** Windows refuses them in
+  cloud-synced folders; always keep the in-app frame fallback (#89).

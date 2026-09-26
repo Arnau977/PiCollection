@@ -15,11 +15,11 @@ validation at the IPC boundary, Vitest + Testing Library for tests. See
 ```bash
 npm install          # also builds better-sqlite3 for Electron's ABI (postinstall)
 npm run dev           # electron-vite dev, hot reload; db at userData/picollection.dev.sqlite
-npm test              # full vitest suite (see ABI note below)
+npm test              # full vitest suite (prefer the verify skill)
 npm run test:watch    # watch mode
 npx vitest run <path>                       # single file
 npx vitest run <path> -t "<test name>"      # single test
-npm run lint           # eslint --fix (see line-ending caution below)
+npm run lint           # eslint --fix, repo-wide - avoid on this checkout (see verify skill)
 npm run typecheck       # tsc, node config + web config
 npm run build            # typecheck + electron-vite build
 npm run build:win|mac|linux   # + electron-builder installer
@@ -27,78 +27,23 @@ npm run migrate:create <name>   # scaffold a migration
 npm run migrate:up / migrate:down   # apply/roll back against .data/picollection.dev.sqlite
 ```
 
-**better-sqlite3 ABI:** the native module is compiled for one runtime at a
-time. `npm test`'s `pretest`/`posttest` hooks rebuild it for plain Node, then
-back for Electron, automatically. If you invoke `npx vitest run` directly
-(bypassing `npm test`) and it wasn't already rebuilt for Node, DB-touching
-tests fail with a `NODE_MODULE_VERSION` mismatch (often surfacing as
-`cleanup is not a function` in `afterEach`, which masks the real error) — fix
-with `npm rebuild better-sqlite3`. Before running the Electron app again
-afterwards, flip it back with `npm run rebuild`.
-
-**Lint caution on Windows checkouts:** if `core.autocrlf=true` and no
-`.gitattributes` pins line endings, a bare `npm run lint` (repo-wide,
-`--fix`) can rewrite CRLF→LF across most of the tree as an unrelated side
-effect. Prefer linting just the files you touched, e.g.
-`npx eslint --no-fix <changed files>`, before running the full autofix.
+**Verifying a change:** use the `verify` skill
+(`bash .claude/skills/verify/verify.sh`). It handles the better-sqlite3 ABI
+flip between Node (tests) and Electron (app), lints only the changed files
+without this checkout's CRLF noise (never run the bare `npm run lint`), and
+recognizes the known port-8934 test failures while the app is open. For
+commits/PRs and releases, the `pr-flow`, `docs-sync` and `cut-release` skills
+hold the conventions.
 
 ## UI/UX & performance
 
-For any visual/design work in this repo, actúa como un diseñador gráfico y
-director de arte senior, crítico, audaz y ultra-específico. Odias el "AI
-slop", el diseño predecible y las soluciones cliché.
-
-**Al diseñar o rediseñar una pantalla**, pasa la propuesta por un "council"
-de cuatro jueces antes de decidir cómo seguir, cada uno opinando desde un
-ángulo distinto y con un peso por defecto (ajusta los pesos si para esa
-pantalla concreta un eje pesa claramente más que los demás — dilo
-explícitamente si lo haces):
-
-- **UI (30%)** — jerarquía visual, color, tipografía, consistencia con el
-  lenguaje visual ya existente en la app (p.ej. los colores por categoría de
-  metadata: `--color-artist`/`--color-series`/`--color-character`/
-  `--color-tag`, o el acento `--accent` "Archive Cabinet").
-- **UX (30%)** — flujo, orden de las acciones, qué se pierde/gana en
-  viewports estrechos, fricción real del usuario, qué es lo primero que
-  debería ver/hacer.
-- **Accesibilidad (20%)** — contraste, foco de teclado visible, roles ARIA,
-  tamaño de objetivo de click, `prefers-reduced-motion`. Para contraste,
-  valida cada par texto/fondo contra el umbral WCAG AA (4.5:1 texto normal,
-  3:1 texto grande ≥18.66px bold/24px regular o icono/componente UI) — usa el
-  [Adobe Color Contrast Analyzer](https://color.adobe.com/es/create/color-contrast-analyzer)
-  o el mismo cálculo de luminancia relativa WCAG 2.x aplicado directamente a
-  los tokens de `src/renderer/src/assets/base.css` (más práctico para
-  comprobar muchos pares a la vez que la UI interactiva). No asumas que un
-  color pasa por "verse bien" en un fondo oscuro — p.ej. `--accent` en sí
-  (~2.7:1 sobre `--color-background`/`--color-surface`) falla como color de
-  texto/icono aunque funcione bien como fondo de botón con `--accent-text`;
-  para texto/iconos sobre superficies oscuras usa `--accent-fg`, la variante
-  ya verificada ≥4.5:1.
-- **Estructura de apps de escritorio (20%)** — específicamente Electron y
-  apps de gestión de archivos/colecciones: qué es "nativo" en ese contexto
-  frente a un patrón web trasplantado sin pensar, y consistencia con
-  patrones ya establecidos en este repo (`*-scroll-region`, sticky vs.
-  scroll-bound, ver más abajo).
-
-Pondera los cuatro votos según esos pesos para decidir cómo proseguir. Si dos
-jueces con peso alto discrepan, dilo explícitamente en la respuesta en vez de
-promediar en silencio, y explica cómo se resolvió (qué juez cedió y por qué).
-
-When touching the renderer, treat UI/UX and perceived performance as part of
-the task, not a follow-up:
-
-- Don't make the user scroll to discover something they need immediately
-  (an action button, pagination, an error) — bound the page to the viewport
-  with its own inner scroll region rather than letting critical controls
-  scroll out of view (see `.gallery-page`/`.manage-page`/`.add-media-page` +
-  their `*-scroll-region` pattern for the established approach, including why
-  `position: sticky` was rejected in favor of it).
-- Don't duplicate the same information or control twice on one page/view
-  without a reason (e.g. a count already shown by a button's own label).
-- Reuse existing components/classes/patterns instead of inventing a new one
-  for something the app already has a convention for — keep visual and
-  functional behavior consistent across pages (spacing, empty/error/loading
-  states, button placement, pagination behavior, etc.).
+Any renderer UI/UX work (a new or redesigned screen, a moved button, layout,
+styles, colors, empty/loading/error states) **must** go through the
+`design-council` skill before deciding the approach: the four-judge council
+(UI 30% / UX 30% / accessibility 20% / desktop structure 20%) plus the
+repo's layout rules (no scrolling to reach critical controls, no duplicated
+info, reuse existing patterns). Every color pair is checked with the
+`contrast-check` skill.
 
 ## Changes made from other projects
 

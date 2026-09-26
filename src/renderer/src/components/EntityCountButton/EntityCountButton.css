@@ -12,9 +12,12 @@
   cursor: pointer;
 }
 
+/* Plain text color, not --accent-fg: accent-fg on surface-hover is ~4.2:1,
+   under AA for this small text (see the contrast-check skill). */
 .entity-count-button:hover {
   background: var(--color-surface-hover);
-  color: var(--accent-fg);
+  color: var(--color-text);
+  text-decoration: underline;
 }
 
 .entity-count-button:focus-visible {
