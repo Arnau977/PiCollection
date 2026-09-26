@@ -16,6 +16,7 @@ import { useAppUpdater } from '../../hooks/useAppUpdater'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
 import { LANGUAGES } from '../../i18n'
+import { AutoStartRow } from './AutoStartRow'
 import { BackupSection } from './BackupSection'
 import { MissingFilesSection } from './MissingFilesSection'
 import { SourceFolderSection } from './SourceFolderSection'
@@ -178,6 +179,8 @@ export default function SettingsPage(): JSX.Element {
                 onChange={(e) => setDefaults({ ...defaults, hideNames: e.target.checked })}
               />
             </SettingsRow>
+
+            <AutoStartRow />
           </section>
         </TabPanel>
 

@@ -22,6 +22,7 @@ import { flushLogBuffer, logError, logInfo } from './logging/logger'
 import { readExtensionBridgeSettings } from './services/extensionBridgeSettings'
 import { startExtensionBridgeServer } from './services/extensionBridge.server'
 import { setTrayWindow, syncAppTray } from './window/tray'
+import { isHiddenLaunch } from './window/autoStart'
 
 // Two instances writing to the same SQLite file (and racing each other's
 // windowState/settings writes) would corrupt state with no user-visible
@@ -126,8 +127,15 @@ function createWindow(): BrowserWindow {
     }
   })
 
+  // A launch at sign-in (see autoStart.ts) starts hidden in the tray - the
+  // tray is created even with background mode off, since it's the only way
+  // to open the window in that case.
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    if (isHiddenLaunch()) {
+      syncAppTray(true)
+    } else {
+      mainWindow.show()
+    }
   })
 
   // External links (social links, "View source" on a suggested match, etc.)
