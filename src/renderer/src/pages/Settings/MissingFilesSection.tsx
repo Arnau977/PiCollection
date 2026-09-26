@@ -4,6 +4,7 @@ import { FolderSearch } from 'lucide-react'
 import type { MissingFileItem } from '@shared/models'
 import { MediaThumb } from '../../components/MediaThumb/MediaThumb'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
+import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
 
 type CheckState =
   | { kind: 'idle' }
@@ -98,22 +99,23 @@ export function MissingFilesSection(): JSX.Element {
 
   return (
     <section className="card">
-      <h2>
-        <FolderSearch size={16} aria-hidden="true" />
-        {t('settings.missingFilesTitle')}
-      </h2>
-      <p className="settings-version">{t('settings.missingFilesHint')}</p>
-
-      <button
-        type="button"
-        className="btn"
-        onClick={handleCheck}
-        disabled={state.kind === 'checking'}
+      <SettingsRow
+        titleAs="h2"
+        icon={<FolderSearch size={16} aria-hidden="true" />}
+        title={t('settings.missingFilesTitle')}
+        description={t('settings.missingFilesHint')}
       >
-        {state.kind === 'checking'
-          ? t('settings.missingFilesChecking')
-          : t('settings.missingFilesCheck')}
-      </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={handleCheck}
+          disabled={state.kind === 'checking'}
+        >
+          {state.kind === 'checking'
+            ? t('settings.missingFilesChecking')
+            : t('settings.missingFilesCheck')}
+        </button>
+      </SettingsRow>
 
       {state.kind === 'clean' && (
         <p className="settings-version">

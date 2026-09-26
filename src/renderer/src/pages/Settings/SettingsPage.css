@@ -1,19 +1,30 @@
+/* Bounded to the viewport with its own inner scroll region (same pattern as
+   .manage-page/.gallery-page) rather than letting the whole page scroll -
+   the tab bar would otherwise scroll out of reach on a tab with many cards
+   (Advanced has six), same problem that pattern was already built to avoid
+   elsewhere in the app. */
 .settings-page {
+  height: 100vh;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  overflow: hidden;
+  padding-bottom: 0;
 }
 
 .settings-tabs {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .settings-tablist {
   display: flex;
   gap: var(--space-2);
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .settings-tab {
@@ -34,17 +45,48 @@
   outline-offset: 2px;
 }
 
+.settings-tab-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding-right: var(--space-2);
+}
+
+.settings-tab-badge {
+  position: absolute;
+  top: -2px;
+  right: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* A multi-column card grid was tried here and reverted - with a handful of
+   cards per tab whose content length varies a lot (a single checkbox next
+   to a multi-field form), auto-fit/auto-fill either leaves ragged empty
+   space or stretches cards into oversized boxes; see git history for that
+   attempt. Settings rows (SettingsRow, used inside these cards for anything
+   that reduces to one label + one control) address the "too tall" complaint
+   this was meant to fix without needing columns - full-width rows never
+   leave dead space, matching the Windows 11 Settings / WinUI SettingsCard
+   pattern for desktop settings screens. */
 .settings-sections {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-  max-width: 640px;
+  max-width: 720px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--space-4);
 }
 
 .settings-page section {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .settings-page section h2 {
@@ -54,7 +96,7 @@
 }
 
 .settings-page section h2 svg {
-  color: var(--accent);
+  color: var(--accent-fg);
   flex-shrink: 0;
 }
 

@@ -131,6 +131,7 @@ code {
 input[type='text'],
 input[type='search'],
 input[type='file'],
+input[type='password'],
 select,
 textarea {
   background: var(--field-background);
@@ -144,11 +145,34 @@ textarea {
 }
 
 input[type='text']:focus,
+input[type='password']:focus,
 select:focus,
 textarea:focus {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: -1px;
   border-color: transparent;
+}
+
+/* Sensitive values (API keys, pairing tokens) that opt out of type="password"
+   dot-masking to stay legible while typing/verifying - blurred at rest so a
+   glance or screenshot doesn't leak them, sharp only while actually focused. */
+.field-sensitive-input {
+  filter: blur(4px);
+  transition: filter var(--transition-fast);
+}
+
+.field-sensitive-input:focus {
+  filter: none;
+}
+
+/* A sibling of the .field label, not nested inside it - text inside the
+   <label> becomes part of the input's accessible name (getByLabelText and
+   real screen readers alike), which this hint has no business polluting. */
+.field-sensitive-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--color-text-faint);
 }
 
 input[type='file']::file-selector-button {
@@ -228,7 +252,7 @@ input[type='checkbox'] {
 .badge-accent {
   background: transparent;
   border: 1px solid var(--accent);
-  color: var(--accent);
+  color: var(--accent-fg);
 }
 
 .chip-list {

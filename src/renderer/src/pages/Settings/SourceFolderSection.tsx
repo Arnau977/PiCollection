@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { FolderOpen } from 'lucide-react'
 import type { SourceFolderMigrationPlan } from '@shared/models'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
+import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
 
 type State =
   | { kind: 'idle' }
@@ -76,29 +77,30 @@ export function SourceFolderSection(): JSX.Element {
 
   return (
     <section className="card">
-      <h2>
-        <FolderOpen size={16} aria-hidden="true" />
-        {t('settings.sourceFolderTitle')}
-      </h2>
-      <p className="settings-version">{t('settings.sourceFolderHint')}</p>
+      <SettingsRow
+        titleAs="h2"
+        icon={<FolderOpen size={16} aria-hidden="true" />}
+        title={t('settings.sourceFolderTitle')}
+        description={t('settings.sourceFolderHint')}
+      >
+        {(state.kind === 'idle' || state.kind === 'done' || state.kind === 'error') && (
+          <>
+            <button type="button" className="btn" onClick={handleChoose}>
+              {t('settings.sourceFolderChoose')}
+            </button>
+            {current && (
+              <button type="button" className="btn" onClick={handleClear}>
+                {t('settings.sourceFolderClear')}
+              </button>
+            )}
+          </>
+        )}
+      </SettingsRow>
       <p className="settings-version">
         {current
           ? t('settings.sourceFolderCurrentValue', { path: current })
           : t('settings.sourceFolderNone')}
       </p>
-
-      {(state.kind === 'idle' || state.kind === 'done' || state.kind === 'error') && (
-        <div className="settings-field-actions">
-          <button type="button" className="btn" onClick={handleChoose}>
-            {t('settings.sourceFolderChoose')}
-          </button>
-          {current && (
-            <button type="button" className="btn" onClick={handleClear}>
-              {t('settings.sourceFolderClear')}
-            </button>
-          )}
-        </div>
-      )}
 
       {state.kind === 'scanning' && (
         <p className="settings-version">{t('settings.sourceFolderScanning')}</p>

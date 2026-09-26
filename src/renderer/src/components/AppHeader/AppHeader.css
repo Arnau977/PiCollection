@@ -29,7 +29,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--accent);
+  color: var(--accent-fg);
   font-weight: 800;
   font-size: 1.6rem;
   font-style: normal;
@@ -92,7 +92,7 @@
 }
 
 .app-sidebar-link.active {
-  color: var(--accent);
+  color: var(--accent-fg);
   background: var(--accent-soft);
   border-left-color: var(--accent);
   font-weight: 700;

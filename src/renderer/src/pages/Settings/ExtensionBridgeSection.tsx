@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Radio } from 'lucide-react'
 import type { ExtensionBridgeStatus } from '@shared/models'
+import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
 
 export function ExtensionBridgeSection(): JSX.Element {
   const { t } = useTranslation()
@@ -82,21 +83,20 @@ export function ExtensionBridgeSection(): JSX.Element {
 
   return (
     <section className="card">
-      <h2>
-        <Radio size={16} aria-hidden="true" />
-        {t('settings.extensionBridgeTitle')}
-      </h2>
-      <p className="settings-version">{t('settings.extensionBridgeHint')}</p>
-
-      <label className="checkbox-row">
+      <SettingsRow
+        titleAs="h2"
+        icon={<Radio size={16} aria-hidden="true" />}
+        title={t('settings.extensionBridgeTitle')}
+        description={t('settings.extensionBridgeHint')}
+      >
         <input
           type="checkbox"
+          aria-label={t('settings.extensionBridgeEnable')}
           checked={status.enabled}
           onChange={handleToggleEnabled}
           disabled={pending}
         />
-        {t('settings.extensionBridgeEnable')}
-      </label>
+      </SettingsRow>
 
       {status.enabled && (
         <p className="settings-version">
@@ -110,8 +110,9 @@ export function ExtensionBridgeSection(): JSX.Element {
         <>
           <label className="field">
             <span>{t('settings.extensionBridgeToken')}</span>
-            <input type="text" value={status.token} readOnly />
+            <input type="text" className="field-sensitive-input" value={status.token} readOnly />
           </label>
+          <span className="field-sensitive-hint">{t('settings.sensitiveFieldHint')}</span>
           <div className="settings-field-actions">
             <button type="button" className="btn" onClick={handleCopyToken} disabled={pending}>
               {t('settings.extensionBridgeCopyToken')}

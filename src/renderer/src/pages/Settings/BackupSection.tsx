@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Download, Upload } from 'lucide-react'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
+import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
 import { Toast } from '../../components/Toast/Toast'
 import { loadGalleryDefaults, saveGalleryDefaults } from '../../utils/gallerySettings'
 
@@ -58,13 +59,12 @@ export function BackupSection(): JSX.Element {
 
   return (
     <section className="card">
-      <h2>
-        <Download size={16} aria-hidden="true" />
-        {t('settings.backupTitle')}
-      </h2>
-      <p className="settings-version">{t('settings.backupHint')}</p>
-
-      <div className="settings-field-actions">
+      <SettingsRow
+        titleAs="h2"
+        icon={<Download size={16} aria-hidden="true" />}
+        title={t('settings.backupTitle')}
+        description={t('settings.backupHint')}
+      >
         <button type="button" className="btn" onClick={handleExport}>
           <Download size={16} />
           {t('settings.backupExport')}
@@ -73,7 +73,7 @@ export function BackupSection(): JSX.Element {
           <Upload size={16} />
           {t('settings.backupImport')}
         </button>
-      </div>
+      </SettingsRow>
 
       {status.kind === 'error' && <p role="alert">{status.message}</p>}
       {status.kind === 'importedNeedsRestart' && (

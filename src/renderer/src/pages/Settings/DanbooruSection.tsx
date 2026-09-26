@@ -64,12 +64,14 @@ export function DanbooruSection(): JSX.Element {
       <label className="field">
         <span>{t('settings.danbooruCredentialsApiKey')}</span>
         <input
-          type="password"
+          type="text"
+          className="field-sensitive-input"
           value={apiKey}
           onChange={(e) => onChange('apiKey', e.target.value)}
           autoComplete="off"
         />
       </label>
+      <span className="field-sensitive-hint">{t('settings.sensitiveFieldHint')}</span>
       <div className="settings-field-actions">
         <button type="button" className="btn btn-primary" onClick={save}>
           {t('settings.danbooruCredentialsSave')}

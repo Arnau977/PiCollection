@@ -47,6 +47,7 @@
     "updateReady": "La versión {{version}} está lista para instalarse.",
     "restartAndInstall": "Reiniciar e instalar",
     "updateCheckFailed": "Fallo al buscar actualizaciones: {{message}}",
+    "sensitiveFieldHint": "Difuminado hasta que haces clic.",
     "sauceNaoApiKey": "Clave de API de SauceNAO",
     "sauceNaoApiKeyHint": "Necesaria para que las sugerencias de tags funcionen - SauceNAO ya no permite acceso anónimo a su API. Regístrate gratis en saucenao.com y pega aquí tu clave.",
     "sauceNaoApiKeySave": "Guardar",

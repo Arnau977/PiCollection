@@ -47,6 +47,7 @@
     "updateReady": "Version {{version}} is ready to install.",
     "restartAndInstall": "Restart and install",
     "updateCheckFailed": "Update check failed: {{message}}",
+    "sensitiveFieldHint": "Blurred until clicked.",
     "sauceNaoApiKey": "SauceNAO API key",
     "sauceNaoApiKeyHint": "Required for tag suggestions to work - SauceNAO no longer allows anonymous API access. Register a free account at saucenao.com and paste your key here.",
     "sauceNaoApiKeySave": "Save",

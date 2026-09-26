@@ -36,7 +36,7 @@
 }
 
 .folder-browser-breadcrumb-icon {
-  color: var(--accent);
+  color: var(--accent-fg);
   flex-shrink: 0;
   margin-right: var(--space-1);
 }
@@ -54,7 +54,7 @@
 }
 
 .folder-browser-crumb:hover {
-  color: var(--accent);
+  color: var(--accent-fg);
 }
 
 .folder-browser-crumb:focus-visible {

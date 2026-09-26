@@ -233,7 +233,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  color: var(--accent);
+  color: var(--accent-fg);
 }
 
 .sauce-quota {
