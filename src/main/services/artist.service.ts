@@ -4,11 +4,12 @@ import * as artistRepo from '../database/repositories/artist.repository'
 import { notifyEntitiesChanged } from '../events/entityEvents'
 import type { ArtistInput, ArtistModel, SocialLinkInput } from '@shared/models'
 import type { ArtistSocialLinkTable, ArtistTable } from '../database/schema'
+import { NO_MEDIA, type MediaCounts } from '../database/repositories/mediaCounts'
 
 function toModel(
   row: ArtistTable,
   links: ArtistSocialLinkTable[],
-  mediaCount?: number
+  counts?: MediaCounts
 ): ArtistModel {
   return {
     id: row.id,
@@ -20,7 +21,8 @@ function toModel(
       url: link.url,
       icon: link.icon ?? undefined
     })),
-    mediaCount
+    mediaCount: counts?.library,
+    pendingMediaCount: counts?.pending
   }
 }
 
@@ -39,7 +41,7 @@ export const artistService = {
       toModel(
         row,
         links.filter((link) => link.artist_id === row.id),
-        counts[row.id] ?? 0
+        counts[row.id] ?? NO_MEDIA
       )
     )
   },

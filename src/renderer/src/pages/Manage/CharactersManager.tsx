@@ -26,6 +26,7 @@ import {
   computeRolledUpCounts
 } from '../../utils/buildEntityTree'
 import { EntityCountButton } from '../../components/EntityCountButton/EntityCountButton'
+import { linkedMediaCount } from '../../utils/linkedMediaCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { CharacterModel, SeriesModel } from '@shared/models'
 
@@ -306,7 +307,7 @@ export function CharactersManager(): JSX.Element {
                     className="icon-btn"
                     aria-label={`${t('manage.delete')} ${character.name}`}
                     onClick={() =>
-                      handleDelete(character.id, character.name, character.mediaCount ?? 0)
+                      handleDelete(character.id, character.name, linkedMediaCount(character))
                     }
                   >
                     <Trash2 size={16} />

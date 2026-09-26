@@ -1,4 +1,5 @@
 import type { Kysely } from 'kysely'
+import { libraryCountExpr, pendingCountExpr, toCountsById, type MediaCounts } from './mediaCounts'
 import type { DB, TagTable } from '../schema'
 
 export function findAllTags(db: Kysely<DB>): Promise<TagTable[]> {
@@ -32,13 +33,13 @@ export async function deleteTag(db: Kysely<DB>, id: string): Promise<void> {
 }
 
 /** Direct media_tag link count per tag, 0 for tags with none. */
-export async function countMediaPerTag(db: Kysely<DB>): Promise<Record<string, number>> {
+export async function countMediaPerTag(db: Kysely<DB>): Promise<Record<string, MediaCounts>> {
   const rows = await db
     .selectFrom('tag')
     .leftJoin('media_tag', 'media_tag.tag_id', 'tag.id')
-    .select(['tag.id as id'])
-    .select((eb) => eb.fn.count('media_tag.media_id').as('count'))
+    .leftJoin('media', 'media.id', 'media_tag.media_id')
+    .select(['tag.id as id', libraryCountExpr.as('library'), pendingCountExpr.as('pending')])
     .groupBy('tag.id')
     .execute()
-  return Object.fromEntries(rows.map((row) => [row.id, Number(row.count)]))
+  return toCountsById(rows)
 }

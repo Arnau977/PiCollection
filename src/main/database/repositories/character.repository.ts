@@ -1,4 +1,5 @@
 import type { Kysely } from 'kysely'
+import { libraryCountExpr, pendingCountExpr, toCountsById, type MediaCounts } from './mediaCounts'
 import type { CharacterTable, DB } from '../schema'
 
 export function findAllCharacters(db: Kysely<DB>): Promise<CharacterTable[]> {
@@ -45,16 +46,16 @@ export async function deleteCharacter(db: Kysely<DB>, id: string): Promise<void>
   await db.deleteFrom('character').where('id', '=', id).execute()
 }
 
-/** Direct media_character link count per character, 0 for characters with none. */
-export async function countMediaPerCharacter(db: Kysely<DB>): Promise<Record<string, number>> {
+/** Direct media_character link counts per character, 0 for characters with none. */
+export async function countMediaPerCharacter(db: Kysely<DB>): Promise<Record<string, MediaCounts>> {
   const rows = await db
     .selectFrom('character')
     .leftJoin('media_character', 'media_character.character_id', 'character.id')
-    .select(['character.id as id'])
-    .select((eb) => eb.fn.count('media_character.media_id').as('count'))
+    .leftJoin('media', 'media.id', 'media_character.media_id')
+    .select(['character.id as id', libraryCountExpr.as('library'), pendingCountExpr.as('pending')])
     .groupBy('character.id')
     .execute()
-  return Object.fromEntries(rows.map((row) => [row.id, Number(row.count)]))
+  return toCountsById(rows)
 }
 
 export async function setCharacterSeries(

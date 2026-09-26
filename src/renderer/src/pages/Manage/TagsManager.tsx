@@ -19,6 +19,7 @@ import {
 } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import { EntityCountButton } from '../../components/EntityCountButton/EntityCountButton'
+import { linkedMediaCount } from '../../utils/linkedMediaCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 
 interface TagFormValues {
@@ -201,7 +202,7 @@ export function TagsManager(): JSX.Element {
                     type="button"
                     className="icon-btn"
                     aria-label={`${t('manage.delete')} ${tag.name}`}
-                    onClick={() => handleDelete(tag.id, tag.name, tag.mediaCount ?? 0)}
+                    onClick={() => handleDelete(tag.id, tag.name, linkedMediaCount(tag))}
                   >
                     <Trash2 size={16} />
                   </button>

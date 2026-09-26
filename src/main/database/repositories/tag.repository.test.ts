@@ -20,7 +20,7 @@ afterEach(async () => {
 })
 
 describe('countMediaPerTag', () => {
-  it('counts direct media links per tag, defaulting to 0 for tags with none', async () => {
+  it('counts library and pending media links per tag apart, defaulting to 0', async () => {
     await tagRepo.insertTag(db, { id: 'tagged', name: 'Tagged', aliases_json: '[]', created_at: 1 })
     await tagRepo.insertTag(db, { id: 'untagged', name: 'Untagged', aliases_json: '[]', created_at: 2 })
     const media = await mediaRepo.insertMediaRow(db, {
@@ -38,9 +38,20 @@ describe('countMediaPerTag', () => {
       pending_tagging: 0
     })
     await mediaRepo.setMediaTags(db, media.id, ['tagged'])
+    const pending = await mediaRepo.insertMediaRow(db, {
+      ...media,
+      id: randomUUID(),
+      route: '/pending.png',
+      pending_tagging: 1
+    })
+    await mediaRepo.setMediaTags(db, pending.id, ['tagged'])
 
     const counts = await tagRepo.countMediaPerTag(db)
 
-    expect(counts).toEqual({ tagged: 1, untagged: 0 })
+    // Pending media is counted apart, so it never inflates the library count.
+    expect(counts).toEqual({
+      tagged: { library: 1, pending: 1 },
+      untagged: { library: 0, pending: 0 }
+    })
   })
 })

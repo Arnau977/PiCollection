@@ -10,6 +10,7 @@ import { filterByQuery } from '../../utils/filterByQuery'
 import { loadManageSort, saveManageSort, sortManageEntities, type ManageSort } from '../../utils/manageSort'
 import { ManageSortControl } from '../../components/ManageSortControl/ManageSortControl'
 import { EntityCountButton } from '../../components/EntityCountButton/EntityCountButton'
+import { linkedMediaCount } from '../../utils/linkedMediaCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { ArtistModel } from '@shared/models'
 
@@ -247,7 +248,7 @@ export function ArtistsManager(): JSX.Element {
                     type="button"
                     className="icon-btn"
                     aria-label={`${t('manage.delete')} ${artist.name}`}
-                    onClick={() => handleDelete(artist.id, artist.name, artist.mediaCount ?? 0)}
+                    onClick={() => handleDelete(artist.id, artist.name, linkedMediaCount(artist))}
                   >
                     <Trash2 size={16} />
                   </button>

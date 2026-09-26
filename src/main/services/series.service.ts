@@ -6,15 +6,17 @@ import { AppError } from '../errors'
 import { notifyEntitiesChanged } from '../events/entityEvents'
 import type { SeriesInput, SeriesModel } from '@shared/models'
 import type { SeriesTable } from '../database/schema'
+import { NO_MEDIA, type MediaCounts } from '../database/repositories/mediaCounts'
 
-function toModel(row: SeriesTable, mediaCount?: number): SeriesModel {
+function toModel(row: SeriesTable, counts?: MediaCounts): SeriesModel {
   return {
     id: row.id,
     name: row.name,
     aliases: JSON.parse(row.aliases_json),
     createdAt: row.created_at,
     parentId: row.parent_id,
-    mediaCount
+    mediaCount: counts?.library,
+    pendingMediaCount: counts?.pending
   }
 }
 
@@ -25,7 +27,7 @@ export const seriesService = {
       seriesRepo.findAllSeries(db),
       seriesRepo.countMediaPerSeries(db)
     ])
-    return rows.map((row) => toModel(row, counts[row.id] ?? 0))
+    return rows.map((row) => toModel(row, counts[row.id] ?? NO_MEDIA))
   },
 
   async createSeries(input: SeriesInput): Promise<SeriesModel> {

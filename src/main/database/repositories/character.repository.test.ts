@@ -53,6 +53,9 @@ describe('countMediaPerCharacter', () => {
 
     const counts = await characterRepo.countMediaPerCharacter(db)
 
-    expect(counts).toEqual({ tagged: 1, untagged: 0 })
+    expect(counts).toEqual({
+      tagged: { library: 1, pending: 0 },
+      untagged: { library: 0, pending: 0 }
+    })
   })
 })

@@ -105,4 +105,24 @@ describe('statsService.getSummary', () => {
 
     expect(summary).toEqual({ topArtists: [], topTags: [], topCharacters: [], topSeries: [] })
   })
+
+  it('leaves pending media out of the rankings', async () => {
+    const artist = await artistService.createArtist({ name: 'Artist' })
+    const tag = await tagService.createTag({ name: 'tag' })
+    const character = await characterService.createCharacter({ name: 'Character' })
+    const series = await seriesService.createSeries({ name: 'Series' })
+    await mediaService.addMedia(
+      baseInput({
+        pendingTagging: true,
+        artistId: artist.id,
+        tagIds: [tag.id],
+        characterIds: [character.id],
+        seriesIds: [series.id]
+      })
+    )
+
+    const summary = await statsService.getSummary()
+
+    expect(summary).toEqual({ topArtists: [], topTags: [], topCharacters: [], topSeries: [] })
+  })
 })

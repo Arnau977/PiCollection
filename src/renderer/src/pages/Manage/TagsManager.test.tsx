@@ -203,6 +203,17 @@ describe('TagsManager', () => {
     expect(refetchTags).toHaveBeenCalled()
   })
 
+  it('still confirms deleting a tag only pending media uses', async () => {
+    tagsData = [{ id: 't3', name: 'sketch', createdAt: 1, mediaCount: 0, pendingMediaCount: 2 }]
+    const user = userEvent.setup()
+    setApi({ delete: vi.fn().mockResolvedValue({ success: true, data: undefined }) })
+    render(<TagsManager />, { wrapper: MemoryRouter })
+
+    await user.click(screen.getByRole('button', { name: 'Delete sketch' }))
+
+    expect(confirmMock).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('2') }))
+  })
+
   it('shows an empty state when there are no tags', () => {
     tagsData = []
     render(<TagsManager />, { wrapper: MemoryRouter })

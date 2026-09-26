@@ -4,14 +4,16 @@ import * as tagRepo from '../database/repositories/tag.repository'
 import { notifyEntitiesChanged } from '../events/entityEvents'
 import type { TagInput, TagModel } from '@shared/models'
 import type { TagTable } from '../database/schema'
+import { NO_MEDIA, type MediaCounts } from '../database/repositories/mediaCounts'
 
-function toModel(row: TagTable, mediaCount?: number): TagModel {
+function toModel(row: TagTable, counts?: MediaCounts): TagModel {
   return {
     id: row.id,
     name: row.name,
     aliases: JSON.parse(row.aliases_json),
     createdAt: row.created_at,
-    mediaCount
+    mediaCount: counts?.library,
+    pendingMediaCount: counts?.pending
   }
 }
 
@@ -22,7 +24,7 @@ export const tagService = {
       tagRepo.findAllTags(db),
       tagRepo.countMediaPerTag(db)
     ])
-    return rows.map((row) => toModel(row, counts[row.id] ?? 0))
+    return rows.map((row) => toModel(row, counts[row.id] ?? NO_MEDIA))
   },
 
   async createTag(input: TagInput): Promise<TagModel> {

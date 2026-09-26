@@ -10,7 +10,10 @@ export interface ArtistModel {
   name: string
   createdAt?: number
   socials?: SocialLink[]
+  /** Media in the library (pending excluded). */
   mediaCount?: number
+  /** Pending media still linked to it - only matters when deleting it. */
+  pendingMediaCount?: number
 }
 
 export interface ArtistFilters {
