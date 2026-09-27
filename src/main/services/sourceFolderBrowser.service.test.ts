@@ -188,6 +188,33 @@ describe('sourceFolderBrowserService.expandSelection', () => {
     ])
   })
 
+  it('orders files by folder, then oldest-modified first inside each folder', async () => {
+    await fs.mkdir(join(sourceDir, 'set 10'))
+    await fs.mkdir(join(sourceDir, 'set 2'))
+    const files: [string, number][] = [
+      [join('set 10', 'a.png'), 1],
+      [join('set 2', 'newest.png'), 300],
+      [join('set 2', 'oldest.png'), 100],
+      [join('set 2', 'middle.png'), 200]
+    ]
+    for (const [relativePath, seconds] of files) {
+      await fs.writeFile(join(sourceDir, relativePath), 'x')
+      await fs.utimes(join(sourceDir, relativePath), seconds, seconds)
+    }
+
+    const result = await sourceFolderBrowserService.expandSelection({
+      files: [],
+      folders: ['set 10', 'set 2']
+    })
+
+    expect(result.map((file) => file.fileName)).toEqual([
+      'oldest.png',
+      'middle.png',
+      'newest.png',
+      'a.png'
+    ])
+  })
+
   it('dedupes a file reachable both directly and via a selected ancestor folder', async () => {
     await fs.mkdir(join(sourceDir, 'sub'))
     await fs.writeFile(join(sourceDir, 'sub', 'a.png'), 'x')

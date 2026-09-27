@@ -45,7 +45,8 @@ required.
   moment, and its characters get linked to its series then.
 - **Batch import** — pick files and folders from your source folder and
   step through them one by one (Previous/Next, Save, Send to pending), or
-  send all the remaining ones to Pending at once.
+  send all the remaining ones to Pending at once. Files come folder by
+  folder, oldest-modified first, so pictures saved together stay together.
 - **Gallery search** — a single text field that suggests tags/characters/
   series/artists and supports `AND` (space), `OR`, `-exclude` and
   `(parentheses)` for grouping, e.g. `(Ishtar OR Ereshkigal) -Fujimaru`.

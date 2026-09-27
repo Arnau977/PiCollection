@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs'
-import { basename, extname, join, normalize } from 'path'
+import { basename, dirname, extname, join, normalize } from 'path'
 import type { Kysely } from 'kysely'
 import { getDb } from '../database/connection'
 import * as mediaRepo from '../database/repositories/media.repository'
@@ -96,6 +96,36 @@ async function countUncatalogedMediaFilesRecursively(
   }
 }
 
+const naturalCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+
+/**
+ * Import-queue order: grouped by folder (in natural order, so "Part 2" comes
+ * before "Part 10"), and inside each folder oldest-modified first - usually
+ * the order the files were saved, which keeps a series of related pictures
+ * together and makes tagging them in a row easier. A file whose mtime can't
+ * be read sorts first in its folder rather than failing the whole import.
+ */
+async function sortForImport(candidates: FileCandidate[]): Promise<FileCandidate[]> {
+  const withTimes = await Promise.all(
+    candidates.map(async (candidate) => {
+      let mtimeMs = 0
+      try {
+        mtimeMs = (await fs.stat(candidate.absolutePath)).mtimeMs
+      } catch {
+        // Keep the 0 fallback.
+      }
+      return { candidate, folder: dirname(candidate.absolutePath), mtimeMs }
+    })
+  )
+  withTimes.sort(
+    (a, b) =>
+      naturalCollator.compare(a.folder, b.folder) ||
+      a.mtimeMs - b.mtimeMs ||
+      naturalCollator.compare(a.candidate.fileName, b.candidate.fileName)
+  )
+  return withTimes.map((entry) => entry.candidate)
+}
+
 export const sourceFolderBrowserService = {
   async browse(relativePath: string): Promise<SourceFolderBrowseResult> {
     const sourceFolder = requireSourceFolder()
@@ -146,7 +176,10 @@ export const sourceFolderBrowserService = {
     return { folders, files }
   },
 
-  async expandSelection(input: { files: string[]; folders: string[] }): Promise<ExpandedMediaFile[]> {
+  async expandSelection(input: {
+    files: string[]
+    folders: string[]
+  }): Promise<ExpandedMediaFile[]> {
     const sourceFolder = requireSourceFolder()
 
     const looseFiles: FileCandidate[] = input.files
@@ -177,12 +210,11 @@ export const sourceFolderBrowserService = {
     )
     const catalogedRoutes = await mediaRepo.routesExist(getDb(), relativeRoutes)
 
-    return candidates
-      .filter((_, index) => !catalogedRoutes.has(relativeRoutes[index]))
-      .map((candidate) => ({
-        route: candidate.absolutePath,
-        fileName: candidate.fileName,
-        type: candidate.type
-      }))
+    const uncataloged = candidates.filter((_, index) => !catalogedRoutes.has(relativeRoutes[index]))
+    return (await sortForImport(uncataloged)).map((candidate) => ({
+      route: candidate.absolutePath,
+      fileName: candidate.fileName,
+      type: candidate.type
+    }))
   }
 }
