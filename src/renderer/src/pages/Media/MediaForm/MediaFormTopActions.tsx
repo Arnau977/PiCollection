@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { StableLabel } from '../../../components/StableLabel/StableLabel'
 import { ArrowLeft, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
 import type { MediaModel } from '@shared/models'
 import type { QueueInfo } from './MediaForm.types'
@@ -53,6 +54,7 @@ export function MediaFormTopActions({
   onDelete
 }: MediaFormTopActionsProps): JSX.Element {
   const { t } = useTranslation()
+  const saveLabel = queueInfo || isEditing ? t('manage.save') : t('addMedia.submit')
 
   return (
     <div className="media-page-actions media-form-top-actions">
@@ -111,11 +113,10 @@ export function MediaFormTopActions({
             className="btn btn-primary"
             disabled={saving || deleting || hasExactDuplicate}
           >
-            {saving
-              ? t('media.saving')
-              : queueInfo || isEditing
-                ? t('manage.save')
-                : t('addMedia.submit')}
+            <StableLabel
+              current={saving ? t('media.saving') : saveLabel}
+              labels={[saveLabel, t('media.saving')]}
+            />
           </button>
         </div>
         {media?.pendingTagging && onDelete && (
@@ -128,7 +129,10 @@ export function MediaFormTopActions({
               disabled={saving || deleting}
             >
               <Trash2 size={16} />
-              {deleting ? t('media.deleting') : t('media.delete')}
+              <StableLabel
+                current={deleting ? t('media.deleting') : t('media.delete')}
+                labels={[t('media.delete'), t('media.deleting')]}
+              />
             </button>
           </>
         )}

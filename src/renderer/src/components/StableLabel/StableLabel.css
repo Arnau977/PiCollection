@@ -1,0 +1,12 @@
+.stable-label {
+  display: inline-grid;
+}
+
+.stable-label > * {
+  grid-area: 1 / 1;
+  text-align: center;
+}
+
+.stable-label-reserve {
+  visibility: hidden;
+}

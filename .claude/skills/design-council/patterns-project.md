@@ -40,6 +40,11 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   opens on keyboard focus and says when it comes back. `.btn[aria-disabled]`
   in `main.css` gives it the disabled look. Where:
   `SauceNaoSuggestionsPanel.tsx` (SauceNAO daily limit).
+- **A button whose label changes while busy ("Save" -> "Saving...") keeps
+  its width** by reserving every label with `StableLabel`, so the rest of
+  the action bar doesn't twitch. Where:
+  `src/renderer/src/components/StableLabel/StableLabel.tsx`,
+  `MediaFormTopActions.tsx`.
 - **Confirm before bulk or destructive actions** with the shared dialog
   (`useConfirm`); name the count in the message and on the button. Where:
   `src/renderer/src/components/ConfirmDialog/ConfirmDialogContext.tsx`.
