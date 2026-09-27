@@ -35,11 +35,21 @@ here.
 
 ## Patterns
 
-(none recorded yet)
+### Explain a disabled button with a tooltip on an aria-disabled control
+- Kind: pattern
+- Use when / avoid when: an action is unavailable for a reason the user can't see (quota, missing prerequisite). Keep the button focusable with `aria-disabled="true"`, block the click in code, and link the reason with `aria-describedby`. Avoid it when the reason is critical and needs to be visible without hovering; show it inline then.
+- Takeaway for PiCollection: reuse the `InfoTooltip` bubble style, open it on `:hover` and `:focus-within`, and say when the action will work again.
+- Source: Making Disabled Buttons More Inclusive (CSS-Tricks) - https://css-tricks.com/making-disabled-buttons-more-inclusive/ ; aria-disabled (a11y-101) - https://a11y-101.com/development/aria-disabled
+- Checked: 2026-09-27
 
 ## Anti-patterns
 
-(none recorded yet)
+### Tooltip on a natively disabled button
+- Kind: anti-pattern
+- Use when / avoid when: the `disabled` attribute drops the button from the tab order and pointer events, so keyboard and screen reader users never get the tooltip explaining why. Use `aria-disabled` instead (see the pattern above).
+- Takeaway for PiCollection: never put the only explanation of a disabled state behind a `disabled` button's hover.
+- Source: MUI issue #33182 - https://github.com/mui/material-ui/issues/33182 ; react-spectrum discussion #9232 - https://github.com/adobe/react-spectrum/discussions/9232
+- Checked: 2026-09-27
 
 ## Trends
 

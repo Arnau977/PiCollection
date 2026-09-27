@@ -83,7 +83,10 @@ beforeEach(() => {
       character: { create: vi.fn() },
       series: { create: vi.fn() },
       system: { showInFolder: vi.fn() },
-      sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+      sauceNao: {
+        getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+        getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+      },
       wd14Runtime: {
         getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
         onEvent: vi.fn().mockReturnValue(() => {})
@@ -171,7 +174,10 @@ function setOrderedIds(data: string[]): void {
       character: { create: vi.fn() },
       series: { create: vi.fn() },
       system: { showInFolder: vi.fn() },
-      sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+      sauceNao: {
+        getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+        getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+      },
       wd14Runtime: {
         getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
         onEvent: vi.fn().mockReturnValue(() => {})
@@ -355,7 +361,10 @@ describe('MediaPage editing', () => {
         artist: { create: vi.fn() },
         tag: { create: vi.fn() },
         character: { create: vi.fn() },
-        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+        sauceNao: {
+          getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+        },
         wd14Runtime: {
           getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
           onEvent: vi.fn().mockReturnValue(() => {})
@@ -410,7 +419,10 @@ describe('MediaPage delete', () => {
         character: { create: vi.fn() },
         series: { create: vi.fn() },
         system: { showInFolder: vi.fn() },
-        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+        sauceNao: {
+          getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+        },
         wd14Runtime: {
           getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
           onEvent: vi.fn().mockReturnValue(() => {})
@@ -445,7 +457,10 @@ describe('MediaPage delete', () => {
         character: { create: vi.fn() },
         series: { create: vi.fn() },
         system: { showInFolder: vi.fn() },
-        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+        sauceNao: {
+          getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+        },
         wd14Runtime: {
           getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
           onEvent: vi.fn().mockReturnValue(() => {})
@@ -479,7 +494,10 @@ describe('MediaPage delete', () => {
         character: { create: vi.fn() },
         series: { create: vi.fn() },
         system: { showInFolder: vi.fn() },
-        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+        sauceNao: {
+          getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+        },
         wd14Runtime: {
           getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
           onEvent: vi.fn().mockReturnValue(() => {})
@@ -538,7 +556,10 @@ describe('MediaPage pending queue', () => {
         character: { create: vi.fn() },
         series: { create: vi.fn() },
         system: { showInFolder: vi.fn() },
-        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+        sauceNao: {
+          getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+        },
         wd14Runtime: {
           getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
           onEvent: vi.fn().mockReturnValue(() => {})
@@ -599,7 +620,10 @@ describe('MediaPage pending queue', () => {
         character: { create: vi.fn() },
         series: { create: vi.fn() },
         system: { showInFolder: vi.fn() },
-        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+        sauceNao: {
+          getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+        },
         wd14Runtime: {
           getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
           onEvent: vi.fn().mockReturnValue(() => {})
@@ -652,7 +676,10 @@ describe('MediaPage pending queue', () => {
         character: { create: vi.fn() },
         series: { create: vi.fn() },
         system: { showInFolder: vi.fn() },
-        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+        sauceNao: {
+          getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+        },
         wd14Runtime: {
           getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
           onEvent: vi.fn().mockReturnValue(() => {})
@@ -693,7 +720,10 @@ describe('MediaPage pending queue', () => {
         character: { create: vi.fn() },
         series: { create: vi.fn() },
         system: { showInFolder: vi.fn() },
-        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+        sauceNao: {
+          getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+        },
         wd14Runtime: {
           getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
           onEvent: vi.fn().mockReturnValue(() => {})
@@ -773,7 +803,10 @@ describe('MediaPage mark resolved', () => {
         character: { create: vi.fn() },
         series: { create: vi.fn() },
         system: { showInFolder: vi.fn() },
-        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+        sauceNao: {
+          getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+        },
         wd14Runtime: {
           getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
           onEvent: vi.fn().mockReturnValue(() => {})
@@ -813,7 +846,10 @@ describe('MediaPage mark resolved', () => {
         character: { create: vi.fn() },
         series: { create: vi.fn() },
         system: { showInFolder: vi.fn() },
-        sauceNao: { getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' }) },
+        sauceNao: {
+          getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
+          getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
+        },
         wd14Runtime: {
           getStatus: vi.fn().mockResolvedValue({ success: true, data: { state: 'not-installed' } }),
           onEvent: vi.fn().mockReturnValue(() => {})

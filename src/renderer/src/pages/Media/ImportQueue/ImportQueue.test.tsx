@@ -33,6 +33,7 @@ beforeEach(() => {
       series: { create: vi.fn() },
       sauceNao: {
         lookup: vi.fn(),
+        getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
         getApiKey: vi.fn().mockResolvedValue({ success: true, data: null })
       },
       wd14Runtime: {

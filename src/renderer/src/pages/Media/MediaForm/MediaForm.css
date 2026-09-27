@@ -211,6 +211,25 @@
   gap: var(--space-2);
 }
 
+.sauce-button-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Opens below: the button sits at the top of the rail, where a bubble above would be clipped. */
+.sauce-button-wrap .sauce-limit-bubble {
+  top: calc(100% + 8px);
+  bottom: auto;
+  left: 0;
+  right: auto;
+}
+
+.sauce-button-wrap:hover .sauce-limit-bubble,
+.sauce-button-wrap:focus-within .sauce-limit-bubble {
+  opacity: 1;
+  visibility: visible;
+}
+
 .sauce-hint {
   font-size: 0.78rem;
   color: var(--color-text-faint);

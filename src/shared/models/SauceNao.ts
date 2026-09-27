@@ -41,3 +41,8 @@ export interface SauceNaoLookup {
   /** SauceNAO's own remaining-search counters, for a "N searches left" hint. */
   remaining: { short: number; long: number }
 }
+
+export interface SauceNaoQuota {
+  /** Epoch ms until which searches are paused after hitting the daily limit; null = searches allowed. */
+  exhaustedUntil: number | null
+}

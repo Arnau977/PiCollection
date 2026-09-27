@@ -423,6 +423,7 @@
     "noMatch": "No confident match found.",
     "dismiss": "Dismiss",
     "quota": "{{count}} searches left today",
+    "dailyLimitTooltip": "SauceNAO's daily search limit was reached. Searches free up gradually over 24 hours; you can try again at {{time}}.",
     "add": "Add",
     "missingArtist": "New artist",
     "missingTags": "New tags",

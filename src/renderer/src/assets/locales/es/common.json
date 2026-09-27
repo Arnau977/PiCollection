@@ -423,6 +423,7 @@
     "noMatch": "No se encontró ninguna coincidencia fiable.",
     "dismiss": "Descartar",
     "quota": "{{count}} búsquedas restantes hoy",
+    "dailyLimitTooltip": "Se alcanzó el límite diario de búsquedas de SauceNAO. Las búsquedas se liberan poco a poco a lo largo de 24 horas; puedes volver a intentarlo a las {{time}}.",
     "add": "Añadir",
     "missingArtist": "Artista nuevo",
     "missingTags": "Tags nuevos",

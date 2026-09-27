@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { withVideoFrameFallback } from '../utils/withVideoFrameFallback'
 import type {
   ArtistModel,
@@ -28,11 +28,16 @@ interface UseSauceNaoSuggestionsArgs {
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
 
+/** Matches `DAILY_LIMIT_ERROR_CODE` in the main process's sauceNao.service.ts. */
+const DAILY_LIMIT_ERROR_CODE = 'SAUCE_NAO_DAILY_LIMIT'
+
 interface UseSauceNaoSuggestionsResult {
   status: Status
   error: string | null
   match: SauceNaoMatch | null
   remaining: { short: number; long: number } | null
+  /** Epoch ms until which searches are paused after SauceNAO's daily limit; null = allowed. */
+  exhaustedUntil: number | null
   appliedCount: number
   missing: Record<SuggestionCategory, string[]>
   /** `type` lets a video fall back to a frame captured here when the OS can't thumbnail it. */
@@ -52,8 +57,28 @@ export function useSauceNaoSuggestions({
   const [error, setError] = useState<string | null>(null)
   const [match, setMatch] = useState<SauceNaoMatch | null>(null)
   const [remaining, setRemaining] = useState<{ short: number; long: number } | null>(null)
+  const [exhaustedUntil, setExhaustedUntil] = useState<number | null>(null)
   const [appliedCount, setAppliedCount] = useState(0)
   const [missing, setMissing] = useState<Record<SuggestionCategory, string[]>>(EMPTY_MISSING)
+
+  // The pause lives in the main process, so it survives closing this form.
+  const refreshQuota = useCallback(async () => {
+    const result = await window.api.sauceNao.getQuota()
+    if (result.success) setExhaustedUntil(result.data.exhaustedUntil)
+  }, [])
+
+  useEffect(() => {
+    void refreshQuota()
+  }, [refreshQuota])
+
+  useEffect(() => {
+    if (exhaustedUntil === null) return
+    const timer = setTimeout(
+      () => setExhaustedUntil(null),
+      Math.max(0, exhaustedUntil - Date.now())
+    )
+    return (): void => clearTimeout(timer)
+  }, [exhaustedUntil])
 
   // Matching happens once, right here, using whatever entity lists were
   // passed in at the moment the lookup resolves - a snapshot of what was on
@@ -69,7 +94,13 @@ export function useSauceNaoSuggestions({
       const result = await withVideoFrameFallback(route, type, () =>
         window.api.sauceNao.lookup(route)
       )
+      void refreshQuota()
       if (!result.success) {
+        // The disabled button's tooltip explains this one - no inline error.
+        if (result.error.code === DAILY_LIMIT_ERROR_CODE) {
+          setStatus('idle')
+          return
+        }
         setStatus('error')
         setError(result.error.message)
         return
@@ -94,7 +125,7 @@ export function useSauceNaoSuggestions({
       setAppliedCount(matched.appliedCount)
       setStatus('ready')
     },
-    [status, artists, tags, characters, series, onApplyExisting]
+    [status, artists, tags, characters, series, onApplyExisting, refreshQuota]
   )
 
   const dismiss = useCallback((category: SuggestionCategory, name: string) => {
@@ -113,5 +144,16 @@ export function useSauceNaoSuggestions({
     setMissing(EMPTY_MISSING)
   }, [])
 
-  return { status, error, match, remaining, appliedCount, missing, run, dismiss, reset }
+  return {
+    status,
+    error,
+    match,
+    remaining,
+    exhaustedUntil,
+    appliedCount,
+    missing,
+    run,
+    dismiss,
+    reset
+  }
 }

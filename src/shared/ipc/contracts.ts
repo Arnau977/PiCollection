@@ -274,6 +274,7 @@ export const IPC = {
   },
   sauceNao: {
     lookup: 'sauce-nao:lookup',
+    getQuota: 'sauce-nao:get-quota',
     getApiKey: 'sauce-nao:get-api-key',
     setApiKey: 'sauce-nao:set-api-key'
   },
