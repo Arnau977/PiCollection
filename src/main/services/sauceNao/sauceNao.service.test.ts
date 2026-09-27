@@ -29,7 +29,7 @@ vi.mock('../rateLimiter', () => ({
   createRateLimiter: (minIntervalMs: number) => createRateLimiter(minIntervalMs)
 }))
 
-const { lookupSauceNao, clearSauceNaoCache } = await import('./sauceNao.service')
+const { lookupSauceNao, clearSauceNaoCache, getSauceNaoQuota } = await import('./sauceNao.service')
 
 function jsonResponse(body: unknown, status = 200): Response {
   return {
@@ -118,9 +118,38 @@ describe('lookupSauceNao', () => {
     await expect(lookupSauceNao('/pic.png')).rejects.toThrow('took too long to respond')
   })
 
-  it('surfaces a rate-limit message on HTTP 429', async () => {
-    vi.mocked(fetch).mockResolvedValue(jsonResponse({}, 429))
-    await expect(lookupSauceNao('/pic.png')).rejects.toThrow('rate limit')
+  it('surfaces our own rate-limit message on a per-30s HTTP 429, without pausing searches', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({ header: { message: '<strong>Search Rate Too High.</strong><br />...' } }, 429)
+    )
+    await expect(lookupSauceNao('/pic.png')).rejects.toThrow('Wait about 30 seconds')
+    expect(getSauceNaoQuota().exhaustedUntil).toBeNull()
+  })
+
+  it('pauses searches after the daily-limit 429, rejecting later ones without a request', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse(
+        { header: { message: '<strong>Daily Search Limit Exceeded.</strong><br />Your IP...' } },
+        429
+      )
+    )
+    const daily = {
+      code: 'SAUCE_NAO_DAILY_LIMIT',
+      message: "SauceNAO's daily search limit was reached."
+    }
+    await expect(lookupSauceNao('/pic.png')).rejects.toMatchObject(daily)
+    expect(getSauceNaoQuota().exhaustedUntil).toBeGreaterThan(Date.now())
+
+    await expect(lookupSauceNao('/other.png')).rejects.toMatchObject(daily)
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('pauses searches once a successful search reports none left', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({ header: { short_remaining: 3, long_remaining: 0 }, results: [] })
+    )
+    await lookupSauceNao('/pic.png')
+    expect(getSauceNaoQuota().exhaustedUntil).not.toBeNull()
   })
 
   it('surfaces a generic message on HTTP 403 with no parseable body', async () => {
@@ -149,9 +178,11 @@ describe('lookupSauceNao', () => {
 
   it('surfaces the header message when SauceNAO reports a search-level error', async () => {
     vi.mocked(fetch).mockResolvedValue(
-      jsonResponse({ header: { status: -2, message: 'Image too small.' } })
+      jsonResponse({
+        header: { status: -2, message: '<strong>Image too small.</strong><br />Try another.' }
+      })
     )
-    await expect(lookupSauceNao('/pic.png')).rejects.toThrow('Image too small.')
+    await expect(lookupSauceNao('/pic.png')).rejects.toThrow(/^Image too small. Try another.$/)
   })
 
   it('surfaces a generic message when the response body is not valid JSON, and logs the cause', async () => {

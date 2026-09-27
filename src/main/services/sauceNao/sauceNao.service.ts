@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs'
-import type { SauceNaoLookup } from '@shared/models'
+import type { SauceNaoLookup, SauceNaoQuota } from '@shared/models'
 import { resolveThumbnail } from '../../thumbnails/thumbnails'
 import { AppError } from '../../errors'
 import { readSauceNaoApiKey } from './sauceNaoSettings'
@@ -21,6 +21,36 @@ const rateLimit = createRateLimiter(3000)
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
+// SauceNAO's daily quota is a rolling 24h window, so searches free up again
+// gradually and there's no exact reset time to wait for. Pausing for an hour
+// stops the button from sending searches that are sure to fail, without
+// locking it for a whole day; a rejected search doesn't use up quota, so
+// trying again after the pause costs nothing.
+const DAILY_LIMIT_PAUSE_MS = 60 * 60 * 1000
+export const DAILY_LIMIT_ERROR_CODE = 'SAUCE_NAO_DAILY_LIMIT'
+const DAILY_LIMIT_MESSAGE = "SauceNAO's daily search limit was reached."
+
+/** In memory only: after a restart, the first rejected search sets it again. */
+let exhaustedUntil: number | null = null
+
+export function getSauceNaoQuota(): SauceNaoQuota {
+  if (exhaustedUntil !== null && exhaustedUntil <= Date.now()) exhaustedUntil = null
+  return { exhaustedUntil }
+}
+
+function markDailyLimitReached(): void {
+  exhaustedUntil = Date.now() + DAILY_LIMIT_PAUSE_MS
+}
+
+/** SauceNAO's `header.message` is HTML meant for its website (`<strong>`, `<br />`, links). */
+function toPlainText(message: string): string {
+  return message
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 /** Cheap double-click/second-window protection - not a queue. */
 let inFlight = false
 
@@ -37,6 +67,7 @@ const resultCache = new Map<string, SauceNaoLookup>()
 /** Test-only: module-scoped state would otherwise leak between test cases. */
 export function clearSauceNaoCache(): void {
   resultCache.clear()
+  exhaustedUntil = null
 }
 
 function maskApiKey(key: string): string {
@@ -84,7 +115,8 @@ async function describeSauceNaoErrorResponse(res: Response): Promise<string | nu
 
   try {
     const parsed = SauceNaoResponseSchema.safeParse(JSON.parse(bodyText))
-    return (parsed.success && parsed.data.header?.message) || null
+    const message = parsed.success ? parsed.data.header?.message : undefined
+    return message ? toPlainText(message) || null : null
   } catch {
     return null
   }
@@ -101,6 +133,10 @@ export async function lookupSauceNao(route: string): Promise<SauceNaoLookup> {
 
   const cached = resultCache.get(thumbPath)
   if (cached) return cached
+
+  if (getSauceNaoQuota().exhaustedUntil !== null) {
+    throw new AppError(DAILY_LIMIT_ERROR_CODE, DAILY_LIMIT_MESSAGE)
+  }
 
   if (inFlight) {
     throw new Error('A SauceNAO search is already running.')
@@ -152,10 +188,14 @@ export async function lookupSauceNao(route: string): Promise<SauceNaoLookup> {
     }
 
     if (res.status === 429) {
+      // Two different limits share this status: the per-30s one ("Search
+      // Rate Too High.") and the daily one ("Daily Search Limit Exceeded.").
       const detail = await describeSauceNaoErrorResponse(res)
-      throw new Error(
-        detail ?? "SauceNAO's rate limit was reached. Wait about 30 seconds and try again."
-      )
+      if (detail && /daily/i.test(detail)) {
+        markDailyLimitReached()
+        throw new AppError(DAILY_LIMIT_ERROR_CODE, DAILY_LIMIT_MESSAGE)
+      }
+      throw new Error("SauceNAO's rate limit was reached. Wait about 30 seconds and try again.")
     }
     if (res.status === 403) {
       const detail = await describeSauceNaoErrorResponse(res)
@@ -196,10 +236,13 @@ export async function lookupSauceNao(route: string): Promise<SauceNaoLookup> {
     // status < 0 is a search-level error; > 0 is a per-index warning, safe to ignore.
     const status = parsed.data.header?.status
     if (typeof status === 'number' && status < 0) {
-      throw new Error(parsed.data.header?.message || 'SauceNAO could not process that image.')
+      const message = toPlainText(parsed.data.header?.message ?? '')
+      throw new Error(message || 'SauceNAO could not process that image.')
     }
 
     const lookup = pickBestMatch(parsed.data)
+    // That search was the last one of the window - don't wait for a rejection.
+    if (parsed.data.header?.long_remaining === 0) markDailyLimitReached()
     if (lookup.match) {
       lookup.match.tags = await fetchDanbooruTags(lookup.match.sourceUrl)
     }

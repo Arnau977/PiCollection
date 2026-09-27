@@ -27,6 +27,7 @@ import type {
   RelinkOneResult,
   RelinkResult,
   SauceNaoLookup,
+  SauceNaoQuota,
   SeriesInput,
   SeriesModel,
   SocialLinkInput,
@@ -207,6 +208,7 @@ export const api = {
   sauceNao: {
     lookup: (route: string): Promise<IpcResult<SauceNaoLookup>> =>
       ipcRenderer.invoke(IPC.sauceNao.lookup, route),
+    getQuota: (): Promise<IpcResult<SauceNaoQuota>> => ipcRenderer.invoke(IPC.sauceNao.getQuota),
     getApiKey: (): Promise<IpcResult<string | undefined>> =>
       ipcRenderer.invoke(IPC.sauceNao.getApiKey),
     setApiKey: (apiKey: string | undefined): Promise<IpcResult<void>> =>

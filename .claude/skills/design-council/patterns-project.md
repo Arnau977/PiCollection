@@ -35,6 +35,11 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
 - **Primary actions save first.** A button that ends the task ("Save & mark
   resolved") persists the form before moving on, and stays put with the
   error shown if saving fails. Where: `MediaForm.tsx` `saveForm()` (#90).
+- **An action that's temporarily unavailable stays visible, is marked
+  `aria-disabled` (not `disabled`) and explains why in a tooltip** that also
+  opens on keyboard focus and says when it comes back. `.btn[aria-disabled]`
+  in `main.css` gives it the disabled look. Where:
+  `SauceNaoSuggestionsPanel.tsx` (SauceNAO daily limit).
 - **Confirm before bulk or destructive actions** with the shared dialog
   (`useConfirm`); name the count in the message and on the button. Where:
   `src/renderer/src/components/ConfirmDialog/ConfirmDialogContext.tsx`.
@@ -98,5 +103,9 @@ of them.
   use a scroll region instead (see ManagePage.css).
 - **Unguarded async buttons.** Double clicks during a bulk create produced
   hundreds of duplicate rows; disable the trigger and use a ref guard.
+- **Showing a third-party API's message verbatim.** SauceNAO's
+  `header.message` is HTML for its website, and the panel printed the raw
+  `<strong>`/`<br />` tags. Map known errors to our own message; strip
+  tags from anything passed through.
 - **Trusting the OS for video thumbnails.** Windows refuses them in
   cloud-synced folders; always keep the in-app frame fallback (#89).

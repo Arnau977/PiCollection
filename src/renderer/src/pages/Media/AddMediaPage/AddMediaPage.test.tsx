@@ -66,6 +66,7 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
     series: { create: vi.fn(), getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
     sauceNao: {
       lookup: vi.fn(),
+      getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),
       getApiKey: vi.fn().mockResolvedValue({ success: true, data: 'test-key' })
     },
     wd14Runtime: {
@@ -630,6 +631,25 @@ describe('AddMediaPage SauceNAO suggestions', () => {
     await user.click(screen.getByRole('button', { name: 'Suggest tags' }))
 
     await vi.waitFor(() => expect(lookup).toHaveBeenCalledWith('sunset.png'))
+  })
+
+  it('turns Suggest tags off with an explaining tooltip after the daily limit', async () => {
+    const lookup = vi.fn()
+    const getQuota = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { exhaustedUntil: Date.now() + 60_000 } })
+    setApi({ sauceNao: { lookup, getQuota } })
+    const user = userEvent.setup()
+    renderPage()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, makeFile('sunset.png'))
+    const button = screen.getByRole('button', { name: 'Suggest tags' })
+    await vi.waitFor(() => expect(button).toHaveAttribute('aria-disabled', 'true'))
+    expect(button).toHaveAccessibleDescription(/daily search limit was reached/)
+
+    await user.click(button)
+    expect(lookup).not.toHaveBeenCalled()
   })
 
   it('pre-selects a suggested character that already exists in the library', async () => {

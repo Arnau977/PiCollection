@@ -74,7 +74,9 @@ required.
   linked automatically if you create that artist from the suggestion.
   Requires a free SauceNAO API key set in Settings — SauceNAO no longer
   allows anonymous API access at all, so the suggestions button doesn't
-  appear at all until a key is configured. This is the only feature that
+  appear at all until a key is configured. Once SauceNAO's daily search
+  limit is reached, the button turns off for an hour and its tooltip says
+  when to try again. This is the only feature that
   sends any of your media off your machine, and only on that explicit
   button press.
 - **Local AI tagging** — "Suggest tags locally" runs a WD14 tagger entirely

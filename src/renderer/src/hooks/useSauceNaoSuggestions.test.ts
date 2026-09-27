@@ -31,7 +31,12 @@ function makeMatch(overrides: Partial<SauceNaoMatch> = {}): SauceNaoMatch {
 
 function setApi(lookup: ReturnType<typeof vi.fn>): void {
   Object.defineProperty(window, 'api', {
-    value: { sauceNao: { lookup } },
+    value: {
+      sauceNao: {
+        lookup,
+        getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } })
+      }
+    },
     writable: true,
     configurable: true
   })

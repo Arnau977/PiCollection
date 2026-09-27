@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ExternalLink, Link2, Plus, ScanSearch } from 'lucide-react'
@@ -5,6 +6,7 @@ import type { MediaInput } from '@shared/models'
 import { PATH } from '../../../app.routes.const'
 import { SAUCE_MISSING_CATEGORIES } from './missingSuggestionCounts'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
+import '../../../components/InfoTooltip/InfoTooltip.css'
 
 interface SauceNaoSuggestionsPanelProps {
   hasApiKey: boolean
@@ -27,8 +29,10 @@ export function SauceNaoSuggestionsPanel({
   onAddMissing,
   onUseSourceUrl
 }: SauceNaoSuggestionsPanelProps): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const limitTooltipId = useId()
   const matchUrl = sauce.match?.sourceUrl
+  const exhaustedUntil = sauce.exhaustedUntil
 
   if (!hasApiKey) {
     return (
@@ -41,15 +45,38 @@ export function SauceNaoSuggestionsPanel({
 
   return (
     <div className="sauce-panel">
-      <button
-        type="button"
-        className="btn"
-        onClick={() => sauce.run(inputRoute, inputType)}
-        disabled={!inputRoute || saving || sauce.status === 'loading'}
-      >
-        <ScanSearch size={16} />
-        {sauce.status === 'loading' ? t('sauceNao.searching') : t('sauceNao.button')}
-      </button>
+      {/* aria-disabled rather than disabled: a natively disabled button can't
+          be focused, so keyboard and screen reader users would never get the
+          tooltip explaining why it's off. */}
+      <span className="sauce-button-wrap">
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            if (exhaustedUntil === null) sauce.run(inputRoute, inputType)
+          }}
+          disabled={!inputRoute || saving || sauce.status === 'loading'}
+          aria-disabled={exhaustedUntil !== null || undefined}
+          aria-describedby={exhaustedUntil !== null ? limitTooltipId : undefined}
+        >
+          <ScanSearch size={16} />
+          {sauce.status === 'loading' ? t('sauceNao.searching') : t('sauceNao.button')}
+        </button>
+        {exhaustedUntil !== null && (
+          <span
+            id={limitTooltipId}
+            role="tooltip"
+            className="info-tooltip-bubble sauce-limit-bubble"
+          >
+            {t('sauceNao.dailyLimitTooltip', {
+              time: new Date(exhaustedUntil).toLocaleTimeString(i18n.language, {
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            })}
+          </span>
+        )}
+      </span>
       <p className="sauce-hint">{t('sauceNao.privacyHint')}</p>
       {inputType === 'video' && <p className="sauce-hint">{t('sauceNao.videoHint')}</p>}
 

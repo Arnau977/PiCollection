@@ -2,7 +2,7 @@ import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { ipcHandler } from './helpers'
 import { IPC } from '@shared/ipc/contracts'
-import { lookupSauceNao } from '../services/sauceNao/sauceNao.service'
+import { getSauceNaoQuota, lookupSauceNao } from '../services/sauceNao/sauceNao.service'
 import { readSauceNaoApiKey, writeSauceNaoApiKey } from '../services/sauceNao/sauceNaoSettings'
 import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
 
@@ -12,6 +12,11 @@ export function registerSauceNaoHandlers(): void {
     ipcHandler(IPC.sauceNao.lookup, z.string().min(1), (route) =>
       lookupSauceNao(resolveRoute(route, readSourceFolder()))
     )
+  )
+
+  ipcMain.handle(
+    IPC.sauceNao.getQuota,
+    ipcHandler(IPC.sauceNao.getQuota, z.void(), async () => getSauceNaoQuota())
   )
 
   ipcMain.handle(
