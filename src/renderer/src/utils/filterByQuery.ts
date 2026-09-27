@@ -1,5 +1,6 @@
+import { fuzzyFilter } from './fuzzyMatch'
+
+/** Forgiving (typo-, punctuation- and word-order-tolerant) match, best first - see fuzzyMatch.ts. */
 export function filterByQuery<T>(items: T[], query: string, getLabel: (item: T) => string): T[] {
-  const trimmed = query.trim().toLowerCase()
-  if (!trimmed) return items
-  return items.filter((item) => getLabel(item).toLowerCase().includes(trimmed))
+  return fuzzyFilter(items, query, getLabel)
 }
