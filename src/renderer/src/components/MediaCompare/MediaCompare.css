@@ -1,0 +1,111 @@
+.media-compare-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  height: 100%;
+}
+
+.media-compare-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  /* Leaves room for the close pill in the top-right corner. */
+  padding-right: 3.5rem;
+}
+
+.media-compare-label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--color-text);
+  font-size: 0.85rem;
+}
+
+.media-compare-label:last-child {
+  text-align: right;
+}
+
+.media-compare-label-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-compare-label-size {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Both images fill the same box with object-fit: contain, so the same
+   picture lines up exactly even at different resolutions. */
+.media-compare-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  animation: lightbox-content-in 200ms ease;
+}
+
+.media-compare-stage img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.media-compare-right {
+  clip-path: inset(0 0 0 var(--split));
+}
+
+.media-compare-range {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+}
+
+.media-compare-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--split);
+  width: 2px;
+  transform: translateX(-1px);
+  background: #fff;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.media-compare-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #fff;
+  color: #14151a;
+  box-shadow: var(--shadow-lg);
+}
+
+.media-compare-range:focus-visible ~ .media-compare-divider .media-compare-handle {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-compare-stage {
+    animation: none;
+  }
+}

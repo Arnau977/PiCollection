@@ -137,9 +137,14 @@ export function MediaFormFileGroup({
         <SimilarMediaWarning
           matches={duplicateCheck.similar}
           title={t('addMedia.duplicateSimilar')}
+          current={
+            input.route
+              ? { route: input.route, name: t('mediaCompare.thisFile'), type: input.type }
+              : undefined
+          }
         />
       )}
-      {isEditing && media && <EditedMediaSimilarWarning mediaId={media.id} />}
+      {isEditing && media && <EditedMediaSimilarWarning media={media} />}
     </div>
   )
 }

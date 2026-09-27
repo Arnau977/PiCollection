@@ -19,10 +19,38 @@
   pointer-events: none;
 }
 
+.media-hover-preview-trigger-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.media-hover-preview-trigger-button:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .media-hover-preview-thumb {
-  height: 140px;
+  height: 200px;
   border-radius: var(--radius-md);
   overflow: hidden;
+  background: var(--color-surface-2);
+}
+
+/* The whole picture, letterboxed - a cropped preview hides exactly the
+   parts that tell two similar images apart. */
+.media-hover-preview-thumb .media-thumb img,
+.media-hover-preview-thumb .media-thumb video {
+  object-fit: contain;
+}
+
+.media-hover-preview-hint {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
 }
 
 .media-hover-preview-name {

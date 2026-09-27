@@ -8,10 +8,12 @@ import './MediaHoverPreview.css'
 interface MediaHoverPreviewProps {
   media: MediaModel
   children: React.ReactNode
+  /** Makes the trigger a button (e.g. to open a full-size comparison). */
+  onClick?: () => void
 }
 
 const CARD_WIDTH = 260
-const CARD_MAX_HEIGHT = 260
+const CARD_MAX_HEIGHT = 360
 const MARGIN = 12
 const SHOW_DELAY_MS = 150
 
@@ -31,11 +33,15 @@ function computePosition(anchor: DOMRect): { top: number; left: number } {
 /** Hovering (or focusing, for keyboard users) the wrapped trigger shows a
  * floating card with the referenced media's thumbnail and tags - context for
  * a bare filename in a duplicate-check list. */
-export function MediaHoverPreview({ media, children }: MediaHoverPreviewProps): JSX.Element {
+export function MediaHoverPreview({
+  media,
+  children,
+  onClick
+}: MediaHoverPreviewProps): JSX.Element {
   const { t } = useTranslation()
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
-  const anchorRef = useRef<HTMLSpanElement>(null)
+  const anchorRef = useRef<HTMLElement>(null)
 
   useEffect((): (() => void) => () => clearTimeout(timerRef.current), [])
 
@@ -52,16 +58,33 @@ export function MediaHoverPreview({ media, children }: MediaHoverPreviewProps): 
     setPosition(null)
   }
 
+  const Trigger = onClick ? 'button' : 'span'
+
   return (
-    <span
-      ref={anchorRef}
-      className="media-hover-preview-trigger"
+    <Trigger
+      ref={anchorRef as React.RefObject<HTMLButtonElement & HTMLSpanElement>}
+      className={
+        onClick
+          ? 'media-hover-preview-trigger media-hover-preview-trigger-button'
+          : 'media-hover-preview-trigger'
+      }
       onMouseEnter={show}
       onMouseLeave={hide}
       onFocus={show}
       onBlur={hide}
-      tabIndex={0}
-      aria-label={t('addMedia.duplicatePreviewLabel', { name: media.name })}
+      {...(onClick
+        ? {
+            type: 'button' as const,
+            onClick: (): void => {
+              hide()
+              onClick()
+            },
+            'aria-label': t('mediaCompare.openLabel', { name: media.name })
+          }
+        : {
+            tabIndex: 0,
+            'aria-label': t('addMedia.duplicatePreviewLabel', { name: media.name })
+          })}
     >
       {children}
       {position &&
@@ -74,6 +97,7 @@ export function MediaHoverPreview({ media, children }: MediaHoverPreviewProps): 
               <MediaThumb type={media.type} route={media.route} alt={media.name} />
             </div>
             <p className="media-hover-preview-name">{media.name}</p>
+            {onClick && <p className="media-hover-preview-hint">{t('mediaCompare.clickHint')}</p>}
             {media.tags && media.tags.length > 0 && (
               <ul className="chip-list chip-list-tags media-hover-preview-tags">
                 {media.tags.map((tag) => (
@@ -84,6 +108,6 @@ export function MediaHoverPreview({ media, children }: MediaHoverPreviewProps): 
           </div>,
           document.body
         )}
-    </span>
+    </Trigger>
   )
 }

@@ -1,20 +1,37 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { MediaDuplicateMatch } from '@shared/models'
+import type { MediaDuplicateMatch, MediaModel } from '@shared/models'
+import { toMediaUrl } from '@shared/utils/mediaUrl'
+import { MediaCompare, type ComparedMedia } from '../../../components/MediaCompare/MediaCompare'
 import { MediaHoverPreview } from '../../../components/MediaHoverPreview/MediaHoverPreview'
 import { useSimilarMedia } from '../../../hooks/useSimilarMedia'
+
+/** The file being added/edited, compared against each match. */
+export interface CurrentFile {
+  route: string
+  name: string
+  type: MediaModel['type']
+}
 
 interface SimilarMediaWarningProps {
   matches: MediaDuplicateMatch[]
   title: string
+  current?: CurrentFile
 }
 
 /** Non-blocking "looks similar to…" list, with a hover preview of each match. */
 export function SimilarMediaWarning({
   matches,
-  title
+  title,
+  current
 }: SimilarMediaWarningProps): JSX.Element | null {
   const { t } = useTranslation()
+  const [compared, setCompared] = useState<ComparedMedia | null>(null)
   if (matches.length === 0) return null
+
+  // A still frame can't be slid against a playing video, so videos keep just the hover preview.
+  const canCompare = (media: MediaModel): boolean =>
+    current !== undefined && current.type !== 'video' && media.type !== 'video'
 
   return (
     <div className="duplicate-warning">
@@ -22,12 +39,28 @@ export function SimilarMediaWarning({
       <ul className="chip-list">
         {matches.map(({ media, distance }) => (
           <li key={media.id}>
-            <MediaHoverPreview media={media}>{media.name}</MediaHoverPreview> (
-            {t('addMedia.duplicateSimilarMatch', { distance })}
+            <MediaHoverPreview
+              media={media}
+              onClick={
+                canCompare(media)
+                  ? (): void => setCompared({ src: toMediaUrl(media.route), name: media.name })
+                  : undefined
+              }
+            >
+              {media.name}
+            </MediaHoverPreview>{' '}
+            ({t('addMedia.duplicateSimilarMatch', { distance })}
             {media.pendingTagging && ` · ${t('addMedia.similarPendingBadge')}`})
           </li>
         ))}
       </ul>
+      {compared && current && (
+        <MediaCompare
+          left={{ src: toMediaUrl(current.route), name: current.name }}
+          right={compared}
+          onClose={() => setCompared(null)}
+        />
+      )}
     </div>
   )
 }
@@ -37,8 +70,14 @@ export function SimilarMediaWarning({
  * through the pending queue, so it also lists other pending items (a batch
  * import can easily contain the same picture twice).
  */
-export function EditedMediaSimilarWarning({ mediaId }: { mediaId: string }): JSX.Element | null {
+export function EditedMediaSimilarWarning({ media }: { media: MediaModel }): JSX.Element | null {
   const { t } = useTranslation()
-  const { data } = useSimilarMedia(mediaId, { includePending: true })
-  return <SimilarMediaWarning matches={data} title={t('addMedia.similarToExisting')} />
+  const { data } = useSimilarMedia(media.id, { includePending: true })
+  return (
+    <SimilarMediaWarning
+      matches={data}
+      title={t('addMedia.similarToExisting')}
+      current={{ route: media.route, name: media.name, type: media.type }}
+    />
+  )
 }
