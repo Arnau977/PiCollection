@@ -1,5 +1,5 @@
-import type { SauceNaoName, SeriesModel } from '@shared/models'
-import { parseCharacterTag } from '@shared/utils'
+import type { DanbooruCharacterInfo, SauceNaoName, SeriesModel } from '@shared/models'
+import { cleanEntityName, parseCharacterTag, toBooruTag } from '@shared/utils'
 import { normalizeForMatch } from '../utils/fuzzyMatch'
 
 export interface ResolvedCharacterCandidates {
@@ -7,6 +7,8 @@ export interface ResolvedCharacterCandidates {
   characters: SauceNaoName[]
   /** Series qualifiers worth offering (as a chip to confirm, never applied silently). */
   seriesHints: SauceNaoName[]
+  /** Series Danbooru confirmed for these characters - trusted like a source's own series. */
+  series: SauceNaoName[]
 }
 
 /** "pro swimmer" -> "Pro Swimmer"; leaves the rest of each word alone ("McDonald" stays). */
@@ -37,12 +39,19 @@ function qualifierNamesSeries(qualifier: string, seriesName: string): boolean {
  *   series, it's a form ("1st costume" next to "hololive"); with no series
  *   info at all it's offered as a series to confirm, as before.
  * A form becomes "Base (Form)" with the base character as its `parent`.
+ *
+ * When Danbooru knows the tag (`danbooru`, see danbooruCharacters.service.ts)
+ * its answer wins: the base character comes from its implications, whatever
+ * qualifiers the base doesn't share are the form, and its series are trusted.
  */
 export function resolveCharacterCandidates(
   characters: SauceNaoName[],
   sourceSeries: SauceNaoName[],
-  librarySeries: SeriesModel[]
+  librarySeries: SeriesModel[],
+  danbooru: DanbooruCharacterInfo[] = []
 ): ResolvedCharacterCandidates {
+  const infoByTag = new Map(danbooru.map((info) => [info.tag, info]))
+  const confirmedSeries = new Map<string, SauceNaoName>()
   const libraryNames = librarySeries.flatMap((series) => [series.name, ...(series.aliases ?? [])])
   const findLibrarySeries = (qualifier: string): SeriesModel | undefined =>
     librarySeries.find((series) =>
@@ -64,6 +73,35 @@ export function resolveCharacterCandidates(
     // Sources strip qualifiers into `name` and keep the full tag as the first altName.
     const full = character.altNames?.find((alt) => alt.includes('(')) ?? character.name
     const { base, qualifiers } = parseCharacterTag(full)
+
+    const info = infoByTag.get(toBooruTag(full))
+    if (info && (info.parentTag || info.series.length > 0)) {
+      for (const tag of info.series) {
+        const name = titleCaseWords(cleanEntityName(tag))
+        confirmedSeries.set(normalizeForMatch(name), { name })
+      }
+      if (!info.parentTag) {
+        resolved.push({ ...character, name: base, altNames: [full] })
+        continue
+      }
+      const parentParts = parseCharacterTag(info.parentTag)
+      const parentQualifiers = new Set(parentParts.qualifiers.map(normalizeForMatch))
+      const forms = qualifiers.filter((q) => !parentQualifiers.has(normalizeForMatch(q)))
+      const parent = {
+        name: titleCaseWords(parentParts.base),
+        altNames: [cleanEntityName(info.parentTag)]
+      }
+      resolved.push(
+        forms.length > 0
+          ? {
+              name: `${parent.name} ${forms.map((q) => `(${titleCaseWords(q)})`).join(' ')}`,
+              altNames: [full],
+              parent
+            }
+          : { ...parent, altNames: [full, ...parent.altNames] }
+      )
+      continue
+    }
 
     let seriesQualifier: string | null = null
     let formQualifiers: string[] = []
@@ -91,7 +129,11 @@ export function resolveCharacterCandidates(
 
     const baseAltNames = seriesQualifier ? [`${base} (${seriesQualifier})`] : []
     if (formQualifiers.length === 0) {
-      resolved.push({ ...character, name: base, altNames: Array.from(new Set([full, ...baseAltNames])) })
+      resolved.push({
+        ...character,
+        name: base,
+        altNames: Array.from(new Set([full, ...baseAltNames]))
+      })
       continue
     }
 
@@ -104,5 +146,9 @@ export function resolveCharacterCandidates(
     })
   }
 
-  return { characters: resolved, seriesHints: [...hints.values()] }
+  return {
+    characters: resolved,
+    seriesHints: [...hints.values()],
+    series: [...confirmedSeries.values()]
+  }
 }

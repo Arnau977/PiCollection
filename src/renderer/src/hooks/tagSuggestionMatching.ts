@@ -1,6 +1,7 @@
 import type {
   ArtistModel,
   CharacterModel,
+  DanbooruCharacterInfo,
   SauceNaoName,
   SeriesModel,
   TagModel
@@ -83,7 +84,9 @@ function pruneAncestors<T extends { id: string; parentId?: string | null }>(
 
 export function matchSuggestionCandidate(
   candidate: TagSuggestionCandidate,
-  entities: MatchEntities
+  entities: MatchEntities,
+  /** Danbooru's answers for the candidate's character tags, when available. */
+  danbooru: DanbooruCharacterInfo[] = []
 ): MatchedSuggestions {
   const artistMatch = candidate.artist
     ? matchEntityNames([candidate.artist], entities.artists)
@@ -92,9 +95,20 @@ export function matchSuggestionCandidate(
   const resolvedCharacters = resolveCharacterCandidates(
     candidate.characters,
     candidate.series,
-    entities.series
+    entities.series,
+    danbooru
   )
-  const seriesContext = [...candidate.series, ...resolvedCharacters.seriesHints].map((s) =>
+  // Danbooru-confirmed series are as trustworthy as the source's own series field.
+  const confirmedSeries = [
+    ...candidate.series,
+    ...resolvedCharacters.series.filter(
+      (s) =>
+        !candidate.series.some(
+          (own) => normalizeEntityName(own.name) === normalizeEntityName(s.name)
+        )
+    )
+  ]
+  const seriesContext = [...confirmedSeries, ...resolvedCharacters.seriesHints].map((s) =>
     normalizeEntityName(s.name)
   )
   const charactersMatch = matchCharacterNames(
@@ -125,7 +139,7 @@ export function matchSuggestionCandidate(
   // e.g. "Fate" from "Ishtar (Fate)") that's usually the series but isn't
   // guaranteed to be, so even when one happens to match an existing series
   // by name, it's surfaced as a chip to confirm rather than applied silently.
-  const seriesMatch = matchEntityNames(candidate.series, entities.series)
+  const seriesMatch = matchEntityNames(confirmedSeries, entities.series)
   const seriesHintsMatch = matchEntityNames(resolvedCharacters.seriesHints, entities.series)
   const leafCharacters = pruneAncestors(
     Array.from(new Map(charactersMatch.existing.map((c) => [c.id, c])).values()),

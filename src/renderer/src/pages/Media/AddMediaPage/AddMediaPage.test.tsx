@@ -64,6 +64,7 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
       update: vi.fn().mockResolvedValue({ success: true, data: {} })
     },
     series: { create: vi.fn(), getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
+    danbooru: { resolveCharacters: vi.fn().mockResolvedValue({ success: true, data: [] }) },
     sauceNao: {
       lookup: vi.fn(),
       getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } }),

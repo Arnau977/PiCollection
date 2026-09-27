@@ -96,3 +96,28 @@ describe('matchSuggestionCandidate with forms', () => {
     expect(result.missing.characters).toEqual([])
   })
 })
+
+describe('matchSuggestionCandidate with Danbooru answers', () => {
+  it("prefers Danbooru's base character and series over reading the parentheses", () => {
+    // Alone, a lone "(1st costume)" with no source series would be offered as a series.
+    const result = matchSuggestionCandidate(
+      {
+        artist: null,
+        tags: [],
+        characters: [{ name: 'inugami korone (1st costume)' }],
+        series: []
+      },
+      { artists: [], tags: [], characters: [], series: [] },
+      [
+        {
+          tag: 'inugami_korone_(1st_costume)',
+          parentTag: 'inugami_korone',
+          series: ['hololive']
+        }
+      ]
+    )
+    expect(result.missing.characters).toEqual(['Inugami Korone (1st Costume)'])
+    expect(result.characterParents).toEqual({ 'Inugami Korone (1st Costume)': 'Inugami Korone' })
+    expect(result.missing.series).toEqual(['Hololive'])
+  })
+})

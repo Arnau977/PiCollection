@@ -29,7 +29,9 @@ required.
   - a one-time download of the local tagging runtime and model, when you
     enable it;
   - Danbooru lookups by tag name: the tag-info button, tag autocomplete (only
-    if you add a Danbooru account), and the tags of a post SauceNAO matched.
+    if you add a Danbooru account), the tags of a post SauceNAO matched, and,
+    with a Danbooru account, the base character and series of a suggested
+    character tag (cached for 30 days).
 
   Browsing, tagging, search and backups never leave your machine.
 
@@ -83,6 +85,9 @@ required.
   way: the last parenthesis is the series (offered only if it names one you
   already have), the earlier ones are a form or costume, suggested as
   "Pyra (Pro Swimmer)", a child of "Pyra", so searching for Pyra still finds it.
+  With a Danbooru account in Settings, the app asks Danbooru instead (by tag
+  name only, cached for 30 days): the exact base character, and the most
+  specific series (Xenoblade Chronicles 2 rather than the whole franchise).
   Requires a free SauceNAO API key set in Settings — SauceNAO no longer
   allows anonymous API access at all, so the suggestions button doesn't
   appear at all until a key is configured. Once SauceNAO's daily search

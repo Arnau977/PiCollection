@@ -31,6 +31,7 @@ function makeMatch(overrides: Partial<SauceNaoMatch> = {}): SauceNaoMatch {
 function setApi(lookup: ReturnType<typeof vi.fn>): void {
   Object.defineProperty(window, 'api', {
     value: {
+      danbooru: { resolveCharacters: vi.fn().mockResolvedValue({ success: true, data: [] }) },
       sauceNao: {
         lookup,
         getQuota: vi.fn().mockResolvedValue({ success: true, data: { exhaustedUntil: null } })

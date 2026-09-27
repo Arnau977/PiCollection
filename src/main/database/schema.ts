@@ -88,6 +88,14 @@ export interface TagWikiCacheTable {
   fetched_at: number
 }
 
+/** Danbooru's answer per character tag - see danbooruCharacters.service.ts. */
+export interface DanbooruCharacterCacheTable {
+  tag_name: string
+  parent_tag: string | null
+  series_json: string
+  fetched_at: number
+}
+
 export interface DB {
   artist: ArtistTable
   artist_social_link: ArtistSocialLinkTable
@@ -100,4 +108,5 @@ export interface DB {
   media_character: MediaCharacterTable
   media_series: MediaSeriesTable
   tag_wiki_cache: TagWikiCacheTable
+  danbooru_character_cache: DanbooruCharacterCacheTable
 }

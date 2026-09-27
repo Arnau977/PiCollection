@@ -63,6 +63,11 @@ function splitBooruListWithQualifiers(raw: string | string[] | undefined): Split
   return { names, qualifiers }
 }
 
+/** "Pyra (Pro Swimmer) (Xenoblade)" -> "pyra_(pro_swimmer)_(xenoblade)", the form Danbooru's API expects. */
+export function toBooruTag(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, '_')
+}
+
 export interface CharacterTagParts {
   /** The name with every trailing "(...)" removed, e.g. "pyra". */
   base: string
