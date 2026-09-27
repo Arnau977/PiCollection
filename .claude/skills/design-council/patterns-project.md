@@ -66,6 +66,14 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
 - **Non-blocking "looks similar" lists** with hover previews and the
   "N/64 difference". Where:
   `src/renderer/src/pages/Media/MediaForm/SimilarMediaWarning.tsx` (#91).
+- **Compare two images at full size with a drag divider** (`MediaCompare`):
+  both fitted to the same box so identical pictures line up, an invisible
+  native range input over the stage for drag/click/keys, and each side's
+  resolution. Images/GIFs only. Where:
+  `src/renderer/src/components/MediaCompare/MediaCompare.tsx`, opened from
+  `SimilarMediaWarning.tsx`.
+- **Previews meant for telling images apart are letterboxed, never
+  cropped** (`object-fit: contain`). Where: `MediaHoverPreview.css`.
 
 ## Media
 

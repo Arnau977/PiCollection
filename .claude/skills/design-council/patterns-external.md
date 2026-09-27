@@ -42,6 +42,13 @@ here.
 - Source: Making Disabled Buttons More Inclusive (CSS-Tricks) - https://css-tricks.com/making-disabled-buttons-more-inclusive/ ; aria-disabled (a11y-101) - https://a11y-101.com/development/aria-disabled
 - Checked: 2026-09-27
 
+### Before/after comparison slider
+- Kind: pattern
+- Use when / avoid when: comparing two versions of the same picture. Expose the divider as a slider (`role="slider"` or a native range input) with a label and an `aria-valuetext` that says what each side shows; arrows/Home/End must work and clicking the track must jump there. Keep the handle at least 24x24 px with a visible focus ring. Avoid it for two different pictures (show them side by side instead).
+- Takeaway for PiCollection: a transparent native `<input type="range">` over the stage gives all of that for free.
+- Source: ARIA slider role (MDN) - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/slider_role ; Accessible slider guide - https://accessibility.build/guides/accessible-slider
+- Checked: 2026-09-27
+
 ## Anti-patterns
 
 ### Tooltip on a natively disabled button
