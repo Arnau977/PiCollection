@@ -166,7 +166,19 @@ describe('suggestTags', () => {
     await expect(promise).resolves.toEqual([{ name: 'tag', score: 0.5 }])
   })
 
-  it('rejects without spawning the subprocess when no thumbnail could be produced', async () => {
+  it('falls back to the original file for a still image with no thumbnail', async () => {
+    resolveThumbnailMock.mockResolvedValue(null)
+
+    const promise = suggestTags('/img/photo.WEBP')
+    await flush()
+    const written = JSON.parse(fakeProcess.stdin.write.mock.calls[0][0] as string)
+    expect(written.path).toBe('/img/photo.WEBP')
+
+    respond({ id: written.id, tags: [{ name: 'tag', score: 0.5 }] })
+    await expect(promise).resolves.toEqual([{ name: 'tag', score: 0.5 }])
+  })
+
+  it('rejects without spawning the subprocess when a video has no thumbnail', async () => {
     resolveThumbnailMock.mockResolvedValue(null)
 
     await expect(suggestTags('/vids/broken.mp4')).rejects.toThrow(
