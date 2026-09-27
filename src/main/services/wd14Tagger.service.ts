@@ -2,13 +2,16 @@ import { spawn, type ChildProcess } from 'child_process'
 import { randomUUID } from 'crypto'
 import { createInterface } from 'readline'
 import { app } from 'electron'
-import { join } from 'path'
+import { extname, join } from 'path'
 import type { Wd14TagSuggestion } from '@shared/models'
 import { resolveThumbnail } from '../thumbnails/thumbnails'
 import { AppError } from '../errors'
 import { getModelFilePaths, getPythonExecutablePath } from './wd14Runtime/wd14Runtime.service'
 
 const REQUEST_TIMEOUT_MS = 30_000
+
+/** Still-image formats `resources/wd14_predict.py`'s Pillow decodes on its own. */
+const PIL_READABLE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif'])
 
 export type Wd14Tag = Wd14TagSuggestion
 
@@ -100,11 +103,16 @@ function runPrediction(imagePath: string): Promise<Wd14Tag[]> {
  * this, a video route reaches `resources/wd14_predict.py`'s
  * `PIL.Image.open()` directly and fails with a raw "cannot identify image
  * file ...mp4" error, since PIL doesn't decode video containers at all.
+ * Still images with no thumbnail fall back to their original file.
  */
 export async function suggestTags(imagePath: string): Promise<Wd14Tag[]> {
   const thumbPath = await resolveThumbnail(imagePath)
-  if (!thumbPath) throw new AppError('NO_THUMBNAIL', 'Could not read that file to tag.')
-  return runPrediction(thumbPath)
+  if (thumbPath) return runPrediction(thumbPath)
+  // No thumbnail is common for WebP: Electron's own decoder only reads
+  // PNG/JPEG, and the Windows shell thumbnail provider fails for many WebP
+  // files. Pillow reads still images directly, so hand it the original.
+  if (PIL_READABLE_EXTENSIONS.has(extname(imagePath).toLowerCase())) return runPrediction(imagePath)
+  throw new AppError('NO_THUMBNAIL', 'Could not read that file to tag.')
 }
 
 /** Test-only: kills the cached subprocess reference so tests don't leak state between files. */
