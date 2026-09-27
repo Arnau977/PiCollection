@@ -153,7 +153,9 @@ export function matchCharacterNames(
   const seenMissing = new Set<string>()
 
   for (const suggestion of suggestions) {
-    const candidateNames = [suggestion.name, ...(suggestion.altNames ?? [])]
+    // The full tag ("Hatsune Miku (Symphony)") first: it's more specific
+    // than the de-qualified name, which may be the costume's base character.
+    const candidateNames = [...(suggestion.altNames ?? []), suggestion.name]
       .map((value) => value.trim())
       .filter((value) => value.length > 0)
 

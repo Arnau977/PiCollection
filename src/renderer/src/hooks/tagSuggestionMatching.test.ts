@@ -13,7 +13,6 @@ function makeCandidate(overrides: Partial<TagSuggestionCandidate> = {}): TagSugg
     artist: { name: 'Known Artist' },
     characters: [{ name: 'Ishtar' }, { name: 'New Character' }],
     series: [{ name: 'Fate/Grand Order' }],
-    seriesHints: [],
     tags: [{ name: 'landscape' }, { name: 'new tag' }],
     ...overrides
   }
@@ -64,8 +63,8 @@ describe('matchSuggestionCandidate', () => {
   it('never silently applies a series hint, even one that matches an existing series by name', () => {
     const result = matchSuggestionCandidate(
       makeCandidate({
-        series: [],
-        seriesHints: [{ name: 'Fate/Grand Order' }]
+        characters: [{ name: 'Ishtar (Fate/Grand Order)' }],
+        series: []
       }),
       entities
     )
@@ -82,9 +81,8 @@ describe('matchSuggestionCandidate', () => {
     }
     const result = matchSuggestionCandidate(
       makeCandidate({
-        characters: [{ name: 'Ishtar' }],
-        series: [],
-        seriesHints: [{ name: 'Fate/Grand Order' }]
+        characters: [{ name: 'Ishtar (Fate/Grand Order)' }],
+        series: []
       }),
       { ...entities, characters: [fgoIshtar] }
     )
@@ -104,9 +102,8 @@ describe('matchSuggestionCandidate', () => {
     }
     const result = matchSuggestionCandidate(
       makeCandidate({
-        characters: [{ name: 'Ishtar' }],
-        series: [],
-        seriesHints: [{ name: 'Fate/Grand Order' }]
+        characters: [{ name: 'Ishtar (Fate/Grand Order)' }],
+        series: []
       }),
       { ...entities, characters: [ambiguousIshtar] }
     )

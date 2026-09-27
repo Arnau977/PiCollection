@@ -62,6 +62,12 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   empty field, and offers a one-click replacement otherwise. Where:
   `SauceNaoSuggestionsPanel.tsx`, `Wd14SuggestionsPanel.tsx`,
   `SourceSuggestionsPanel.tsx` (#83, #88).
+- **A suggested form/costume is a child character**: its chip reads
+  "Pyra (Pro Swimmer) · form of Pyra" (muted `.suggestion-form-of`); the
+  base character is applied right away if it exists, and accepting the chip
+  creates the form under it and swaps it in. Where:
+  `src/renderer/src/hooks/resolveCharacterCandidates.ts`,
+  `CharacterFormOfHint.tsx`.
 - **Category colors per metadata type**: `--color-artist` /
   `--color-tag` / `--color-character` / `--color-series`, shown as the
   `.field-accent-*` left bar on form fields. Where: `main.css`.

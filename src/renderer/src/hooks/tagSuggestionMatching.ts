@@ -11,6 +11,7 @@ import {
   matchEntityNames,
   normalizeEntityName
 } from '../utils/matchEntityNames'
+import { resolveCharacterCandidates } from './resolveCharacterCandidates'
 
 export type SuggestionCategory = 'artist' | 'tags' | 'characters' | 'series'
 
@@ -27,14 +28,16 @@ export interface ApplyPayload {
 export interface TagSuggestionCandidate {
   artist: SauceNaoName | null
   tags: SauceNaoName[]
+  /** As the source reports them - trailing "(...)" qualifiers are sorted into series/forms here. */
   characters: SauceNaoName[]
   series: SauceNaoName[]
-  seriesHints: SauceNaoName[]
 }
 
 export interface MatchedSuggestions {
   applied: ApplyPayload
   missing: Record<SuggestionCategory, string[]>
+  /** Missing character name -> the base character it's a form of ("Pyra (Pro Swimmer)" -> "Pyra"). */
+  characterParents: Record<string, string>
   appliedCount: number
 }
 
@@ -86,14 +89,36 @@ export function matchSuggestionCandidate(
     ? matchEntityNames([candidate.artist], entities.artists)
     : { existing: [], missing: [] }
   const tagsMatch = matchEntityNames(candidate.tags, entities.tags)
-  const seriesContext = [...candidate.series, ...candidate.seriesHints].map((s) =>
+  const resolvedCharacters = resolveCharacterCandidates(
+    candidate.characters,
+    candidate.series,
+    entities.series
+  )
+  const seriesContext = [...candidate.series, ...resolvedCharacters.seriesHints].map((s) =>
     normalizeEntityName(s.name)
   )
   const charactersMatch = matchCharacterNames(
-    candidate.characters,
+    resolvedCharacters.characters.filter((character) => !character.parent),
     entities.characters,
     seriesContext
   )
+  // A form/costume ("Pyra (Pro Swimmer)") is applied if it already exists.
+  // Otherwise its base character is applied right away when that exists, and
+  // the form is offered as a chip that creates it as the base's child.
+  const characterParents: Record<string, string> = {}
+  for (const form of resolvedCharacters.characters) {
+    if (!form.parent) continue
+    const formMatch = matchCharacterNames([form], entities.characters, seriesContext)
+    if (formMatch.existing.length > 0) {
+      charactersMatch.existing.push(...formMatch.existing)
+      continue
+    }
+    const parentMatch = matchCharacterNames([form.parent], entities.characters, seriesContext)
+    charactersMatch.existing.push(...parentMatch.existing)
+    charactersMatch.missing.push(...formMatch.missing)
+    characterParents[capitalizeFirstLetter(form.name)] =
+      parentMatch.existing[0]?.name ?? form.parent.name
+  }
   // `series` comes straight from the source's own series field - trustworthy
   // enough to apply on an existing-entity match with no further review.
   // `seriesHints` are a heuristic (a qualifier peeled off a character name,
@@ -101,8 +126,11 @@ export function matchSuggestionCandidate(
   // guaranteed to be, so even when one happens to match an existing series
   // by name, it's surfaced as a chip to confirm rather than applied silently.
   const seriesMatch = matchEntityNames(candidate.series, entities.series)
-  const seriesHintsMatch = matchEntityNames(candidate.seriesHints, entities.series)
-  const leafCharacters = pruneAncestors(charactersMatch.existing, entities.characters)
+  const seriesHintsMatch = matchEntityNames(resolvedCharacters.seriesHints, entities.series)
+  const leafCharacters = pruneAncestors(
+    Array.from(new Map(charactersMatch.existing.map((c) => [c.id, c])).values()),
+    entities.characters
+  )
   const leafSeries = pruneAncestors(seriesMatch.existing, entities.series)
   // A matched character with exactly one associated series gets that series
   // silently linked elsewhere (see withImpliedSeries) - if a hint happens to
@@ -135,6 +163,7 @@ export function matchSuggestionCandidate(
       characters: charactersMatch.missing.map(capitalizeFirstLetter),
       series: [...seriesMatch.missing, ...seriesHintNames].map(capitalizeFirstLetter)
     },
+    characterParents,
     appliedCount:
       (artistMatch.existing.length > 0 ? 1 : 0) +
       tagsMatch.existing.length +

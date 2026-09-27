@@ -30,7 +30,8 @@ export interface MediaFormDrafts {
   pendingSeries: SeriesModel[]
   createArtist: (name: string, social?: { name: string; url: string }) => void
   createTag: (name: string) => void
-  createCharacter: (name: string) => void
+  /** `parentName`: create it as a form/costume of that character (created too if missing). */
+  createCharacter: (name: string, parentName?: string) => void
   createSeries: (name: string) => string
   /**
    * A "missing" series chip isn't always actually missing - a SauceNAO series
@@ -68,6 +69,7 @@ export function useMediaFormDrafts({
   const [pendingCharacters, setPendingCharacters] = useState<CharacterModel[]>([])
   const [pendingArtists, setPendingArtists] = useState<ArtistModel[]>([])
   const pendingArtistSocials = useRef(new Map<string, { name: string; url: string }>())
+  const pendingCharacterParents = useRef(new Map<string, string>())
 
   function createArtist(name: string, social?: { name: string; url: string }): void {
     const draft: ArtistModel = { id: crypto.randomUUID(), name }
@@ -85,12 +87,18 @@ export function useMediaFormDrafts({
   // A new character starts with no series of its own: its series is only
   // derived from what the media actually ends up tagged with (see
   // linkCharactersToSoleSeries), never from a suggestion the user didn't accept.
-  function createCharacter(name: string): void {
+  function createCharacter(name: string, parentName?: string): void {
     const draft: CharacterModel = { id: crypto.randomUUID(), name, series: [] }
     setPendingCharacters((prev) => [...prev, draft])
+    if (parentName) pendingCharacterParents.current.set(draft.id, parentName)
+    // The form replaces its base character (applied earlier by the suggestion):
+    // searches for the base still find it through the character hierarchy.
+    const parent = parentName
+      ? characters.data.find((c) => normalizeEntityName(c.name) === normalizeEntityName(parentName))
+      : undefined
     setInput((prev) => ({
       ...prev,
-      characterIds: [...(prev.characterIds ?? []), draft.id]
+      characterIds: [...(prev.characterIds ?? []).filter((id) => id !== parent?.id), draft.id]
     }))
   }
 
@@ -184,17 +192,25 @@ export function useMediaFormDrafts({
     const freshResult = await window.api.character.getAll()
     const freshCharacters = freshResult.success ? freshResult.data : characters.data
 
-    const entries = await Promise.all(
-      toResolve.map(async (draft) => {
-        const match = freshCharacters.find((c) => c.name.toLowerCase() === draft.name.toLowerCase())
-        if (match) return [draft.id, match.id] as const
+    const idByName = new Map(freshCharacters.map((c) => [normalizeEntityName(c.name), c.id]))
+    async function findOrCreate(name: string, parentId?: string): Promise<string> {
+      const key = normalizeEntityName(name)
+      const existing = idByName.get(key)
+      if (existing) return existing
+      const result = await window.api.character.create({ name, seriesIds: [], parentId })
+      if (!result.success) throw new Error(result.error.message)
+      idByName.set(key, result.data.id)
+      return result.data.id
+    }
 
-        const result = await window.api.character.create({ name: draft.name, seriesIds: [] })
-        if (!result.success) throw new Error(result.error.message)
-        return [draft.id, result.data.id] as const
-      })
-    )
-    return new Map(entries)
+    // One at a time: two forms of the same new base character must create it once.
+    const resolved = new Map<string, string>()
+    for (const draft of toResolve) {
+      const parentName = pendingCharacterParents.current.get(draft.id)
+      const parentId = parentName ? await findOrCreate(parentName) : undefined
+      resolved.set(draft.id, await findOrCreate(draft.name, parentId))
+    }
+    return resolved
   }
 
   async function resolveForSave(overrides?: Partial<MediaInput>): Promise<MediaFormSaveResolution> {

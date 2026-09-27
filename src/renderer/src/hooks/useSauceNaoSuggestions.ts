@@ -40,6 +40,8 @@ interface UseSauceNaoSuggestionsResult {
   exhaustedUntil: number | null
   appliedCount: number
   missing: Record<SuggestionCategory, string[]>
+  /** Missing character -> the base character it's a form of (see matchSuggestionCandidate). */
+  characterParents: Record<string, string>
   /** `type` lets a video fall back to a frame captured here when the OS can't thumbnail it. */
   run: (route: string, type?: MediaModel['type']) => Promise<void>
   dismiss: (category: SuggestionCategory, name: string) => void
@@ -59,6 +61,7 @@ export function useSauceNaoSuggestions({
   const [remaining, setRemaining] = useState<{ short: number; long: number } | null>(null)
   const [exhaustedUntil, setExhaustedUntil] = useState<number | null>(null)
   const [appliedCount, setAppliedCount] = useState(0)
+  const [characterParents, setCharacterParents] = useState<Record<string, string>>({})
   const [missing, setMissing] = useState<Record<SuggestionCategory, string[]>>(EMPTY_MISSING)
 
   // The pause lives in the main process, so it survives closing this form.
@@ -122,6 +125,7 @@ export function useSauceNaoSuggestions({
       const matched = matchSuggestionCandidate(found, { artists, tags, characters, series })
       onApplyExisting({ ...matched.applied, sourceUrl: found.sourceUrl })
       setMissing(matched.missing)
+      setCharacterParents(matched.characterParents)
       setAppliedCount(matched.appliedCount)
       setStatus('ready')
     },
@@ -142,9 +146,11 @@ export function useSauceNaoSuggestions({
     setRemaining(null)
     setAppliedCount(0)
     setMissing(EMPTY_MISSING)
+    setCharacterParents({})
   }, [])
 
   return {
+    characterParents,
     status,
     error,
     match,

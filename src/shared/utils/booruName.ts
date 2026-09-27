@@ -19,7 +19,7 @@ const TRAILING_QUALIFIER = /^(.*?)\s*\(([^()]*)\)\s*$/
  * separate bucket. Only ever splits on commas - a "/" inside a name (e.g.
  * "Fate/Grand Order") must survive intact.
  */
-export function splitBooruListWithQualifiers(raw: string | string[] | undefined): SplitResult {
+function splitBooruListWithQualifiers(raw: string | string[] | undefined): SplitResult {
   const joined = Array.isArray(raw) ? raw.join(',') : raw
   if (!joined) return { names: [], qualifiers: [] }
 
@@ -61,6 +61,54 @@ export function splitBooruListWithQualifiers(raw: string | string[] | undefined)
   }
 
   return { names, qualifiers }
+}
+
+export interface CharacterTagParts {
+  /** The name with every trailing "(...)" removed, e.g. "pyra". */
+  base: string
+  /** The trailing qualifiers in order, e.g. ["pro swimmer", "xenoblade"]. */
+  qualifiers: string[]
+}
+
+/**
+ * Splits one booru character tag ("pyra_(pro_swimmer)_(xenoblade)" or its
+ * cleaned form) into its base name and trailing qualifiers. Deciding which
+ * qualifier is a series and which a form/costume is left to the caller.
+ */
+export function parseCharacterTag(raw: string): CharacterTagParts {
+  let base = cleanEntityName(raw)
+  const qualifiers: string[] = []
+  let match = base.match(TRAILING_QUALIFIER)
+  while (match) {
+    const [, rest, qualifier] = match
+    if (!rest.trim()) break
+    const cleaned = cleanEntityName(qualifier)
+    if (cleaned) qualifiers.unshift(cleaned)
+    base = rest.trim()
+    match = base.match(TRAILING_QUALIFIER)
+  }
+  return { base, qualifiers }
+}
+
+/**
+ * A booru character list, one entry per full tag with its qualifiers kept
+ * ("pyra (xenoblade)" and "pyra (pro swimmer) (xenoblade)" stay two entries) -
+ * which qualifier is a series and which a form is decided later, against the
+ * library (see the renderer's resolveCharacterCandidates).
+ */
+export function splitBooruCharacterList(raw: string | string[] | undefined): SauceNaoName[] {
+  const joined = Array.isArray(raw) ? raw.join(',') : raw
+  if (!joined) return []
+  const seen = new Set<string>()
+  const names: SauceNaoName[] = []
+  for (const segment of joined.split(',')) {
+    const full = cleanEntityName(segment)
+    const key = full.toLowerCase()
+    if (!full || seen.has(key)) continue
+    seen.add(key)
+    names.push({ name: full })
+  }
+  return names
 }
 
 export function splitBooruList(raw: string | string[] | undefined): SauceNaoName[] {

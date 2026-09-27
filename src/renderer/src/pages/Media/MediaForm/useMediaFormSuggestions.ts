@@ -164,7 +164,7 @@ export function useMediaFormSuggestions({
     } else if (category === 'tags') drafts.createTag(name)
     // Accepting a character never accepts a suggested series along with it -
     // that series chip stays for the user to accept or ignore on its own.
-    else if (category === 'characters') drafts.createCharacter(name)
+    else if (category === 'characters') drafts.createCharacter(name, sauce.characterParents[name])
     else drafts.attachExistingOrCreateSeries(name)
     sauce.dismiss(category, name)
   }
@@ -179,7 +179,7 @@ export function useMediaFormSuggestions({
       // wiki or to dismiss it from the suggestion list below.
       drafts.createTag(titleCaseTagName(name))
     } else if (category === 'characters') {
-      drafts.createCharacter(name)
+      drafts.createCharacter(name, wd14.characterParents[name])
     } else {
       drafts.attachExistingOrCreateSeries(name)
     }
@@ -197,7 +197,7 @@ export function useMediaFormSuggestions({
   function addSourceSuggestion(category: SuggestionCategory, name: string): void {
     if (category === 'artist') drafts.createArtist(name)
     else if (category === 'tags') drafts.createTag(titleCaseTagName(name))
-    else if (category === 'characters') drafts.createCharacter(name)
+    else if (category === 'characters') drafts.createCharacter(name, source.characterParents[name])
     else drafts.attachExistingOrCreateSeries(name)
     source.dismiss(category, name)
   }
@@ -226,7 +226,9 @@ export function useMediaFormSuggestions({
         window.api.character.update(character.id, {
           name: character.name,
           seriesIds: [...character.series.map((linked) => linked.id), soleSeriesId],
-          aliases: character.aliases
+          aliases: character.aliases,
+          // update() treats a missing parentId as "no parent" - keep the existing one.
+          parentId: character.parentId
         })
       )
     )

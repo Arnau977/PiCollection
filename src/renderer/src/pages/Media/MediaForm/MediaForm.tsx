@@ -266,7 +266,7 @@ export function MediaForm({
               pendingCharacters={drafts.pendingCharacters}
               selectedCharacterIds={input.characterIds ?? []}
               onCharactersChange={suggestions.handleCharactersChange}
-              onCreateCharacter={drafts.createCharacter}
+              onCreateCharacter={(name) => drafts.createCharacter(name)}
               seriesOptions={[...series.data, ...drafts.pendingSeries]}
               pendingSeries={drafts.pendingSeries}
               selectedSeriesIds={input.seriesIds ?? []}

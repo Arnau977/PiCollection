@@ -3,12 +3,11 @@ import { withVideoFrameFallback } from '../utils/withVideoFrameFallback'
 import type {
   CharacterModel,
   MediaModel,
-  SauceNaoName,
   SeriesModel,
   TagModel,
   Wd14TagSuggestion
 } from '@shared/models'
-import { splitBooruListWithQualifiers } from '@shared/utils'
+import { normalizeForMatch } from '../utils/fuzzyMatch'
 import { normalizeEntityName } from '../utils/matchEntityNames'
 import {
   matchSuggestionCandidate,
@@ -43,6 +42,8 @@ interface UseWd14SuggestionsResult {
   error: string | null
   appliedCount: number
   missing: Record<SuggestionCategory, Wd14MissingSuggestion[]>
+  /** Missing character -> the base character it's a form of (see matchSuggestionCandidate). */
+  characterParents: Record<string, string>
   /** The model's single highest-scoring rating prediction, or null before a run/on error. */
   rating: Wd14TagSuggestion | null
   /** `type` lets a video fall back to a frame captured here when the OS can't thumbnail it. */
@@ -58,35 +59,33 @@ function byCategory(
   return tags.filter((tag) => tag.category === category)
 }
 
-interface SplitCharacterTag {
-  name: SauceNaoName
-  qualifier: SauceNaoName | null
-  score: number
-}
-
-/**
- * Unlike SauceNAO (which reports a character's series separately), the WD14
- * label set bakes a disambiguating series straight into the character tag's
- * own name - e.g. "seele (honkai: star rail)" as one Danbooru tag. Matching
- * that raw string against the library's "Seele" would never hit, silently
- * treating an already-known character as brand new every time. Peel the
- * qualifier off first, exactly like SauceNAO's own character field.
- */
-function splitCharacterTag(tag: Wd14TagSuggestion): SplitCharacterTag {
-  const { names, qualifiers } = splitBooruListWithQualifiers(tag.name)
-  return {
-    name: names[0] ?? { name: tag.name },
-    qualifier: qualifiers[0] ?? null,
-    score: tag.score
-  }
-}
-
 /** `matchSuggestionCandidate` capitalizes missing character/series names but leaves tags
  * lowercase, so a plain name->score map (keyed by the model's raw lowercase output) would miss
  * on lookup for those two categories - normalize both sides instead of relying on exact case. */
 function withScores(names: string[], scoreByName: Map<string, number>): Wd14MissingSuggestion[] {
   return names
     .map((name) => ({ name, score: scoreByName.get(normalizeEntityName(name)) ?? 0 }))
+    .sort((a, b) => b.score - a.score)
+}
+
+/**
+ * A missing character's name no longer equals its tag once qualifiers are
+ * sorted out ("Pyra (Pro Swimmer)" from "pyra (pro swimmer) (xenoblade)"),
+ * so score it by the tag containing all of its words.
+ */
+function withCharacterScores(
+  names: string[],
+  characterTags: Wd14TagSuggestion[]
+): Wd14MissingSuggestion[] {
+  return names
+    .map((name) => {
+      const words = normalizeForMatch(name).split(' ')
+      const tag = characterTags.find((candidate) => {
+        const tagWords = new Set(normalizeForMatch(candidate.name).split(' '))
+        return words.every((word) => tagWords.has(word))
+      })
+      return { name, score: tag?.score ?? 0 }
+    })
     .sort((a, b) => b.score - a.score)
 }
 
@@ -99,6 +98,7 @@ export function useWd14Suggestions({
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<string | null>(null)
   const [appliedCount, setAppliedCount] = useState(0)
+  const [characterParents, setCharacterParents] = useState<Record<string, string>>({})
   const [missing, setMissing] =
     useState<Record<SuggestionCategory, Wd14MissingSuggestion[]>>(EMPTY_WD14_MISSING)
   const [rating, setRating] = useState<Wd14TagSuggestion | null>(null)
@@ -119,41 +119,26 @@ export function useWd14Suggestions({
       }
 
       const copyrightTags = byCategory(result.data, 'copyright')
-      const characterTags = byCategory(result.data, 'character').map(splitCharacterTag)
-      const copyrightKeys = new Set(copyrightTags.map((tag) => normalizeEntityName(tag.name)))
-      // Same rule as SauceNAO's own seriesHints: a qualifier that just
-      // repeats a series the model already reported directly (via the
-      // copyright category) doesn't need a second, redundant suggestion.
-      const seriesHints = characterTags
-        .map((entry) => entry.qualifier)
-        .filter((hint): hint is SauceNaoName => {
-          if (!hint) return false
-          return !copyrightKeys.has(normalizeEntityName(hint.name))
-        })
+      // Full tags, e.g. "seele (honkai: star rail)" - matchSuggestionCandidate
+      // sorts their qualifiers into series and forms (resolveCharacterCandidates).
+      const characterTags = byCategory(result.data, 'character')
 
       const scoreByName = new Map([
         ...byCategory(result.data, 'general').map(
           (tag) => [normalizeEntityName(tag.name), tag.score] as const
         ),
-        ...characterTags.map(
-          (entry) => [normalizeEntityName(entry.name.name), entry.score] as const
-        ),
-        ...characterTags
-          .filter((entry) => entry.qualifier)
-          .map((entry) => [normalizeEntityName(entry.qualifier!.name), entry.score] as const),
         ...copyrightTags.map((tag) => [normalizeEntityName(tag.name), tag.score] as const)
       ])
       // The model's own copyright guess (plus any series peeled off a
       // character tag) doubles as series context for disambiguating a
-      // same-named character, the same role SauceNAO's series/seriesHints
+      // same-named character, the same role SauceNAO's series
       // play in matchSuggestionCandidate.
       const matched = matchSuggestionCandidate(
         {
           artist: null,
           tags: byCategory(result.data, 'general'),
-          characters: characterTags.map((entry) => entry.name),
-          series: copyrightTags,
-          seriesHints
+          characters: characterTags,
+          series: copyrightTags
         },
         { artists: [], tags, characters, series }
       )
@@ -162,10 +147,11 @@ export function useWd14Suggestions({
       setMissing({
         artist: [],
         tags: withScores(matched.missing.tags, scoreByName),
-        characters: withScores(matched.missing.characters, scoreByName),
+        characters: withCharacterScores(matched.missing.characters, characterTags),
         series: withScores(matched.missing.series, scoreByName)
       })
       setAppliedCount(matched.appliedCount)
+      setCharacterParents(matched.characterParents)
       // Only category the python script ever guarantees at most one of - no
       // need to pick a "best" one, but guard against future changes anyway.
       const ratingTags = byCategory(result.data, 'rating')
@@ -192,8 +178,9 @@ export function useWd14Suggestions({
     setError(null)
     setAppliedCount(0)
     setMissing(EMPTY_WD14_MISSING)
+    setCharacterParents({})
     setRating(null)
   }, [])
 
-  return { status, error, appliedCount, missing, rating, run, dismiss, reset }
+  return { status, error, appliedCount, missing, characterParents, rating, run, dismiss, reset }
 }

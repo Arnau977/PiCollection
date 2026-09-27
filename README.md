@@ -79,6 +79,10 @@ required.
   a different one, it's offered as a one-click replacement instead. When
   the match includes a known artist social profile (Pixiv, Twitter/X), it's
   linked automatically if you create that artist from the suggestion.
+  Character tags like `pyra_(pro_swimmer)_(xenoblade)` are read the booru
+  way: the last parenthesis is the series (offered only if it names one you
+  already have), the earlier ones are a form or costume, suggested as
+  "Pyra (Pro Swimmer)", a child of "Pyra", so searching for Pyra still finds it.
   Requires a free SauceNAO API key set in Settings — SauceNAO no longer
   allows anonymous API access at all, so the suggestions button doesn't
   appear at all until a key is configured. Once SauceNAO's daily search
