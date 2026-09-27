@@ -8,6 +8,7 @@ import type {
   SeriesModel,
   TagModel
 } from '@shared/models'
+import { fuzzyScore } from '../../utils/fuzzyMatch'
 import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import { InfoTooltip } from '../InfoTooltip/InfoTooltip'
@@ -95,7 +96,26 @@ export function SearchBar({
 
   const suggestions = useMemo<Suggestion[]>(() => {
     if (!token) return []
-    const matches = (name: string): boolean => name.toLowerCase().includes(token)
+    // Every kind is scored on the same scale and ranked together, so a close
+    // character match isn't pushed out of the top 8 by loose tag matches.
+    const scored: { suggestion: Suggestion; score: number }[] = []
+    function add(name: string, suggestion: Suggestion): void {
+      const score = fuzzyScore(name, token)
+      if (score !== null) scored.push({ suggestion, score })
+    }
+    for (const tag of tags) add(tag.name, { kind: 'tag', id: tag.id, label: tag.name })
+    for (const character of characters) {
+      add(character.name, {
+        kind: 'character',
+        id: character.id,
+        label: formatCharacterOptionLabel(character)
+      })
+    }
+    for (const s of series) add(s.name, { kind: 'series', id: s.id, label: s.name })
+    for (const artist of artists)
+      add(artist.name, { kind: 'artist', id: artist.id, label: artist.name })
+    // Array.prototype.sort is stable, so equal scores keep the tag/character/series/artist order.
+    scored.sort((a, b) => b.score - a.score)
 
     return [
       ...('ai'.startsWith(token)
@@ -108,34 +128,7 @@ export function SearchBar({
             }
           ]
         : []),
-      ...tags
-        .filter((tag) => matches(tag.name))
-        .map((tag) => ({
-          kind: 'tag' as const,
-          id: tag.id,
-          label: tag.name
-        })),
-      ...characters
-        .filter((character) => matches(character.name))
-        .map((character) => ({
-          kind: 'character' as const,
-          id: character.id,
-          label: formatCharacterOptionLabel(character)
-        })),
-      ...series
-        .filter((s) => matches(s.name))
-        .map((s) => ({
-          kind: 'series' as const,
-          id: s.id,
-          label: s.name
-        })),
-      ...artists
-        .filter((artist) => matches(artist.name))
-        .map((artist) => ({
-          kind: 'artist' as const,
-          id: artist.id,
-          label: artist.name
-        }))
+      ...scored.map((entry) => entry.suggestion)
     ].slice(0, 8)
   }, [token, isNegated, tags, characters, series, artists, t])
 

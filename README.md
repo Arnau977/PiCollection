@@ -50,6 +50,9 @@ required.
 - **Gallery search** — a single text field that suggests tags/characters/
   series/artists and supports `AND` (space), `OR`, `-exclude` and
   `(parentheses)` for grouping, e.g. `(Ishtar OR Ereshkigal) -Fujimaru`.
+  Its suggestions, like every tag/character/series/artist picker, forgive
+  typos, accents, underscores, parentheses and word order: `pyra xenoblade`
+  or `pyar` both find "Pyra (Xenoblade)", closest match first.
 - **Fast thumbnails** — grid and list views load a small cached preview
   instead of the original file; GIFs and videos only animate on hover.
 - **NSFW handling** — mark media as NSFW, optionally blur it in listings, and

@@ -14,6 +14,7 @@ import {
   type Key
 } from 'react-aria-components'
 import { filterByQuery } from '../../utils/filterByQuery'
+import { normalizeForMatch } from '../../utils/fuzzyMatch'
 import './Autocomplete.css'
 
 const CREATE_KEY = '__create_new__'
@@ -107,8 +108,10 @@ export function Autocomplete<T>({
   }, [options, query, getOptionLabel])
 
   const trimmedQuery = query.trim()
+  // Normalized, so "pyra xenoblade" doesn't offer to create a duplicate of "Pyra (Xenoblade)".
+  const normalizedQuery = normalizeForMatch(trimmedQuery)
   const hasExactMatch = options.some(
-    (option) => getOptionMatchName(option).toLowerCase() === trimmedQuery.toLowerCase()
+    (option) => normalizeForMatch(getOptionMatchName(option)) === normalizedQuery
   )
   const showCreateOption = Boolean(onCreate) && trimmedQuery.length > 0 && !hasExactMatch
 
