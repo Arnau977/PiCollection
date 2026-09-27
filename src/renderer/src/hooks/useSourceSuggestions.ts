@@ -6,8 +6,12 @@ import type {
   SeriesModel,
   TagModel
 } from '@shared/models'
-import { cleanEntityName, splitBooruListWithQualifiers } from '@shared/utils'
-import { EMPTY_MISSING, matchSuggestionCandidate, type SuggestionCategory } from './tagSuggestionMatching'
+import { cleanEntityName, splitBooruCharacterList } from '@shared/utils'
+import {
+  EMPTY_MISSING,
+  matchSuggestionCandidate,
+  type SuggestionCategory
+} from './tagSuggestionMatching'
 
 interface UseSourceSuggestionsArgs {
   metadata?: MediaSourceMetadata
@@ -22,6 +26,8 @@ export interface SourceSuggestions {
   available: boolean
   site?: string
   missing: Record<SuggestionCategory, string[]>
+  /** Missing character -> the base character it's a form of (see matchSuggestionCandidate). */
+  characterParents: Record<string, string>
   dismiss: (category: SuggestionCategory, name: string) => void
 }
 
@@ -41,24 +47,21 @@ export function useSourceSuggestions({
   const [dismissed, setDismissed] = useState<Set<string>>(() => new Set())
 
   const matched = useMemo(() => {
-    if (!metadata) return EMPTY_MISSING
-    const split = splitBooruListWithQualifiers(metadata.characters)
-    const seriesKeys = new Set(metadata.series.map((s) => cleanEntityName(s).toLowerCase()))
+    if (!metadata) return { missing: EMPTY_MISSING, characterParents: {} }
     return matchSuggestionCandidate(
       {
         artist: metadata.artist ? { name: cleanEntityName(metadata.artist) } : null,
         tags: metadata.tags.map((name) => ({ name: cleanEntityName(name) })),
-        characters: split.names,
-        series: metadata.series.map((name) => ({ name: cleanEntityName(name) })),
-        seriesHints: split.qualifiers.filter((q) => !seriesKeys.has(q.name.toLowerCase()))
+        characters: splitBooruCharacterList(metadata.characters),
+        series: metadata.series.map((name) => ({ name: cleanEntityName(name) }))
       },
       { artists, tags, characters, series }
-    ).missing
+    )
   }, [metadata, artists, tags, characters, series])
 
   const missing = useMemo(() => {
     const visible = (category: SuggestionCategory): string[] =>
-      matched[category].filter((name) => !dismissed.has(`${category}:${name}`))
+      matched.missing[category].filter((name) => !dismissed.has(`${category}:${name}`))
     return {
       artist: visible('artist'),
       tags: visible('tags'),
@@ -71,5 +74,11 @@ export function useSourceSuggestions({
     setDismissed((prev) => new Set(prev).add(`${category}:${name}`))
   }, [])
 
-  return { available: Boolean(metadata), site: metadata?.site, missing, dismiss }
+  return {
+    available: Boolean(metadata),
+    site: metadata?.site,
+    missing,
+    characterParents: matched.characterParents,
+    dismiss
+  }
 }

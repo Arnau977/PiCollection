@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { SauceNaoArtist, SauceNaoLookup, SauceNaoMatch } from '@shared/models'
-import { cleanEntityName, splitBooruList, splitBooruListWithQualifiers } from '@shared/utils'
+import { cleanEntityName, splitBooruCharacterList, splitBooruList } from '@shared/utils'
 
 export const MIN_SIMILARITY = 60
 
@@ -110,12 +110,9 @@ export function pickBestMatch(
   )
   const chosen = withMetadata ?? candidates[0]
 
-  const characters = splitBooruListWithQualifiers(chosen.data.characters)
+  // Full tags, qualifiers included: the renderer decides which are series and which forms.
+  const characters = splitBooruCharacterList(chosen.data.characters)
   const series = splitBooruList(chosen.data.material)
-  const seriesKeys = new Set(series.map((entry) => entry.name.toLowerCase()))
-  const seriesHints = characters.qualifiers.filter(
-    (qualifier) => !seriesKeys.has(qualifier.name.toLowerCase())
-  )
 
   const artistNames = splitBooruList(chosen.data.creator)
   const social = deriveArtistSocial(chosen.data)
@@ -135,9 +132,8 @@ export function pickBestMatch(
     sourceUrl: chosen.data.ext_urls?.[0],
     title: chosen.data.title ?? chosen.data.eng_name,
     artist,
-    characters: characters.names,
+    characters,
     series,
-    seriesHints,
     tags: []
   }
 

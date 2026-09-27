@@ -8,6 +8,7 @@ import { TagWikiInfo } from '../../../components/TagWikiInfo/TagWikiInfo'
 import { useWd14NsfwThreshold } from '../../../hooks/useWd14NsfwThreshold'
 import { wd14RatingIsNsfw } from '../../../utils/wd14RatingSettings'
 import { WD14_MISSING_CATEGORIES, countWd14Missing } from './missingSuggestionCounts'
+import { CharacterFormOfHint } from './CharacterFormOfHint'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
 
 /**
@@ -131,6 +132,9 @@ export function Wd14SuggestionsPanel({
                           >
                             <Plus size={12} />
                             {category === 'tags' ? titleCaseTagName(name) : name}
+                            {category === 'characters' && (
+                              <CharacterFormOfHint parent={wd14.characterParents[name]} />
+                            )}
                           </button>
                           <TagWikiInfo tagName={name} />
                         </li>

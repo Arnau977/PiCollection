@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { ExternalLink, Link2, Plus, ScanSearch } from 'lucide-react'
 import type { MediaInput } from '@shared/models'
 import { PATH } from '../../../app.routes.const'
+import { CharacterFormOfHint } from './CharacterFormOfHint'
 import { SAUCE_MISSING_CATEGORIES } from './missingSuggestionCounts'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
 import '../../../components/InfoTooltip/InfoTooltip.css'
@@ -151,6 +152,9 @@ export function SauceNaoSuggestionsPanel({
                         >
                           <Plus size={12} />
                           {name}
+                          {category === 'characters' && (
+                            <CharacterFormOfHint parent={sauce.characterParents[name]} />
+                          )}
                         </button>
                       </li>
                     ))}

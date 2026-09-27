@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { cleanEntityName, splitBooruList, splitBooruListWithQualifiers } from './booruName'
+import {
+  cleanEntityName,
+  parseCharacterTag,
+  splitBooruCharacterList,
+  splitBooruList
+} from './booruName'
 
 describe('splitBooruList', () => {
   it('returns an empty array for undefined or empty input', () => {
@@ -53,14 +58,25 @@ describe('splitBooruList', () => {
   })
 })
 
-describe('splitBooruListWithQualifiers', () => {
-  it('splits a single name (no comma) the same way a list entry would', () => {
-    // A single WD14 suggestion is parsed one at a time, not as part of a
-    // comma-joined list, so this must behave identically for one bare name.
-    expect(splitBooruListWithQualifiers('seele (honkai: star rail)')).toEqual({
-      names: [{ name: 'seele', altNames: ['seele (honkai: star rail)'] }],
-      qualifiers: [{ name: 'honkai: star rail' }]
+describe('parseCharacterTag', () => {
+  it('splits a raw or cleaned tag into its base and every trailing qualifier, in order', () => {
+    expect(parseCharacterTag('pyra_(pro_swimmer)_(xenoblade)')).toEqual({
+      base: 'pyra',
+      qualifiers: ['pro swimmer', 'xenoblade']
     })
+    expect(parseCharacterTag('seele (honkai: star rail)')).toEqual({
+      base: 'seele',
+      qualifiers: ['honkai: star rail']
+    })
+    expect(parseCharacterTag('Hatsune Miku')).toEqual({ base: 'Hatsune Miku', qualifiers: [] })
+  })
+})
+
+describe('splitBooruCharacterList', () => {
+  it('keeps each full tag, so a form and its base character stay separate', () => {
+    expect(
+      splitBooruCharacterList('pyra_(xenoblade), pyra (pro swimmer) (xenoblade), Pyra (Xenoblade)')
+    ).toEqual([{ name: 'pyra (xenoblade)' }, { name: 'pyra (pro swimmer) (xenoblade)' }])
   })
 })
 

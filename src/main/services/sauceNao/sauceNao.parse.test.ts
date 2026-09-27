@@ -116,25 +116,19 @@ describe('pickBestMatch', () => {
     expect(pickBestMatch({ results: [resultWith({})] }).remaining).toEqual({ short: 0, long: 0 })
   })
 
-  it('collects distinct character qualifiers into seriesHints', () => {
+  it('keeps each full character tag, so a form and its base stay separate', () => {
     const { match } = pickBestMatch({
       results: [
         resultWith({
-          characters: 'Ishtar (Fate), Ereshkigal (Fate), Reimu (Touhou)',
-          material: 'Fate/Grand Order'
+          characters: 'pyra (xenoblade), pyra (pro swimmer) (xenoblade), pyra (xenoblade)',
+          material: 'xenoblade chronicles 2'
         })
       ]
     })
-    // "Fate" is kept even though `material` is "Fate/Grand Order" - qualifiers
-    // are often abbreviated and only an exact match gets deduped (see below).
-    expect(match?.seriesHints).toEqual([{ name: 'Fate' }, { name: 'Touhou' }])
-  })
-
-  it('drops a qualifier that exactly matches an already-known series', () => {
-    const { match } = pickBestMatch({
-      results: [resultWith({ characters: 'Reimu (Touhou)', material: 'Touhou' })]
-    })
-    expect(match?.seriesHints).toEqual([])
+    expect(match?.characters).toEqual([
+      { name: 'pyra (xenoblade)' },
+      { name: 'pyra (pro swimmer) (xenoblade)' }
+    ])
   })
 
   it('handles a missing results array without throwing', () => {

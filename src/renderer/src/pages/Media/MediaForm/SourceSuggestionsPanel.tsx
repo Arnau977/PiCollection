@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 import { TagWikiInfo } from '../../../components/TagWikiInfo/TagWikiInfo'
 import { titleCaseTagName } from '../../../utils/matchEntityNames'
 import { SAUCE_MISSING_CATEGORIES, countSourceMissing } from './missingSuggestionCounts'
+import { CharacterFormOfHint } from './CharacterFormOfHint'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
 
 interface SourceSuggestionsPanelProps {
@@ -11,7 +12,10 @@ interface SourceSuggestionsPanelProps {
 }
 
 /** What the capture's source site had and the library doesn't - never applied until clicked. */
-export function SourceSuggestionsPanel({ source, onAdd }: SourceSuggestionsPanelProps): JSX.Element {
+export function SourceSuggestionsPanel({
+  source,
+  onAdd
+}: SourceSuggestionsPanelProps): JSX.Element {
   const { t } = useTranslation()
 
   if (countSourceMissing(source.missing) === 0) {
@@ -36,6 +40,9 @@ export function SourceSuggestionsPanel({ source, onAdd }: SourceSuggestionsPanel
                     >
                       <Plus size={12} />
                       {category === 'tags' ? titleCaseTagName(name) : name}
+                      {category === 'characters' && (
+                        <CharacterFormOfHint parent={source.characterParents[name]} />
+                      )}
                     </button>
                     {category === 'tags' && <TagWikiInfo tagName={name} />}
                   </li>

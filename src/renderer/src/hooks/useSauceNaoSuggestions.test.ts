@@ -23,7 +23,6 @@ function makeMatch(overrides: Partial<SauceNaoMatch> = {}): SauceNaoMatch {
     artist: { name: 'Known Artist' },
     characters: [{ name: 'Ishtar' }, { name: 'New Character' }],
     series: [{ name: 'Fate/Grand Order' }],
-    seriesHints: [],
     tags: [{ name: 'landscape' }, { name: 'new tag' }],
     ...overrides
   }

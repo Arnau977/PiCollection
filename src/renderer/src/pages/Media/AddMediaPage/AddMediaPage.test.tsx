@@ -428,7 +428,6 @@ describe('AddMediaPage', () => {
           artist: null,
           characters: [{ name: 'Alice' }],
           series: [{ name: 'Wonderland' }],
-          seriesHints: [],
           tags: []
         },
         remaining: { short: 5, long: 90 }
@@ -575,7 +574,6 @@ describe('AddMediaPage SauceNAO suggestions', () => {
           artist: null,
           characters: [],
           series: [],
-          seriesHints: [],
           tags: []
         },
         remaining: { short: 5, long: 90 }
@@ -664,7 +662,6 @@ describe('AddMediaPage SauceNAO suggestions', () => {
           artist: null,
           characters: [{ name: 'Alice' }],
           series: [],
-          seriesHints: [],
           tags: []
         },
         remaining: { short: 5, long: 90 }
@@ -692,7 +689,6 @@ describe('AddMediaPage SauceNAO suggestions', () => {
           artist: null,
           characters: [{ name: 'New Character' }],
           series: [],
-          seriesHints: [],
           tags: []
         },
         remaining: { short: 5, long: 90 }
@@ -726,7 +722,6 @@ describe('AddMediaPage SauceNAO suggestions', () => {
           artist: null,
           characters: [{ name: 'new character' }],
           series: [{ name: 'new series' }],
-          seriesHints: [],
           tags: []
         },
         remaining: { short: 5, long: 90 }
@@ -767,7 +762,6 @@ describe('AddMediaPage SauceNAO suggestions', () => {
           artist: null,
           characters: [{ name: 'new character' }],
           series: [{ name: 'series one' }, { name: 'series two' }],
-          seriesHints: [],
           tags: []
         },
         remaining: { short: 5, long: 90 }
@@ -826,7 +820,6 @@ describe('AddMediaPage SauceNAO suggestions', () => {
           artist: { name: 'Suggested Artist' },
           characters: [],
           series: [],
-          seriesHints: [],
           tags: []
         },
         remaining: { short: 5, long: 90 }

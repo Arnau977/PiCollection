@@ -423,6 +423,9 @@
     "slider": "Divider between the two images",
     "sliderValue": "{{left}}% this file, {{right}}% the other one"
   },
+  "suggestions": {
+    "formOf": "· form of {{parent}}"
+  },
   "sauceNao": {
     "button": "Suggest tags",
     "searching": "Searching...",
