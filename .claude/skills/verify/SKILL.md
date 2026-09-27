@@ -23,6 +23,10 @@ Exit code 0 means clean. What it handles so you don't re-derive it:
   rebuilds it back for Electron at the end, even if tests fail. So after this
   script the user can run the app without the `NODE_MODULE_VERSION`
   "Database error".
+- **Unhandled errors**: Vitest errors thrown outside a test (typically a
+  `window.api` mock missing a method the code now calls) fail CI with no
+  `FAIL` line, so the script reports them separately. When adding an API
+  method, grep every `*.test.ts` *and* `*.test.tsx` that mocks that namespace.
 - **Known environmental failure**: the 2 `extensionBridge.server.test.ts`
   cases fail with `EADDRINUSE 127.0.0.1:8934` whenever the PiCollection app
   is open, because they bind the bridge's real port. The script labels them

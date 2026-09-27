@@ -55,6 +55,15 @@ if [ "$mode" != "--no-tests" ]; then
     fi
     if [ -n "$other" ]; then echo "$other"; status=1; fi
   fi
+  # Errors thrown outside a test (e.g. a mock missing a newly called API
+  # method) fail CI even when every test passes, and have no FAIL line.
+  clean=$(echo "$out" | sed 's/\x1b\[[0-9;]*m//g')
+  if echo "$clean" | grep -q "Unhandled Errors"; then
+    echo "$clean" | grep -E "caught [0-9]+ unhandled error"
+    echo "$clean" | grep -E "^(TypeError|ReferenceError|Error|SyntaxError)" | sort | uniq -c | head -10
+    echo "$clean" | grep -E 'originated in "' | sort -u | head -10
+    status=1
+  fi
 fi
 
 echo "== rebuild better-sqlite3 for Electron"
