@@ -90,3 +90,28 @@
     font-size: 0.8rem;
   }
 }
+
+.lightbox-zoom {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.lightbox-zoom-level {
+  min-width: 4.5rem;
+  padding-inline: var(--space-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.lightbox-zoomable {
+  cursor: zoom-in;
+}
+
+.lightbox-zoomed {
+  cursor: grab;
+  touch-action: none;
+}
+
+.lightbox-zoomed:active {
+  cursor: grabbing;
+}

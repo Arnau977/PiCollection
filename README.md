@@ -47,6 +47,9 @@ required.
   step through them one by one (Previous/Next, Save, Send to pending), or
   send all the remaining ones to Pending at once. Files come folder by
   folder, oldest-modified first, so pictures saved together stay together.
+- **Full-size viewer** — clicking an image or GIF (in its detail page or the
+  edit form) opens it full screen, with zoom: mouse wheel toward the cursor,
+  drag to pan, double-click to toggle, `+`/`-`/`0`, or the zoom buttons.
 - **Gallery search** — a single text field that suggests tags/characters/
   series/artists and supports `AND` (space), `OR`, `-exclude` and
   `(parentheses)` for grouping, e.g. `(Ishtar OR Ereshkigal) -Fujimaru`.
