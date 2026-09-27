@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { withVideoFrameFallback } from '../utils/withVideoFrameFallback'
+import { fetchDanbooruCharacters } from '../utils/fetchDanbooruCharacters'
 import type {
   CharacterModel,
   MediaModel,
@@ -133,6 +134,7 @@ export function useWd14Suggestions({
       // character tag) doubles as series context for disambiguating a
       // same-named character, the same role SauceNAO's series
       // play in matchSuggestionCandidate.
+      const danbooru = await fetchDanbooruCharacters(characterTags.map((tag) => tag.name))
       const matched = matchSuggestionCandidate(
         {
           artist: null,
@@ -140,7 +142,8 @@ export function useWd14Suggestions({
           characters: characterTags,
           series: copyrightTags
         },
-        { artists: [], tags, characters, series }
+        { artists: [], tags, characters, series },
+        danbooru
       )
 
       onApplyExisting(matched.applied)

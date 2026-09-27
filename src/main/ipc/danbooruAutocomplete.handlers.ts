@@ -5,6 +5,7 @@ import { DanbooruCredentialsInputSchema, IPC } from '@shared/ipc/contracts'
 import type { DanbooruCredentials } from '@shared/models'
 import { autocompleteDanbooruTags } from '../services/danbooruAutocomplete.service'
 import { resolveDanbooruUserId } from '../services/danbooruCredentials.service'
+import { resolveCharacterTags } from '../services/danbooruCharacters.service'
 import { readDanbooruCredentials, writeDanbooruCredentials } from '../services/danbooruSettings'
 
 export function registerDanbooruAutocompleteHandlers(): void {
@@ -12,6 +13,15 @@ export function registerDanbooruAutocompleteHandlers(): void {
     IPC.danbooru.autocompleteTags,
     ipcHandler(IPC.danbooru.autocompleteTags, z.string().min(1), (query) =>
       autocompleteDanbooruTags(query)
+    )
+  )
+
+  ipcMain.handle(
+    IPC.danbooru.resolveCharacters,
+    ipcHandler(
+      IPC.danbooru.resolveCharacters,
+      z.array(z.string().min(1).max(200)).max(50),
+      (names) => resolveCharacterTags(names)
     )
   )
 

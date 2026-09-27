@@ -1,12 +1,14 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type {
   ArtistModel,
   CharacterModel,
+  DanbooruCharacterInfo,
   MediaSourceMetadata,
   SeriesModel,
   TagModel
 } from '@shared/models'
 import { cleanEntityName, splitBooruCharacterList } from '@shared/utils'
+import { fetchDanbooruCharacters } from '../utils/fetchDanbooruCharacters'
 import {
   EMPTY_MISSING,
   matchSuggestionCandidate,
@@ -45,6 +47,22 @@ export function useSourceSuggestions({
   series
 }: UseSourceSuggestionsArgs): SourceSuggestions {
   const [dismissed, setDismissed] = useState<Set<string>>(() => new Set())
+  const [danbooru, setDanbooru] = useState<DanbooruCharacterInfo[]>([])
+
+  // Chips show right away from the tags' parentheses and refine once Danbooru answers.
+  const characterNames = metadata?.characters.join(',') ?? ''
+  useEffect(() => {
+    let cancelled = false
+    setDanbooru([])
+    const names = splitBooruCharacterList(characterNames).map((c) => c.name)
+    if (names.length === 0) return
+    void fetchDanbooruCharacters(names).then((info) => {
+      if (!cancelled) setDanbooru(info)
+    })
+    return (): void => {
+      cancelled = true
+    }
+  }, [characterNames])
 
   const matched = useMemo(() => {
     if (!metadata) return { missing: EMPTY_MISSING, characterParents: {} }
@@ -55,9 +73,10 @@ export function useSourceSuggestions({
         characters: splitBooruCharacterList(metadata.characters),
         series: metadata.series.map((name) => ({ name: cleanEntityName(name) }))
       },
-      { artists, tags, characters, series }
+      { artists, tags, characters, series },
+      danbooru
     )
-  }, [metadata, artists, tags, characters, series])
+  }, [metadata, artists, tags, characters, series, danbooru])
 
   const missing = useMemo(() => {
     const visible = (category: SuggestionCategory): string[] =>

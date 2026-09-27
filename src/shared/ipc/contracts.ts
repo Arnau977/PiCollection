@@ -280,6 +280,7 @@ export const IPC = {
   },
   danbooru: {
     autocompleteTags: 'danbooru:autocomplete-tags',
+    resolveCharacters: 'danbooru:resolve-characters',
     getCredentials: 'danbooru:get-credentials',
     setCredentials: 'danbooru:set-credentials'
   },

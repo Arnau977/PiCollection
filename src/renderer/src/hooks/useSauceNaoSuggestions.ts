@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { withVideoFrameFallback } from '../utils/withVideoFrameFallback'
+import { fetchDanbooruCharacters } from '../utils/fetchDanbooruCharacters'
 import type {
   ArtistModel,
   CharacterModel,
@@ -122,7 +123,12 @@ export function useSauceNaoSuggestions({
       const found = result.data.match
       setMatch(found)
 
-      const matched = matchSuggestionCandidate(found, { artists, tags, characters, series })
+      const danbooru = await fetchDanbooruCharacters(found.characters.map((c) => c.name))
+      const matched = matchSuggestionCandidate(
+        found,
+        { artists, tags, characters, series },
+        danbooru
+      )
       onApplyExisting({ ...matched.applied, sourceUrl: found.sourceUrl })
       setMissing(matched.missing)
       setCharacterParents(matched.characterParents)

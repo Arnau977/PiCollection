@@ -12,7 +12,10 @@ const EMPTY_MISSING = { artist: [], tags: [], characters: [], series: [] }
 
 function setApi(suggestTags: ReturnType<typeof vi.fn>): void {
   Object.defineProperty(window, 'api', {
-    value: { wd14Tagger: { suggestTags } },
+    value: {
+      wd14Tagger: { suggestTags },
+      danbooru: { resolveCharacters: vi.fn().mockResolvedValue({ success: true, data: [] }) }
+    },
     writable: true,
     configurable: true
   })
