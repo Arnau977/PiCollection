@@ -84,6 +84,11 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
 
 - **Lightbox only for images/GIFs**, never over a playing video (that
   started a second playback). Where: `MediaFormFileGroup.tsx`.
+- **Zoom in the Lightbox**: wheel toward the cursor, drag to pan
+  (limited so the image always covers its box), double-click toggles
+  fit/2x, `+`/`-`/`0`, and -/%/+ buttons in the action pill. A pan that
+  ends over the backdrop must not close it. Images/GIFs only. Where:
+  `src/renderer/src/components/Lightbox/useZoomPan.ts`.
 - **Video frame fallback**: when the OS can't produce a thumbnail (e.g.
   cloud-synced folders), capture a frame with a `<video>` element and cache
   it. Where: `src/renderer/src/components/MediaThumb/captureVideoFrame.ts`

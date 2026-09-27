@@ -49,6 +49,13 @@ here.
 - Source: ARIA slider role (MDN) - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/slider_role ; Accessible slider guide - https://accessibility.build/guides/accessible-slider
 - Checked: 2026-09-27
 
+### Image viewer zoom and pan
+- Kind: pattern
+- Use when / avoid when: a full-size image viewer. Zoom keeps the point under the cursor still, drag pans once zoomed, and visible zoom controls exist alongside the gestures so the feature is discoverable. Load the full-resolution file, since a zoomed low-res preview is useless.
+- Takeaway for PiCollection: the Lightbox already shows the original file, so zoom works on real pixels; buttons carry their keyboard shortcut in the label.
+- Source: Understanding and supporting zoom behaviors on the web (LogRocket) - https://blog.logrocket.com/understanding-supporting-zoom-behaviors-web/ ; Image Zoom design pattern - https://ui-patterns.com/patterns/ImageZoom ; Baymard, image gestures - https://baymard.com/blog/mobile-image-gestures
+- Checked: 2026-09-27
+
 ## Anti-patterns
 
 ### Tooltip on a natively disabled button
