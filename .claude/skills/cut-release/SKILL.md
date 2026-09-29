@@ -54,8 +54,10 @@ node .claude/skills/cut-release/fill-highlights.mjs vX.Y.Z "First" "Second" "Thi
 ```
 
 It only edits drafts, and writes the section as a Markdown list because the
-app's update panel shows it as bullets. Also point out to the user when the
-auto-generated "What's Changed" spans more than this version's PRs.
+app's update panel shows it as bullets. "What's Changed" must list only
+the PRs since the last published release (beta or stable): the workflow
+starts the range there. If it spans more, fix the range - don't just
+report it.
 
 ## 4. Hand off
 
