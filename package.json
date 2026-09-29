@@ -36,6 +36,7 @@
     "adm-zip": "^0.5.16",
     "better-sqlite3": "^11.10.0",
     "electron-updater": "^6.1.7",
+    "gifenc": "^1.0.3",
     "i18next": "^24.2.1",
     "i18next-browser-languagedetector": "^8.0.2",
     "kysely": "^0.28.17",

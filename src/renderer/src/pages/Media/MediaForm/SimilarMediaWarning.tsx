@@ -39,7 +39,7 @@ export function SimilarMediaWarning({
     <div className="duplicate-warning">
       <p>{title}</p>
       <ul className="chip-list">
-        {matches.map(({ media, distance }) => (
+        {matches.map(({ media, distance, relation }) => (
           <li key={media.id}>
             <MediaHoverPreview
               media={media}
@@ -56,7 +56,10 @@ export function SimilarMediaWarning({
             >
               {media.name}
             </MediaHoverPreview>{' '}
-            ({t('addMedia.duplicateSimilarMatch', { distance })}
+            (
+            {relation
+              ? t(`media.relation.${relation}`)
+              : t('addMedia.duplicateSimilarMatch', { distance })}
             {media.pendingTagging && ` · ${t('addMedia.similarPendingBadge')}`})
           </li>
         ))}

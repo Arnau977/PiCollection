@@ -78,6 +78,12 @@ export const FindSimilarSchema = z.object({
 
 export const RouteSchema = z.object({ route: z.string().min(1) })
 
+/** A GIF the renderer encoded from a video; capped well above any sensible short clip. */
+export const CreateGifFromVideoSchema = z.object({
+  sourceMediaId: z.string().min(1),
+  bytes: z.instanceof(Uint8Array).refine((bytes) => bytes.length <= 200 * 1024 * 1024)
+})
+
 export const DanbooruCredentialsInputSchema = z.object({
   username: z.string().min(1),
   apiKey: z.string().min(1)
@@ -201,7 +207,8 @@ export const IPC = {
     cacheThumbnail: 'db:media:cache-thumbnail',
     checkDuplicate: 'db:media:check-duplicate',
     findSimilar: 'db:media:find-similar',
-    detectAiMetadata: 'media:detect-ai-metadata'
+    detectAiMetadata: 'media:detect-ai-metadata',
+    createGifFromVideo: 'media:create-gif-from-video'
   },
   artist: {
     getAll: 'db:artist:get-all',

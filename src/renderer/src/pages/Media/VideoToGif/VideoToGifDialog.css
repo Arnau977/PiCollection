@@ -1,0 +1,139 @@
+/* Wider than a confirm dialog to fit the preview; capped to the viewport so
+   the actions row is always reachable (the preview shrinks first). */
+.video-gif-dialog {
+  max-width: 560px;
+  max-height: calc(100vh - var(--space-5) * 2);
+  overflow-y: auto;
+}
+
+.video-gif-preview {
+  width: 100%;
+  max-height: 36vh;
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+}
+
+.video-gif-dialog fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+
+.video-gif-dialog legend {
+  padding: 0;
+  margin-bottom: var(--space-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.video-gif-clip {
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  gap: var(--space-3) !important;
+}
+
+.video-gif-edge {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.video-gif-edge label,
+.video-gif-custom label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.video-gif-edge input {
+  width: 6rem;
+}
+
+/* Same segmented look as the gallery's grid-size group. */
+.video-gif-preset-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.2rem;
+  padding: 0.2rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  border: 1px solid var(--border-color);
+}
+
+.video-gif-preset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.2rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+
+.video-gif-preset:hover {
+  color: var(--color-text);
+}
+
+.video-gif-preset.active {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* The native radio stays in the tab order (arrow keys switch presets) but
+   is visually replaced by the pill; focus shows on the pill. */
+.video-gif-preset input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.video-gif-preset:focus-within {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+.video-gif-custom {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.video-gif-summary {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.video-gif-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.video-gif-progress progress {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.video-gif-progress p {
+  margin: 0;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.video-gif-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.85rem;
+}

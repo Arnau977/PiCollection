@@ -254,6 +254,10 @@
     "noSeries": "Sin serie asignada"
   },
   "media": {
+    "relation": {
+      "source": "Vídeo de origen",
+      "derived": "GIF de este vídeo"
+    },
     "sfwTitle": "Apta para todo público",
     "nsfwTitle": "Contenido erótico",
     "sfwBadge": "SFW",
@@ -488,5 +492,35 @@
   },
   "shortcuts": {
     "withKeys": "{{label}} ({{keys}})"
+  },
+  "videoGif": {
+    "open": "Crear GIF",
+    "title": "Crear un GIF",
+    "clipLegend": "Fragmento (hasta {{max}} s)",
+    "start": "Inicio (s)",
+    "end": "Fin (s)",
+    "useCurrent": "Usar el tiempo actual",
+    "errorOrder": "El fin tiene que ir después del inicio.",
+    "errorTooLong": "El fragmento puede durar como máximo {{max}} segundos.",
+    "presetLegend": "Tamaño",
+    "presetCustom": "Personalizado",
+    "width": "Ancho",
+    "fps": "Fotogramas",
+    "summary": "{{width}} px de ancho · {{fps}} fps · {{frames}} fotogramas",
+    "progressLabel": "Progreso del GIF",
+    "encoding": "Codificando fotograma {{done}} de {{total}}…",
+    "retrying": "{{size}} MB supera {{limit}} MB - reintentando a {{width}} px…",
+    "saving": "Guardando el GIF…",
+    "stop": "Detener",
+    "create": "Crear GIF",
+    "created": "GIF creado ({{size}} MB) con las etiquetas del vídeo.",
+    "createdOverLimit": "GIF creado, pero con {{size}} MB sigue por encima del límite de {{limit}} MB - prueba con un fragmento más corto.",
+    "errorUnreadable": "No se puede leer este vídeo para convertirlo.",
+    "errorEncoding": "No se ha podido crear el GIF.",
+    "preset": {
+      "discord": "Discord (≤ {{size}} MB)",
+      "x": "X / Twitter (≤ {{size}} MB)",
+      "gallery": "Galería (máxima calidad)"
+    }
   }
 }

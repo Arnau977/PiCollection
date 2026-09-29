@@ -254,6 +254,10 @@
     "noSeries": "No series assigned"
   },
   "media": {
+    "relation": {
+      "source": "Source video",
+      "derived": "GIF from it"
+    },
     "sfwTitle": "Safe for work",
     "nsfwTitle": "Explicit content",
     "sfwBadge": "SFW",
@@ -488,5 +492,35 @@
   },
   "shortcuts": {
     "withKeys": "{{label}} ({{keys}})"
+  },
+  "videoGif": {
+    "open": "Make GIF",
+    "title": "Make a GIF",
+    "clipLegend": "Clip (up to {{max}} s)",
+    "start": "Start (s)",
+    "end": "End (s)",
+    "useCurrent": "Use current time",
+    "errorOrder": "The end must come after the start.",
+    "errorTooLong": "Keep the clip to {{max}} seconds or less.",
+    "presetLegend": "Size",
+    "presetCustom": "Custom",
+    "width": "Width",
+    "fps": "Frame rate",
+    "summary": "{{width}} px wide · {{fps}} fps · {{frames}} frames",
+    "progressLabel": "GIF progress",
+    "encoding": "Encoding frame {{done}} of {{total}}…",
+    "retrying": "{{size}} MB is over {{limit}} MB - trying again at {{width}} px…",
+    "saving": "Saving the GIF…",
+    "stop": "Stop",
+    "create": "Create GIF",
+    "created": "GIF created ({{size}} MB) with the video's tags.",
+    "createdOverLimit": "GIF created, but at {{size}} MB it is still over the {{limit}} MB limit - try a shorter clip.",
+    "errorUnreadable": "This video can't be read for conversion.",
+    "errorEncoding": "The GIF couldn't be created.",
+    "preset": {
+      "discord": "Discord (≤ {{size}} MB)",
+      "x": "X / Twitter (≤ {{size}} MB)",
+      "gallery": "Gallery (best quality)"
+    }
   }
 }

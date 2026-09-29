@@ -1,12 +1,14 @@
 import { ipcMain } from 'electron'
 import { mediaService } from '../services/media.service'
 import { detectAiMetadata } from '../services/aiMetadata.service'
+import { videoGifService } from '../services/videoGif.service'
 import { cacheThumbnailFromBuffer, THUMBNAIL_MAX_SIZE } from '../thumbnails/thumbnails'
 import { ipcHandler } from './helpers'
 import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
 import {
   CacheThumbnailSchema,
   FindSimilarSchema,
+  CreateGifFromVideoSchema,
   IPC,
   IdSchema,
   MediaBatchUpdateAssociationsSchema,
@@ -93,6 +95,12 @@ export function registerMediaHandlers(): void {
     IPC.media.detectAiMetadata,
     ipcHandler(IPC.media.detectAiMetadata, RouteSchema, ({ route }) =>
       detectAiMetadata(resolveRoute(route, readSourceFolder()))
+    )
+  )
+  ipcMain.handle(
+    IPC.media.createGifFromVideo,
+    ipcHandler(IPC.media.createGifFromVideo, CreateGifFromVideoSchema, ({ sourceMediaId, bytes }) =>
+      videoGifService.createFromVideo(sourceMediaId, bytes)
     )
   )
   ipcMain.handle(

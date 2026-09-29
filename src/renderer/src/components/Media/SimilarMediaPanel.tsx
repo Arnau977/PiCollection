@@ -33,14 +33,16 @@ export function SimilarMediaPanel({ media: current }: SimilarMediaPanelProps): J
     <div className="media-detail-section">
       <h2>{t('media.similarMedia')}</h2>
       <ul className="similar-media-grid">
-        {data.map(({ media }) => {
+        {data.map(({ media, relation }) => {
           const blurred = defaults.blurNsfw && !media.sfw
           return (
             <li key={media.id}>
               <Link
                 to={PATH.MEDIA.replace(':id', media.id)}
                 className="similar-media-link"
-                aria-label={media.name}
+                aria-label={
+                  relation ? `${media.name} (${t(`media.relation.${relation}`)})` : media.name
+                }
               >
                 <div
                   className={
@@ -49,6 +51,12 @@ export function SimilarMediaPanel({ media: current }: SimilarMediaPanelProps): J
                 >
                   <MediaThumb type={media.type} route={media.route} alt={media.name} />
                   {blurred && <span className="nsfw-blur-overlay">{t('media.revealNsfw')}</span>}
+                  {/* Listed because one was made from the other, not for looking alike. */}
+                  {relation && (
+                    <span className="similar-media-relation" aria-hidden="true">
+                      {t(`media.relation.${relation}`)}
+                    </span>
+                  )}
                 </div>
               </Link>
               {/* A still frame can't be slid against a playing video. */}

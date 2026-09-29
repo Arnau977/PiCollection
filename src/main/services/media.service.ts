@@ -22,6 +22,7 @@ import type {
   EntityKind,
   MediaBatchUpdateAssociationsInput,
   MediaDuplicateCheck,
+  MediaDuplicateMatch,
   MediaFilteredResult,
   MediaFilters,
   MediaInput,
@@ -254,11 +255,30 @@ export const mediaService = {
     limit: number = SIMILAR_MEDIA_LIMIT,
     /** The pending edit form wants other pending items too (duplicates within an import batch). */
     includePending = false
-  ): Promise<{ media: MediaModel; distance: number }[]> {
+  ): Promise<MediaDuplicateMatch[]> {
     const db = getDb()
+    // A GIF and the video it was made from always list each other first -
+    // their hashes can't be compared (videos have no perceptual hash).
+    const relatives = (
+      await Promise.all(
+        (await mediaRepo.findDerivationRelatives(db, mediaId)).map(
+          async ({ id, relation }): Promise<MediaDuplicateMatch | null> => {
+            const media = await getMediaModelById(db, id)
+            return media && (includePending || !media.pendingTagging)
+              ? { media, distance: 0, relation }
+              : null
+          }
+        )
+      )
+    ).filter((entry): entry is MediaDuplicateMatch => entry !== null)
+
     const row = await mediaRepo.findMediaRowById(db, mediaId)
-    if (!row?.phash) return []
-    return findSimilarByPhash(db, row.phash, mediaId, limit, includePending)
+    if (!row?.phash) return relatives.slice(0, limit)
+    const relativeIds = new Set(relatives.map(({ media }) => media.id))
+    const lookalikes = (
+      await findSimilarByPhash(db, row.phash, mediaId, limit, includePending)
+    ).filter(({ media }) => !relativeIds.has(media.id))
+    return [...relatives, ...lookalikes].slice(0, limit)
   },
 
   async getMediaFiltered(filters: MediaFilters, sorting?: Sorting): Promise<MediaFilteredResult> {
@@ -303,10 +323,14 @@ export const mediaService = {
     return getMediaModelById(getDb(), id)
   },
 
-  /** `sourceMetadata` is capture-only, so it's kept out of the IPC-facing MediaInput. */
+  /**
+   * `sourceMetadata` (capture) and `derivedFromId` (a GIF's source video)
+   * are set only by main-process flows, so they're kept out of the IPC-facing
+   * MediaInput.
+   */
   async addMedia(
     input: MediaInput,
-    options: { sourceMetadata?: MediaSourceMetadata } = {}
+    options: { sourceMetadata?: MediaSourceMetadata; derivedFromId?: string } = {}
   ): Promise<MediaModel> {
     const db = getDb()
     await assertRelationsExist(db, input)
@@ -340,7 +364,8 @@ export const mediaService = {
         hash,
         phash,
         pending_tagging: input.pendingTagging ? 1 : 0,
-        source_metadata: options.sourceMetadata ? JSON.stringify(options.sourceMetadata) : null
+        source_metadata: options.sourceMetadata ? JSON.stringify(options.sourceMetadata) : null,
+        derived_from_id: options.derivedFromId ?? null
       })
       if (input.tagIds?.length) await mediaRepo.setMediaTags(trx, id, input.tagIds)
       if (input.characterIds?.length)
