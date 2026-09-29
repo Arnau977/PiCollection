@@ -6,12 +6,18 @@
   height: 100%;
 }
 
+/* Left label | zoom + close | right label. The actions sit in the row
+   instead of floating over it, so the right label is never covered
+   whatever the pill's width. */
 .media-compare-labels {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
   gap: var(--space-4);
-  /* Leaves room for the close pill in the top-right corner. */
-  padding-right: 3.5rem;
+}
+
+.media-compare .lightbox-actions {
+  position: static;
 }
 
 .media-compare-label {

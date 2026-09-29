@@ -76,6 +76,9 @@ async function serveFile(filePath: string, range: string | null): Promise<Respon
       headers: {
         'Content-Range': `bytes ${start}-${end}/${stat.size}`,
         'Access-Control-Allow-Origin': '*',
+        // Not CORS-safelisted, so the renderer (another origin) can only read
+        // the total size - the compare view's file size - if it's exposed.
+        'Access-Control-Expose-Headers': 'Content-Range',
         'Accept-Ranges': 'bytes',
         'Content-Length': String(chunkSize),
         'Content-Type': mimeType
