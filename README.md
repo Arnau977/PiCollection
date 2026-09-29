@@ -78,9 +78,11 @@ required.
 - **NSFW handling** — mark media as NSFW, optionally blur it in listings, and
   reveal on click. Blurring can be switched from the gallery toolbar or with
   `Ctrl+B` on any page.
-- **Keyboard shortcuts** — `E` edits the open media, `Ctrl+S` saves the
-  edit form, `Ctrl+Shift+A` runs the local AI tagger, and `Alt+←`/`Alt+→`
-  move through a batch import or the pending queue. Each button's tooltip
+- **Keyboard shortcuts** — `E` edits the open media and `Esc` leaves the
+  form (in a field, the first `Esc` just leaves the field; leaving with
+  unsaved changes, by `Esc` or Cancel, asks before discarding them), `Ctrl+S` saves, `Ctrl+Shift+S` saves and marks
+  a pending media resolved, `Ctrl+Shift+A` runs the local AI tagger, and
+  `Alt+←`/`Alt+→` move through a batch import or the pending queue. Each button's tooltip
   shows its shortcut.
 - **Home dashboard** — recent additions plus a quick stats summary of your
   most-tagged artists/tags/characters/series.

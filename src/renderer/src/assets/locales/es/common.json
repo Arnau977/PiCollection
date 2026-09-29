@@ -258,6 +258,8 @@
       "source": "Vídeo de origen",
       "derived": "GIF de este vídeo"
     },
+    "discardChangesConfirm": "¿Salir sin guardar los cambios?",
+    "discardChanges": "Descartar cambios",
     "sfwTitle": "Apta para todo público",
     "nsfwTitle": "Contenido erótico",
     "sfwBadge": "SFW",

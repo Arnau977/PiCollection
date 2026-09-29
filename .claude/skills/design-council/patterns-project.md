@@ -69,6 +69,11 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   are skipped while a modal is open, and a shortcut presses the real button
   (via a ref) so it inherits its disabled state. Every button with a
   shortcut shows it in its tooltip ("Save (Ctrl+S)") and `aria-keyshortcuts`.
+  A plain Esc inside a field only leaves the field.
+- **Leaving an edit form with unsaved changes asks first** (Cancel or Esc,
+  "Discard changes" as a danger confirm); nothing to lose, no dialog. A
+  batch import's Close keeps its own exit dialog instead. Where:
+  `MediaFormTopActions.tsx` (`isDirty` from `MediaForm.tsx`).
 - **A view setting toggled away from its settings page confirms with a
   toast** when the change isn't otherwise visible (Ctrl+B on a page without
   the gallery toolbar). Gallery view settings are a shared store

@@ -15,12 +15,14 @@ export const SHORTCUTS = {
   suggestLocally: { key: 'a', ctrl: true, shift: true },
   previous: { key: 'ArrowLeft', alt: true },
   next: { key: 'ArrowRight', alt: true },
-  toggleBlur: { key: 'b', ctrl: true }
+  toggleBlur: { key: 'b', ctrl: true },
+  saveAndResolve: { key: 's', ctrl: true, shift: true },
+  leaveEdit: { key: 'Escape' }
 } satisfies Record<string, Shortcut>
 
 const TEXT_INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
-const KEY_LABELS: Record<string, string> = { ArrowLeft: '←', ArrowRight: '→' }
+const KEY_LABELS: Record<string, string> = { ArrowLeft: '←', ArrowRight: '→', Escape: 'Esc' }
 
 function matches(e: KeyboardEvent, shortcut: Shortcut): boolean {
   return (
@@ -49,7 +51,9 @@ export function ariaShortcut(shortcut: Shortcut): string {
 
 /**
  * Runs `handler` on `shortcut` anywhere in the window. A plain-key shortcut
- * (no Ctrl/Alt) is ignored while typing in a field, and every shortcut is
+ * (no Ctrl/Alt) is ignored while typing in a field - except that a plain
+ * Escape there leaves the field, so a second Escape reaches the shortcut
+ * (typing a tag and pressing Esc twice exits) - and every shortcut is
  * ignored while a modal dialog (confirm, lightbox, compare) is open - those
  * own the keyboard.
  */
@@ -64,7 +68,10 @@ export function useShortcut(shortcut: Shortcut, handler: () => void, enabled = t
       if (e.repeat || !matches(e, { key, ctrl, shift, alt })) return
       const target = e.target as HTMLElement | null
       const typing = target && (TEXT_INPUT_TAGS.has(target.tagName) || target.isContentEditable)
-      if (typing && !ctrl && !alt) return
+      if (typing && !ctrl && !alt) {
+        if (e.key === 'Escape') target.blur()
+        return
+      }
       if (document.querySelector('[aria-modal="true"]')) return
       e.preventDefault()
       handlerRef.current()

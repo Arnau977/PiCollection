@@ -77,6 +77,10 @@ export function MediaForm({
   const { defaults: galleryDefaults } = useGalleryDefaults()
 
   const [input, setInput] = useState<MediaInput>(() => toInput(media, initialFile))
+  // What the form held when opened or last saved - Esc only asks before
+  // leaving when something changed since.
+  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(input))
+  const isDirty = JSON.stringify(input) !== savedSnapshot
   // In a queue, "Guardar" no longer advances to the next item - it just
   // persists the current one and stays put, so a second "Guardar" click (or
   // one from the queue's "Siguiente" bookkeeping) must update that same
@@ -165,6 +169,7 @@ export function MediaForm({
     if (!result.data.pendingTagging)
       await suggestions.linkCharactersToSoleSeries(resolvedSeriesIds, resolvedCharacterIds)
     if (!media) setQueueSavedMedia(result.data)
+    setSavedSnapshot(JSON.stringify(input))
     return result.data
   }
 
@@ -229,6 +234,7 @@ export function MediaForm({
         deleting={deleting}
         hasExactDuplicate={Boolean(duplicateCheck?.exactMatch)}
         onCancel={onCancel}
+        isDirty={isDirty}
         onMarkResolved={onMarkResolved}
         onMarkResolvedClick={handleMarkResolved}
         onSendToPending={handleSendToPending}
