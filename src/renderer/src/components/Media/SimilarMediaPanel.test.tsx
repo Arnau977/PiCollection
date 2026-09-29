@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { MediaDuplicateMatch } from '@shared/models'
 import { saveGalleryDefaults, FALLBACK_GALLERY_DEFAULTS } from '../../utils/gallerySettings'
@@ -19,7 +19,15 @@ function setApi(): void {
 function renderPanel(mediaId = '1'): ReturnType<typeof render> {
   return render(
     <MemoryRouter>
-      <SimilarMediaPanel mediaId={mediaId} />
+      <SimilarMediaPanel
+        media={{
+          id: mediaId,
+          route: '/pics/1.png',
+          name: 'This picture',
+          type: 'image',
+          pendingTagging: false
+        }}
+      />
     </MemoryRouter>
   )
 }
@@ -69,6 +77,17 @@ describe('SimilarMediaPanel', () => {
     expect(await screen.findByRole('heading', { name: 'Similar media' })).toBeInTheDocument()
     const link = screen.getByRole('link', { name: 'Other picture' })
     expect(link).toHaveAttribute('href', '/media/2')
+  })
+
+  it('opens the compare view from an item, labelling where each file stands', async () => {
+    findSimilarResult = similarMediaResult({ pendingTagging: true })
+    renderPanel()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Compare with "Other picture"' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Compare images' })
+    expect(within(dialog).getByText('In library')).toBeInTheDocument()
+    expect(within(dialog).getByText('Pending')).toBeInTheDocument()
   })
 
   it('blurs an NSFW similar item when blurNsfw is enabled (the default)', async () => {

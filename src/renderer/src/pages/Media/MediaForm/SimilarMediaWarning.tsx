@@ -11,6 +11,8 @@ export interface CurrentFile {
   route: string
   name: string
   type: MediaModel['type']
+  /** Unset while the file is being added (not saved yet). */
+  pendingTagging?: boolean
 }
 
 interface SimilarMediaWarningProps {
@@ -43,7 +45,12 @@ export function SimilarMediaWarning({
               media={media}
               onClick={
                 canCompare(media)
-                  ? (): void => setCompared({ src: toMediaUrl(media.route), name: media.name })
+                  ? (): void =>
+                      setCompared({
+                        src: toMediaUrl(media.route),
+                        name: media.name,
+                        status: media.pendingTagging ? 'pending' : 'library'
+                      })
                   : undefined
               }
             >
@@ -56,7 +63,16 @@ export function SimilarMediaWarning({
       </ul>
       {compared && current && (
         <MediaCompare
-          left={{ src: toMediaUrl(current.route), name: current.name }}
+          left={{
+            src: toMediaUrl(current.route),
+            name: current.name,
+            status:
+              current.pendingTagging === undefined
+                ? 'new'
+                : current.pendingTagging
+                  ? 'pending'
+                  : 'library'
+          }}
           right={compared}
           onClose={() => setCompared(null)}
         />
@@ -77,7 +93,12 @@ export function EditedMediaSimilarWarning({ media }: { media: MediaModel }): JSX
     <SimilarMediaWarning
       matches={data}
       title={t('addMedia.similarToExisting')}
-      current={{ route: media.route, name: media.name, type: media.type }}
+      current={{
+        route: media.route,
+        name: media.name,
+        type: media.type,
+        pendingTagging: media.pendingTagging
+      }}
     />
   )
 }

@@ -142,7 +142,12 @@ required.
   editing, that includes other pending items, so duplicates inside an
   import batch show up. In the add/edit form, hovering a similar item shows
   the whole picture, and clicking it opens a full-size comparison with a
-  divider you drag across both images (images and GIFs).
+  divider you drag across both images (images and GIFs); on the detail
+  page, the compare button on a similar thumbnail does the same. The
+  comparison labels each side (in library, pending, being added), keeps
+  the divider over the pictures, and zooms both at once (wheel,
+  double-click, `+`/`-`/`0`); zoomed, dragging pans and the divider moves
+  by its handle.
 
 ## For developers
 

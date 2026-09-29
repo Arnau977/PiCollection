@@ -1,19 +1,31 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Columns2 } from 'lucide-react'
+import type { MediaModel } from '@shared/models'
+import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { PATH } from '../../app.routes.const'
 import { useSimilarMedia } from '../../hooks/useSimilarMedia'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { MediaThumb } from '../MediaThumb/MediaThumb'
+import { MediaCompare, type ComparedMedia } from '../MediaCompare/MediaCompare'
 import './SimilarMediaPanel.css'
 
+type ShownMedia = Pick<MediaModel, 'id' | 'route' | 'name' | 'type' | 'pendingTagging'>
+
 interface SimilarMediaPanelProps {
-  mediaId: string
+  /** The media whose detail page this is - also the left side of a comparison. */
+  media: ShownMedia
 }
 
-export function SimilarMediaPanel({ mediaId }: SimilarMediaPanelProps): JSX.Element | null {
+const statusOf = (media: ShownMedia): ComparedMedia['status'] =>
+  media.pendingTagging ? 'pending' : 'library'
+
+export function SimilarMediaPanel({ media: current }: SimilarMediaPanelProps): JSX.Element | null {
   const { t } = useTranslation()
-  const { data } = useSimilarMedia(mediaId)
+  const { data } = useSimilarMedia(current.id)
   const { defaults } = useGalleryDefaults()
+  const [compared, setCompared] = useState<ComparedMedia | null>(null)
 
   if (data.length === 0) return null
 
@@ -39,10 +51,35 @@ export function SimilarMediaPanel({ mediaId }: SimilarMediaPanelProps): JSX.Elem
                   {blurred && <span className="nsfw-blur-overlay">{t('media.revealNsfw')}</span>}
                 </div>
               </Link>
+              {/* A still frame can't be slid against a playing video. */}
+              {current.type !== 'video' && media.type !== 'video' && (
+                <button
+                  type="button"
+                  className="similar-media-compare"
+                  aria-label={t('mediaCompare.openLabel', { name: media.name })}
+                  title={t('mediaCompare.openLabel', { name: media.name })}
+                  onClick={() =>
+                    setCompared({
+                      src: toMediaUrl(media.route),
+                      name: media.name,
+                      status: statusOf(media)
+                    })
+                  }
+                >
+                  <Columns2 size={14} />
+                </button>
+              )}
             </li>
           )
         })}
       </ul>
+      {compared && (
+        <MediaCompare
+          left={{ src: toMediaUrl(current.route), name: current.name, status: statusOf(current) }}
+          right={compared}
+          onClose={() => setCompared(null)}
+        />
+      )}
     </div>
   )
 }

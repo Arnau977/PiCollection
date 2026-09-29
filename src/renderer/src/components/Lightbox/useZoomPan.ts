@@ -15,8 +15,10 @@ interface View {
 
 const FIT: View = { scale: 1, x: 0, y: 0 }
 
-interface ZoomPan {
+export interface ZoomPan {
   scale: number
+  /** Top-left of the zoomed content relative to its box, in px. */
+  offset: { x: number; y: number }
   isZoomed: boolean
   /** Inline style for the zoomed element (transform-origin is its top-left corner). */
   style: React.CSSProperties
@@ -125,6 +127,7 @@ export function useZoomPan(target: React.RefObject<HTMLElement>): ZoomPan {
 
   return {
     scale: view.scale,
+    offset: { x: view.x, y: view.y },
     isZoomed: view.scale > MIN_ZOOM,
     style: {
       transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`,

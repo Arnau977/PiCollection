@@ -102,11 +102,17 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   "N/64 difference". Where:
   `src/renderer/src/pages/Media/MediaForm/SimilarMediaWarning.tsx` (#91).
 - **Compare two images at full size with a drag divider** (`MediaCompare`):
-  both fitted to the same box so identical pictures line up, an invisible
-  native range input over the stage for drag/click/keys, and each side's
-  resolution. Images/GIFs only. Where:
-  `src/renderer/src/components/MediaCompare/MediaCompare.tsx`, opened from
-  `SimilarMediaWarning.tsx`.
+  both fitted to the same box so identical pictures line up; the stage
+  handles the pointer (continuous, not the range input's 1% steps) and a
+  hidden native range input keeps arrows/Home/End; the divider is clamped
+  to the images' on-screen span (`dividerBounds.ts`); shared zoom via
+  `useZoomPan` + `ZoomControls`, with each image in an unzoomed clipping
+  layer so the clip follows the divider; zoomed, drag pans and only the
+  divider line moves it (Lightroom). Each side shows its resolution and a
+  solid status pill (library / pending / being added). Images/GIFs only.
+  Where: `src/renderer/src/components/MediaCompare/`, opened from
+  `SimilarMediaWarning.tsx` and the detail page's `SimilarMediaPanel.tsx`
+  (a compare button revealed on hover/focus).
 - **Previews meant for telling images apart are letterboxed, never
   cropped** (`object-fit: contain`). Where: `MediaHoverPreview.css`.
 

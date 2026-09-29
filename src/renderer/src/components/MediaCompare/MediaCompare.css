@@ -33,9 +33,31 @@
   white-space: nowrap;
 }
 
+.media-compare-label-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.media-compare-label:last-child .media-compare-label-meta {
+  justify-content: flex-end;
+}
+
 .media-compare-label-size {
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
+}
+
+/* Library / Pending / New file - a solid pill so it reads over the dark
+   backdrop (the outlined neutral badge nearly disappears there). */
+.media-compare-status {
+  padding: 0.05rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  border: 1px solid var(--border-color-strong);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 /* Both images fill the same box with object-fit: contain, so the same
@@ -44,23 +66,39 @@
   position: relative;
   flex: 1;
   min-height: 0;
+  cursor: ew-resize;
+  touch-action: none;
   animation: lightbox-content-in 200ms ease;
 }
 
-.media-compare-stage img {
+/* Zoomed, the stage pans (the divider still drags from its own line). */
+.media-compare-stage.is-zoomed {
+  cursor: grab;
+}
+
+/* Each image sits in its own unzoomed layer, so the clip follows the
+   divider on screen while the zoom transform moves the picture inside. */
+.media-compare-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.media-compare-layer img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
   user-select: none;
-  pointer-events: none;
 }
 
 .media-compare-right {
   clip-path: inset(0 0 0 var(--split));
 }
 
+/* Keyboard-only: the pointer is handled by the stage. */
 .media-compare-range {
   position: absolute;
   inset: 0;
@@ -68,7 +106,7 @@
   height: 100%;
   margin: 0;
   opacity: 0;
-  cursor: ew-resize;
+  pointer-events: none;
 }
 
 .media-compare-divider {
