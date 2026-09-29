@@ -135,8 +135,10 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   to the images' on-screen span (`dividerBounds.ts`); shared zoom via
   `useZoomPan` + `ZoomControls`, with each image in an unzoomed clipping
   layer so the clip follows the divider; zoomed, drag pans and only the
-  divider line moves it (Lightroom). Each side shows its resolution and a
-  solid status pill (library / pending / being added). Images/GIFs only.
+  divider line moves it (Lightroom). Each side shows its resolution, file
+  size (read from the protocol's Content-Range, one byte fetched) and a
+  solid status pill (library / pending / being added); zoom + close sit
+  centered between the two labels. Images/GIFs only.
   Where: `src/renderer/src/components/MediaCompare/`, opened from
   `SimilarMediaWarning.tsx` and the detail page's `SimilarMediaPanel.tsx`
   (a compare button revealed on hover/focus).
@@ -197,3 +199,8 @@ of them.
   tags from anything passed through.
 - **Trusting the OS for video thumbnails.** Windows refuses them in
   cloud-synced folders; always keep the in-app frame fallback (#89).
+- **Reserving room for a floating overlay with a fixed padding.** The
+  compare view's labels kept `padding-right: 3.5rem` for the close pill;
+  once zoom controls joined it, the pill covered the right-hand label.
+  Put the controls in the same row (grid/flex) instead of floating them
+  over content. Where: `MediaCompare.css`.

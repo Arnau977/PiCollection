@@ -165,7 +165,9 @@ required.
   the whole picture, and clicking it opens a full-size comparison with a
   divider you drag across both images (images and GIFs); on the detail
   page, the compare button on a similar thumbnail does the same. The
-  comparison labels each side (in library, pending, being added), keeps
+  comparison labels each side (in library, pending, being added) with its
+  resolution and file size - so a heavier copy of the same picture stands
+  out - keeps
   the divider over the pictures, and zooms both at once (wheel,
   double-click, `+`/`-`/`0`); zoomed, dragging pans and the divider moves
   by its handle.

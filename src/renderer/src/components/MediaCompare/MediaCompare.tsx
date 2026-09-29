@@ -5,6 +5,7 @@ import { useZoomPan } from '../Lightbox/useZoomPan'
 import { ZoomControls } from '../Lightbox/ZoomControls'
 import '../Lightbox/Lightbox.css'
 import { dividerBounds, type Dimensions } from './dividerBounds'
+import { fetchFileSize, formatFileSize } from './fileSize'
 import './MediaCompare.css'
 
 /** Where the file stands: already in the library, waiting in Pending, or not saved yet. */
@@ -38,13 +39,27 @@ function clamp(value: number, min: number, max: number): number {
  * compared; once zoomed, dragging pans and the divider moves by its handle.
  */
 export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const stageRef = useRef<HTMLDivElement>(null)
   const zoom = useZoomPan(stageRef)
   const [split, setSplit] = useState(50)
   const [sizes, setSizes] = useState<{ left?: Dimensions; right?: Dimensions }>({})
   const [stage, setStage] = useState<Dimensions | null>(null)
+  const [fileSizes, setFileSizes] = useState<{ left?: number; right?: number }>({})
   const draggingDivider = useRef(false)
+
+  // Same-resolution copies can still differ a lot in weight (recompressed
+  // re-uploads), which the picture alone doesn't show.
+  useEffect(() => {
+    let cancelled = false
+    setFileSizes({})
+    void Promise.all([fetchFileSize(left.src), fetchFileSize(right.src)]).then(([l, r]) => {
+      if (!cancelled) setFileSizes({ left: l ?? undefined, right: r ?? undefined })
+    })
+    return (): void => {
+      cancelled = true
+    }
+  }, [left.src, right.src])
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent): void {
@@ -125,6 +140,11 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
 
   function label(side: 'left' | 'right', media: ComparedMedia): JSX.Element {
     const size = sizes[side]
+    const bytes = fileSizes[side]
+    const details = [
+      size && t('mediaCompare.dimensions', size),
+      bytes !== undefined && formatFileSize(bytes, i18n.language)
+    ].filter(Boolean)
     return (
       <span className="media-compare-label">
         <span className="media-compare-label-name" title={media.name}>
@@ -134,8 +154,8 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
           {media.status && (
             <span className="media-compare-status">{t(`mediaCompare.status.${media.status}`)}</span>
           )}
-          {size && (
-            <span className="media-compare-label-size">{t('mediaCompare.dimensions', size)}</span>
+          {details.length > 0 && (
+            <span className="media-compare-label-size">{details.join(' · ')}</span>
           )}
         </span>
       </span>
@@ -150,21 +170,20 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
       aria-label={t('mediaCompare.title')}
       onClick={handleBackdropClick}
     >
-      <div className="lightbox-actions">
-        <ZoomControls zoom={zoom} />
-        <button
-          type="button"
-          className="icon-btn lightbox-close"
-          aria-label={t('media.closeLightbox')}
-          onClick={onClose}
-        >
-          <X size={20} />
-        </button>
-      </div>
-
       <div className="media-compare-body">
         <div className="media-compare-labels">
           {label('left', left)}
+          <div className="lightbox-actions">
+            <ZoomControls zoom={zoom} />
+            <button
+              type="button"
+              className="icon-btn lightbox-close"
+              aria-label={t('media.closeLightbox')}
+              onClick={onClose}
+            >
+              <X size={20} />
+            </button>
+          </div>
           {label('right', right)}
         </div>
         <div
