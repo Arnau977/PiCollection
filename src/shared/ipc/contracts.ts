@@ -198,7 +198,8 @@ export const IPC = {
     delete: 'db:media:delete',
     cacheThumbnail: 'db:media:cache-thumbnail',
     checkDuplicate: 'db:media:check-duplicate',
-    findSimilar: 'db:media:find-similar'
+    findSimilar: 'db:media:find-similar',
+    detectAiMetadata: 'media:detect-ai-metadata'
   },
   artist: {
     getAll: 'db:artist:get-all',

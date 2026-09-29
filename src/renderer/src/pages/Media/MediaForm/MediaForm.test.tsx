@@ -15,7 +15,8 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
         .fn()
         .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } }),
       clearPendingTagging: vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } }),
-      findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] })
+      findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+      detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null })
     },
     artist: { create: vi.fn() },
     tag: { create: vi.fn(), getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
@@ -847,6 +848,24 @@ describe('MediaForm source-site suggestions', () => {
     await user.click(screen.getByRole('button', { name: 'SFW' }))
 
     expect(screen.queryByText('Rating')).not.toBeInTheDocument()
+  })
+
+  it('offers to mark the media as AI when its file metadata names a generator', async () => {
+    setApi({
+      media: {
+        detectAiMetadata: vi
+          .fn()
+          .mockResolvedValue({ success: true, data: { generator: 'ComfyUI' } })
+      }
+    })
+    const user = userEvent.setup()
+    renderForm({ media: capturedMedia })
+
+    await screen.findByText("The file's metadata says it was made with ComfyUI.")
+    await user.click(screen.getByRole('button', { name: 'Mark as AI' }))
+
+    expect(screen.getByRole('checkbox', { name: 'Generated using AI' })).toBeChecked()
+    expect(screen.queryByRole('button', { name: 'Mark as AI' })).not.toBeInTheDocument()
   })
 
   it('shows the file name and folder of the edited media', () => {

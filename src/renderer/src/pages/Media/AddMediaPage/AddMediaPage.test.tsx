@@ -50,7 +50,8 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
       create: vi.fn().mockResolvedValue({ success: true, data: { id: 'm1' } }),
       checkDuplicate: vi
         .fn()
-        .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } })
+        .mockResolvedValue({ success: true, data: { exactMatch: null, similar: [] } }),
+      detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null })
     },
     artist: {
       create: vi.fn(),

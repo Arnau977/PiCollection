@@ -120,6 +120,16 @@ export function splitBooruList(raw: string | string[] | undefined): SauceNaoName
   return splitBooruListWithQualifiers(raw).names
 }
 
+/** Booru sites flag fully generated posts with this tag (`ai-generated` on Danbooru, `ai_generated` on Rule34). */
+export function isAiGeneratedTag(name: string): boolean {
+  return (
+    name
+      .trim()
+      .toLowerCase()
+      .replace(/[\s_]+/g, '-') === 'ai-generated'
+  )
+}
+
 /**
  * A media has a single artist, but booru posts can credit several - the
  * extension sends them comma-joined. Trimmed, blanks and case-insensitive

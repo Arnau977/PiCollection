@@ -99,6 +99,13 @@ required.
 - **Local AI tagging** — "Suggest tags locally" runs a WD14 tagger entirely
   on your device (no upload): tags, characters, series and a SFW/NSFW
   hint. The runtime and model are downloaded once, from Settings.
+- **AI-generated hint** — the edit form reads an image's own metadata
+  (on your device) for traces generators leave: Stable Diffusion WebUI,
+  ComfyUI, InvokeAI and NovelAI parameters, or the "fully AI-generated"
+  mark of Content Credentials/IPTC. When it finds one it offers "Mark as
+  AI"; most sites strip this metadata, so finding nothing proves nothing.
+  Captures from boorus also suggest it when the post has the
+  `ai-generated` tag.
 - **Browser extension captures** — the PiCollection Capture extension
   (paired from Settings, over a local-only connection) saves the post
   you're viewing straight to the pending queue. With it enabled, closing
@@ -108,7 +115,7 @@ required.
   had is kept as source info: when you tag the media, the suggestions panel
   ("From danbooru") offers the tags, characters and series you already have
   (one by one or all at once), the ones you don't (marked "new", created on
-  click), and the site's rating and AI flag. Nothing from the site gets
+  click), and the site's rating and AI tag. Nothing from the site gets
   added unless you pick it.
 - **File location** — the edit form shows the file's name and folder, with
   copy and "open in file explorer" actions.

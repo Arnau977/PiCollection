@@ -73,6 +73,7 @@ beforeEach(() => {
     value: {
       media: {
         findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
         update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
         getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
         delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -165,6 +166,7 @@ function setOrderedIds(data: string[]): void {
     value: {
       media: {
         findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
         update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
         getOrderedIds: vi.fn().mockResolvedValue({ success: true, data }),
         delete: vi.fn().mockResolvedValue({ success: true, data: undefined })
@@ -355,6 +357,7 @@ describe('MediaPage editing', () => {
       value: {
         media: {
           findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
           update,
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['1'] })
         },
@@ -410,6 +413,7 @@ describe('MediaPage delete', () => {
       value: {
         media: {
           findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
           update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: deleteFn
@@ -448,6 +452,7 @@ describe('MediaPage delete', () => {
       value: {
         media: {
           findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
           update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: deleteFn
@@ -485,6 +490,7 @@ describe('MediaPage delete', () => {
       value: {
         media: {
           findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
           update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: deleteFn
@@ -546,6 +552,7 @@ describe('MediaPage pending queue', () => {
       value: {
         media: {
           findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
           update,
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -611,6 +618,7 @@ describe('MediaPage pending queue', () => {
       value: {
         media: {
           findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
           clearPendingTagging: vi.fn().mockResolvedValue({ success: true, data: sampleMedia })
@@ -666,6 +674,7 @@ describe('MediaPage pending queue', () => {
       value: {
         media: {
           findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
           update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
           getOrderedIds,
           delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -710,6 +719,7 @@ describe('MediaPage pending queue', () => {
       value: {
         media: {
           findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
           update,
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -793,6 +803,7 @@ describe('MediaPage mark resolved', () => {
       value: {
         media: {
           findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
           update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['0', '1', '2'] }),
           delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -836,6 +847,7 @@ describe('MediaPage mark resolved', () => {
       value: {
         media: {
           findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] }),
+          detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null }),
           update: vi.fn().mockResolvedValue({ success: true, data: sampleMedia }),
           getOrderedIds: vi.fn().mockResolvedValue({ success: true, data: ['1', '2'] }),
           delete: vi.fn().mockResolvedValue({ success: true, data: undefined }),

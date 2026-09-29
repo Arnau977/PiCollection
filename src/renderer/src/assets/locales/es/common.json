@@ -305,6 +305,10 @@
     "suggestionsSauceNaoTitle": "Coincidencia SauceNAO",
     "suggestionsWd14Title": "Etiquetado local con IA"
   },
+  "aiMetadata": {
+    "detected": "Los metadatos del archivo dicen que se hizo con {{generator}}.",
+    "markAsAi": "Marcar como IA"
+  },
   "sourceSuggestions": {
     "title": "Del sitio de origen",
     "titleWithSite": "De {{site}}",

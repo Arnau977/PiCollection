@@ -12,6 +12,7 @@ import type { InitialFile, QueueInfo } from './MediaForm.types'
 import { SuggestionsRail } from './SuggestionsRail'
 import { useMediaFormDrafts } from './useMediaFormDrafts'
 import { useMediaFormSuggestions } from './useMediaFormSuggestions'
+import { useAiMetadataDetection } from './useAiMetadataDetection'
 import './MediaForm.css'
 
 export type { InitialFile, QueueInfo }
@@ -86,6 +87,7 @@ export function MediaForm({
   const [saving, setSaving] = useState(false)
   const [duplicateCheck, setDuplicateCheck] = useState<MediaDuplicateCheck | null>(null)
 
+  const aiDetection = useAiMetadataDetection(input.route, input.type)
   const drafts = useMediaFormDrafts({ input, setInput, artists, tags, characters, series })
   const suggestions = useMediaFormSuggestions({
     input,
@@ -255,6 +257,8 @@ export function MediaForm({
               pendingArtists={drafts.pendingArtists}
               onArtistSelect={(artist) => setInput((prev) => ({ ...prev, artistId: artist?.id }))}
               onCreateArtist={drafts.createArtist}
+              aiDetection={aiDetection}
+              onMarkAiGenerated={() => setInput((prev) => ({ ...prev, isAiGenerated: true }))}
             />
 
             <MediaFormTaxonomyFields
