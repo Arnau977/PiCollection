@@ -1,5 +1,6 @@
 import { Plus, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { parseGroupEntry, toGroupEntry } from '@shared/query/groupEntry'
 import { MultiSelectAutocomplete, type ChipToggle } from '../Autocomplete/MultiSelectAutocomplete'
 import { InfoTooltip } from '../InfoTooltip/InfoTooltip'
 import './GroupedEntityFilter.css'
@@ -25,6 +26,8 @@ interface GroupedEntityFilterProps<T> {
   }
   /** Passed to each group's chips - see MultiSelectAutocomplete. */
   chipToggle?: ChipToggle
+  /** Lets each chip flip between "must have" and "must not have" (see groupEntry.ts). */
+  allowExclusion?: boolean
 }
 
 /**
@@ -40,15 +43,36 @@ export function GroupedEntityFilter<T>({
   getOptionLabel,
   getOptionValue,
   noneOption,
-  chipToggle
+  chipToggle,
+  allowExclusion = false
 }: GroupedEntityFilterProps<T>): JSX.Element {
   const { t } = useTranslation()
   const effectiveGroups = groups.length > 0 ? groups : [[]]
 
-  function updateGroup(index: number, values: string[]): void {
+  // The picker works on plain ids; exclusions are kept per group and
+  // re-applied to whichever ids remain after a change.
+  function excludedIn(index: number): Set<string> {
+    return new Set(
+      effectiveGroups[index]
+        .map(parseGroupEntry)
+        .flatMap(({ id, excluded }) => (excluded ? [id] : []))
+    )
+  }
+
+  function updateGroup(index: number, values: string[], excluded = excludedIn(index)): void {
     const next = [...effectiveGroups]
-    next[index] = values
+    next[index] = values.map((id) => toGroupEntry({ id, excluded: excluded.has(id) }))
     onChange(next)
+  }
+
+  function toggleExcluded(index: number, id: string): void {
+    const excluded = excludedIn(index)
+    if (!excluded.delete(id)) excluded.add(id)
+    updateGroup(
+      index,
+      effectiveGroups[index].map((entry) => parseGroupEntry(entry).id),
+      excluded
+    )
   }
 
   function addGroup(): void {
@@ -81,11 +105,21 @@ export function GroupedEntityFilter<T>({
                 options={options}
                 getOptionLabel={getOptionLabel}
                 getOptionValue={getOptionValue}
-                selectedValues={group}
+                selectedValues={group.map((entry) => parseGroupEntry(entry).id)}
                 onChange={(values) => updateGroup(index, values)}
                 disabled={noneOption?.checked}
                 noneToggle={index === 0 ? noneOption : undefined}
                 chipToggle={chipToggle}
+                chipExclusion={
+                  allowExclusion
+                    ? {
+                        isExcluded: (id) => excludedIn(index).has(id),
+                        onToggle: (id) => toggleExcluded(index, id),
+                        includedLabel: t('filters.included'),
+                        excludedLabel: t('filters.excluded')
+                      }
+                    : undefined
+                }
               />
               {effectiveGroups.length > 1 && (
                 <button

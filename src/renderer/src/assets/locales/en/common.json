@@ -218,6 +218,8 @@
     "cancel": "Cancel"
   },
   "filters": {
+    "included": "Included, click to exclude",
+    "excluded": "Excluded, click to include",
     "exactCharacter": "Only this one, without its forms",
     "exactSeries": "Only this one, without its subseries",
     "name": "Name",

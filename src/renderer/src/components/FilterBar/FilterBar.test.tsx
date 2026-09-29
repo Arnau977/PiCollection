@@ -47,6 +47,15 @@ afterEach(() => {
 })
 
 describe('FilterBar', () => {
+  it('flips a selected character between included and excluded', () => {
+    charactersData = [{ id: 'pyra', name: 'Pyra', series: [] }] as CharacterModel[]
+    const { onFiltersChange } = renderFilterBar({ characterGroups: [['pyra']] })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Included, click to exclude: Pyra' }))
+
+    expect(onFiltersChange).toHaveBeenLastCalledWith({ characterGroups: [['-pyra']] })
+  })
+
   it('offers "only this one" only on a selected character that has forms', () => {
     charactersData = [
       { id: 'mythra', name: 'Mythra', series: [] },

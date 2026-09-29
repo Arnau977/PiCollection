@@ -154,7 +154,9 @@ hierarchy (a filter on a parent also matches media tagged only with a
 descendant, via `buildClosureMap` in
 `src/main/database/repositories/entityHierarchy.ts`). Ids listed in
 `exactCharacterIds`/`exactSeriesIds` skip that expansion and match only
-direct links.
+direct links. A group entry prefixed with `-` is an exclusion ("must not
+have it"), parsed by `src/shared/query/groupEntry.ts` - always go through
+it rather than reading group entries as bare ids.
 
 Pending media (`pending_tagging = 1`) is a staging area, not library
 content: the gallery, entity thumbnails, similar-media panel, Metadata

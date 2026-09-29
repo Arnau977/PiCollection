@@ -3,6 +3,7 @@ import { sql } from 'kysely'
 import type { DB, MediaTable } from '../schema'
 import type { MediaFilters, Sorting } from '@shared/models'
 import { extractAiToken, parseSearchQuery, type QueryNode } from '@shared/query/searchQuery'
+import { parseGroupEntry } from '@shared/query/groupEntry'
 
 const SORT_COLUMNS: Record<string, keyof MediaTable> = {
   name: 'name',
@@ -55,7 +56,9 @@ function applyGroupedFilter<O>(
  * to its hierarchy closure (itself + descendants) via `closures` before being ANDed - so "media
  * must match series/character A AND B" really means "must be in A's closure AND in B's closure",
  * not just carry exactly those two ids. Used for both `seriesGroups` and `characterGroups`.
- * Ids in `exactIds` skip the expansion and match only their own direct links.
+ * Ids in `exactIds` skip the expansion and match only their own direct links. An entry
+ * prefixed with `-` (see groupEntry.ts) is an exclusion: the media must *not* be in that
+ * closure - so excluding a character also excludes its forms, unless it's exact.
  */
 function applyClosureGroupedFilter<O>(
   qb: SelectQueryBuilder<DB, 'media', O>,
@@ -75,13 +78,14 @@ function applyClosureGroupedFilter<O>(
     eb.or(
       nonEmptyGroups.map((group) =>
         eb.and(
-          group.map((id) =>
-            eb(
+          group.map((entry) => {
+            const { id, excluded } = parseGroupEntry(entry)
+            return eb(
               'media.id',
-              'in',
+              excluded ? 'not in' : 'in',
               db.selectFrom(table).select('media_id').where(column, 'in', closureFor(id))
             )
-          )
+          })
         )
       )
     )

@@ -456,6 +456,48 @@ describe('media.repository character hierarchy filtering (characterClosures)', (
 
     expect(result.map((r) => r.name).sort()).toEqual(['both', 'onlyBase'])
   })
+
+  it('excludes a character together with its forms', async () => {
+    const pyra = await characterRepo.insertCharacter(db, {
+      id: randomUUID(),
+      name: 'Pyra',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const swimsuit = await characterRepo.insertCharacter(db, {
+      id: randomUUID(),
+      name: 'Pyra (Pro Swimmer)',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: pyra.id
+    })
+    const rex = await characterRepo.insertCharacter(db, {
+      id: randomUUID(),
+      name: 'Rex',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const rexAlone = await insertMedia('rexAlone')
+    const rexWithForm = await insertMedia('rexWithForm')
+    await mediaRepo.setMediaCharacters(db, rexAlone.id, [rex.id])
+    await mediaRepo.setMediaCharacters(db, rexWithForm.id, [rex.id, swimsuit.id])
+
+    const characterClosures = new Map([
+      [pyra.id, [pyra.id, swimsuit.id]],
+      [rex.id, [rex.id]]
+    ])
+    const result = await mediaRepo.findMediaRows(
+      db,
+      { characterGroups: [[rex.id, `-${pyra.id}`]] },
+      undefined,
+      undefined,
+      characterClosures
+    )
+
+    expect(result.map((r) => r.name)).toEqual(['rexAlone'])
+  })
 })
 
 describe('media.repository free-text/sfw/type filtering', () => {
