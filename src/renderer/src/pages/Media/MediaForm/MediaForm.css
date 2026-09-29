@@ -112,6 +112,16 @@
   gap: var(--space-3);
 }
 
+/* "Made with ComfyUI - Mark as AI": sits under the toggle it would change. */
+.media-form-ai-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
 /* Two boolean attributes of the record (SFW/NSFW, AI-generated), upgraded
    from a tiny native checkbox to a pill built on a real <input
    type="checkbox"> (visually hidden, not display:none, so keyboard/screen

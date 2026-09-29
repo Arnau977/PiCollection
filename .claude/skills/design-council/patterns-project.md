@@ -69,6 +69,12 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   already in your library" button (artists excluded) and the site's
   rating/AI flag as hint rows. Chips disappear once the form has them.
   Where: `SourceSuggestionsPanel.tsx`, `useSourceSuggestions.ts`.
+- **A hint about a record field sits under that field, never applies
+  itself.** The file-metadata AI detection shows "The file's metadata says
+  it was made with X - Mark as AI" right under the SFW/AI toggles
+  (`.media-form-ai-hint`, muted text 6.44:1 on surface) and hides once the
+  toggle is on. Where: `MediaFormDetailsFields.tsx`,
+  `useAiMetadataDetection.ts`.
 - **A suggested form/costume is a child character**: its chip reads
   "Pyra (Pro Swimmer) · form of Pyra" (muted `.suggestion-form-of`); the
   base character is applied right away if it exists, and accepting the chip

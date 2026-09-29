@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron'
 import { mediaService } from '../services/media.service'
+import { detectAiMetadata } from '../services/aiMetadata.service'
 import { cacheThumbnailFromBuffer, THUMBNAIL_MAX_SIZE } from '../thumbnails/thumbnails'
 import { ipcHandler } from './helpers'
 import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
@@ -86,6 +87,12 @@ export function registerMediaHandlers(): void {
     IPC.media.checkDuplicate,
     ipcHandler(IPC.media.checkDuplicate, RouteSchema, ({ route }) =>
       mediaService.checkDuplicate(route)
+    )
+  )
+  ipcMain.handle(
+    IPC.media.detectAiMetadata,
+    ipcHandler(IPC.media.detectAiMetadata, RouteSchema, ({ route }) =>
+      detectAiMetadata(resolveRoute(route, readSourceFolder()))
     )
   )
   ipcMain.handle(

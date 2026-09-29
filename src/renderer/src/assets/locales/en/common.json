@@ -305,6 +305,10 @@
     "suggestionsSauceNaoTitle": "SauceNAO match",
     "suggestionsWd14Title": "Local AI tagging"
   },
+  "aiMetadata": {
+    "detected": "The file's metadata says it was made with {{generator}}.",
+    "markAsAi": "Mark as AI"
+  },
   "sourceSuggestions": {
     "title": "From the source site",
     "titleWithSite": "From {{site}}",

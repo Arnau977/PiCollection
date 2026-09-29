@@ -67,6 +67,12 @@ export interface MediaDuplicateMatch {
   distance: number
 }
 
+/** Generator traces found inside a file's own metadata (see aiMetadata.service). */
+export interface AiMetadataDetection {
+  /** Display name: "ComfyUI", "Stable Diffusion WebUI", "Content Credentials"... */
+  generator: string
+}
+
 export interface MediaDuplicateCheck {
   /** Same file, by path or exact content hash - the add should be blocked. */
   exactMatch: MediaModel | null

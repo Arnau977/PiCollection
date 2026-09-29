@@ -18,6 +18,7 @@ import type {
   ExtensionBridgeStatus,
   MediaBatchUpdateAssociationsInput,
   MediaDuplicateCheck,
+  AiMetadataDetection,
   MediaDuplicateMatch,
   MediaFilteredResult,
   MediaFilters,
@@ -81,6 +82,8 @@ export const api = {
       ipcRenderer.invoke(IPC.media.cacheThumbnail, { route, png }),
     checkDuplicate: (route: string): Promise<IpcResult<MediaDuplicateCheck>> =>
       ipcRenderer.invoke(IPC.media.checkDuplicate, { route }),
+    detectAiMetadata: (route: string): Promise<IpcResult<AiMetadataDetection | null>> =>
+      ipcRenderer.invoke(IPC.media.detectAiMetadata, { route }),
     findSimilar: (
       mediaId: string,
       options: { includePending?: boolean } = {}

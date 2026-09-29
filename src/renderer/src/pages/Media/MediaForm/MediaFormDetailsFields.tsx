@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react'
-import type { ArtistModel, MediaInput } from '@shared/models'
+import type { AiMetadataDetection, ArtistModel, MediaInput } from '@shared/models'
 import { Autocomplete } from '../../../components/Autocomplete/Autocomplete'
 
 interface MediaFormDetailsFieldsProps {
@@ -12,6 +12,9 @@ interface MediaFormDetailsFieldsProps {
   pendingArtists: ArtistModel[]
   onArtistSelect: (artist: ArtistModel | null) => void
   onCreateArtist: (name: string, social?: { name: string; url: string }) => void
+  /** Generator traces found in the file itself - offered, never applied on their own. */
+  aiDetection: AiMetadataDetection | null
+  onMarkAiGenerated: () => void
 }
 
 export function MediaFormDetailsFields({
@@ -22,7 +25,9 @@ export function MediaFormDetailsFields({
   artistOptions,
   pendingArtists,
   onArtistSelect,
-  onCreateArtist
+  onCreateArtist,
+  aiDetection,
+  onMarkAiGenerated
 }: MediaFormDetailsFieldsProps): JSX.Element {
   const { t } = useTranslation()
 
@@ -85,6 +90,16 @@ export function MediaFormDetailsFields({
           </span>
         </label>
       </div>
+
+      {aiDetection && !input.isAiGenerated && (
+        <div className="media-form-ai-hint">
+          <Sparkles size={14} aria-hidden="true" />
+          <span>{t('aiMetadata.detected', { generator: aiDetection.generator })}</span>
+          <button type="button" className="btn" onClick={onMarkAiGenerated}>
+            {t('aiMetadata.markAsAi')}
+          </button>
+        </div>
+      )}
 
       <div className="field">
         <label htmlFor="media-source-url">{t('manage.sourceUrl')}</label>

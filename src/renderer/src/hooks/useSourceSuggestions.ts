@@ -8,7 +8,12 @@ import type {
   SeriesModel,
   TagModel
 } from '@shared/models'
-import { cleanEntityName, splitArtistCredits, splitBooruCharacterList } from '@shared/utils'
+import {
+  cleanEntityName,
+  isAiGeneratedTag,
+  splitArtistCredits,
+  splitBooruCharacterList
+} from '@shared/utils'
 import { fetchDanbooruCharacters } from '../utils/fetchDanbooruCharacters'
 import { matchEntityNames, normalizeEntityName } from '../utils/matchEntityNames'
 import {
@@ -44,7 +49,7 @@ export interface SourceSuggestions {
   characterParents: Record<string, string>
   /** The site's rating, when it differs from the form's. */
   suggestedSfw?: boolean
-  /** The site marked it AI-generated and the form doesn't say so yet. */
+  /** The site marked it AI-generated (flag or tag) and the form doesn't say so yet. */
   suggestsAiGenerated: boolean
   dismiss: (category: SuggestionCategory, name: string) => void
 }
@@ -172,7 +177,9 @@ export function useSourceSuggestions({
     characterParents: matched.characterParents,
     suggestedSfw:
       metadata?.sfw !== undefined && metadata.sfw !== input.sfw ? metadata.sfw : undefined,
-    suggestsAiGenerated: metadata?.isAiGenerated === true && !input.isAiGenerated,
+    suggestsAiGenerated:
+      !input.isAiGenerated &&
+      (metadata?.isAiGenerated === true || (metadata?.tags.some(isAiGeneratedTag) ?? false)),
     dismiss
   }
 }

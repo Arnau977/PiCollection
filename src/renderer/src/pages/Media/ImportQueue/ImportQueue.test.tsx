@@ -26,7 +26,12 @@ beforeEach(() => {
   Object.defineProperty(window, 'api', {
     value: {
       sourceFolder: { expandSelection },
-      media: { create: mediaCreate, createMany: mediaCreateMany, checkDuplicate },
+      media: {
+        create: mediaCreate,
+        createMany: mediaCreateMany,
+        checkDuplicate,
+        detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null })
+      },
       artist: { create: vi.fn() },
       tag: { create: vi.fn() },
       character: { create: vi.fn() },
