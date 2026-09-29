@@ -37,10 +37,13 @@ jobs:
           # later, that auto-detection kept anchoring on the last release
           # that was STILL flagged prerelease at creation time, skipping
           # every stable release promoted in between and re-listing PRs
-          # already shipped and documented there. Pin the actual immediately
-          # preceding tag (by commit ancestry, regardless of its prerelease
-          # status) instead.
-          PREV_TAG=$(git describe --tags --abbrev=0 "${{ github.ref_name }}^" 2>/dev/null || true)
+          # already shipped and documented there. Commit ancestry (git
+          # describe) doesn't work either: tags sit on release branches that
+          # are squash-merged, so none of them is an ancestor of the next
+          # one. Pin the last published release instead - beta or stable,
+          # drafts skipped (which also skips the one being built).
+          PREV_TAG=$(gh release list --repo "${{ github.repository }}" --exclude-drafts --limit 10 \
+            --json tagName -q '[.[] | select(.tagName != "${{ github.ref_name }}")][0].tagName // empty')
           if [ -n "$PREV_TAG" ]; then
             gh release create "${{ github.ref_name }}" \
               --repo "${{ github.repository }}" \
@@ -62,7 +65,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          NOTES=$(gh release view "${{ github.ref_name }}" --repo "${{ github.repository }}" --json body -q .body)
+          # The previous version's own release PR ("X.Y.Z - ...", squash-merged
+          # after its tag) falls inside the range; it's just a version bump.
+          NOTES=$(gh release view "${{ github.ref_name }}" --repo "${{ github.repository }}" --json body -q .body \
+            | grep -vE '^\* [0-9]+\.[0-9]+\.[0-9]+ - ')
           { printf '## Highlights\n\n_Fill in 2-3 bullet points of user-facing changes before publishing._\n\n'; echo "$NOTES"; } > notes.md
           gh release edit "${{ github.ref_name }}" --repo "${{ github.repository }}" --notes-file notes.md
 
