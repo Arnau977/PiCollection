@@ -73,6 +73,12 @@ export interface MediaDuplicateMatch {
   media: MediaModel
   /** Perceptual-hash Hamming distance out of 64 bits - lower is more similar. */
   distance: number
+  /**
+   * Set when it's listed because one was made from the other rather than for
+   * looking alike: 'source' = the video this GIF came from, 'derived' = a GIF
+   * made from this video. `distance` is 0 then.
+   */
+  relation?: 'source' | 'derived'
 }
 
 /** Generator traces found inside a file's own metadata (see aiMetadata.service). */

@@ -254,6 +254,10 @@
     "noSeries": "Sin serie asignada"
   },
   "media": {
+    "relation": {
+      "source": "Vídeo de origen",
+      "derived": "GIF de este vídeo"
+    },
     "sfwTitle": "Apta para todo público",
     "nsfwTitle": "Contenido erótico",
     "sfwBadge": "SFW",

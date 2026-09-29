@@ -38,19 +38,22 @@ export const videoGifService = {
     const path = await freeGifPath(resolveRoute(source.route, readSourceFolder()))
     await writeFile(path, bytes)
     try {
-      return await mediaService.addMedia({
-        name: `${source.name} (GIF)`,
-        type: 'gif',
-        route: path,
-        sfw: source.sfw,
-        isAiGenerated: source.isAiGenerated,
-        sourceUrl: source.sourceUrl,
-        artistId: source.artist?.id,
-        tagIds: source.tags?.map((tag) => tag.id) ?? [],
-        characterIds: source.characters?.map((character) => character.id) ?? [],
-        seriesIds: source.series?.map((series) => series.id) ?? [],
-        pendingTagging: false
-      })
+      return await mediaService.addMedia(
+        {
+          name: `${source.name} (GIF)`,
+          type: 'gif',
+          route: path,
+          sfw: source.sfw,
+          isAiGenerated: source.isAiGenerated,
+          sourceUrl: source.sourceUrl,
+          artistId: source.artist?.id,
+          tagIds: source.tags?.map((tag) => tag.id) ?? [],
+          characterIds: source.characters?.map((character) => character.id) ?? [],
+          seriesIds: source.series?.map((series) => series.id) ?? [],
+          pendingTagging: false
+        },
+        { derivedFromId: source.id }
+      )
     } catch (err) {
       // Don't leave an orphan GIF in the source folder if it couldn't be added.
       await unlink(path).catch(() => {})

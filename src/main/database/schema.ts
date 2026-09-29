@@ -64,6 +64,8 @@ export interface MediaTable {
   /** JSON `MediaSourceMetadata`: the raw names the source site had, set only by
       capture. Informational - never applied as the media's own tags. */
   source_metadata?: string | null
+  /** The media this one was made from (a GIF's source video); null when the source is deleted. */
+  derived_from_id?: string | null
 }
 
 export interface MediaTagTable {

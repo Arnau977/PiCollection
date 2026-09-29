@@ -55,7 +55,8 @@ required.
   or X/Twitter (≤ 15 MB), re-encoding smaller until the file fits, or keep
   the best quality for the gallery; width and frame rate can also be set by
   hand. The GIF is saved next to the video and added to the library with the
-  video's artist, tags, characters, series and rating.
+  video's artist, tags, characters, series and rating, and the two always
+  list each other under "Similar media" ("Source video" / "GIF from it").
 - **Full-size viewer** — clicking an image or GIF (in its detail page or the
   edit form) opens it full screen, with zoom: mouse wheel toward the cursor,
   drag to pan, double-click to toggle, `+`/`-`/`0`, or the zoom buttons.

@@ -308,6 +308,28 @@ export async function setMediaHash(
   await db.updateTable('media').set({ hash, phash }).where('id', '=', id).execute()
 }
 
+/** Media made from `id` (its GIFs) plus the one `id` was made from, if any. */
+export async function findDerivationRelatives(
+  db: Kysely<DB>,
+  id: string
+): Promise<{ id: string; relation: 'source' | 'derived' }[]> {
+  const row = await db
+    .selectFrom('media')
+    .select('derived_from_id')
+    .where('id', '=', id)
+    .executeTakeFirst()
+  const derived = await db
+    .selectFrom('media')
+    .select('id')
+    .where('derived_from_id', '=', id)
+    .orderBy('created_at', 'asc')
+    .execute()
+  return [
+    ...(row?.derived_from_id ? [{ id: row.derived_from_id, relation: 'source' as const }] : []),
+    ...derived.map(({ id: derivedId }) => ({ id: derivedId, relation: 'derived' as const }))
+  ]
+}
+
 export function insertMediaRow(db: Kysely<DB>, media: MediaTable): Promise<MediaTable> {
   return db.insertInto('media').values(media).returningAll().executeTakeFirstOrThrow()
 }

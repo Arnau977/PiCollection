@@ -254,6 +254,10 @@
     "noSeries": "No series assigned"
   },
   "media": {
+    "relation": {
+      "source": "Source video",
+      "derived": "GIF from it"
+    },
     "sfwTitle": "Safe for work",
     "nsfwTitle": "Explicit content",
     "sfwBadge": "SFW",

@@ -65,5 +65,19 @@ describe('videoGifService.createFromVideo', () => {
     })
     expect(gif.tags?.map((t) => t.id)).toEqual([tag.id])
     expect(await fs.readFile(join(sourceDir, 'clip (GIF 2).gif'), 'utf8')).toBe('GIF')
+
+    // Each lists the other under similar media, though a video has no perceptual hash.
+    expect(await mediaService.findSimilarMedia(video.id)).toEqual([
+      expect.objectContaining({
+        relation: 'derived',
+        media: expect.objectContaining({ id: gif.id })
+      })
+    ])
+    expect(await mediaService.findSimilarMedia(gif.id)).toEqual([
+      expect.objectContaining({
+        relation: 'source',
+        media: expect.objectContaining({ id: video.id })
+      })
+    ])
   })
 })
