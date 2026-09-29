@@ -218,6 +218,8 @@
     "cancel": "Cancelar"
   },
   "filters": {
+    "included": "Incluido, pulsa para excluir",
+    "excluded": "Excluido, pulsa para incluir",
     "exactCharacter": "Solo este, sin sus formas",
     "exactSeries": "Solo esta, sin sus subseries",
     "name": "Nombre",

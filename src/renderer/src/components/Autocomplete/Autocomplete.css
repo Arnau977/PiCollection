@@ -149,6 +149,18 @@
   color: var(--accent);
 }
 
+/* An excluded ("must not have") chip: danger outline, struck-through
+   name - not color alone. color-danger on its soft fill 4.74:1. */
+.multi-select-chips .chip.is-excluded {
+  background: var(--color-danger-soft);
+  box-shadow: inset 0 0 0 1px var(--color-danger);
+  color: var(--color-danger);
+}
+
+.multi-select-chips .chip.is-excluded .chip-label {
+  text-decoration: line-through;
+}
+
 .multi-select-chips .chip button {
   display: inline-flex;
   align-items: center;

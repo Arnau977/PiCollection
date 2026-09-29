@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Crosshair, X } from 'lucide-react'
+import { Crosshair, SquareCheck, SquareX, X } from 'lucide-react'
 import { Autocomplete } from './Autocomplete'
 
 /** An on/off switch on each selected chip that supports it (e.g. "only this one, without its forms"). */
@@ -9,6 +9,19 @@ export interface ChipToggle {
   onToggle: (value: string) => void
   /** Accessible name, followed by the chip's own label. */
   label: string
+}
+
+/**
+ * Include/exclude per chip, shown as a checkbox-like box: a check means
+ * "must have it", a cross "must not have it"; clicking flips between the two
+ * (no chip at all is the third, "not filtered by it", state).
+ */
+export interface ChipExclusion {
+  isExcluded: (value: string) => boolean
+  onToggle: (value: string) => void
+  /** Accessible names, each followed by the chip's own label. */
+  includedLabel: string
+  excludedLabel: string
 }
 
 interface MultiSelectAutocompleteProps<T> {
@@ -33,6 +46,7 @@ interface MultiSelectAutocompleteProps<T> {
     label: string
   }
   chipToggle?: ChipToggle
+  chipExclusion?: ChipExclusion
 }
 
 export function MultiSelectAutocomplete<T>({
@@ -48,7 +62,8 @@ export function MultiSelectAutocomplete<T>({
   disabled = false,
   getOptionMatchName,
   noneToggle,
-  chipToggle
+  chipToggle,
+  chipExclusion
 }: MultiSelectAutocompleteProps<T>): JSX.Element {
   const selectedSet = useMemo(() => new Set(selectedValues), [selectedValues])
   const selectedOptions = useMemo(
@@ -91,30 +106,44 @@ export function MultiSelectAutocomplete<T>({
       />
       {selectedOptions.length > 0 && (
         <ul className="multi-select-chips">
-          {selectedOptions.map((option) => (
-            <li key={getOptionValue(option)} className="chip">
-              {getOptionLabel(option)}
-              {chipToggle?.isAvailable(getOptionValue(option)) && (
+          {selectedOptions.map((option) => {
+            const excluded = chipExclusion?.isExcluded(getOptionValue(option)) ?? false
+            return (
+              <li key={getOptionValue(option)} className={excluded ? 'chip is-excluded' : 'chip'}>
+                {chipExclusion && (
+                  <button
+                    type="button"
+                    className="chip-exclusion"
+                    aria-label={`${excluded ? chipExclusion.excludedLabel : chipExclusion.includedLabel}: ${getOptionLabel(option)}`}
+                    title={excluded ? chipExclusion.excludedLabel : chipExclusion.includedLabel}
+                    onClick={() => chipExclusion.onToggle(getOptionValue(option))}
+                  >
+                    {excluded ? <SquareX size={14} /> : <SquareCheck size={14} />}
+                  </button>
+                )}
+                <span className="chip-label">{getOptionLabel(option)}</span>
+                {chipToggle?.isAvailable(getOptionValue(option)) && (
+                  <button
+                    type="button"
+                    className="chip-toggle"
+                    aria-pressed={chipToggle.isOn(getOptionValue(option))}
+                    aria-label={`${chipToggle.label}: ${getOptionLabel(option)}`}
+                    title={chipToggle.label}
+                    onClick={() => chipToggle.onToggle(getOptionValue(option))}
+                  >
+                    <Crosshair size={12} />
+                  </button>
+                )}
                 <button
                   type="button"
-                  className="chip-toggle"
-                  aria-pressed={chipToggle.isOn(getOptionValue(option))}
-                  aria-label={`${chipToggle.label}: ${getOptionLabel(option)}`}
-                  title={chipToggle.label}
-                  onClick={() => chipToggle.onToggle(getOptionValue(option))}
+                  onClick={() => handleRemove(getOptionValue(option))}
+                  aria-label={`Quitar ${getOptionLabel(option)}`}
                 >
-                  <Crosshair size={12} />
+                  <X size={12} />
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={() => handleRemove(getOptionValue(option))}
-                aria-label={`Quitar ${getOptionLabel(option)}`}
-              >
-                <X size={12} />
-              </button>
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>

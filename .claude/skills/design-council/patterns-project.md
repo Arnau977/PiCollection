@@ -79,6 +79,12 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   applies (e.g. the crosshair "only this one, without its forms" on a
   character/series that has children), `aria-pressed`, inverted when on.
   Where: `MultiSelectAutocomplete.tsx`, `FilterBar.tsx`.
+- **Include/exclude on a filter chip is a checkbox-like box at its start**
+  (`ChipExclusion`): square-check = must have, square-x = must not have
+  (the square frame keeps it distinct from the bare remove ×); no chip is
+  the third "not filtered" state. Excluded chips get a danger outline and a
+  struck-through name, so the state never relies on color alone. Where:
+  `MultiSelectAutocomplete.tsx`, `GroupedEntityFilter.tsx`.
 
 ## Suggestions and metadata
 

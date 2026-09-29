@@ -32,6 +32,7 @@ import type {
   TagModel
 } from '@shared/models'
 import type { DB, MediaTable } from '../database/schema'
+import { groupEntityIds } from '@shared/query/groupEntry'
 
 /** A malformed value (hand-edited DB, future shape) just hides the source info. */
 function parseSourceMetadata(raw: string | null | undefined): MediaSourceMetadata | undefined {
@@ -262,11 +263,11 @@ export const mediaService = {
 
   async getMediaFiltered(filters: MediaFilters, sorting?: Sorting): Promise<MediaFilteredResult> {
     const db = getDb()
-    const flatSeriesIds = filters.seriesGroups?.flat() ?? []
+    const flatSeriesIds = groupEntityIds(filters.seriesGroups)
     const seriesClosures = flatSeriesIds.length
       ? buildClosureMap(await seriesRepo.findSeriesHierarchy(db), flatSeriesIds)
       : undefined
-    const flatCharacterIds = filters.characterGroups?.flat() ?? []
+    const flatCharacterIds = groupEntityIds(filters.characterGroups)
     const characterClosures = flatCharacterIds.length
       ? buildClosureMap(await characterRepo.findCharacterHierarchy(db), flatCharacterIds)
       : undefined
@@ -280,11 +281,11 @@ export const mediaService = {
 
   async getMediaOrderedIds(filters: MediaFilters, sorting?: Sorting): Promise<string[]> {
     const db = getDb()
-    const flatSeriesIds = filters.seriesGroups?.flat() ?? []
+    const flatSeriesIds = groupEntityIds(filters.seriesGroups)
     const seriesClosures = flatSeriesIds.length
       ? buildClosureMap(await seriesRepo.findSeriesHierarchy(db), flatSeriesIds)
       : undefined
-    const flatCharacterIds = filters.characterGroups?.flat() ?? []
+    const flatCharacterIds = groupEntityIds(filters.characterGroups)
     const characterClosures = flatCharacterIds.length
       ? buildClosureMap(await characterRepo.findCharacterHierarchy(db), flatCharacterIds)
       : undefined

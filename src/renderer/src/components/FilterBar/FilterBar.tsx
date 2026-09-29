@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { ArtistModel, MediaFilters, MediaSortableProp, SeriesModel, Sorting, TagModel } from '@shared/models'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
+import { groupEntityIds } from '@shared/query/groupEntry'
 import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import { Autocomplete } from '../Autocomplete/Autocomplete'
 import { SearchBar } from '../SearchBar/SearchBar'
@@ -29,7 +30,7 @@ function keepExact(
   exact: string[] | undefined,
   groups: string[][] | undefined
 ): string[] | undefined {
-  const selected = new Set(groups?.flat())
+  const selected = new Set(groupEntityIds(groups))
   const kept = (exact ?? []).filter((id) => selected.has(id))
   return kept.length > 0 ? kept : undefined
 }
@@ -180,6 +181,7 @@ export function FilterBar({
                 }),
               label: t('filters.exactCharacter')
             }}
+            allowExclusion
             options={characters}
             getOptionLabel={formatCharacterOptionLabel}
             getOptionValue={(character) => character.id}
@@ -218,6 +220,7 @@ export function FilterBar({
                 }),
               label: t('filters.exactSeries')
             }}
+            allowExclusion
             options={series}
             getOptionLabel={getSeriesLabel}
             getOptionValue={(s) => s.id}
