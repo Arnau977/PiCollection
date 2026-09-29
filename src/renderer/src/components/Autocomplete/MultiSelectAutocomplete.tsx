@@ -1,6 +1,15 @@
 import { useMemo } from 'react'
-import { X } from 'lucide-react'
+import { Crosshair, X } from 'lucide-react'
 import { Autocomplete } from './Autocomplete'
+
+/** An on/off switch on each selected chip that supports it (e.g. "only this one, without its forms"). */
+export interface ChipToggle {
+  isAvailable: (value: string) => boolean
+  isOn: (value: string) => boolean
+  onToggle: (value: string) => void
+  /** Accessible name, followed by the chip's own label. */
+  label: string
+}
 
 interface MultiSelectAutocompleteProps<T> {
   name: string
@@ -23,6 +32,7 @@ interface MultiSelectAutocompleteProps<T> {
     onChange: (checked: boolean) => void
     label: string
   }
+  chipToggle?: ChipToggle
 }
 
 export function MultiSelectAutocomplete<T>({
@@ -37,7 +47,8 @@ export function MultiSelectAutocomplete<T>({
   hideLabel = false,
   disabled = false,
   getOptionMatchName,
-  noneToggle
+  noneToggle,
+  chipToggle
 }: MultiSelectAutocompleteProps<T>): JSX.Element {
   const selectedSet = useMemo(() => new Set(selectedValues), [selectedValues])
   const selectedOptions = useMemo(
@@ -83,6 +94,18 @@ export function MultiSelectAutocomplete<T>({
           {selectedOptions.map((option) => (
             <li key={getOptionValue(option)} className="chip">
               {getOptionLabel(option)}
+              {chipToggle?.isAvailable(getOptionValue(option)) && (
+                <button
+                  type="button"
+                  className="chip-toggle"
+                  aria-pressed={chipToggle.isOn(getOptionValue(option))}
+                  aria-label={`${chipToggle.label}: ${getOptionLabel(option)}`}
+                  title={chipToggle.label}
+                  onClick={() => chipToggle.onToggle(getOptionValue(option))}
+                >
+                  <Crosshair size={12} />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => handleRemove(getOptionValue(option))}

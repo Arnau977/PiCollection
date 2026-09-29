@@ -136,6 +136,19 @@
   }
 }
 
+/* Pressed = inverted, so an exact ("only this one") chip reads differently
+   at a glance: accent icon on white 6.29:1, white on accent 6.29:1. */
+.multi-select-chips .chip .chip-toggle {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+}
+
+.multi-select-chips .chip .chip-toggle[aria-pressed='true'] {
+  background: var(--accent-text);
+  color: var(--accent);
+}
+
 .multi-select-chips .chip button {
   display: inline-flex;
   align-items: center;

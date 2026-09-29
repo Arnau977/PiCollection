@@ -74,6 +74,12 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   the gallery toolbar). Gallery view settings are a shared store
   (`useGalleryDefaults`), so every consumer updates at once.
 
+- **A per-chip on/off option is a small round toggle inside the chip**
+  (`ChipToggle` in `MultiSelectAutocomplete`), shown only where it
+  applies (e.g. the crosshair "only this one, without its forms" on a
+  character/series that has children), `aria-pressed`, inverted when on.
+  Where: `MultiSelectAutocomplete.tsx`, `FilterBar.tsx`.
+
 ## Suggestions and metadata
 
 - **Suggestions never apply silently unless they match something already in

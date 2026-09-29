@@ -24,6 +24,26 @@ function normalizeGroups(groups: string[][]): string[][] | undefined {
   return hasNonEmptyGroup(groups) ? groups : undefined
 }
 
+/** Exact ids only make sense for entities still selected in some group. */
+function keepExact(
+  exact: string[] | undefined,
+  groups: string[][] | undefined
+): string[] | undefined {
+  const selected = new Set(groups?.flat())
+  const kept = (exact ?? []).filter((id) => selected.has(id))
+  return kept.length > 0 ? kept : undefined
+}
+
+function toggleExact(exact: string[] | undefined, id: string): string[] | undefined {
+  const next = exact?.includes(id) ? exact.filter((other) => other !== id) : [...(exact ?? []), id]
+  return next.length > 0 ? next : undefined
+}
+
+/** Ids that some other entity names as its parent - only those have forms/subseries to leave out. */
+function parentIds(entities: { parentId?: string | null }[]): Set<string> {
+  return new Set(entities.flatMap((entity) => (entity.parentId ? [entity.parentId] : [])))
+}
+
 function getArtistLabel(artist: ArtistModel): string {
   return artist.name
 }
@@ -47,6 +67,8 @@ export function FilterBar({
   const { data: tags } = useTags()
   const { data: characters } = useCharacters()
   const { data: series } = useSeries()
+  const characterParents = parentIds(characters)
+  const seriesParents = parentIds(series)
 
   return (
     <div className="filter-bar card">
@@ -142,8 +164,22 @@ export function FilterBar({
             label={t('filters.characters')}
             groups={filters.characterGroups ?? []}
             onChange={(characterGroups) =>
-              onFiltersChange({ ...filters, characterGroups: normalizeGroups(characterGroups) })
+              onFiltersChange({
+                ...filters,
+                characterGroups: normalizeGroups(characterGroups),
+                exactCharacterIds: keepExact(filters.exactCharacterIds, characterGroups)
+              })
             }
+            chipToggle={{
+              isAvailable: (id) => characterParents.has(id),
+              isOn: (id) => filters.exactCharacterIds?.includes(id) ?? false,
+              onToggle: (id) =>
+                onFiltersChange({
+                  ...filters,
+                  exactCharacterIds: toggleExact(filters.exactCharacterIds, id)
+                }),
+              label: t('filters.exactCharacter')
+            }}
             options={characters}
             getOptionLabel={formatCharacterOptionLabel}
             getOptionValue={(character) => character.id}
@@ -153,7 +189,8 @@ export function FilterBar({
                 onFiltersChange({
                   ...filters,
                   noCharacter: checked || undefined,
-                  characterGroups: checked ? undefined : filters.characterGroups
+                  characterGroups: checked ? undefined : filters.characterGroups,
+                  exactCharacterIds: checked ? undefined : filters.exactCharacterIds
                 }),
               label: t('filters.noCharacter')
             }}
@@ -165,8 +202,22 @@ export function FilterBar({
             label={t('manage.series')}
             groups={filters.seriesGroups ?? []}
             onChange={(seriesGroups) =>
-              onFiltersChange({ ...filters, seriesGroups: normalizeGroups(seriesGroups) })
+              onFiltersChange({
+                ...filters,
+                seriesGroups: normalizeGroups(seriesGroups),
+                exactSeriesIds: keepExact(filters.exactSeriesIds, seriesGroups)
+              })
             }
+            chipToggle={{
+              isAvailable: (id) => seriesParents.has(id),
+              isOn: (id) => filters.exactSeriesIds?.includes(id) ?? false,
+              onToggle: (id) =>
+                onFiltersChange({
+                  ...filters,
+                  exactSeriesIds: toggleExact(filters.exactSeriesIds, id)
+                }),
+              label: t('filters.exactSeries')
+            }}
             options={series}
             getOptionLabel={getSeriesLabel}
             getOptionValue={(s) => s.id}
@@ -176,7 +227,8 @@ export function FilterBar({
                 onFiltersChange({
                   ...filters,
                   noSeries: checked || undefined,
-                  seriesGroups: checked ? undefined : filters.seriesGroups
+                  seriesGroups: checked ? undefined : filters.seriesGroups,
+                  exactSeriesIds: checked ? undefined : filters.exactSeriesIds
                 }),
               label: t('filters.noSeries')
             }}
