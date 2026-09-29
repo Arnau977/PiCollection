@@ -84,7 +84,7 @@ export function MediaFormFileGroup({
             <button type="button" className="btn" onClick={queueInfo.onSendRemainingToPending}>
               <Inbox size={14} />
               {t('importQueue.sendRemainingToPending', {
-                count: queueInfo.total - queueInfo.current + 1
+                count: queueInfo.remaining
               })}
             </button>
           )}

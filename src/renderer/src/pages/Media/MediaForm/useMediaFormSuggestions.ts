@@ -12,7 +12,7 @@ import {
   useSauceNaoSuggestions,
   type SuggestionCategory
 } from '../../../hooks/useSauceNaoSuggestions'
-import { useSourceSuggestions } from '../../../hooks/useSourceSuggestions'
+import { useSourceSuggestions, type ExistingSuggestion } from '../../../hooks/useSourceSuggestions'
 import { useWd14Runtime } from '../../../hooks/useWd14Runtime'
 import { useWd14Suggestions } from '../../../hooks/useWd14Suggestions'
 import { titleCaseTagName } from '../../../utils/matchEntityNames'
@@ -28,6 +28,7 @@ interface EntityListWithRefetch<T> extends EntityList<T> {
 }
 
 interface UseMediaFormSuggestionsArgs {
+  input: MediaInput
   setInput: Dispatch<SetStateAction<MediaInput>>
   artists: EntityList<ArtistModel>
   tags: EntityList<TagModel>
@@ -45,6 +46,10 @@ export interface MediaFormSuggestions {
   wd14: ReturnType<typeof useWd14Suggestions>
   source: ReturnType<typeof useSourceSuggestions>
   addSourceSuggestion: (category: SuggestionCategory, name: string) => void
+  /** Links source-site names the library already has - one, or every one still offered. */
+  addSourceExisting: (category: SuggestionCategory, entity: ExistingSuggestion) => void
+  addAllSourceExisting: () => void
+  applySourceAiGenerated: () => void
   addMissingSuggestion: (category: SuggestionCategory, name: string) => Promise<void>
   addWd14Suggestion: (
     category: Extract<SuggestionCategory, 'tags' | 'characters' | 'series'>,
@@ -75,6 +80,7 @@ export interface MediaFormSuggestions {
  * hand or accepted from a suggestion chip.
  */
 export function useMediaFormSuggestions({
+  input,
   setInput,
   artists,
   tags,
@@ -188,6 +194,7 @@ export function useMediaFormSuggestions({
 
   const source = useSourceSuggestions({
     metadata: sourceMetadata,
+    input,
     artists: [...artists.data, ...drafts.pendingArtists],
     tags: [...tags.data, ...drafts.pendingTags],
     characters: [...characters.data, ...drafts.pendingCharacters],
@@ -200,6 +207,48 @@ export function useMediaFormSuggestions({
     else if (category === 'characters') drafts.createCharacter(name, source.characterParents[name])
     else drafts.attachExistingOrCreateSeries(name)
     source.dismiss(category, name)
+  }
+
+  function linkExisting(entries: [SuggestionCategory, ExistingSuggestion][]): void {
+    const idsOf = (category: SuggestionCategory): string[] =>
+      entries.filter(([c]) => c === category).map(([, entity]) => entity.id)
+    const artist = entries.find(([category]) => category === 'artist')?.[1]
+    setInput((prev) => {
+      const previousCharacterIds = prev.characterIds ?? []
+      const addedCharacterIds = idsOf('characters').filter(
+        (id) => !previousCharacterIds.includes(id)
+      )
+      const nextSeriesIds = Array.from(new Set([...(prev.seriesIds ?? []), ...idsOf('series')]))
+      return {
+        ...prev,
+        // A media has one artist: picking a credit replaces the current one.
+        artistId: artist?.id ?? prev.artistId,
+        tagIds: Array.from(new Set([...(prev.tagIds ?? []), ...idsOf('tags')])),
+        characterIds: [...previousCharacterIds, ...addedCharacterIds],
+        seriesIds: withImpliedSeries(characters.data, addedCharacterIds, nextSeriesIds)
+      }
+    })
+  }
+
+  function addSourceExisting(category: SuggestionCategory, entity: ExistingSuggestion): void {
+    linkExisting([[category, entity]])
+  }
+
+  // Skips artists: with several credits, which one is the media's is the user's call.
+  function addAllSourceExisting(): void {
+    const { tags, characters, series } = source.existing
+    linkExisting([
+      ...tags.map((entity): [SuggestionCategory, ExistingSuggestion] => ['tags', entity]),
+      ...characters.map((entity): [SuggestionCategory, ExistingSuggestion] => [
+        'characters',
+        entity
+      ]),
+      ...series.map((entity): [SuggestionCategory, ExistingSuggestion] => ['series', entity])
+    ])
+  }
+
+  function applySourceAiGenerated(): void {
+    setInput((prev) => ({ ...prev, isAiGenerated: true }))
   }
 
   async function linkCharactersToSoleSeries(
@@ -244,6 +293,9 @@ export function useMediaFormSuggestions({
     addMissingSuggestion,
     addWd14Suggestion,
     addSourceSuggestion,
+    addSourceExisting,
+    addAllSourceExisting,
+    applySourceAiGenerated,
     handleCharactersChange,
     linkCharactersToSoleSeries
   }

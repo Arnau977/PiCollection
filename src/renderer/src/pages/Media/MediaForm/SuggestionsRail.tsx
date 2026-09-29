@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import type { MediaInput } from '@shared/models'
-import { countSauceMissing, countSourceMissing, countWd14Missing } from './missingSuggestionCounts'
+import {
+  countSauceMissing,
+  countSourceSuggestions,
+  countWd14Missing
+} from './missingSuggestionCounts'
 import { SauceNaoSuggestionsPanel } from './SauceNaoSuggestionsPanel'
 import { SourceSuggestionsPanel } from './SourceSuggestionsPanel'
 import { Wd14SuggestionsPanel } from './Wd14SuggestionsPanel'
@@ -40,7 +44,7 @@ export function SuggestionsRail({
   const totalMissing =
     countSauceMissing(suggestions.sauce.missing) +
     countWd14Missing(suggestions.wd14.missing) +
-    countSourceMissing(suggestions.source.missing)
+    countSourceSuggestions(suggestions.source)
 
   return (
     <aside className={`suggestions-rail${collapsed ? ' is-collapsed' : ''}`}>
@@ -71,6 +75,10 @@ export function SuggestionsRail({
               <SourceSuggestionsPanel
                 source={suggestions.source}
                 onAdd={suggestions.addSourceSuggestion}
+                onAddExisting={suggestions.addSourceExisting}
+                onAddAllExisting={suggestions.addAllSourceExisting}
+                onApplyRating={onApplyRating}
+                onApplyAiGenerated={suggestions.applySourceAiGenerated}
               />
             </div>
           )}

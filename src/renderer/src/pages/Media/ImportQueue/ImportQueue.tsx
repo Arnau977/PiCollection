@@ -16,7 +16,13 @@ interface ImportQueueProps {
 
 type QueueState =
   | { kind: 'loading' }
-  | { kind: 'ready'; items: ExpandedMediaFile[]; index: number }
+  | {
+      kind: 'ready'
+      items: ExpandedMediaFile[]
+      index: number
+      /** Set when the item was saved earlier in this session: it reopens in edit mode. */
+      openedMedia?: MediaModel
+    }
   | { kind: 'error'; message: string }
 
 export function ImportQueue({
@@ -28,11 +34,11 @@ export function ImportQueue({
   const confirm = useConfirm()
   const [state, setState] = useState<QueueState>({ kind: 'loading' })
   const [showExitDialog, setShowExitDialog] = useState(false)
-  // "Guardar" persists the current item but no longer advances the queue by
-  // itself - tracked here so that moving past the *last* item (via
-  // "Siguiente") can still open the item that was actually saved, instead of
-  // just closing blindly the way skipping an unsaved item does.
-  const [currentSaved, setCurrentSaved] = useState<MediaModel | null>(null)
+  // Every item saved in this session, by route. "Guardar" doesn't advance the
+  // queue, so moving past the *last* item can still open the one actually
+  // saved; and going back to a saved item reopens it in edit mode - as a new
+  // file it would be flagged as a duplicate of itself and refuse to save.
+  const [saved, setSaved] = useState<ReadonlyMap<string, MediaModel>>(() => new Map())
   const [showSentToPendingToast, setShowSentToPendingToast] = useState(false)
   // Set for the whole duration of the "add remaining to pending" bulk create.
   // While it's true a full-screen overlay blocks every control (Close, Next,
@@ -78,15 +84,26 @@ export function ImportQueue({
   }
 
   const current = items[index]
-  const remaining = items.length - index
+  const currentSaved = saved.get(current.route)
+  // Items already saved in this session aren't sent to Pending again.
+  const remainingItems = items.slice(index).filter((file) => !saved.has(file.route))
+  const remaining = remainingItems.length
+
+  function open(nextIndex: number): void {
+    setState({
+      kind: 'ready',
+      items,
+      index: nextIndex,
+      openedMedia: saved.get(items[nextIndex].route)
+    })
+  }
 
   function goToNextOrFinish(onFinish: () => void): void {
     if (index + 1 >= items.length) {
       onFinish()
       return
     }
-    setCurrentSaved(null)
-    setState({ kind: 'ready', items, index: index + 1 })
+    open(index + 1)
   }
 
   function advance(): void {
@@ -110,12 +127,11 @@ export function ImportQueue({
   // already has when skipping an unsaved item.
   function goBack(): void {
     if (busy || index === 0) return
-    setCurrentSaved(null)
-    setState({ kind: 'ready', items, index: index - 1 })
+    open(index - 1)
   }
 
   function handleSaved(media: MediaModel): void {
-    setCurrentSaved(media)
+    setSaved((prev) => new Map(prev).set(current.route, media))
   }
 
   function handleCloseClick(): void {
@@ -134,7 +150,7 @@ export function ImportQueue({
     setShowExitDialog(false)
 
     const result = await window.api.media.createMany(
-      items.slice(index).map((file) => ({
+      remainingItems.map((file) => ({
         name: deriveMediaName(file.fileName),
         type: file.type,
         route: file.route,
@@ -173,17 +189,23 @@ export function ImportQueue({
     <>
       <MediaForm
         key={current.route}
-        initialFile={{
-          route: current.route,
-          name: deriveMediaName(current.fileName),
-          type: current.type
-        }}
+        media={state.openedMedia}
+        initialFile={
+          state.openedMedia
+            ? undefined
+            : {
+                route: current.route,
+                name: deriveMediaName(current.fileName),
+                type: current.type
+              }
+        }
         queueInfo={{
           current: index + 1,
           total: items.length,
           onNext: advance,
           onPrevious: index > 0 ? goBack : undefined,
-          onSendRemainingToPending: handleSendRemainingToPending
+          onSendRemainingToPending: remaining > 0 ? handleSendRemainingToPending : undefined,
+          remaining
         }}
         onCancel={handleCloseClick}
         onSaved={handleSaved}

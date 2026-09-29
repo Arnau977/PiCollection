@@ -60,8 +60,15 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   "create" chip (`.sauce-add-chip`) that does nothing until clicked. That
   goes for SauceNAO, WD14 and source-site tags. A suggestion only fills an
   empty field, and offers a one-click replacement otherwise. Where:
-  `SauceNaoSuggestionsPanel.tsx`, `Wd14SuggestionsPanel.tsx`,
-  `SourceSuggestionsPanel.tsx` (#83, #88).
+  `SauceNaoSuggestionsPanel.tsx`, `Wd14SuggestionsPanel.tsx` (#83, #88).
+- **Extension captures apply nothing but a sole credited artist.** Which
+  of a parent/child series pair, a base character and its form, or the
+  site's rating the user wants can't be told from code, so the source panel
+  offers everything: library matches as "add" chips first, unknown names as
+  "create" chips marked "· new" (muted `.suggestion-form-of`), an "Add the N
+  already in your library" button (artists excluded) and the site's
+  rating/AI flag as hint rows. Chips disappear once the form has them.
+  Where: `SourceSuggestionsPanel.tsx`, `useSourceSuggestions.ts`.
 - **A suggested form/costume is a child character**: its chip reads
   "Pyra (Pro Swimmer) · form of Pyra" (muted `.suggestion-form-of`); the
   base character is applied right away if it exists, and accepting the chip

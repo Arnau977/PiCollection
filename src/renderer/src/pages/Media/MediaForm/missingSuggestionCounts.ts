@@ -22,8 +22,21 @@ export function countSauceMissing(missing: MediaFormSuggestions['sauce']['missin
   return SAUCE_MISSING_CATEGORIES.reduce((sum, { category }) => sum + missing[category].length, 0)
 }
 
-export function countSourceMissing(missing: MediaFormSuggestions['source']['missing']): number {
-  return SAUCE_MISSING_CATEGORIES.reduce((sum, { category }) => sum + missing[category].length, 0)
+/** Library names "add all" links - artists excluded, the user picks one of several credits. */
+export function countSourceLinkable(source: MediaFormSuggestions['source']): number {
+  const { tags, characters, series } = source.existing
+  return tags.length + characters.length + series.length
+}
+
+/** Every chip and hint the source panel still offers. */
+export function countSourceSuggestions(source: MediaFormSuggestions['source']): number {
+  return (
+    countSauceMissing(source.missing) +
+    countSourceLinkable(source) +
+    source.existing.artist.length +
+    (source.suggestedSfw !== undefined ? 1 : 0) +
+    (source.suggestsAiGenerated ? 1 : 0)
+  )
 }
 
 export function countWd14Missing(missing: MediaFormSuggestions['wd14']['missing']): number {

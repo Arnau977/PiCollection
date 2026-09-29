@@ -308,8 +308,12 @@
   "sourceSuggestions": {
     "title": "Del sitio de origen",
     "titleWithSite": "De {{site}}",
-    "hint": "Lo que tenía el post original y aún no está en tu biblioteca. No se añade nada hasta que lo pulses.",
-    "nothingMissing": "Todo lo que tenía el sitio de origen ya está en tu biblioteca."
+    "hint": "Lo que tenía el post original. No se añade nada hasta que lo pulses; lo marcado como nuevo se crea.",
+    "nothingLeft": "Todo lo que tenía el sitio de origen ya está en este media.",
+    "new": "nuevo",
+    "addExisting": "Añadir {{name}}",
+    "addAllExisting": "Añadir los {{count}} que ya tienes",
+    "aiLabel": "IA"
   },
   "autocomplete": {
     "noResults": "Sin resultados",
@@ -324,10 +328,10 @@
     "next": "Siguiente",
     "close": "Cerrar",
     "sendToPending": "Enviar a pendientes",
-    "sendRemainingToPending_one": "Enviar este último a pendientes",
+    "sendRemainingToPending_one": "Enviar el que queda a pendientes",
     "sendRemainingToPending_other": "Enviar los {{count}} restantes a pendientes",
-    "sendRemainingConfirm_one": "¿Enviar este último archivo a pendientes sin etiquetarlo ahora?",
-    "sendRemainingConfirm_other": "¿Enviar a pendientes los {{count}} archivos restantes, incluido el actual, sin etiquetarlos ahora?",
+    "sendRemainingConfirm_one": "¿Enviar a pendientes el archivo sin guardar que queda, sin etiquetarlo ahora?",
+    "sendRemainingConfirm_other": "¿Enviar a pendientes los {{count}} archivos sin guardar que quedan, sin etiquetarlos ahora?",
     "sentToPending": "Enviado a pendientes.",
     "exitDialogTitle": "Quedan archivos por importar",
     "exitDialogMessage": "{{count}} archivo(s) no se han añadido todavía. ¿Qué quieres hacer con ellos?",

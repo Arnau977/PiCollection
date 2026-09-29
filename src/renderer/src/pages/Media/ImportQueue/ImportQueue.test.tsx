@@ -149,6 +149,43 @@ describe('ImportQueue', () => {
     expect(await screen.findByText('File 1 of 2')).toBeInTheDocument()
   })
 
+  it('reopens an already saved file in edit mode, so saving updates it instead of creating it again', async () => {
+    const savedA = {
+      id: 'm1',
+      type: 'image',
+      route: '/src/a.png',
+      name: 'a',
+      sfw: true,
+      isAiGenerated: false,
+      createdAt: 0,
+      pendingTagging: false
+    }
+    mediaCreate.mockResolvedValueOnce({ success: true, data: savedA })
+    const mediaUpdate = vi.fn().mockResolvedValue({ success: true, data: savedA })
+    Object.assign(window.api.media, {
+      update: mediaUpdate,
+      findSimilar: vi.fn().mockResolvedValue({ success: true, data: [] })
+    })
+    const { container } = renderQueue()
+    await screen.findByText('File 1 of 2')
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+    await vi.waitFor(() => expect(mediaCreate).toHaveBeenCalledTimes(1))
+    // The saved file no longer counts as one to send to Pending.
+    expect(
+      await screen.findByRole('button', { name: 'Send the remaining file to Pending' })
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await screen.findByText('File 2 of 2')
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }))
+    await screen.findByText('File 1 of 2')
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+
+    await vi.waitFor(() => expect(mediaUpdate).toHaveBeenCalledWith('m1', expect.anything()))
+    expect(mediaCreate).toHaveBeenCalledTimes(1)
+    expect(checkDuplicate).toHaveBeenCalledTimes(2)
+  })
+
   it('advances to the next file on Next without saving', async () => {
     renderQueue()
     await screen.findByText('File 1 of 2')

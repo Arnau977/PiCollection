@@ -88,6 +88,7 @@ export function MediaForm({
 
   const drafts = useMediaFormDrafts({ input, setInput, artists, tags, characters, series })
   const suggestions = useMediaFormSuggestions({
+    input,
     setInput,
     artists,
     tags,

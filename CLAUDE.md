@@ -180,4 +180,4 @@ its sole series.
 | Auto-update | `src/main/updater/` (see `docs/auto-update.md`) |
 | Debug logging (settings, rotation, logger) | `src/main/logging/` |
 | SauceNAO tag suggestions | `src/main/services/sauceNao/` — the only module that sends user content (a thumbnail) off the machine, and only on an explicit button press. Other outbound calls: update checks (GitHub), the one-time local-AI runtime download, and Danbooru text lookups (tag wiki, optional account-based autocomplete, a SauceNAO-matched post's tags, account-based character-tag resolution in `danbooruCharacters.service.ts`) |
-| Browser extension bridge | `src/main/services/extensionBridge.*.ts` — local HTTP API on 127.0.0.1 for PiCollection Capture; captures never create entities |
+| Browser extension bridge | `src/main/services/extensionBridge.*.ts` — local HTTP API on 127.0.0.1 for PiCollection Capture; captures never create entities and link only a sole credited artist - the rest is source metadata offered as suggestions |

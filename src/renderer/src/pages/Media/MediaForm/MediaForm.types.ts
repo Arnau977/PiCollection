@@ -15,4 +15,6 @@ export interface QueueInfo {
   onPrevious?: () => void
   /** Batch import only: sends this item and every one after it to Pending without reviewing them. */
   onSendRemainingToPending?: () => void
+  /** How many of those aren't saved yet - the ones the action above would send. */
+  remaining?: number
 }
