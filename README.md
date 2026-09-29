@@ -50,6 +50,12 @@ required.
   send all the remaining ones to Pending at once. Files come folder by
   folder, oldest-modified first, so pictures saved together stay together.
   Going back to a file you already saved reopens it for editing.
+- **Video to GIF** — "Make GIF" on a video's page turns a clip of up to 10
+  seconds into a GIF, entirely on your device. Presets fit Discord (≤ 10 MB)
+  or X/Twitter (≤ 15 MB), re-encoding smaller until the file fits, or keep
+  the best quality for the gallery; width and frame rate can also be set by
+  hand. The GIF is saved next to the video and added to the library with the
+  video's artist, tags, characters, series and rating.
 - **Full-size viewer** — clicking an image or GIF (in its detail page or the
   edit form) opens it full screen, with zoom: mouse wheel toward the cursor,
   drag to pan, double-click to toggle, `+`/`-`/`0`, or the zoom buttons.

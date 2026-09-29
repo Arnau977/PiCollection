@@ -26,6 +26,11 @@ export function registerMediaProtocolScheme(): void {
         secure: true,
         supportFetchAPI: true,
         stream: true,
+        // Lets the renderer read back a video frame drawn to a canvas (the
+        // GIF converter) - without it the canvas is tainted. Paired with the
+        // Access-Control-Allow-Origin header below; only this app's own
+        // renderer can reach the app: scheme.
+        corsEnabled: true,
         bypassCSP: false
       }
     }
@@ -70,6 +75,7 @@ async function serveFile(filePath: string, range: string | null): Promise<Respon
       status: 206,
       headers: {
         'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+        'Access-Control-Allow-Origin': '*',
         'Accept-Ranges': 'bytes',
         'Content-Length': String(chunkSize),
         'Content-Type': mimeType
@@ -83,7 +89,8 @@ async function serveFile(filePath: string, range: string | null): Promise<Respon
     headers: {
       'Content-Length': String(stat.size),
       'Content-Type': mimeType,
-      'Accept-Ranges': 'bytes'
+      'Accept-Ranges': 'bytes',
+      'Access-Control-Allow-Origin': '*'
     }
   })
 }

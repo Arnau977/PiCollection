@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, Clapperboard, Pencil, Trash2 } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import type { MediaFilters, Sorting } from '@shared/models'
 import Media from '../../../components/Media/Media'
@@ -11,6 +11,9 @@ import { useMediaById } from '../../../hooks/useMediaById'
 import { useAdjacentMedia } from '../../../hooks/useAdjacentMedia'
 import { SHORTCUTS, ariaShortcut, formatShortcut, useShortcut } from '../../../hooks/useShortcut'
 import { MediaForm } from '../MediaForm/MediaForm'
+import { Toast } from '../../../components/Toast/Toast'
+import { VideoToGifDialog } from '../VideoToGif/VideoToGifDialog'
+import { formatMegabytes } from '../VideoToGif/gifPresets'
 import './MediaPage.css'
 
 const TEXT_INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
@@ -35,6 +38,8 @@ const MediaPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(() => pendingQueue)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [gifDialogOpen, setGifDialogOpen] = useState(false)
+  const [gifToast, setGifToast] = useState<string | null>(null)
   const scrollRegionRef = useRef<HTMLDivElement>(null)
   const savedScrollTop = useRef(0)
 
@@ -140,6 +145,8 @@ const MediaPage: React.FC = () => {
     function handleKeyDown(e: KeyboardEvent): void {
       const target = e.target as HTMLElement | null
       if (target && (TEXT_INPUT_TAGS.has(target.tagName) || target.isContentEditable)) return
+      // A dialog (lightbox, compare, Make GIF) owns the arrow keys while open.
+      if (document.querySelector('[aria-modal="true"]')) return
 
       if (e.key === 'ArrowLeft' && previousId) goToMedia(previousId)
       else if (e.key === 'ArrowRight' && nextId) goToMedia(nextId)
@@ -192,6 +199,13 @@ const MediaPage: React.FC = () => {
           <div className="action-bar-spacer" />
 
           <MediaFileActions route={media.route} type={media.type} />
+
+          {media.type === 'video' && (
+            <button type="button" className="btn" onClick={() => setGifDialogOpen(true)}>
+              <Clapperboard size={16} />
+              {t('videoGif.open')}
+            </button>
+          )}
 
           <div className="action-divider" />
 
@@ -254,6 +268,26 @@ const MediaPage: React.FC = () => {
           <Media {...media} previousId={previousId} nextId={nextId} onNavigate={goToMedia} />
         )}
       </div>
+      {gifDialogOpen && media.type === 'video' && (
+        <VideoToGifDialog
+          video={media}
+          onClose={() => setGifDialogOpen(false)}
+          onCreated={(gif, sizeBytes, settings) => {
+            setGifDialogOpen(false)
+            const size = formatMegabytes(sizeBytes)
+            setGifToast(
+              settings.maxBytes && sizeBytes > settings.maxBytes
+                ? t('videoGif.createdOverLimit', {
+                    size,
+                    limit: formatMegabytes(settings.maxBytes)
+                  })
+                : t('videoGif.created', { size })
+            )
+            navigate(PATH.MEDIA.replace(':id', gif.id))
+          }}
+        />
+      )}
+      {gifToast && <Toast message={gifToast} onDismiss={() => setGifToast(null)} />}
     </div>
   )
 }

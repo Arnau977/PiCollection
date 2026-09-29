@@ -84,6 +84,11 @@ export const api = {
       ipcRenderer.invoke(IPC.media.checkDuplicate, { route }),
     detectAiMetadata: (route: string): Promise<IpcResult<AiMetadataDetection | null>> =>
       ipcRenderer.invoke(IPC.media.detectAiMetadata, { route }),
+    createGifFromVideo: (
+      sourceMediaId: string,
+      bytes: Uint8Array
+    ): Promise<IpcResult<MediaModel>> =>
+      ipcRenderer.invoke(IPC.media.createGifFromVideo, { sourceMediaId, bytes }),
     findSimilar: (
       mediaId: string,
       options: { includePending?: boolean } = {}

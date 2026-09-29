@@ -152,6 +152,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   it. Where: `src/renderer/src/components/MediaThumb/captureVideoFrame.ts`
   (#89).
 
+- **A task dialog (e.g. Make GIF) reuses the ConfirmDialog shell**
+  (`.confirm-dialog-backdrop` / `.confirm-dialog`), wider and capped to
+  the viewport so its actions row never scrolls away; while it works, the
+  inputs are locked (`<fieldset disabled>`), Escape/backdrop don't close
+  it, a `<progress>` + `role="status"` line shows progress, and Cancel
+  becomes Stop. Where: `pages/Media/VideoToGif/VideoToGifDialog.tsx`.
+
 ## Shared components to reach for first
 
 `ConfirmDialog` (via `useConfirm`), `Toast`, `EmptyState`, `Pagination`,
