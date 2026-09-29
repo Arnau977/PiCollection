@@ -218,6 +218,8 @@
     "cancel": "Cancel"
   },
   "filters": {
+    "exactCharacter": "Only this one, without its forms",
+    "exactSeries": "Only this one, without its subseries",
     "name": "Name",
     "namePlaceholder": "Search by name...",
     "artist": "Artist",

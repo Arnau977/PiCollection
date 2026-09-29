@@ -55,6 +55,7 @@ function applyGroupedFilter<O>(
  * to its hierarchy closure (itself + descendants) via `closures` before being ANDed - so "media
  * must match series/character A AND B" really means "must be in A's closure AND in B's closure",
  * not just carry exactly those two ids. Used for both `seriesGroups` and `characterGroups`.
+ * Ids in `exactIds` skip the expansion and match only their own direct links.
  */
 function applyClosureGroupedFilter<O>(
   qb: SelectQueryBuilder<DB, 'media', O>,
@@ -62,11 +63,13 @@ function applyClosureGroupedFilter<O>(
   table: 'media_series' | 'media_character',
   column: 'series_id' | 'character_id',
   groups: string[][] | undefined,
-  closures?: Map<string, string[]>
+  closures?: Map<string, string[]>,
+  exactIds: string[] = []
 ): SelectQueryBuilder<DB, 'media', O> {
   const nonEmptyGroups = (groups ?? []).filter((group) => group.length > 0)
   if (!nonEmptyGroups.length) return qb
-  const closureFor = (id: string): string[] => closures?.get(id) ?? [id]
+  const closureFor = (id: string): string[] =>
+    exactIds.includes(id) ? [id] : (closures?.get(id) ?? [id])
 
   return qb.where((eb) =>
     eb.or(
@@ -188,14 +191,23 @@ function applyMediaFilters(
     'media_character',
     'character_id',
     filters.characterGroups,
-    characterClosures
+    characterClosures,
+    filters.exactCharacterIds
   )
 
   if (filters.noCharacter) {
     qb = qb.where('media.id', 'not in', db.selectFrom('media_character').select('media_id'))
   }
 
-  qb = applyClosureGroupedFilter(qb, db, 'media_series', 'series_id', filters.seriesGroups, seriesClosures)
+  qb = applyClosureGroupedFilter(
+    qb,
+    db,
+    'media_series',
+    'series_id',
+    filters.seriesGroups,
+    seriesClosures,
+    filters.exactSeriesIds
+  )
 
   if (filters.noSeries) {
     qb = qb.where('media.id', 'not in', db.selectFrom('media_series').select('media_id'))

@@ -422,6 +422,40 @@ describe('media.repository character hierarchy filtering (characterClosures)', (
 
     expect(result.map((r) => r.name)).toEqual(['onlyChild'])
   })
+
+  it('matches only direct links for an exact id - base and form together included', async () => {
+    const mythra = await characterRepo.insertCharacter(db, {
+      id: randomUUID(),
+      name: 'Mythra',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: null
+    })
+    const swimmer = await characterRepo.insertCharacter(db, {
+      id: randomUUID(),
+      name: 'Mythra (Pro Swimmer)',
+      aliases_json: '[]',
+      created_at: Date.now(),
+      parent_id: mythra.id
+    })
+    const onlyBase = await insertMedia('onlyBase')
+    const onlyForm = await insertMedia('onlyForm')
+    const both = await insertMedia('both')
+    await mediaRepo.setMediaCharacters(db, onlyBase.id, [mythra.id])
+    await mediaRepo.setMediaCharacters(db, onlyForm.id, [swimmer.id])
+    await mediaRepo.setMediaCharacters(db, both.id, [mythra.id, swimmer.id])
+
+    const characterClosures = new Map([[mythra.id, [mythra.id, swimmer.id]]])
+    const result = await mediaRepo.findMediaRows(
+      db,
+      { characterGroups: [[mythra.id]], exactCharacterIds: [mythra.id] },
+      undefined,
+      undefined,
+      characterClosures
+    )
+
+    expect(result.map((r) => r.name).sort()).toEqual(['both', 'onlyBase'])
+  })
 })
 
 describe('media.repository free-text/sfw/type filtering', () => {

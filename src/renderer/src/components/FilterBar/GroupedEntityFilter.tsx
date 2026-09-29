@@ -1,6 +1,6 @@
 import { Plus, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { MultiSelectAutocomplete } from '../Autocomplete/MultiSelectAutocomplete'
+import { MultiSelectAutocomplete, type ChipToggle } from '../Autocomplete/MultiSelectAutocomplete'
 import { InfoTooltip } from '../InfoTooltip/InfoTooltip'
 import './GroupedEntityFilter.css'
 
@@ -23,6 +23,8 @@ interface GroupedEntityFilterProps<T> {
     onChange: (checked: boolean) => void
     label: string
   }
+  /** Passed to each group's chips - see MultiSelectAutocomplete. */
+  chipToggle?: ChipToggle
 }
 
 /**
@@ -37,7 +39,8 @@ export function GroupedEntityFilter<T>({
   options,
   getOptionLabel,
   getOptionValue,
-  noneOption
+  noneOption,
+  chipToggle
 }: GroupedEntityFilterProps<T>): JSX.Element {
   const { t } = useTranslation()
   const effectiveGroups = groups.length > 0 ? groups : [[]]
@@ -82,6 +85,7 @@ export function GroupedEntityFilter<T>({
                 onChange={(values) => updateGroup(index, values)}
                 disabled={noneOption?.checked}
                 noneToggle={index === 0 ? noneOption : undefined}
+                chipToggle={chipToggle}
               />
               {effectiveGroups.length > 1 && (
                 <button

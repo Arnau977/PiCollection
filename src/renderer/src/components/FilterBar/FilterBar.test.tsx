@@ -47,6 +47,24 @@ afterEach(() => {
 })
 
 describe('FilterBar', () => {
+  it('offers "only this one" only on a selected character that has forms', () => {
+    charactersData = [
+      { id: 'mythra', name: 'Mythra', series: [] },
+      { id: 'swimmer', name: 'Mythra (Pro Swimmer)', series: [], parentId: 'mythra' },
+      { id: 'rex', name: 'Rex', series: [] }
+    ] as CharacterModel[]
+    const filters: MediaFilters = { characterGroups: [['mythra', 'rex']] }
+    const { onFiltersChange } = renderFilterBar(filters)
+
+    expect(
+      screen.queryByRole('button', { name: 'Only this one, without its forms: Rex' })
+    ).not.toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Only this one, without its forms: Mythra' })
+    )
+    expect(onFiltersChange).toHaveBeenLastCalledWith({ ...filters, exactCharacterIds: ['mythra'] })
+  })
+
   it('does not call onFiltersChange on initial mount', () => {
     const { onFiltersChange } = renderFilterBar()
     vi.advanceTimersByTime(1000)

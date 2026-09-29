@@ -152,7 +152,9 @@ matters for series and characters, since only the structured
 `seriesGroups`/`characterGroups` paths expand through the parent/child
 hierarchy (a filter on a parent also matches media tagged only with a
 descendant, via `buildClosureMap` in
-`src/main/database/repositories/entityHierarchy.ts`).
+`src/main/database/repositories/entityHierarchy.ts`). Ids listed in
+`exactCharacterIds`/`exactSeriesIds` skip that expansion and match only
+direct links.
 
 Pending media (`pending_tagging = 1`) is a staging area, not library
 content: the gallery, entity thumbnails, similar-media panel, Metadata

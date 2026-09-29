@@ -59,6 +59,10 @@ required.
   Its suggestions, like every tag/character/series/artist picker, forgive
   typos, accents, underscores, parentheses and word order: `pyra xenoblade`
   or `pyar` both find "Pyra (Xenoblade)", closest match first.
+- **Hierarchy-aware filters** — filtering by a character also finds its
+  forms (Mythra finds Mythra (Pro Swimmer)), and a series its subseries.
+  The crosshair on a selected chip switches that one to "only this one":
+  media tagged with it directly, whether or not the form is there too.
 - **Fast thumbnails** — grid and list views load a small cached preview
   instead of the original file; GIFs and videos only animate on hover.
 - **NSFW handling** — mark media as NSFW, optionally blur it in listings, and
