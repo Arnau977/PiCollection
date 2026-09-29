@@ -7,6 +7,7 @@ import {
   useShortcut,
   type Shortcut
 } from '../../../hooks/useShortcut'
+import { useConfirm } from '../../../components/ConfirmDialog/ConfirmDialogContext'
 import { StableLabel } from '../../../components/StableLabel/StableLabel'
 import { ArrowLeft, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
 import type { MediaModel } from '@shared/models'
@@ -21,6 +22,8 @@ interface MediaFormTopActionsProps {
   deleting?: boolean
   hasExactDuplicate: boolean
   onCancel: () => void
+  /** Unsaved changes: leaving (Cancel or Esc) asks before dropping them. */
+  isDirty: boolean
   onMarkResolved?: () => void
   onMarkResolvedClick: () => void
   onSendToPending: () => void
@@ -56,6 +59,7 @@ export function MediaFormTopActions({
   deleting = false,
   hasExactDuplicate,
   onCancel,
+  isDirty,
   onMarkResolved,
   onMarkResolvedClick,
   onSendToPending,
@@ -63,7 +67,9 @@ export function MediaFormTopActions({
 }: MediaFormTopActionsProps): JSX.Element {
   const { t } = useTranslation()
   const saveLabel = queueInfo || isEditing ? t('manage.save') : t('addMedia.submit')
+  const confirm = useConfirm()
   const saveRef = useRef<HTMLButtonElement>(null)
+  const resolveRef = useRef<HTMLButtonElement>(null)
   const previousRef = useRef<HTMLButtonElement>(null)
   const nextRef = useRef<HTMLButtonElement>(null)
 
@@ -73,6 +79,22 @@ export function MediaFormTopActions({
     if (ref.current && !ref.current.disabled) ref.current.click()
   }
   useShortcut(SHORTCUTS.save, press(saveRef))
+  useShortcut(SHORTCUTS.saveAndResolve, press(resolveRef))
+  // Cancel, and Esc (which leaves the form the way E entered it), ask before
+  // dropping unsaved changes. A batch import's Close skips this: its own
+  // exit dialog already covers leaving mid-queue.
+  async function leave(): Promise<void> {
+    if (isDirty && !queueInfo) {
+      const discard = await confirm({
+        message: t('media.discardChangesConfirm'),
+        confirmLabel: t('media.discardChanges'),
+        danger: true
+      })
+      if (!discard) return
+    }
+    onCancel()
+  }
+  useShortcut(SHORTCUTS.leaveEdit, () => void leave())
   useShortcut(SHORTCUTS.previous, press(previousRef), Boolean(queueInfo?.onPrevious))
   useShortcut(SHORTCUTS.next, press(nextRef), Boolean(queueInfo))
   const hint = (label: string, shortcut: Shortcut): Record<string, string> => ({
@@ -82,7 +104,12 @@ export function MediaFormTopActions({
 
   return (
     <div className="media-page-actions media-form-top-actions">
-      <button type="button" className="btn" onClick={onCancel}>
+      <button
+        type="button"
+        className="btn"
+        onClick={() => void leave()}
+        {...hint(queueInfo ? t('importQueue.close') : t('manage.cancel'), SHORTCUTS.leaveEdit)}
+      >
         <ArrowLeft size={16} />
         {queueInfo ? t('importQueue.close') : t('manage.cancel')}
       </button>
@@ -120,9 +147,11 @@ export function MediaFormTopActions({
         <div className="action-group">
           {media?.pendingTagging && onMarkResolved && (
             <button
+              ref={resolveRef}
               type="button"
               className="btn"
               onClick={onMarkResolvedClick}
+              {...hint(t('media.saveAndResolve'), SHORTCUTS.saveAndResolve)}
               disabled={deleting || saving || hasExactDuplicate}
             >
               {t('media.saveAndResolve')}

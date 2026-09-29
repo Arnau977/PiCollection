@@ -258,6 +258,8 @@
       "source": "Source video",
       "derived": "GIF from it"
     },
+    "discardChangesConfirm": "Leave without saving your changes?",
+    "discardChanges": "Discard changes",
     "sfwTitle": "Safe for work",
     "nsfwTitle": "Explicit content",
     "sfwBadge": "SFW",

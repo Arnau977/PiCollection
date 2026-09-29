@@ -7,6 +7,11 @@ import type { CharacterModel } from '@shared/models'
 import { MemoryRouter } from 'react-router-dom'
 import { MediaForm } from './MediaForm'
 
+const confirmMock = vi.fn()
+vi.mock('../../../components/ConfirmDialog/ConfirmDialogContext', () => ({
+  useConfirm: () => confirmMock
+}))
+
 function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
   const defaults: Record<string, Record<string, unknown>> = {
     media: {
@@ -334,6 +339,36 @@ describe('MediaForm onMarkResolved', () => {
     renderForm({ media: pendingMedia, onMarkResolved: vi.fn() })
 
     expect(screen.getByRole('button', { name: 'Save & mark resolved' })).toBeInTheDocument()
+  })
+
+  it('saves and marks resolved with Ctrl+Shift+S', async () => {
+    const onMarkResolved = vi.fn()
+    setApi({ media: { update: vi.fn().mockResolvedValue({ success: true, data: pendingMedia }) } })
+    renderForm({ media: pendingMedia, onMarkResolved })
+
+    fireEvent.keyDown(document.body, { key: 'S', ctrlKey: true, shiftKey: true })
+
+    await vi.waitFor(() => expect(onMarkResolved).toHaveBeenCalled())
+  })
+
+  it('leaves with Esc or Cancel, asking first only when there are unsaved changes', async () => {
+    const { onCancel } = renderForm({ media: pendingMedia })
+    confirmMock.mockResolvedValueOnce(false)
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Generated using AI' }))
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+    await vi.waitFor(() => expect(confirmMock).toHaveBeenCalledTimes(1))
+    expect(onCancel).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Generated using AI' }))
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+    await vi.waitFor(() => expect(onCancel).toHaveBeenCalledTimes(1))
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Generated using AI' }))
+    confirmMock.mockResolvedValueOnce(true)
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await vi.waitFor(() => expect(onCancel).toHaveBeenCalledTimes(2))
+    expect(confirmMock).toHaveBeenCalledTimes(2)
   })
 
   it('does not show Save & mark resolved when the media is not pending', () => {
