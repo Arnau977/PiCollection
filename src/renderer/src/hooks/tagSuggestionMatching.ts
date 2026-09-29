@@ -40,6 +40,12 @@ export interface MatchedSuggestions {
   /** Missing character name -> the base character it's a form of ("Pyra (Pro Swimmer)" -> "Pyra"). */
   characterParents: Record<string, string>
   appliedCount: number
+  /**
+   * Every library entity the candidate matched, before the ancestor pruning
+   * `applied` does - for sources that only suggest (the extension's source
+   * site), where the user picks which of a parent/child pair they want.
+   */
+  existing: Record<SuggestionCategory, { id: string; name: string }[]>
 }
 
 export const EMPTY_MISSING: Record<SuggestionCategory, string[]> = {
@@ -80,6 +86,10 @@ function pruneAncestors<T extends { id: string; parentId?: string | null }>(
     (entity) =>
       !matched.some((other) => other.id !== entity.id && isDescendantOf(other.id, entity.id))
   )
+}
+
+function uniqueById<T extends { id: string }>(entities: T[]): T[] {
+  return Array.from(new Map(entities.map((entity) => [entity.id, entity])).values())
 }
 
 export function matchSuggestionCandidate(
@@ -141,10 +151,7 @@ export function matchSuggestionCandidate(
   // by name, it's surfaced as a chip to confirm rather than applied silently.
   const seriesMatch = matchEntityNames(confirmedSeries, entities.series)
   const seriesHintsMatch = matchEntityNames(resolvedCharacters.seriesHints, entities.series)
-  const leafCharacters = pruneAncestors(
-    Array.from(new Map(charactersMatch.existing.map((c) => [c.id, c])).values()),
-    entities.characters
-  )
+  const leafCharacters = pruneAncestors(uniqueById(charactersMatch.existing), entities.characters)
   const leafSeries = pruneAncestors(seriesMatch.existing, entities.series)
   // A matched character with exactly one associated series gets that series
   // silently linked elsewhere (see withImpliedSeries) - if a hint happens to
@@ -178,6 +185,12 @@ export function matchSuggestionCandidate(
       series: [...seriesMatch.missing, ...seriesHintNames].map(capitalizeFirstLetter)
     },
     characterParents,
+    existing: {
+      artist: artistMatch.existing,
+      tags: tagsMatch.existing,
+      characters: uniqueById(charactersMatch.existing),
+      series: uniqueById([...seriesMatch.existing, ...seriesHintsMatch.existing])
+    },
     appliedCount:
       (artistMatch.existing.length > 0 ? 1 : 0) +
       tagsMatch.existing.length +

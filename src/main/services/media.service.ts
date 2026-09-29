@@ -45,7 +45,9 @@ function parseSourceMetadata(raw: string | null | undefined): MediaSourceMetadat
       artist: typeof parsed.artist === 'string' ? parsed.artist : undefined,
       tags: names(parsed.tags),
       characters: names(parsed.characters),
-      series: names(parsed.series)
+      series: names(parsed.series),
+      sfw: typeof parsed.sfw === 'boolean' ? parsed.sfw : undefined,
+      isAiGenerated: typeof parsed.isAiGenerated === 'boolean' ? parsed.isAiGenerated : undefined
     }
   } catch {
     return undefined

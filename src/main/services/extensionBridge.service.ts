@@ -9,6 +9,7 @@ import { readSourceFolder } from './sourceFolder'
 import { seriesService } from './series.service'
 import { tagService } from './tag.service'
 import type { MediaSourceMetadata } from '@shared/models'
+import { splitArtistCredits } from '@shared/utils'
 
 export type ExtensionBridgeLookupType = 'artist' | 'tag' | 'series' | 'character'
 
@@ -110,42 +111,14 @@ function findExisting<T extends Named>(name: string, all: T[], options: MatchOpt
 }
 
 /**
- * A media has a single artist, but booru posts can credit several - the
- * extension sends them comma-joined. Links the first one already in the
- * library, or none.
+ * The artist is the one thing a capture links on its own: it's reliable when
+ * the site credits exactly one. Several credits are left for the user to pick
+ * from the source suggestions, since a media has a single artist.
  */
-async function findExistingArtist(rawName: string): Promise<string | undefined> {
-  const names = rawName
-    .split(',')
-    .map((n) => n.trim())
-    .filter((n) => n.length > 0)
-  if (names.length === 0) return undefined
-
-  const all = await artistService.getAllArtists()
-  for (const name of names) {
-    const existing = findExisting(name, all)
-    if (existing) return existing.id
-  }
-  return undefined
-}
-
-/**
- * Ids of the library entities these names match; unknown names are skipped.
- * Deduplicated: two names resolving to the same entity (repeats, case
- * variants, an alias) would otherwise trip the media_tag/media_character/
- * media_series composite primary key when addMedia links them.
- */
-function findExistingIds<T extends Named>(
-  names: string[],
-  all: T[],
-  options: MatchOptions = {}
-): string[] {
-  const ids: string[] = []
-  for (const name of names) {
-    const id = findExisting(name, all, options)?.id
-    if (id && !ids.includes(id)) ids.push(id)
-  }
-  return ids
+async function findSoleArtist(rawName: string | undefined): Promise<string | undefined> {
+  const names = splitArtistCredits(rawName)
+  if (names.length !== 1) return undefined
+  return findExisting(names[0], await artistService.getAllArtists())?.id
 }
 
 /**
@@ -164,10 +137,14 @@ function toSourceMetadata(input: ExtensionBridgeCaptureInput): MediaSourceMetada
     artist: raw.artist?.trim() || undefined,
     tags: cleanNames(raw.tags),
     characters: cleanNames(raw.characters),
-    series: cleanNames(raw.series)
+    series: cleanNames(raw.series),
+    sfw: input.sfw,
+    isAiGenerated: input.isAiGenerated
   }
   const isEmpty =
     !metadata.artist &&
+    metadata.sfw === undefined &&
+    metadata.isAiGenerated === undefined &&
     metadata.tags.length + metadata.characters.length + metadata.series.length === 0
   return isEmpty ? undefined : metadata
 }
@@ -224,33 +201,26 @@ export const extensionBridgeService = {
         return { status: 'duplicate', mediaId: duplicateCheck.exactMatch.id }
       }
 
-      // The extension is a quick inbox, not a tagging tool: it only links
-      // names that already exist in the library and never creates entities.
-      // Everything the site had is kept as source metadata instead, for the
-      // user to pick from when they tag the media in the app.
-      const artistId = input.artistName ? await findExistingArtist(input.artistName) : undefined
-      const tagIds = findExistingIds(cleanNames(input.tagNames), await tagService.getAllTags())
-      const characterIds = findExistingIds(
-        cleanNames(input.characterNames),
-        await characterService.getAllCharacters(),
-        { stripQualifier: true }
-      )
-      const seriesIds = findExistingIds(
-        cleanNames(input.seriesNames),
-        await seriesService.getAllSeries()
-      )
+      // The extension is a quick inbox, not a tagging tool. Which of the
+      // site's names the user wants (a parent series next to its child, a
+      // base character next to its form, the site's rating) can't be told
+      // from code, so everything is kept as source metadata and offered as
+      // one-click suggestions when the media is reviewed. Only a sole
+      // credited artist is linked right away.
+      const artistId = await findSoleArtist(input.artistName)
 
       const created = await mediaService.addMedia(
         {
           name: input.fileName,
           type: input.mediaType,
           route: absolutePath,
-          sfw: input.sfw ?? true,
-          isAiGenerated: input.isAiGenerated ?? false,
+          // Blurred until reviewed - the site's rating is only a suggestion.
+          sfw: false,
+          isAiGenerated: false,
           artistId,
-          tagIds,
-          characterIds,
-          seriesIds,
+          tagIds: [],
+          characterIds: [],
+          seriesIds: [],
           pendingTagging: input.pendingTagging ?? true,
           sourceUrl: input.sourceUrl
         },

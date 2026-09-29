@@ -29,6 +29,9 @@ export interface MediaSourceMetadata {
   tags: string[]
   characters: string[]
   series: string[]
+  /** The rating chosen at capture time - a suggestion, the media itself starts NSFW. */
+  sfw?: boolean
+  isAiGenerated?: boolean
 }
 
 export interface MediaFilters {

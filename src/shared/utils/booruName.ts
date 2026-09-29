@@ -119,3 +119,21 @@ export function splitBooruCharacterList(raw: string | string[] | undefined): Sau
 export function splitBooruList(raw: string | string[] | undefined): SauceNaoName[] {
   return splitBooruListWithQualifiers(raw).names
 }
+
+/**
+ * A media has a single artist, but booru posts can credit several - the
+ * extension sends them comma-joined. Trimmed, blanks and case-insensitive
+ * repeats dropped.
+ */
+export function splitArtistCredits(raw: string | undefined): string[] {
+  const seen = new Set<string>()
+  return (raw ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter((name) => {
+      const key = name.toLowerCase()
+      if (!name || seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+}

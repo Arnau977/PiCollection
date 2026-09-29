@@ -49,6 +49,7 @@ required.
   step through them one by one (Previous/Next, Save, Send to pending), or
   send all the remaining ones to Pending at once. Files come folder by
   folder, oldest-modified first, so pictures saved together stay together.
+  Going back to a file you already saved reopens it for editing.
 - **Full-size viewer** — clicking an image or GIF (in its detail page or the
   edit form) opens it full screen, with zoom: mouse wheel toward the cursor,
   drag to pan, double-click to toggle, `+`/`-`/`0`, or the zoom buttons.
@@ -101,12 +102,14 @@ required.
 - **Browser extension captures** — the PiCollection Capture extension
   (paired from Settings, over a local-only connection) saves the post
   you're viewing straight to the pending queue. With it enabled, closing
-  the window keeps PiCollection running in the system tray. It only links tags,
-  characters, series and artists you already have, and never creates new
-  ones; everything the site had is kept as source info. When you tag the
-  media, the names you don't have yet show up in the suggestions panel ("From
-  danbooru") to create with one click. Nothing from the site gets added
-  unless you pick it.
+  the window keeps PiCollection running in the system tray. A capture only
+  links the artist, when the site credits exactly one you already have; it
+  starts as NSFW (blurred) and never creates anything. Everything the site
+  had is kept as source info: when you tag the media, the suggestions panel
+  ("From danbooru") offers the tags, characters and series you already have
+  (one by one or all at once), the ones you don't (marked "new", created on
+  click), and the site's rating and AI flag. Nothing from the site gets
+  added unless you pick it.
 - **File location** — the edit form shows the file's name and folder, with
   copy and "open in file explorer" actions.
 - **Backup & Restore** — export the whole library (database, tags, settings,

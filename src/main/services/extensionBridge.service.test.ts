@@ -128,44 +128,48 @@ describe('extensionBridgeService.capture', () => {
     })
   })
 
-  it('stores the raw sourceMetadata payload over the names it links', async () => {
+  it('links only a sole artist, keeping names, rating and AI flag as suggestions', async () => {
     writeSourceFolder(sourceDir)
-    const tag = await tagService.createTag({ name: 'Closed eyes' })
+    const artist = await artistService.createArtist({ name: 'Some Artist' })
+    await tagService.createTag({ name: 'Closed eyes' })
+    const parent = await seriesService.createSeries({ name: 'Xenoblade Chronicles (series)' })
+    await seriesService.createSeries({ name: 'Xenoblade Chronicles 2', parentId: parent.id })
 
     const result = await extensionBridgeService.capture(
       baseCapture({
+        artistName: 'some artist',
         tagNames: ['closed_eyes'],
-        sourceMetadata: { tags: ['closed_eyes', 'rabbit_ears'], characters: [], series: [] }
+        seriesNames: ['xenoblade_chronicles_(series)', 'xenoblade_chronicles_2'],
+        sfw: true,
+        isAiGenerated: true
       })
     )
 
     const media = await mediaService.getMediaById(result.mediaId)
-    expect(media?.tags?.map((t) => t.id)).toEqual([tag.id])
-    expect(media?.sourceMetadata?.tags).toEqual(['closed_eyes', 'rabbit_ears'])
+    expect(media?.artist?.id).toBe(artist.id)
+    expect(media?.tags).toEqual([])
+    expect(media?.series).toEqual([])
+    expect(media?.sfw).toBe(false)
+    expect(media?.isAiGenerated).toBe(false)
+    expect(media?.sourceMetadata).toMatchObject({
+      tags: ['closed_eyes'],
+      series: ['xenoblade_chronicles_(series)', 'xenoblade_chronicles_2'],
+      sfw: true,
+      isAiGenerated: true
+    })
   })
 
-  it('reuses an existing artist matched case-insensitively', async () => {
+  it('leaves several credited artists for the user to pick', async () => {
     writeSourceFolder(sourceDir)
-    const existing = await artistService.createArtist({ name: 'Some Artist' })
-
-    await extensionBridgeService.capture(baseCapture({ artistName: 'some artist' }))
-
-    const artists = await artistService.getAllArtists()
-    expect(artists.filter((a) => a.name.toLowerCase() === 'some artist')).toHaveLength(1)
-    expect(artists[0].id).toBe(existing.id)
-  })
-
-  it('links case-variant duplicates of an existing tag once, not an error', async () => {
-    writeSourceFolder(sourceDir)
-    const tag = await tagService.createTag({ name: 'rating:safe' })
+    await artistService.createArtist({ name: 'sketchdrif' })
 
     const result = await extensionBridgeService.capture(
-      baseCapture({ tagNames: ['rating:safe', 'Rating:Safe'] })
+      baseCapture({ artistName: 'keihh, sketchdrif' })
     )
 
-    expect(result.status).toBe('created')
     const media = await mediaService.getMediaById(result.mediaId)
-    expect(media?.tags?.map((t) => t.id)).toEqual([tag.id])
+    expect(media?.artist).toBeUndefined()
+    expect(media?.sourceMetadata?.artist).toBe('keihh, sketchdrif')
   })
 
   it('returns duplicate status without creating a second row for identical bytes', async () => {
@@ -224,53 +228,23 @@ describe('extensionBridgeService.lookup', () => {
   })
 })
 
-describe('extensionBridgeService.capture name matching', () => {
-  it('links booru-style tags to existing ones instead of creating duplicates', async () => {
-    writeSourceFolder(sourceDir)
-    const existing = await tagService.createTag({ name: 'Closed eyes' })
-
-    await extensionBridgeService.capture(baseCapture({ tagNames: ['closed_eyes'] }))
-
-    const tags = await tagService.getAllTags()
-    expect(tags.map((t) => t.id)).toEqual([existing.id])
-  })
-
+describe('extensionBridgeService.lookup name matching', () => {
   it('matches tags by alias', async () => {
     writeSourceFolder(sourceDir)
-    const existing = await tagService.createTag({ name: 'Nude', aliases: ['completely_nude'] })
+    await tagService.createTag({ name: 'Nude', aliases: ['completely_nude'] })
 
-    await extensionBridgeService.capture(baseCapture({ tagNames: ['completely_nude'] }))
+    const matches = await extensionBridgeService.lookup('tag', 'completely_nude')
 
-    expect((await tagService.getAllTags()).map((t) => t.id)).toEqual([existing.id])
+    expect(matches).toEqual([expect.objectContaining({ name: 'Nude', exact: true })])
   })
 
   it('does not strip qualifiers from general tags', async () => {
     writeSourceFolder(sourceDir)
     await tagService.createTag({ name: 'Bow' })
 
-    const result = await extensionBridgeService.capture(baseCapture({ tagNames: ['bow_(weapon)'] }))
+    const matches = await extensionBridgeService.lookup('tag', 'bow_(weapon)')
 
-    expect((await mediaService.getMediaById(result.mediaId))?.tags).toEqual([])
-  })
-
-  it('links a qualified character to the unqualified existing one', async () => {
-    writeSourceFolder(sourceDir)
-    const existing = await characterService.createCharacter({ name: 'Sylphiette' })
-
-    await extensionBridgeService.capture(
-      baseCapture({ characterNames: ['sylphiette_(mushoku_tensei)'] })
-    )
-
-    expect((await characterService.getAllCharacters()).map((c) => c.id)).toEqual([existing.id])
-  })
-
-  it('links the first known artist of a comma-joined list', async () => {
-    writeSourceFolder(sourceDir)
-    const known = await artistService.createArtist({ name: 'sketchdrif' })
-
-    await extensionBridgeService.capture(baseCapture({ artistName: 'keihh, sketchdrif' }))
-
-    expect((await artistService.getAllArtists()).map((a) => a.id)).toEqual([known.id])
+    expect(matches.some((m) => m.exact)).toBe(false)
   })
 })
 

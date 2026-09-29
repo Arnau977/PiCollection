@@ -3,12 +3,14 @@ import type {
   ArtistModel,
   CharacterModel,
   DanbooruCharacterInfo,
+  MediaInput,
   MediaSourceMetadata,
   SeriesModel,
   TagModel
 } from '@shared/models'
-import { cleanEntityName, splitBooruCharacterList } from '@shared/utils'
+import { cleanEntityName, splitArtistCredits, splitBooruCharacterList } from '@shared/utils'
 import { fetchDanbooruCharacters } from '../utils/fetchDanbooruCharacters'
+import { matchEntityNames, normalizeEntityName } from '../utils/matchEntityNames'
 import {
   EMPTY_MISSING,
   matchSuggestionCandidate,
@@ -17,30 +19,53 @@ import {
 
 interface UseSourceSuggestionsArgs {
   metadata?: MediaSourceMetadata
+  /** The form's current values - suggestions it already has are hidden. */
+  input: MediaInput
   artists: ArtistModel[]
   tags: TagModel[]
   characters: CharacterModel[]
   series: SeriesModel[]
 }
 
+export interface ExistingSuggestion {
+  id: string
+  name: string
+}
+
 export interface SourceSuggestions {
   /** False for media not captured by the extension (or captured before this was stored). */
   available: boolean
   site?: string
+  /** Names the library already has - one click links them. */
+  existing: Record<SuggestionCategory, ExistingSuggestion[]>
+  /** Names the library doesn't have - one click creates them. */
   missing: Record<SuggestionCategory, string[]>
   /** Missing character -> the base character it's a form of (see matchSuggestionCandidate). */
   characterParents: Record<string, string>
+  /** The site's rating, when it differs from the form's. */
+  suggestedSfw?: boolean
+  /** The site marked it AI-generated and the form doesn't say so yet. */
+  suggestsAiGenerated: boolean
   dismiss: (category: SuggestionCategory, name: string) => void
 }
 
+const EMPTY_EXISTING: Record<SuggestionCategory, ExistingSuggestion[]> = {
+  artist: [],
+  tags: [],
+  characters: [],
+  series: []
+}
+
 /**
- * The names a capture's source site had but the library doesn't (the capture
- * already linked the ones that exist). Unlike SauceNAO/WD14 there's no lookup
- * to run and nothing is ever applied automatically - these are offered as
- * "create" chips only, since the site's tagging is informational.
+ * Everything a capture's source site had. The capture links nothing but a
+ * sole credited artist - which of a parent/child series pair, a base
+ * character and its form, or the site's rating the user wants can't be told
+ * from code - so all of it is offered here: names the library has as "add"
+ * chips, names it doesn't as "create" chips, and the rating/AI flag as hints.
  */
 export function useSourceSuggestions({
   metadata,
+  input,
   artists,
   tags,
   characters,
@@ -65,10 +90,13 @@ export function useSourceSuggestions({
   }, [characterNames])
 
   const matched = useMemo(() => {
-    if (!metadata) return { missing: EMPTY_MISSING, characterParents: {} }
-    return matchSuggestionCandidate(
+    if (!metadata) {
+      return { existing: EMPTY_EXISTING, missing: EMPTY_MISSING, characterParents: {} }
+    }
+    const result = matchSuggestionCandidate(
       {
-        artist: metadata.artist ? { name: cleanEntityName(metadata.artist) } : null,
+        // Several credits are matched below, one chip each.
+        artist: null,
         tags: metadata.tags.map((name) => ({ name: cleanEntityName(name) })),
         characters: splitBooruCharacterList(metadata.characters),
         series: metadata.series.map((name) => ({ name: cleanEntityName(name) }))
@@ -76,18 +104,61 @@ export function useSourceSuggestions({
       { artists, tags, characters, series },
       danbooru
     )
+    const artistMatch = matchEntityNames(
+      splitArtistCredits(metadata.artist).map((name) => ({ name })),
+      artists
+    )
+    // A series hint that names an existing series is already an "add" chip.
+    const existingSeriesKeys = new Set(
+      result.existing.series.map((entity) => normalizeEntityName(entity.name))
+    )
+    return {
+      existing: { ...result.existing, artist: artistMatch.existing },
+      missing: {
+        ...result.missing,
+        artist: artistMatch.missing,
+        series: result.missing.series.filter(
+          (name) => !existingSeriesKeys.has(normalizeEntityName(name))
+        )
+      },
+      characterParents: result.characterParents
+    }
   }, [metadata, artists, tags, characters, series, danbooru])
+
+  const isDismissed = useCallback(
+    (category: SuggestionCategory, name: string) => dismissed.has(`${category}:${name}`),
+    [dismissed]
+  )
 
   const missing = useMemo(() => {
     const visible = (category: SuggestionCategory): string[] =>
-      matched.missing[category].filter((name) => !dismissed.has(`${category}:${name}`))
+      matched.missing[category].filter((name) => !isDismissed(category, name))
     return {
       artist: visible('artist'),
       tags: visible('tags'),
       characters: visible('characters'),
       series: visible('series')
     }
-  }, [matched, dismissed])
+  }, [matched, isDismissed])
+
+  const existing = useMemo(() => {
+    const selected: Record<SuggestionCategory, string[]> = {
+      artist: input.artistId ? [input.artistId] : [],
+      tags: input.tagIds ?? [],
+      characters: input.characterIds ?? [],
+      series: input.seriesIds ?? []
+    }
+    const visible = (category: SuggestionCategory): ExistingSuggestion[] =>
+      matched.existing[category].filter(
+        (entity) => !selected[category].includes(entity.id) && !isDismissed(category, entity.name)
+      )
+    return {
+      artist: visible('artist'),
+      tags: visible('tags'),
+      characters: visible('characters'),
+      series: visible('series')
+    }
+  }, [matched, isDismissed, input.artistId, input.tagIds, input.characterIds, input.seriesIds])
 
   const dismiss = useCallback((category: SuggestionCategory, name: string) => {
     setDismissed((prev) => new Set(prev).add(`${category}:${name}`))
@@ -96,8 +167,12 @@ export function useSourceSuggestions({
   return {
     available: Boolean(metadata),
     site: metadata?.site,
+    existing,
     missing,
     characterParents: matched.characterParents,
+    suggestedSfw:
+      metadata?.sfw !== undefined && metadata.sfw !== input.sfw ? metadata.sfw : undefined,
+    suggestsAiGenerated: metadata?.isAiGenerated === true && !input.isAiGenerated,
     dismiss
   }
 }

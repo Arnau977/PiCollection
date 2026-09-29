@@ -815,7 +815,7 @@ describe('MediaForm source-site suggestions', () => {
     }
   }
 
-  it('offers only the source names missing from the library, staging one on click', async () => {
+  it('offers source names as suggestions: existing ones link, new ones are staged', async () => {
     tagsData = [{ id: 't1', name: 'Closed eyes' }]
     const tagCreate = vi.fn()
     setApi({ tag: { create: tagCreate } })
@@ -823,13 +823,30 @@ describe('MediaForm source-site suggestions', () => {
     renderForm({ media: capturedMedia })
 
     expect(screen.getByText('From danbooru')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Closed Eyes' })).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Rabbit Ears' }))
+    await user.click(screen.getByRole('button', { name: 'Add Closed eyes' }))
+    expect(screen.queryByRole('button', { name: 'Add Closed eyes' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^Rabbit Ears/ }))
 
     expect(await screen.findByText('Rabbit Ears (new)')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Rabbit Ears' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Rabbit Ears/ })).not.toBeInTheDocument()
     expect(tagCreate).not.toHaveBeenCalled()
+  })
+
+  it('suggests the rating the site had instead of applying it', async () => {
+    const user = userEvent.setup()
+    renderForm({
+      media: {
+        ...capturedMedia,
+        sfw: false,
+        sourceMetadata: { ...capturedMedia.sourceMetadata!, sfw: true }
+      }
+    })
+
+    await user.click(screen.getByRole('button', { name: 'SFW' }))
+
+    expect(screen.queryByText('Rating')).not.toBeInTheDocument()
   })
 
   it('shows the file name and folder of the edited media', () => {
