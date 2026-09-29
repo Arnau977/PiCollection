@@ -89,7 +89,7 @@ export function Wd14SuggestionsPanel({
             className="sauce-add-chip"
             onClick={() => onApplyRating(suggestedSfw)}
           >
-            <span className={`badge ${suggestedSfw ? 'badge-neutral' : 'badge-accent'}`}>
+            <span className={`badge ${suggestedSfw ? 'badge-safe' : 'badge-accent'}`}>
               {suggestedSfw ? <ShieldCheck size={12} /> : <ShieldAlert size={12} />}
               {t(suggestedSfw ? 'media.sfwBadge' : 'media.nsfwBadge')}
             </span>

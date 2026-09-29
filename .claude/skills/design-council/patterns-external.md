@@ -56,6 +56,13 @@ here.
 - Source: Understanding and supporting zoom behaviors on the web (LogRocket) - https://blog.logrocket.com/understanding-supporting-zoom-behaviors-web/ ; Image Zoom design pattern - https://ui-patterns.com/patterns/ImageZoom ; Baymard, image gestures - https://baymard.com/blog/mobile-image-gestures
 - Checked: 2026-09-27
 
+### Tabs for switching between sibling panels
+- Kind: pattern
+- Use when / avoid when: several panels of the same kind where only one is needed at a time (here, suggestion sources). `role="tablist"`/`tab`/`tabpanel`, roving `tabIndex`, Left/Right/Home/End move and select (automatic activation, fine when panels render instantly). Avoid tabs when the user needs to compare panels side by side, or when a panel's content changes silently in the background - then show a count on its tab.
+- Takeaway for PiCollection: the suggestions rail's source tabs carry their pending-suggestion count, so results in a hidden tab aren't missed.
+- Source: WAI-ARIA APG, Tabs pattern - https://www.w3.org/WAI/ARIA/apg/patterns/tabs/ ; Fluent 2 TabList - https://fluent2.microsoft.design/components/web/react/core/tablist/usage
+- Checked: 2026-09-29
+
 ## Anti-patterns
 
 ### Tooltip on a natively disabled button

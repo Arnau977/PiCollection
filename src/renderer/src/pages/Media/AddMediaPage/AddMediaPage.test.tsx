@@ -118,6 +118,8 @@ beforeEach(() => {
   refetchCharacters.mockReset()
   refetchSeries.mockReset()
   setApi()
+  // These tests drive the SauceNAO panel; the rail otherwise opens on Local AI.
+  window.localStorage.setItem('picollection.suggestionsTab', 'sauce')
 })
 
 describe('AddMediaPage', () => {

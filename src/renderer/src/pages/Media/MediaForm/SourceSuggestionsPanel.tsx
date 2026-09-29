@@ -59,7 +59,7 @@ export function SourceSuggestionsPanel({
             className="sauce-add-chip"
             onClick={() => onApplyRating(source.suggestedSfw as boolean)}
           >
-            <span className={`badge ${source.suggestedSfw ? 'badge-neutral' : 'badge-accent'}`}>
+            <span className={`badge ${source.suggestedSfw ? 'badge-safe' : 'badge-accent'}`}>
               {source.suggestedSfw ? <ShieldCheck size={12} /> : <ShieldAlert size={12} />}
               {t(source.suggestedSfw ? 'media.sfwBadge' : 'media.nsfwBadge')}
             </span>

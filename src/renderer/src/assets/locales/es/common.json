@@ -302,16 +302,16 @@
     "suggestionsTitle": "Sugerencias",
     "suggestionsExpand": "Mostrar panel de sugerencias",
     "suggestionsCollapse": "Ocultar panel de sugerencias",
-    "suggestionsSauceNaoTitle": "Coincidencia SauceNAO",
-    "suggestionsWd14Title": "Etiquetado local con IA"
+    "suggestionsTabsLabel": "Fuentes de sugerencias",
+    "suggestionsTabSource": "Origen",
+    "suggestionsTabSauceNao": "SauceNAO",
+    "suggestionsTabWd14": "IA local"
   },
   "aiMetadata": {
     "detected": "Los metadatos del archivo dicen que se hizo con {{generator}}.",
     "markAsAi": "Marcar como IA"
   },
   "sourceSuggestions": {
-    "title": "Del sitio de origen",
-    "titleWithSite": "De {{site}}",
     "hint": "Lo que tenía el post original. No se añade nada hasta que lo pulses; lo marcado como nuevo se crea.",
     "nothingLeft": "Todo lo que tenía el sitio de origen ya está en este media.",
     "new": "nuevo",
@@ -435,6 +435,7 @@
     "formOf": "· variante de {{parent}}"
   },
   "sauceNao": {
+    "loadingTags": "Cargando las etiquetas del post encontrado…",
     "button": "Sugerir tags",
     "searching": "Buscando...",
     "privacyHint": "Envía una miniatura de este archivo a saucenao.com para buscar una coincidencia. No se sube nada más, y solo al pulsar este botón.",
