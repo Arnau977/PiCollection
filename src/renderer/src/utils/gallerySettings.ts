@@ -1,6 +1,6 @@
 import type { MediaFilters, MediaSortableProp } from '@shared/models'
 
-const STORAGE_KEY = 'picollection:gallery-defaults'
+export const GALLERY_DEFAULTS_STORAGE_KEY = 'picollection:gallery-defaults'
 
 export type GalleryDensity = 'compact' | 'comfortable' | 'large'
 
@@ -28,7 +28,7 @@ export const FALLBACK_GALLERY_DEFAULTS: GalleryDefaults = {
 
 export function loadGalleryDefaults(): GalleryDefaults {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
+    const raw = window.localStorage.getItem(GALLERY_DEFAULTS_STORAGE_KEY)
     if (!raw) return FALLBACK_GALLERY_DEFAULTS
     return { ...FALLBACK_GALLERY_DEFAULTS, ...JSON.parse(raw) }
   } catch {
@@ -37,5 +37,5 @@ export function loadGalleryDefaults(): GalleryDefaults {
 }
 
 export function saveGalleryDefaults(defaults: GalleryDefaults): void {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults))
+  window.localStorage.setItem(GALLERY_DEFAULTS_STORAGE_KEY, JSON.stringify(defaults))
 }

@@ -1,4 +1,12 @@
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import {
+  SHORTCUTS,
+  ariaShortcut,
+  formatShortcut,
+  useShortcut,
+  type Shortcut
+} from '../../../hooks/useShortcut'
 import { StableLabel } from '../../../components/StableLabel/StableLabel'
 import { ArrowLeft, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
 import type { MediaModel } from '@shared/models'
@@ -55,6 +63,22 @@ export function MediaFormTopActions({
 }: MediaFormTopActionsProps): JSX.Element {
   const { t } = useTranslation()
   const saveLabel = queueInfo || isEditing ? t('manage.save') : t('addMedia.submit')
+  const saveRef = useRef<HTMLButtonElement>(null)
+  const previousRef = useRef<HTMLButtonElement>(null)
+  const nextRef = useRef<HTMLButtonElement>(null)
+
+  // Shortcuts press the real buttons, so they respect the same disabled
+  // states (saving, duplicate file...) and run the same handlers.
+  const press = (ref: React.RefObject<HTMLButtonElement>) => (): void => {
+    if (ref.current && !ref.current.disabled) ref.current.click()
+  }
+  useShortcut(SHORTCUTS.save, press(saveRef))
+  useShortcut(SHORTCUTS.previous, press(previousRef), Boolean(queueInfo?.onPrevious))
+  useShortcut(SHORTCUTS.next, press(nextRef), Boolean(queueInfo))
+  const hint = (label: string, shortcut: Shortcut): Record<string, string> => ({
+    title: t('shortcuts.withKeys', { label, keys: formatShortcut(shortcut) }),
+    'aria-keyshortcuts': ariaShortcut(shortcut)
+  })
 
   return (
     <div className="media-page-actions media-form-top-actions">
@@ -68,12 +92,24 @@ export function MediaFormTopActions({
           <>
             <div className="action-group">
               {queueInfo.onPrevious && (
-                <button type="button" className="btn" onClick={queueInfo.onPrevious}>
+                <button
+                  ref={previousRef}
+                  type="button"
+                  className="btn"
+                  onClick={queueInfo.onPrevious}
+                  {...hint(t('importQueue.previous'), SHORTCUTS.previous)}
+                >
                   <ChevronLeft size={16} />
                   {t('importQueue.previous')}
                 </button>
               )}
-              <button type="button" className="btn" onClick={queueInfo.onNext}>
+              <button
+                ref={nextRef}
+                type="button"
+                className="btn"
+                onClick={queueInfo.onNext}
+                {...hint(t('importQueue.next'), SHORTCUTS.next)}
+              >
                 {t('importQueue.next')}
                 <ChevronRight size={16} />
               </button>
@@ -108,9 +144,11 @@ export function MediaFormTopActions({
             </button>
           )}
           <button
+            ref={saveRef}
             type="submit"
             form="media-form"
             className="btn btn-primary"
+            {...hint(saveLabel, SHORTCUTS.save)}
             disabled={saving || deleting || hasExactDuplicate}
           >
             <StableLabel

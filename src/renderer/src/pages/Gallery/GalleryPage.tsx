@@ -250,6 +250,8 @@ const GalleryPage: React.FC = () => {
         total={total}
         density={defaults.density}
         onDensityChange={handleDensityChange}
+        blurNsfw={defaults.blurNsfw}
+        onBlurNsfwChange={(blurNsfw) => setDefaults({ ...defaults, blurNsfw })}
         pageSize={pageSize}
         onPageSizeChange={handlePageSizeChange}
         page={page}

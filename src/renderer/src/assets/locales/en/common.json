@@ -167,6 +167,9 @@
     "noData": "Not enough data yet"
   },
   "gallery": {
+    "blurNsfw": "Blur NSFW",
+    "blurOn": "NSFW blur on",
+    "blurOff": "NSFW blur off",
     "title": "Your gallery",
     "mediaCount": "Media count: {{count}}",
     "addMedia": "Add media",
@@ -478,5 +481,8 @@
     "title": "Page not found",
     "hint": "There's nothing here. The link may be broken or the page may have moved.",
     "backHome": "Back to home"
+  },
+  "shortcuts": {
+    "withKeys": "{{label}} ({{keys}})"
   }
 }

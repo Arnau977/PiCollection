@@ -9,6 +9,7 @@ import { MediaFileActions } from '../../../components/MediaFileActions/MediaFile
 import { useConfirm } from '../../../components/ConfirmDialog/ConfirmDialogContext'
 import { useMediaById } from '../../../hooks/useMediaById'
 import { useAdjacentMedia } from '../../../hooks/useAdjacentMedia'
+import { SHORTCUTS, ariaShortcut, formatShortcut, useShortcut } from '../../../hooks/useShortcut'
 import { MediaForm } from '../MediaForm/MediaForm'
 import './MediaPage.css'
 
@@ -149,6 +150,12 @@ const MediaPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- goToMedia/navigate are stable for the lifetime of this component
   }, [isEditing, previousId, nextId])
 
+  useShortcut(SHORTCUTS.edit, startEditing, !isEditing && Boolean(media))
+  const editHint = t('shortcuts.withKeys', {
+    label: t('media.edit'),
+    keys: formatShortcut(SHORTCUTS.edit)
+  })
+
   if (loading) {
     return (
       <div className="page">
@@ -194,7 +201,13 @@ const MediaPage: React.FC = () => {
                 {t('media.markResolved')}
               </button>
             )}
-            <button type="button" className="btn btn-primary" onClick={startEditing}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={startEditing}
+              title={editHint}
+              aria-keyshortcuts={ariaShortcut(SHORTCUTS.edit)}
+            >
               <Pencil size={16} />
               {t('media.edit')}
             </button>

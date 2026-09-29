@@ -62,7 +62,12 @@ required.
 - **Fast thumbnails** — grid and list views load a small cached preview
   instead of the original file; GIFs and videos only animate on hover.
 - **NSFW handling** — mark media as NSFW, optionally blur it in listings, and
-  reveal on click.
+  reveal on click. Blurring can be switched from the gallery toolbar or with
+  `Ctrl+B` on any page.
+- **Keyboard shortcuts** — `E` edits the open media, `Ctrl+S` saves the
+  edit form, `Ctrl+Shift+A` runs the local AI tagger, and `Alt+←`/`Alt+→`
+  move through a batch import or the pending queue. Each button's tooltip
+  shows its shortcut.
 - **Home dashboard** — recent additions plus a quick stats summary of your
   most-tagged artists/tags/characters/series.
 - **Window state** — remembers the app window's size and position between
