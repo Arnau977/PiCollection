@@ -6,6 +6,8 @@ import { Home, Images, Inbox, Database, Settings } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import { useAppUpdater } from '../../hooks/useAppUpdater'
 import { useEntityCacheSync } from '../../hooks/useEntityLists'
+import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
+import { SHORTCUTS, useShortcut } from '../../hooks/useShortcut'
 import { Toast } from '../Toast/Toast'
 import './AppHeader.css'
 
@@ -32,6 +34,16 @@ export function AppHeader(): JSX.Element {
   const navigate = useNavigate()
   const updateReady = status.state === 'available' || status.state === 'downloaded'
   useEntityCacheSync()
+
+  // Ctrl+B works on every page (Home, detail, Pending also blur NSFW); the
+  // toast confirms it where there's no toolbar button showing the state.
+  const { defaults, setDefaults } = useGalleryDefaults()
+  const [blurToast, setBlurToast] = useState<string | null>(null)
+  useShortcut(SHORTCUTS.toggleBlur, () => {
+    const blurNsfw = !defaults.blurNsfw
+    setDefaults({ ...defaults, blurNsfw })
+    setBlurToast(t(blurNsfw ? 'gallery.blurOn' : 'gallery.blurOff'))
+  })
 
   // The badge stays up for as long as an update is pending, but the toast is
   // a one-time nudge - once dismissed (by the user, or by its own auto-hide
@@ -102,6 +114,16 @@ export function AppHeader(): JSX.Element {
               navigate(PATH.SETTINGS)
             }}
             onDismiss={() => setUpdateToastDismissed(true)}
+          />,
+          document.body
+        )}
+      {blurToast &&
+        createPortal(
+          <Toast
+            key={blurToast}
+            message={blurToast}
+            durationMs={2500}
+            onDismiss={() => setBlurToast(null)}
           />,
           document.body
         )}

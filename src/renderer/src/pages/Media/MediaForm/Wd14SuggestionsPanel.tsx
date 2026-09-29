@@ -5,6 +5,7 @@ import type { MediaInput } from '@shared/models'
 import { PATH } from '../../../app.routes.const'
 import { titleCaseTagName } from '../../../utils/matchEntityNames'
 import { TagWikiInfo } from '../../../components/TagWikiInfo/TagWikiInfo'
+import { SHORTCUTS, ariaShortcut, formatShortcut } from '../../../hooks/useShortcut'
 import { useWd14NsfwThreshold } from '../../../hooks/useWd14NsfwThreshold'
 import { wd14RatingIsNsfw } from '../../../utils/wd14RatingSettings'
 import { WD14_MISSING_CATEGORIES, countWd14Missing } from './missingSuggestionCounts'
@@ -31,6 +32,8 @@ interface Wd14SuggestionsPanelProps {
   saving: boolean
   onAddMissing: MediaFormSuggestions['addWd14Suggestion']
   onApplyRating: (sfw: boolean) => void
+  /** Lets the rail's Ctrl+Shift+A press this panel's button. */
+  runButtonRef?: React.Ref<HTMLButtonElement>
 }
 
 export function Wd14SuggestionsPanel({
@@ -41,7 +44,8 @@ export function Wd14SuggestionsPanel({
   inputSfw,
   saving,
   onAddMissing,
-  onApplyRating
+  onApplyRating,
+  runButtonRef
 }: Wd14SuggestionsPanelProps): JSX.Element {
   const { t } = useTranslation()
   const { threshold } = useWd14NsfwThreshold()
@@ -65,8 +69,14 @@ export function Wd14SuggestionsPanel({
   return (
     <div className="sauce-panel">
       <button
+        ref={runButtonRef}
         type="button"
         className="btn"
+        title={t('shortcuts.withKeys', {
+          label: t('wd14.button'),
+          keys: formatShortcut(SHORTCUTS.suggestLocally)
+        })}
+        aria-keyshortcuts={ariaShortcut(SHORTCUTS.suggestLocally)}
         onClick={() => wd14.run(inputRoute, inputType)}
         disabled={!inputRoute || saving || wd14.status === 'loading'}
       >

@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { loadGalleryDefaults } from '../../utils/gallerySettings'
 import { AppHeader } from './AppHeader'
 
 let emit: (event: unknown) => void = () => {}
@@ -35,6 +36,20 @@ beforeEach(() => {
 })
 
 describe('AppHeader', () => {
+  it('toggles NSFW blur with Ctrl+B from any page, confirming it with a toast', () => {
+    window.localStorage.clear()
+    render(
+      <MemoryRouter>
+        <AppHeader />
+      </MemoryRouter>
+    )
+
+    fireEvent.keyDown(document.body, { key: 'b', ctrlKey: true })
+
+    expect(loadGalleryDefaults().blurNsfw).toBe(false)
+    expect(screen.getByText('NSFW blur off')).toBeInTheDocument()
+  })
+
   it('links to the home, gallery, pending, metadata and settings routes', () => {
     render(
       <MemoryRouter>

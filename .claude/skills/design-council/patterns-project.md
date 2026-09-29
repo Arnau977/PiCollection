@@ -64,6 +64,16 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   re-entrancy created hundreds of duplicate rows. Where:
   `src/renderer/src/pages/Media/ImportQueue/ImportQueue.tsx`.
 
+- **Keyboard shortcuts go through `useShortcut`** (`hooks/useShortcut.ts`,
+  keys listed in `SHORTCUTS`): plain keys are skipped while typing, all
+  are skipped while a modal is open, and a shortcut presses the real button
+  (via a ref) so it inherits its disabled state. Every button with a
+  shortcut shows it in its tooltip ("Save (Ctrl+S)") and `aria-keyshortcuts`.
+- **A view setting toggled away from its settings page confirms with a
+  toast** when the change isn't otherwise visible (Ctrl+B on a page without
+  the gallery toolbar). Gallery view settings are a shared store
+  (`useGalleryDefaults`), so every consumer updates at once.
+
 ## Suggestions and metadata
 
 - **Suggestions never apply silently unless they match something already in

@@ -9,6 +9,8 @@ function renderToolbar(overrides: Partial<React.ComponentProps<typeof GalleryToo
     total: 130,
     density: 'comfortable',
     onDensityChange: vi.fn(),
+    blurNsfw: true,
+    onBlurNsfwChange: vi.fn(),
     pageSize: 60,
     onPageSizeChange: vi.fn(),
     page: 0,
@@ -20,6 +22,16 @@ function renderToolbar(overrides: Partial<React.ComponentProps<typeof GalleryToo
 }
 
 describe('GalleryToolbar', () => {
+  it('turns NSFW blur off from its toggle', async () => {
+    const { props } = renderToolbar({ blurNsfw: true })
+
+    const toggle = screen.getByRole('button', { name: 'Blur NSFW (Ctrl+B)' })
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(toggle)
+
+    expect(props.onBlurNsfwChange).toHaveBeenCalledWith(false)
+  })
+
   it('shows the item count', () => {
     renderToolbar({ total: 130 })
     expect(screen.getByText('Media count: 130')).toBeInTheDocument()

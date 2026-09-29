@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import type { MediaInput } from '@shared/models'
@@ -12,6 +12,7 @@ import { SourceSuggestionsPanel } from './SourceSuggestionsPanel'
 import { Wd14SuggestionsPanel } from './Wd14SuggestionsPanel'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
 import { useSuggestionsTab, type SuggestionsTab } from './useSuggestionsTab'
+import { SHORTCUTS, useShortcut } from '../../../hooks/useShortcut'
 
 interface SuggestionsRailProps {
   suggestions: MediaFormSuggestions
@@ -50,6 +51,23 @@ export function SuggestionsRail({
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const [tab, setTab] = useSuggestionsTab(suggestions.source.available)
   const tabRefs = useRef(new Map<SuggestionsTab, HTMLButtonElement>())
+  const wd14ButtonRef = useRef<HTMLButtonElement>(null)
+  const [wd14Requested, setWd14Requested] = useState(false)
+
+  // Ctrl+Shift+A: the local AI tagger, the most reliable of the three. The
+  // rail may be collapsed or on another tab, so open it there first and
+  // press the real button once it's rendered (it knows when it can run).
+  useShortcut(SHORTCUTS.suggestLocally, () => {
+    setCollapsed(false)
+    setTab('wd14')
+    setWd14Requested(true)
+  })
+  useEffect(() => {
+    if (!wd14Requested) return
+    setWd14Requested(false)
+    const button = wd14ButtonRef.current
+    if (button && !button.disabled) button.click()
+  }, [wd14Requested])
 
   const tabs: { id: SuggestionsTab; label: string; count: number }[] = [
     ...(suggestions.source.available
@@ -186,6 +204,7 @@ export function SuggestionsRail({
                 saving={saving}
                 onAddMissing={suggestions.addWd14Suggestion}
                 onApplyRating={onApplyRating}
+                runButtonRef={wd14ButtonRef}
               />
             </div>
           </div>
