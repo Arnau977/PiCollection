@@ -429,7 +429,12 @@
     "thisFile": "This file",
     "dimensions": "{{width}} × {{height}}",
     "slider": "Divider between the two images",
-    "sliderValue": "{{left}}% this file, {{right}}% the other one"
+    "sliderValue": "{{left}}% this file, {{right}}% the other one",
+    "status": {
+      "library": "In library",
+      "pending": "Pending",
+      "new": "Being added"
+    }
   },
   "suggestions": {
     "formOf": "· form of {{parent}}"

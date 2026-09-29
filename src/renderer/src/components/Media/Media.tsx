@@ -39,6 +39,7 @@ export default function Media({
   route,
   sourceUrl,
   createdAt,
+  pendingTagging,
   previousId = null,
   nextId = null,
   onNavigate
@@ -205,7 +206,7 @@ export default function Media({
           </div>
         )}
 
-        <SimilarMediaPanel mediaId={id} />
+        <SimilarMediaPanel media={{ id, route, name, type, pendingTagging }} />
       </div>
     </div>
   )

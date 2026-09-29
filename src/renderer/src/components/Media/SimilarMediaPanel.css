@@ -8,7 +8,45 @@
 }
 
 .similar-media-grid li {
+  position: relative;
   aspect-ratio: 1;
+}
+
+/* Revealed on hover or keyboard focus, like a file manager's item actions,
+   so a row of small thumbnails isn't covered in buttons. */
+.similar-media-compare {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-sm);
+  background: rgba(10, 10, 14, 0.8);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.similar-media-grid li:hover .similar-media-compare,
+.similar-media-compare:focus-visible {
+  opacity: 1;
+}
+
+.similar-media-compare:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .similar-media-compare {
+    transition: none;
+  }
 }
 
 .similar-media-grid a {
