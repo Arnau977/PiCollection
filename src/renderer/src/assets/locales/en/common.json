@@ -302,16 +302,16 @@
     "suggestionsTitle": "Suggestions",
     "suggestionsExpand": "Show suggestions panel",
     "suggestionsCollapse": "Hide suggestions panel",
-    "suggestionsSauceNaoTitle": "SauceNAO match",
-    "suggestionsWd14Title": "Local AI tagging"
+    "suggestionsTabsLabel": "Suggestion sources",
+    "suggestionsTabSource": "Source",
+    "suggestionsTabSauceNao": "SauceNAO",
+    "suggestionsTabWd14": "Local AI"
   },
   "aiMetadata": {
     "detected": "The file's metadata says it was made with {{generator}}.",
     "markAsAi": "Mark as AI"
   },
   "sourceSuggestions": {
-    "title": "From the source site",
-    "titleWithSite": "From {{site}}",
     "hint": "What the original post had. Nothing is added until you click it; names marked new are created.",
     "nothingLeft": "Everything the source site had is already on this media.",
     "new": "new",
@@ -435,6 +435,7 @@
     "formOf": "· form of {{parent}}"
   },
   "sauceNao": {
+    "loadingTags": "Loading the matched post's tags…",
     "button": "Suggest tags",
     "searching": "Searching...",
     "privacyHint": "Sends a thumbnail of this file to saucenao.com to look for a match. Nothing else is uploaded, and only when you press this button.",

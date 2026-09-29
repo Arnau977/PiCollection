@@ -823,7 +823,7 @@ describe('MediaForm source-site suggestions', () => {
     const user = userEvent.setup()
     renderForm({ media: capturedMedia })
 
-    expect(screen.getByText('From danbooru')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /danbooru/ })).toHaveAttribute('aria-selected', 'true')
 
     await user.click(screen.getByRole('button', { name: 'Add Closed eyes' }))
     expect(screen.queryByRole('button', { name: 'Add Closed eyes' })).not.toBeInTheDocument()
@@ -833,6 +833,22 @@ describe('MediaForm source-site suggestions', () => {
     expect(await screen.findByText('Rabbit Ears (new)')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^Rabbit Ears/ })).not.toBeInTheDocument()
     expect(tagCreate).not.toHaveBeenCalled()
+  })
+
+  it('remembers the lookup tab picked last, but opens captures on their site', async () => {
+    window.localStorage.removeItem('picollection.suggestionsTab')
+    const user = userEvent.setup()
+    const { unmount } = renderForm()
+    expect(screen.getByRole('tab', { name: 'Local AI' })).toHaveAttribute('aria-selected', 'true')
+
+    await user.click(screen.getByRole('tab', { name: 'SauceNAO' }))
+    unmount()
+    const second = renderForm()
+    expect(screen.getByRole('tab', { name: 'SauceNAO' })).toHaveAttribute('aria-selected', 'true')
+    second.unmount()
+
+    renderForm({ media: capturedMedia })
+    expect(screen.getByRole('tab', { name: /danbooru/ })).toHaveAttribute('aria-selected', 'true')
   })
 
   it('suggests the rating the site had instead of applying it', async () => {

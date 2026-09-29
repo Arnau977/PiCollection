@@ -71,6 +71,10 @@ required.
   you sign in (installed builds on Windows/macOS).
 - **Auto-update** — checks GitHub Releases for new versions, with an opt-in
   beta channel; see [`docs/auto-update.md`](docs/auto-update.md).
+- **Suggestions panel** — beside the add/edit media form, one tab per
+  source (the capture's site, SauceNAO, Local AI), each showing how many
+  suggestions are waiting. Captures open on their site's tab; otherwise it
+  reopens on the lookup you used last.
 - **Tag suggestions** — on the add/edit media form, "Suggest tags" sends a
   thumbnail to [SauceNAO](https://saucenao.com) to find the source artwork
   and pre-fill its known artist/characters/series/tags. Works on images,
@@ -112,8 +116,8 @@ required.
   the window keeps PiCollection running in the system tray. A capture only
   links the artist, when the site credits exactly one you already have; it
   starts as NSFW (blurred) and never creates anything. Everything the site
-  had is kept as source info: when you tag the media, the suggestions panel
-  ("From danbooru") offers the tags, characters and series you already have
+  had is kept as source info: when you tag the media, the suggestions panel's
+  site tab ("danbooru") offers the tags, characters and series you already have
   (one by one or all at once), the ones you don't (marked "new", created on
   click), and the site's rating and AI tag. Nothing from the site gets
   added unless you pick it.

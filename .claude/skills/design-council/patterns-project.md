@@ -18,8 +18,19 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   whatever the item's tag count, so buttons don't jump between queue items.
   Where: `src/renderer/src/pages/Media/MediaForm/MediaFormTopActions.tsx`.
 - **Suggestions rail: side column on wide screens, above the fields and
-  collapsed below 900px.** Where:
-  `src/renderer/src/pages/Media/MediaForm/SuggestionsRail.tsx`.
+  collapsed below 900px**, with one tab per source (the capture's site,
+  SauceNAO, Local AI) instead of stacked sections, each tab showing its
+  pending count. Captures open on their site's tab; otherwise the lookup
+  picked last is remembered (localStorage). Where:
+  `src/renderer/src/pages/Media/MediaForm/SuggestionsRail.tsx`,
+  `useSuggestionsTab.ts`.
+- **Suggested SFW uses `.badge-safe`** (green, `--color-success` on its soft
+  fill, 6.79:1) as the counterpart of the accent NSFW badge; the muted
+  neutral badge was nearly invisible. Where: `main.css`.
+- **Loading placeholders use the shared `media-thumb-shimmer`** (e.g. the
+  SauceNAO tag skeleton while Danbooru answers), with a visible
+  "Loading..." label in a `role="status"` and no animation under
+  reduced motion. Where: `SauceNaoSuggestionsPanel.tsx`.
 
 ## Actions
 

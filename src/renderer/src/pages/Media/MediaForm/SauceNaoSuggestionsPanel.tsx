@@ -118,7 +118,18 @@ export function SauceNaoSuggestionsPanel({
               {t('sauceNao.dismiss')}
             </button>
           </div>
-          <p className="sauce-hint">{t('sauceNao.applied', { count: sauce.appliedCount })}</p>
+          {/* The match shows as soon as SauceNAO answers; its tags still wait on
+              Danbooru's character lookup, so hold their place meanwhile. */}
+          {sauce.status === 'loading' ? (
+            <div className="sauce-skeleton" role="status" aria-busy="true">
+              <span className="sauce-skeleton-label">{t('sauceNao.loadingTags')}</span>
+              <span className="sauce-skeleton-line" aria-hidden="true" />
+              <span className="sauce-skeleton-line" aria-hidden="true" />
+              <span className="sauce-skeleton-line is-short" aria-hidden="true" />
+            </div>
+          ) : (
+            <p className="sauce-hint">{t('sauceNao.applied', { count: sauce.appliedCount })}</p>
+          )}
 
           {/* An empty field is filled on its own (see useMediaFormSuggestions); a
               different URL already typed in is only replaced on request. */}

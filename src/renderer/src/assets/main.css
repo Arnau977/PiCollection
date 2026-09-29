@@ -266,6 +266,15 @@ input[type='checkbox'] {
   color: var(--accent-fg);
 }
 
+/* A suggested "SFW" rating: green so it reads as the safe counterpart of
+   the accent NSFW badge - the muted neutral badge all but vanished on the
+   rail (6.79:1 text on the tinted fill over surface). */
+.badge-safe {
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+}
+
 .chip-list {
   display: flex;
   flex-wrap: wrap;
