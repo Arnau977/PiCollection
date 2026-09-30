@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { ipcHandler } from './helpers'
 import { IPC } from '@shared/ipc/contracts'
 import { loadImageForClipboard } from '../services/system.service'
+import { copyFileToClipboard, isAnimatedImage } from '../services/clipboardFile'
+import { logError } from '../logging/logger'
 import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
 import { getAutoStartStatus, setAutoStart } from '../window/autoStart'
 
@@ -27,7 +29,17 @@ export function registerSystemHandlers(): void {
   ipcMain.handle(
     IPC.system.copyImageToClipboard,
     ipcHandler(IPC.system.copyImageToClipboard, z.string().min(1), async (route) => {
-      const image = await loadImageForClipboard(resolveRoute(route, readSourceFolder()))
+      const filePath = resolveRoute(route, readSourceFolder())
+      if (process.platform === 'win32' && (await isAnimatedImage(filePath).catch(() => false))) {
+        try {
+          await copyFileToClipboard(filePath)
+          return
+        } catch (err) {
+          // Still copy the first frame as an image rather than nothing.
+          logError('clipboard', 'copy as file failed', err)
+        }
+      }
+      const image = await loadImageForClipboard(filePath)
       if (!image) {
         throw new Error('Could not read image data from that file.')
       }

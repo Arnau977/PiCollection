@@ -280,6 +280,7 @@
     "copyLocation": "Copy location",
     "locationCopied": "Copied!",
     "copyMedia": "Copy image",
+    "copyingMedia": "Copying…",
     "mediaCopied": "Copied!",
     "openInFolder": "Open in file explorer",
     "closeLightbox": "Close",
