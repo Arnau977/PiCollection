@@ -142,28 +142,31 @@ async function getMediaModelById(db: Kysely<DB>, id: string): Promise<MediaModel
   return hydrated
 }
 
+/** Codes the edit form maps to the field to point at (see mediaFormError.ts). */
 async function assertRelationsExist(
   db: Kysely<DB>,
   input: Pick<MediaInput, 'artistId' | 'tagIds' | 'characterIds' | 'seriesIds'>
 ): Promise<void> {
   if (input.artistId) {
     const artist = await artistRepo.findArtistById(db, input.artistId)
-    if (!artist) throw new Error(`Artist "${input.artistId}" does not exist`)
+    if (!artist) throw new AppError('MISSING_ARTIST', `Artist "${input.artistId}" does not exist`)
   }
   if (input.tagIds?.length) {
     const tags = await tagRepo.findTagsByIds(db, input.tagIds)
-    if (tags.length !== input.tagIds.length) throw new Error('One or more tags do not exist')
+    if (tags.length !== input.tagIds.length) {
+      throw new AppError('MISSING_TAGS', 'One or more tags do not exist')
+    }
   }
   if (input.characterIds?.length) {
     const characters = await characterRepo.findCharactersByIds(db, input.characterIds)
     if (characters.length !== input.characterIds.length) {
-      throw new Error('One or more characters do not exist')
+      throw new AppError('MISSING_CHARACTERS', 'One or more characters do not exist')
     }
   }
   if (input.seriesIds?.length) {
     const series = await seriesRepo.findSeriesByIds(db, input.seriesIds)
     if (series.length !== input.seriesIds.length) {
-      throw new Error('One or more series do not exist')
+      throw new AppError('MISSING_SERIES', 'One or more series do not exist')
     }
   }
 }

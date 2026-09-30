@@ -2,8 +2,11 @@ import { useTranslation } from 'react-i18next'
 import type { CharacterModel, SeriesModel, TagModel } from '@shared/models'
 import { MultiSelectAutocomplete } from '../../../components/Autocomplete/MultiSelectAutocomplete'
 import { formatCharacterOptionLabel } from '../../../utils/matchEntityNames'
+import type { MediaFormField } from './mediaFormError'
 
 interface MediaFormTaxonomyFieldsProps {
+  /** The field a failed save pointed at (see MediaFormSaveError). */
+  invalidField?: MediaFormField
   tagOptions: TagModel[]
   pendingTags: TagModel[]
   selectedTagIds: string[]
@@ -24,6 +27,7 @@ interface MediaFormTaxonomyFieldsProps {
 }
 
 export function MediaFormTaxonomyFields({
+  invalidField,
   tagOptions,
   pendingTags,
   selectedTagIds,
@@ -45,7 +49,7 @@ export function MediaFormTaxonomyFields({
   return (
     <div className="media-form-group">
       <h2>{t('addMedia.groupTaxonomy')}</h2>
-      <div className="field-accent field-accent-tags">
+      <div className="field-accent field-accent-tags" data-form-field="tags">
         <MultiSelectAutocomplete
           name="tags"
           label={t('filters.tags')}
@@ -60,9 +64,10 @@ export function MediaFormTaxonomyFields({
           selectedValues={selectedTagIds}
           onChange={onTagsChange}
           onCreate={onCreateTag}
+          invalid={invalidField === 'tags'}
         />
       </div>
-      <div className="field-accent field-accent-characters">
+      <div className="field-accent field-accent-characters" data-form-field="characters">
         <MultiSelectAutocomplete
           name="characters"
           label={t('filters.characters')}
@@ -77,9 +82,10 @@ export function MediaFormTaxonomyFields({
           selectedValues={selectedCharacterIds}
           onChange={onCharactersChange}
           onCreate={onCreateCharacter}
+          invalid={invalidField === 'characters'}
         />
       </div>
-      <div className="field-accent field-accent-series">
+      <div className="field-accent field-accent-series" data-form-field="series">
         <MultiSelectAutocomplete
           name="series"
           label={t('manage.series')}
@@ -94,6 +100,7 @@ export function MediaFormTaxonomyFields({
           selectedValues={selectedSeriesIds}
           onChange={onSeriesChange}
           onCreate={onCreateSeries}
+          invalid={invalidField === 'series'}
         />
       </div>
     </div>

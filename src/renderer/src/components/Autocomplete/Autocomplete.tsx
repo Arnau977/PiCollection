@@ -57,6 +57,8 @@ interface AutocompleteProps<T> {
     onChange: (checked: boolean) => void
     label: string
   }
+  /** Marks the field as the cause of an error (danger outline, aria-invalid). */
+  invalid?: boolean
 }
 
 export function Autocomplete<T>({
@@ -72,7 +74,8 @@ export function Autocomplete<T>({
   hideLabel = false,
   getOptionMatchName = getOptionLabel,
   disabled = false,
-  noneToggle
+  noneToggle,
+  invalid
 }: AutocompleteProps<T>): JSX.Element {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
@@ -151,6 +154,7 @@ export function Autocomplete<T>({
       onInputChange={handleInputChange}
       onSelectionChange={handleSelectionChange}
       isDisabled={disabled}
+      isInvalid={invalid}
     >
       {!hideLabel && <Label>{label}</Label>}
       <div

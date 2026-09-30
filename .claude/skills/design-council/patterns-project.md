@@ -17,6 +17,12 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
 - **Fixed top action bar in the edit form.** It stays in the same spot
   whatever the item's tag count, so buttons don't jump between queue items.
   Where: `src/renderer/src/pages/Media/MediaForm/MediaFormTopActions.tsx`.
+- **A failed save shows right under that fixed bar, naming the field.** A
+  danger-soft banner (`role="alert"`) between the bar and the scroll region,
+  never at the bottom of the form; a field error (main-process `AppError`
+  code, mapped in `mediaFormError.ts`) says which field and offers "Go to
+  <field>", and the field's input gets a danger border (`invalid` on
+  `Autocomplete`, aria-invalid). Where: `MediaFormSaveError.tsx`.
 - **Suggestions rail: side column on wide screens, above the fields and
   collapsed below 900px**, with one tab per source (the capture's site,
   SauceNAO, Local AI) instead of stacked sections, each tab showing its

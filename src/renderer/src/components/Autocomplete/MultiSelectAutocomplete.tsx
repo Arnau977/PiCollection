@@ -47,6 +47,7 @@ interface MultiSelectAutocompleteProps<T> {
   }
   chipToggle?: ChipToggle
   chipExclusion?: ChipExclusion
+  invalid?: boolean
 }
 
 export function MultiSelectAutocomplete<T>({
@@ -63,7 +64,8 @@ export function MultiSelectAutocomplete<T>({
   getOptionMatchName,
   noneToggle,
   chipToggle,
-  chipExclusion
+  chipExclusion,
+  invalid
 }: MultiSelectAutocompleteProps<T>): JSX.Element {
   const selectedSet = useMemo(() => new Set(selectedValues), [selectedValues])
   const selectedOptions = useMemo(
@@ -103,6 +105,7 @@ export function MultiSelectAutocomplete<T>({
         getOptionMatchName={getOptionMatchName}
         disabled={disabled}
         noneToggle={noneToggle}
+        invalid={invalid}
       />
       {selectedOptions.length > 0 && (
         <ul className="multi-select-chips">

@@ -294,6 +294,16 @@
     "sourceUrlTitle": "Open the original post"
   },
   "addMedia": {
+    "saveError": {
+      "title": "Couldn't save.",
+      "goTo": "Go to {{field}}",
+      "missing": {
+        "artist": "The artist is no longer in the library (deleted or merged?). Pick it again and save.",
+        "tags": "One of the tags is no longer in the library (deleted or merged?). Check the tags and save again.",
+        "characters": "One of the characters is no longer in the library (deleted or merged?). Check the characters and save again.",
+        "series": "One of the series is no longer in the library (deleted or merged?). Check the series and save again."
+      }
+    },
     "title": "Add new media",
     "file": "File",
     "submit": "Add",
