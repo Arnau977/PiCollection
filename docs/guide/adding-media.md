@@ -42,7 +42,8 @@ folder, and a message says how many.
 ## Capturing from the browser
 
 The **PiCollection Capture** browser extension saves the post you're viewing
-(currently on Danbooru and Rule34) straight into the pending queue.
+(on Danbooru, Rule34, Safebooru, Gelbooru, Yande.re and Konachan) straight
+into the pending queue.
 
 1. **Settings > Advanced > Browser extension capture**: turn it on and pair
    the extension. The connection is local to your computer only; nothing
