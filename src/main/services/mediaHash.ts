@@ -1,11 +1,11 @@
 import { createHash } from 'crypto'
 import { createReadStream } from 'fs'
-import { nativeImage } from 'electron'
+import sharp from 'sharp'
 import { resolveThumbnail } from '../thumbnails/thumbnails'
 
-/** 9x8 so each row yields 8 horizontal comparisons - 64 bits total, 16 hex chars. */
-const PHASH_WIDTH = 9
-const PHASH_HEIGHT = 8
+// sharp's operation cache keeps input files open, which on Windows would
+// lock them (e.g. against moving to the Recycle Bin); hashing gains nothing from it.
+sharp.cache(false)
 
 const NIBBLE_POPCOUNT = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4]
 
@@ -25,51 +25,88 @@ export function computeFileHash(filePath: string): Promise<string | null> {
   })
 }
 
+/** What near-duplicate detection compares: a perceptual hash and the picture's shape. */
+export interface VisualFingerprint {
+  /** 64-bit DCT perceptual hash, 16 hex chars. */
+  phash: string
+  /** Width / height, after EXIF rotation. */
+  aspectRatio: number
+}
+
 /**
- * 64-bit difference hash (dHash) of the file's visual content: reuses the
- * same thumbnail already generated/cached for the gallery and SauceNAO
- * (handles images, video posterframes and GIF first frames uniformly),
- * resizes it to 9x8 and encodes whether each pixel is brighter than its
- * right neighbor. Two hashes' Hamming distance approximates visual
- * similarity, tolerant to recompression/resizing - unlike `computeFileHash`,
- * which only matches byte-identical files.
+ * 64-bit DCT perceptual hash (pHash) of the file's visual content, plus its
+ * aspect ratio. The file itself is decoded with sharp (JPEG/PNG/WebP/AVIF,
+ * a GIF's or animated WebP's first frame); what sharp can't read (a video)
+ * falls back to its cached thumbnail.
+ *
+ * The picture is squashed to 32x32 grayscale, and each of the 64 lowest DCT
+ * frequencies (8x8) becomes a bit: above or below their median. Unlike the
+ * earlier 9x8 difference hash, flat areas (a white background) don't turn
+ * into runs of zeros, so two unrelated pictures on similar backgrounds no
+ * longer look alike. Returns null when nothing could be decoded.
  */
-export async function computePerceptualHash(filePath: string): Promise<string | null> {
+export async function computePerceptualHash(filePath: string): Promise<VisualFingerprint | null> {
+  const fromFile = await fingerprintOf(filePath)
+  if (fromFile) return fromFile
   const thumbPath = await resolveThumbnail(filePath)
-  if (!thumbPath) return null
+  return thumbPath ? fingerprintOf(thumbPath) : null
+}
 
+async function fingerprintOf(input: string): Promise<VisualFingerprint | null> {
   try {
-    const image = nativeImage.createFromPath(thumbPath)
-    if (image.isEmpty()) return null
+    const metadata = await sharp(input).metadata()
+    if (!metadata.width || !metadata.height) return null
+    // EXIF orientations 5-8 swap width and height once rotated.
+    const rotated = (metadata.orientation ?? 1) >= 5
+    const aspectRatio = rotated
+      ? metadata.height / metadata.width
+      : metadata.width / metadata.height
 
-    const resized = image.resize({ width: PHASH_WIDTH, height: PHASH_HEIGHT })
-    const { width, height } = resized.getSize()
-    if (width !== PHASH_WIDTH || height !== PHASH_HEIGHT) return null
-
-    // BGRA, 4 bytes per pixel - a plain average of the 3 color channels is a
-    // good enough luma approximation for a difference hash.
-    const bitmap = resized.toBitmap()
-    const gray = new Array<number>(width * height)
-    for (let i = 0; i < gray.length; i += 1) {
-      const o = i * 4
-      gray[i] = (bitmap[o] + bitmap[o + 1] + bitmap[o + 2]) / 3
-    }
-
-    let bits = ''
-    for (let y = 0; y < height; y += 1) {
-      for (let x = 0; x < width - 1; x += 1) {
-        bits += gray[y * width + x] > gray[y * width + x + 1] ? '1' : '0'
-      }
-    }
-
-    let hex = ''
-    for (let i = 0; i < bits.length; i += 4) {
-      hex += parseInt(bits.slice(i, i + 4), 2).toString(16)
-    }
-    return hex
+    const { data } = await sharp(input)
+      .rotate()
+      .resize(DCT_SIZE, DCT_SIZE, { fit: 'fill' })
+      .greyscale()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    return { phash: dctHash(data), aspectRatio }
   } catch {
     return null
   }
+}
+
+const DCT_SIZE = 32
+const HASH_SIZE = 8
+const COSINES = Array.from({ length: HASH_SIZE }, (_, k) =>
+  Array.from({ length: DCT_SIZE }, (_, n) => Math.cos(((2 * n + 1) * k * Math.PI) / (2 * DCT_SIZE)))
+)
+
+/** 32x32 grayscale bytes -> 16 hex chars. */
+export function dctHash(pixels: Uint8Array): string {
+  const coefficients: number[] = []
+  for (let u = 0; u < HASH_SIZE; u += 1) {
+    for (let v = 0; v < HASH_SIZE; v += 1) {
+      let sum = 0
+      for (let y = 0; y < DCT_SIZE; y += 1) {
+        for (let x = 0; x < DCT_SIZE; x += 1) {
+          sum += pixels[y * DCT_SIZE + x] * COSINES[u][y] * COSINES[v][x]
+        }
+      }
+      coefficients.push(sum)
+    }
+  }
+  // The DC term (overall brightness) is left out of the median.
+  const ac = coefficients.slice(1).sort((a, b) => a - b)
+  const median = ac[Math.floor(ac.length / 2)]
+
+  let hex = ''
+  for (let i = 0; i < coefficients.length; i += 4) {
+    let nibble = 0
+    for (let bit = 0; bit < 4; bit += 1) {
+      nibble = (nibble << 1) | (coefficients[i + bit] > median ? 1 : 0)
+    }
+    hex += nibble.toString(16)
+  }
+  return hex
 }
 
 /** Number of differing bits between two same-length hex hashes; Infinity if the lengths don't match. */
@@ -83,5 +120,19 @@ export function hammingDistance(hashA: string, hashB: string): number {
   return distance
 }
 
-/** Out of 64 bits - conservative enough to flag recompressions/resizes without too many false positives. */
-export const PHASH_SIMILAR_THRESHOLD = 10
+/**
+ * Out of 64 bits. Tuned on a real ~1000-picture library: up to 12 still
+ * catches recompressions, resizes and a post's near-identical pages, and past
+ * it unrelated pictures start to show up.
+ */
+export const PHASH_SIMILAR_THRESHOLD = 12
+
+/**
+ * Copies keep their shape: two pictures whose aspect ratios differ by more
+ * than ~3% aren't the same picture, however close their hashes (the hash
+ * squashes both into a square). 0 means "unknown" and doesn't filter.
+ */
+export function sameShape(ratioA: number | null, ratioB: number | null): boolean {
+  if (!ratioA || !ratioB) return true
+  return Math.abs(Math.log(ratioA / ratioB)) <= 0.03
+}

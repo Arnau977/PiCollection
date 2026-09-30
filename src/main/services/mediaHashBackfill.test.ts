@@ -5,6 +5,7 @@ import { join } from 'path'
 import { tmpdir } from 'os'
 import type { Kysely } from 'kysely'
 import type { DB } from '../database/schema'
+import sharp from 'sharp'
 
 const createThumbnailFromPath = vi.fn()
 const createFromPath = vi.fn()
@@ -72,8 +73,8 @@ beforeEach(async () => {
   // its own fresh userData dir rather than an earlier test's cached value.
   resetSourceFolderCache()
   createThumbnailFromPath.mockReset().mockResolvedValue(fakeThumbnail())
-  // Always empty -> computePerceptualHash short-circuits to null; the
-  // dHash math itself is already covered by mediaHash.test.ts.
+  // Always empty -> no thumbnail fallback; files that are real images are
+  // decoded by sharp directly (the hash math is covered by mediaHash.test.ts).
   createFromPath.mockReset().mockReturnValue(emptyImage())
   createFromBitmap.mockReset().mockReturnValue(emptyImage())
   createFromBuffer.mockReset().mockReturnValue(emptyImage())
@@ -129,6 +130,32 @@ describe('backfillMediaHashes', () => {
 
     const updated = await mediaRepo.findMediaRowById(db, row.id)
     expect(updated?.hash).toMatch(/^[0-9a-f]{64}$/)
+  })
+
+  // After migration 0018 cleared every phash: the file is decoded again, but
+  // not re-read for SHA-256; an undecodable one isn't retried.
+  it('fills in the fingerprint of an already-hashed row, once', async () => {
+    const picture = join(sourceDir, 'pic.png')
+    const text = join(sourceDir, 'notes.png')
+    await sharp({ create: { width: 200, height: 100, channels: 3, background: '#c33' } })
+      .png()
+      .toFile(picture)
+    await fs.writeFile(text, 'not an image')
+    const pictureRow = await insertRow(picture, 'precomputed')
+    const textRow = await insertRow(text, 'precomputed-too')
+
+    await backfillMediaHashes()
+
+    expect(await mediaRepo.findMediaRowById(db, pictureRow.id)).toMatchObject({
+      hash: 'precomputed',
+      phash: expect.stringMatching(/^[0-9a-f]{16}$/),
+      aspect_ratio: 2
+    })
+    expect(await mediaRepo.findMediaRowById(db, textRow.id)).toMatchObject({
+      phash: null,
+      aspect_ratio: 0
+    })
+    expect(await mediaRepo.listMediaRowsMissingFingerprint(db, 10)).toEqual([])
   })
 
   it('leaves rows that already have a hash untouched', async () => {

@@ -3,83 +3,42 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { promises as fs } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
+import sharp from 'sharp'
 
-const createThumbnailFromPath = vi.fn()
-const createFromPath = vi.fn()
-const createFromBitmap = vi.fn()
-const createFromBuffer = vi.fn()
-let userDataDir = ''
-
-vi.mock('electron', () => ({
-  app: { getPath: () => userDataDir },
-  nativeImage: {
-    createThumbnailFromPath: (...args: unknown[]) => createThumbnailFromPath(...args),
-    createFromPath: (...args: unknown[]) => createFromPath(...args),
-    createFromBitmap: (...args: unknown[]) => createFromBitmap(...args),
-    createFromBuffer: (...args: unknown[]) => createFromBuffer(...args)
-  }
+const resolveThumbnail = vi.fn()
+vi.mock('../thumbnails/thumbnails', () => ({
+  resolveThumbnail: (...args: unknown[]) => resolveThumbnail(...args)
 }))
 
-const { computeFileHash, computePerceptualHash, hammingDistance } = await import('./mediaHash')
-
-/** Fake NativeImage returned by the shell thumbnail provider - always succeeds. */
-function fakeThumbnail(): unknown {
-  return {
-    isEmpty: () => false,
-    getSize: () => ({ width: 480, height: 480 }),
-    resize: () => fakeThumbnail(),
-    toPNG: () => Buffer.from('fake-png-bytes')
-  }
-}
-
-function emptyImage(): unknown {
-  return { isEmpty: () => true }
-}
-
-/** BGRA buffer, brightness only a function of `x` so every row's dHash bits are identical. */
-function gradientBitmap(
-  width: number,
-  height: number,
-  brightnessAt: (x: number) => number
-): Buffer {
-  const buf = Buffer.alloc(width * height * 4)
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      const o = (y * width + x) * 4
-      const v = brightnessAt(x)
-      buf[o] = v
-      buf[o + 1] = v
-      buf[o + 2] = v
-      buf[o + 3] = 255
-    }
-  }
-  return buf
-}
-
-function fakeDecodedImage(bitmap: Buffer, width: number, height: number): unknown {
-  return {
-    isEmpty: () => false,
-    getSize: () => ({ width, height }),
-    resize: () => fakeDecodedImage(bitmap, width, height),
-    toBitmap: () => bitmap
-  }
-}
+const { computeFileHash, computePerceptualHash, hammingDistance, sameShape } = await import(
+  './mediaHash'
+)
 
 let sourceDir = ''
 
 beforeEach(async () => {
   sourceDir = await fs.mkdtemp(join(tmpdir(), 'media-hash-src-'))
-  userDataDir = await fs.mkdtemp(join(tmpdir(), 'media-hash-cache-'))
-  createThumbnailFromPath.mockReset().mockResolvedValue(fakeThumbnail())
-  createFromPath.mockReset().mockReturnValue(emptyImage())
-  createFromBitmap.mockReset().mockReturnValue(emptyImage())
-  createFromBuffer.mockReset().mockReturnValue(emptyImage())
+  resolveThumbnail.mockReset().mockResolvedValue(null)
 })
 
 afterEach(async () => {
   await fs.rm(sourceDir, { recursive: true, force: true })
-  await fs.rm(userDataDir, { recursive: true, force: true })
 })
+
+/** A white 300x400 canvas with dark shapes on it, like a figure on a plain background. */
+function figure(shapes: string): sharp.Sharp {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400">
+    <rect width="300" height="400" fill="#fff"/>${shapes}</svg>`
+  return sharp(Buffer.from(svg))
+}
+// Off-center like a real illustration: a perfectly symmetric shape leaves
+// many DCT terms at exactly zero, right on the median, where noise flips them.
+const STANDING =
+  '<rect x="95" y="70" width="55" height="310" fill="#222"/>' +
+  '<circle cx="130" cy="55" r="32" fill="#c33"/><rect x="190" y="240" width="70" height="40" fill="#36c"/>'
+const SITTING =
+  '<ellipse cx="90" cy="300" rx="80" ry="60" fill="#222"/>' +
+  '<circle cx="220" cy="120" r="50" fill="#36c"/>'
 
 describe('computeFileHash', () => {
   it('matches a manually computed SHA-256 of the file contents', async () => {
@@ -95,48 +54,68 @@ describe('computeFileHash', () => {
 })
 
 describe('computePerceptualHash', () => {
-  it('returns null when no thumbnail can be produced', async () => {
+  it('matches the same picture across PNG, WebP and a smaller JPEG', async () => {
+    const png = join(sourceDir, 'pic.png')
+    const webp = join(sourceDir, 'pic.webp')
+    const jpeg = join(sourceDir, 'small.jpg')
+    await figure(STANDING).png().toFile(png)
+    await figure(STANDING).webp({ quality: 70 }).toFile(webp)
+    await figure(STANDING).resize(150).jpeg({ quality: 60 }).toFile(jpeg)
+
+    const [a, b, c] = await Promise.all([png, webp, jpeg].map(computePerceptualHash))
+
+    expect(a?.phash).toMatch(/^[0-9a-f]{16}$/)
+    expect(a?.aspectRatio).toBeCloseTo(0.75)
+    expect(hammingDistance(a!.phash, b!.phash)).toBeLessThanOrEqual(4)
+    expect(hammingDistance(a!.phash, c!.phash)).toBeLessThanOrEqual(4)
+    expect(sameShape(a!.aspectRatio, c!.aspectRatio)).toBe(true)
+  })
+
+  // The old 9x8 difference hash saw two figures on white as near-identical.
+  it('keeps two different figures on the same white background apart', async () => {
+    const standing = join(sourceDir, 'standing.png')
+    const sitting = join(sourceDir, 'sitting.png')
+    await figure(STANDING).png().toFile(standing)
+    await figure(SITTING).png().toFile(sitting)
+
+    const [a, b] = await Promise.all([standing, sitting].map(computePerceptualHash))
+
+    expect(hammingDistance(a!.phash, b!.phash)).toBeGreaterThan(12)
+  })
+
+  it('falls back to the thumbnail when the file itself is not an image (a video)', async () => {
+    const video = join(sourceDir, 'clip.mp4')
+    const thumb = join(sourceDir, 'thumb.png')
+    await fs.writeFile(video, 'not an image')
+    await figure(STANDING).png().toFile(thumb)
+    resolveThumbnail.mockResolvedValue(thumb)
+
+    expect((await computePerceptualHash(video))?.aspectRatio).toBeCloseTo(0.75)
+  })
+
+  it('returns null when neither the file nor a thumbnail can be decoded', async () => {
     const file = join(sourceDir, 'not-an-image.txt')
     await fs.writeFile(file, 'not actually an image')
-    createThumbnailFromPath.mockRejectedValue(new Error('unsupported'))
-    createFromPath.mockReturnValue(emptyImage())
 
     expect(await computePerceptualHash(file)).toBeNull()
-  })
-
-  it('returns a 16-char hex dHash for a decodable thumbnail', async () => {
-    const file = join(sourceDir, 'pic.png')
-    await fs.writeFile(file, 'x')
-    const ascending = gradientBitmap(9, 8, (x) => x * 20)
-    createFromPath.mockReturnValue(fakeDecodedImage(ascending, 9, 8))
-
-    const hash = await computePerceptualHash(file)
-    expect(hash).toMatch(/^[0-9a-f]{16}$/)
-    // Strictly ascending brightness -> every pixel is dimmer than its right
-    // neighbor, so every "brighter than the right neighbor" bit is 0.
-    expect(hash).toBe('0'.repeat(16))
-  })
-
-  it('produces the inverse hash for a descending gradient', async () => {
-    const file = join(sourceDir, 'pic2.png')
-    await fs.writeFile(file, 'x')
-    const descending = gradientBitmap(9, 8, (x) => 160 - x * 20)
-    createFromPath.mockReturnValue(fakeDecodedImage(descending, 9, 8))
-
-    expect(await computePerceptualHash(file)).toBe('f'.repeat(16))
   })
 })
 
 describe('hammingDistance', () => {
-  it('is 0 for identical hashes', () => {
-    expect(hammingDistance('0123abcd', '0123abcd')).toBe(0)
-  })
-
   it('counts every differing bit', () => {
+    expect(hammingDistance('0123abcd', '0123abcd')).toBe(0)
     expect(hammingDistance('0'.repeat(16), 'f'.repeat(16))).toBe(64)
   })
 
   it('is infinite for mismatched lengths', () => {
     expect(hammingDistance('00', '000')).toBe(Number.POSITIVE_INFINITY)
+  })
+})
+
+describe('sameShape', () => {
+  it('tells a portrait from a near-square picture, and ignores unknown ratios', () => {
+    expect(sameShape(0.667, 0.827)).toBe(false)
+    expect(sameShape(0.7, 0.71)).toBe(true)
+    expect(sameShape(0, 1.5)).toBe(true)
   })
 })

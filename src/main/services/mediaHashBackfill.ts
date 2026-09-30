@@ -31,10 +31,37 @@ export async function backfillMediaHashes(): Promise<void> {
     for (const row of rows) {
       const resolvedRoute = resolveRoute(row.route, sourceFolder)
       const hash = await computeFileHash(resolvedRoute)
-      const phash = hash ? await computePerceptualHash(resolvedRoute) : null
-      await mediaRepo.setMediaHash(db, row.id, hash ?? '', phash)
+      const fingerprint = hash ? await computePerceptualHash(resolvedRoute) : null
+      await mediaRepo.setMediaHash(
+        db,
+        row.id,
+        hash ?? '',
+        fingerprint?.phash ?? null,
+        hash ? (fingerprint?.aspectRatio ?? 0) : null
+      )
       processed += 1
       if (!hash) unavailable += 1
+    }
+
+    await new Promise((resolve) => setImmediate(resolve))
+  }
+
+  // Rows already hashed but without a fingerprint (all of them right after
+  // migration 0018 replaced the old hash). An undecodable file gets aspect
+  // ratio 0, so it isn't retried on every start.
+  for (;;) {
+    const rows = await mediaRepo.listMediaRowsMissingFingerprint(db, BATCH_SIZE)
+    if (rows.length === 0) break
+
+    for (const row of rows) {
+      const fingerprint = await computePerceptualHash(resolveRoute(row.route, sourceFolder))
+      await mediaRepo.setMediaFingerprint(
+        db,
+        row.id,
+        fingerprint?.phash ?? null,
+        fingerprint?.aspectRatio ?? 0
+      )
+      processed += 1
     }
 
     await new Promise((resolve) => setImmediate(resolve))
