@@ -42,7 +42,15 @@ export function Lightbox({ src, type, alt, route, onClose }: LightboxProps): JSX
   }
 
   return (
-    <div className="lightbox-backdrop" onClick={handleBackdropClick}>
+    // aria-modal also tells useShortcut the keyboard is ours: Esc closes this,
+    // not the page behind it (e.g. the batch import's exit dialog).
+    <div
+      className="lightbox-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label={alt}
+      onClick={handleBackdropClick}
+    >
       <div className="lightbox-actions">
         {canZoom && <ZoomControls zoom={zoom} />}
         <MediaFileActions route={route} type={type} />
