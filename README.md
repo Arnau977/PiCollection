@@ -50,6 +50,14 @@ required.
   send all the remaining ones to Pending at once. Files come folder by
   folder, oldest-modified first, so pictures saved together stay together.
   Going back to a file you already saved reopens it for editing.
+  Delete takes a file out of the queue; files you discarded earlier are
+  skipped (with a count) the next time you import their folder.
+- **Discarded files** — deleting media (from the gallery, the pending queue
+  or a batch import) never touches the file on disk: it's listed under
+  Manage > Discarded with where it lives, why and when. From there each file
+  can go to the Recycle Bin, one by one or all at once, or be kept where it
+  is (it just leaves the list). Adding the same file again takes it off the
+  list.
 - **Video to GIF** — "Make GIF" on a video's page turns a clip of up to 10
   seconds into a GIF, entirely on your device. Presets fit Discord (≤ 10 MB)
   or X/Twitter (≤ 15 MB), re-encoding smaller until the file fits, or keep

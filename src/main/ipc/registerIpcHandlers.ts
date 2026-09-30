@@ -17,6 +17,7 @@ import { registerMediaMaintenanceHandlers } from './mediaMaintenance.handlers'
 import { registerSourceFolderHandlers } from './sourceFolder.handlers'
 import { registerExtensionBridgeHandlers } from './extensionBridge.handlers'
 import { registerLoggingHandlers } from './logging.handlers'
+import { registerDiscardedMediaHandlers } from './discardedMedia.handlers'
 
 export function registerIpcHandlers(): void {
   registerMediaHandlers()
@@ -38,4 +39,5 @@ export function registerIpcHandlers(): void {
   registerSourceFolderHandlers()
   registerExtensionBridgeHandlers()
   registerLoggingHandlers()
+  registerDiscardedMediaHandlers()
 }

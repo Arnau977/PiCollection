@@ -14,7 +14,9 @@ import type {
   DanbooruCharacterInfo,
   DanbooruTagSuggestion,
   EntitiesChangedEvent,
-  ExpandedMediaFile,
+  ExpandedSelection,
+  DiscardedMediaModel,
+  DiscardFileInput,
   ExtensionBridgeStatus,
   MediaBatchUpdateAssociationsInput,
   MediaDuplicateCheck,
@@ -201,8 +203,18 @@ export const api = {
     expandSelection: (selection: {
       files: string[]
       folders: string[]
-    }): Promise<IpcResult<ExpandedMediaFile[]>> =>
+    }): Promise<IpcResult<ExpandedSelection>> =>
       ipcRenderer.invoke(IPC.sourceFolder.expandSelection, selection)
+  },
+  discardedMedia: {
+    list: (): Promise<IpcResult<DiscardedMediaModel[]>> =>
+      ipcRenderer.invoke(IPC.discardedMedia.list),
+    discardFile: (input: DiscardFileInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.discardedMedia.discardFile, input),
+    trashFiles: (ids: string[]): Promise<IpcResult<{ trashed: number; failed: number }>> =>
+      ipcRenderer.invoke(IPC.discardedMedia.trashFiles, ids),
+    keepFile: (id: string): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.discardedMedia.keepFile, id)
   },
   extensionBridge: {
     getStatus: (): Promise<IpcResult<ExtensionBridgeStatus>> =>

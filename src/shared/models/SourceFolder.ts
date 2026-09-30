@@ -45,3 +45,10 @@ export interface ExpandedMediaFile {
   fileName: string
   type: 'image' | 'video' | 'gif'
 }
+
+/** A batch import's files, minus those already cataloged or discarded earlier. */
+export interface ExpandedSelection {
+  files: ExpandedMediaFile[]
+  /** Left out because they're in the Discarded list. */
+  skippedDiscarded: number
+}

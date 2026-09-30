@@ -39,7 +39,8 @@ export function ImportQueue({
   // saved; and going back to a saved item reopens it in edit mode - as a new
   // file it would be flagged as a duplicate of itself and refuse to save.
   const [saved, setSaved] = useState<ReadonlyMap<string, MediaModel>>(() => new Map())
-  const [showSentToPendingToast, setShowSentToPendingToast] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   // Set for the whole duration of the "add remaining to pending" bulk create.
   // While it's true a full-screen overlay blocks every control (Close, Next,
   // Previous, the form itself) so the batch can't be re-triggered or the
@@ -57,7 +58,11 @@ export function ImportQueue({
         setState({ kind: 'error', message: result.error.message })
         return
       }
-      setState({ kind: 'ready', items: result.data, index: 0 })
+      setState({ kind: 'ready', items: result.data.files, index: 0 })
+      const { skippedDiscarded } = result.data
+      if (skippedDiscarded > 0) {
+        setToast(t('importQueue.skippedDiscarded', { count: skippedDiscarded }))
+      }
     })
     return () => {
       cancelled = true
@@ -117,8 +122,47 @@ export function ImportQueue({
   // saved-and-ready-to-review the way onLastSaved expects (the whole point
   // was deferring review), so this just closes the queue instead.
   function handleSentToPending(): void {
-    setShowSentToPendingToast(true)
+    setToast(t('importQueue.sentToPending'))
     goToNextOrFinish(onClose)
+  }
+
+  // Takes the current file out of the queue and lists it under Manage >
+  // Discarded (the file stays on disk). One saved earlier in this session is
+  // deleted as media, which records it the same way.
+  async function handleDeleteCurrent(): Promise<void> {
+    if (busy || deleting) return
+    const ok = await confirm({ message: t('media.confirmDelete'), danger: true })
+    if (!ok) return
+    setDeleting(true)
+    const result = currentSaved
+      ? await window.api.media.delete(currentSaved.id)
+      : await window.api.discardedMedia.discardFile({
+          route: current.route,
+          name: deriveMediaName(current.fileName),
+          type: current.type
+        })
+    setDeleting(false)
+    if (!result.success) {
+      setToast(result.error.message)
+      return
+    }
+    setSaved((prev) => {
+      const next = new Map(prev)
+      next.delete(current.route)
+      return next
+    })
+    const rest = items.filter((_, i) => i !== index)
+    if (rest.length === 0) {
+      onClose()
+      return
+    }
+    const nextIndex = Math.min(index, rest.length - 1)
+    setState({
+      kind: 'ready',
+      items: rest,
+      index: nextIndex,
+      openedMedia: saved.get(rest[nextIndex].route)
+    })
   }
 
   // Going back re-shows the file's own picked route (`key={current.route}`
@@ -210,13 +254,10 @@ export function ImportQueue({
         onCancel={handleCloseClick}
         onSaved={handleSaved}
         onSentToPending={handleSentToPending}
+        onDelete={() => void handleDeleteCurrent()}
+        deleting={deleting}
       />
-      {showSentToPendingToast && (
-        <Toast
-          message={t('importQueue.sentToPending')}
-          onDismiss={() => setShowSentToPendingToast(false)}
-        />
-      )}
+      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
       {showExitDialog && (
         <ImportQueueExitDialog
           remaining={remaining}

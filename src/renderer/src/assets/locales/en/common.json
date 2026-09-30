@@ -186,7 +186,7 @@
     "clearSelection": "Clear selection",
     "deleteSelected": "Delete selected",
     "editMetadata": "Edit metadata",
-    "confirmDeleteSelected": "Remove {{count}} selected media from PiCollection? The files on disk won't be deleted.",
+    "confirmDeleteSelected": "Remove {{count}} selected media from PiCollection? The files stay on disk and are listed under Manage > Discarded.",
     "pagination": {
       "previous": "Previous",
       "next": "Next",
@@ -273,7 +273,7 @@
     "saving": "Saving...",
     "markResolved": "Mark resolved",
     "saveAndResolve": "Save & mark resolved",
-    "confirmDelete": "Remove this media from PiCollection? The file on disk won't be deleted.",
+    "confirmDelete": "Remove this media from PiCollection? The file stays on disk and is listed under Manage > Discarded.",
     "aiGeneratedTitle": "Generated using AI",
     "aiGeneratedBadge": "AI",
     "addedOnTitle": "Added on {{date}}",
@@ -367,7 +367,9 @@
     "exitDialogDiscard": "Discard",
     "exitDialogKeepEditing": "Keep editing",
     "addingToPending_one": "Adding {{count}} file to Pending…",
-    "addingToPending_other": "Adding {{count}} files to Pending…"
+    "addingToPending_other": "Adding {{count}} files to Pending…",
+    "skippedDiscarded_one": "Skipped 1 file you discarded earlier (Manage > Discarded).",
+    "skippedDiscarded_other": "Skipped {{count}} files you discarded earlier (Manage > Discarded)."
   },
   "folderBrowser": {
     "root": "Source folder",
@@ -534,6 +536,25 @@
       "discord": "Discord (≤ {{size}} MB)",
       "x": "X / Twitter (≤ {{size}} MB)",
       "gallery": "Gallery (best quality)"
+    }
+  },
+  "discarded": {
+    "tab": "Discarded",
+    "intro": "Files taken out of PiCollection that are still on disk. Move them to the Recycle Bin, or keep them where they are (they're no longer listed here, and a batch import can offer them again).",
+    "empty": "Nothing discarded",
+    "keep": "Keep file",
+    "keepHint": "Leave the file on disk and remove it from this list",
+    "trash": "Move to Recycle Bin",
+    "trashAll_one": "Move the file to the Recycle Bin",
+    "trashAll_other": "Move all {{count}} to the Recycle Bin",
+    "trashAllConfirm_one": "Move the discarded file to the Recycle Bin?",
+    "trashAllConfirm_other": "Move the {{count}} discarded files to the Recycle Bin?",
+    "trashFailed_one": "One file couldn't be moved to the Recycle Bin; it's still listed.",
+    "trashFailed_other": "{{count}} files couldn't be moved to the Recycle Bin; they're still listed.",
+    "working": "Working...",
+    "reason": {
+      "deleted": "Deleted {{date}}",
+      "replaced": "Replaced {{date}}"
     }
   }
 }

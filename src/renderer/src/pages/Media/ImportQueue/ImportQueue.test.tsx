@@ -9,6 +9,7 @@ const mediaCreate = vi.fn()
 const mediaCreateMany = vi.fn()
 const checkDuplicate = vi.fn()
 const confirmMock = vi.fn()
+const discardFile = vi.fn()
 
 vi.mock('../../../components/ConfirmDialog/ConfirmDialogContext', () => ({
   useConfirm: () => confirmMock
@@ -16,6 +17,7 @@ vi.mock('../../../components/ConfirmDialog/ConfirmDialogContext', () => ({
 
 beforeEach(() => {
   expandSelection.mockReset()
+  discardFile.mockReset().mockResolvedValue({ success: true, data: undefined })
   mediaCreate.mockReset().mockResolvedValue({ success: true, data: { id: 'm1' } })
   mediaCreateMany
     .mockReset()
@@ -26,6 +28,7 @@ beforeEach(() => {
   Object.defineProperty(window, 'api', {
     value: {
       sourceFolder: { expandSelection },
+      discardedMedia: { discardFile },
       media: {
         create: mediaCreate,
         createMany: mediaCreateMany,
@@ -62,10 +65,13 @@ vi.mock('../../../hooks/useEntityLists', () => ({
 function renderQueue(onClose = vi.fn(), onLastSaved = vi.fn()) {
   expandSelection.mockResolvedValue({
     success: true,
-    data: [
-      { route: '/src/a.png', fileName: 'a.png', type: 'image' },
-      { route: '/src/b.png', fileName: 'b.png', type: 'image' }
-    ]
+    data: {
+      files: [
+        { route: '/src/a.png', fileName: 'a.png', type: 'image' },
+        { route: '/src/b.png', fileName: 'b.png', type: 'image' }
+      ],
+      skippedDiscarded: 0
+    }
   })
   return render(
     <MemoryRouter>
@@ -101,6 +107,18 @@ describe('ImportQueue', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
     expect(await screen.findByText('File 2 of 2')).toBeInTheDocument()
+  })
+
+  it('deleting an unsaved file records it as discarded and shows the next one in its place', async () => {
+    confirmMock.mockResolvedValue(true)
+    renderQueue()
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByText('File 1 of 1')).toBeInTheDocument()
+    expect(discardFile).toHaveBeenCalledWith({ route: '/src/a.png', name: 'a', type: 'image' })
+    await vi.waitFor(() => expect(checkDuplicate).toHaveBeenCalledWith('/src/b.png'))
   })
 
   it('sending an item to Pending advances to the next file automatically', async () => {
@@ -399,7 +417,10 @@ describe('ImportQueue', () => {
 
   it('shows an empty message and a Close button, with no form, when the expansion has no files', async () => {
     const onClose = vi.fn()
-    expandSelection.mockResolvedValue({ success: true, data: [] })
+    expandSelection.mockResolvedValue({
+      success: true,
+      data: { files: [], skippedDiscarded: 0 }
+    })
 
     const { container } = render(
       <MemoryRouter>

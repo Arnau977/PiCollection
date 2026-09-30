@@ -155,7 +155,7 @@ describe('sourceFolderBrowserService.expandSelection', () => {
       folders: []
     })
 
-    expect(result).toEqual([{ route: join(sourceDir, 'a.png'), fileName: 'a.png', type: 'image' }])
+    expect(result.files).toEqual([{ route: join(sourceDir, 'a.png'), fileName: 'a.png', type: 'image' }])
   })
 
   it('expands a selected folder recursively, skipping unsupported files', async () => {
@@ -166,13 +166,13 @@ describe('sourceFolderBrowserService.expandSelection', () => {
 
     const result = await sourceFolderBrowserService.expandSelection({ files: [], folders: ['sub'] })
 
-    expect(result).toEqual(
+    expect(result.files).toEqual(
       expect.arrayContaining([
         { route: join(sourceDir, 'sub', 'a.png'), fileName: 'a.png', type: 'image' },
         { route: join(sourceDir, 'sub', 'deep', 'b.mp4'), fileName: 'b.mp4', type: 'video' }
       ])
     )
-    expect(result).toHaveLength(2)
+    expect(result.files).toHaveLength(2)
   })
 
   it('excludes files already cataloged in the DB, even inside a recursively selected folder', async () => {
@@ -183,7 +183,7 @@ describe('sourceFolderBrowserService.expandSelection', () => {
 
     const result = await sourceFolderBrowserService.expandSelection({ files: [], folders: ['sub'] })
 
-    expect(result).toEqual([
+    expect(result.files).toEqual([
       { route: join(sourceDir, 'sub', 'b.png'), fileName: 'b.png', type: 'image' }
     ])
   })
@@ -207,7 +207,7 @@ describe('sourceFolderBrowserService.expandSelection', () => {
       folders: ['set 10', 'set 2']
     })
 
-    expect(result.map((file) => file.fileName)).toEqual([
+    expect(result.files.map((file) => file.fileName)).toEqual([
       'oldest.png',
       'middle.png',
       'newest.png',
@@ -224,6 +224,6 @@ describe('sourceFolderBrowserService.expandSelection', () => {
       folders: ['sub']
     })
 
-    expect(result).toHaveLength(1)
+    expect(result.files).toHaveLength(1)
   })
 })

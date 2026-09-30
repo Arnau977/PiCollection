@@ -3,11 +3,12 @@ import { basename, dirname, extname, join, normalize } from 'path'
 import type { Kysely } from 'kysely'
 import { getDb } from '../database/connection'
 import * as mediaRepo from '../database/repositories/media.repository'
+import * as discardedRepo from '../database/repositories/discardedMedia.repository'
 import type { DB } from '../database/schema'
 import { AppError } from '../errors'
 import { isPathUnderRoot } from './pathPrefix'
 import { readSourceFolder, relativizeRoute, resolveRoute } from './sourceFolder'
-import type { ExpandedMediaFile, SourceFolderBrowseResult } from '@shared/models'
+import type { ExpandedSelection, SourceFolderBrowseResult } from '@shared/models'
 
 type MediaType = 'image' | 'video' | 'gif'
 
@@ -179,7 +180,7 @@ export const sourceFolderBrowserService = {
   async expandSelection(input: {
     files: string[]
     folders: string[]
-  }): Promise<ExpandedMediaFile[]> {
+  }): Promise<ExpandedSelection> {
     const sourceFolder = requireSourceFolder()
 
     const looseFiles: FileCandidate[] = input.files
@@ -209,12 +210,17 @@ export const sourceFolderBrowserService = {
       relativizeRoute(candidate.absolutePath, sourceFolder)
     )
     const catalogedRoutes = await mediaRepo.routesExist(getDb(), relativeRoutes)
+    const discarded = await discardedRepo.discardedRoutes(getDb(), relativeRoutes)
 
     const uncataloged = candidates.filter((_, index) => !catalogedRoutes.has(relativeRoutes[index]))
-    return (await sortForImport(uncataloged)).map((candidate) => ({
+    const kept = uncataloged.filter(
+      (candidate) => !discarded.has(relativizeRoute(candidate.absolutePath, sourceFolder))
+    )
+    const files = (await sortForImport(kept)).map((candidate) => ({
       route: candidate.absolutePath,
       fileName: candidate.fileName,
       type: candidate.type
     }))
+    return { files, skippedDiscarded: uncataloged.length - kept.length }
   }
 }
