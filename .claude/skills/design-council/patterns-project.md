@@ -65,6 +65,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
 - **Confirm before bulk or destructive actions** with the shared dialog
   (`useConfirm`); name the count in the message and on the button. Where:
   `src/renderer/src/components/ConfirmDialog/ConfirmDialogContext.tsx`.
+- **Deleting never touches the file; files are cleaned up from Manage >
+  Discarded.** Delete (gallery, pending, batch import - same danger button
+  slot at the end of the edit form's bar, same confirm) records the file;
+  the Discarded tab (plain accent, not a category color) lists it with
+  "Keep file" / "Move to Recycle Bin" per row and a bulk "Move all N" behind
+  a confirm, one sequential IPC call, all buttons locked while it runs.
+  Where: `DiscardedManager.tsx`, `ImportQueue.tsx`.
 - **Block the UI during bulk async work**: a full-screen busy overlay with a
   spinner, plus a ref guard against double clicks. It was added after
   re-entrancy created hundreds of duplicate rows. Where:

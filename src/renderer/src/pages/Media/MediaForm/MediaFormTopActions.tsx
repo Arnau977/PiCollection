@@ -186,7 +186,8 @@ export function MediaFormTopActions({
             />
           </button>
         </div>
-        {media?.pendingTagging && onDelete && (
+        {/* Pending media, or any batch-import item (saved or not). */}
+        {(media?.pendingTagging || queueInfo) && onDelete && (
           <>
             <div className="action-divider" />
             <button

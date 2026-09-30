@@ -8,6 +8,8 @@ import * as characterRepo from '../database/repositories/character.repository'
 import * as seriesRepo from '../database/repositories/series.repository'
 import { buildClosureMap } from '../database/repositories/entityHierarchy'
 import { AppError } from '../errors'
+import * as discardedRepo from '../database/repositories/discardedMedia.repository'
+import { recordDiscarded } from './discardedMedia.service'
 import {
   computeFileHash,
   computePerceptualHash,
@@ -352,14 +354,17 @@ export const mediaService = {
     }
 
     const id = randomUUID()
+    const route = relativizeRoute(input.route, sourceFolder)
     await db.transaction().execute(async (trx) => {
+      // Back in the app, so no longer discarded.
+      await discardedRepo.deleteDiscardedByRoute(trx, route)
       await mediaRepo.insertMediaRow(trx, {
         id,
         name: input.name,
         sfw: input.sfw ? 1 : 0,
         is_ai_generated: input.isAiGenerated ? 1 : 0,
         type: input.type,
-        route: relativizeRoute(input.route, sourceFolder),
+        route,
         alias: input.alias ?? null,
         source_url: input.sourceUrl ?? null,
         artist_id: input.artistId ?? null,
@@ -481,8 +486,14 @@ export const mediaService = {
     if (touchedKinds.length) notifyEntitiesChanged(touchedKinds)
   },
 
+  /** The file stays on disk; it's recorded in the Discarded list to clean up later. */
   async deleteMedia(id: string): Promise<void> {
-    await mediaRepo.deleteMediaRow(getDb(), id)
+    const db = getDb()
+    await db.transaction().execute(async (trx) => {
+      const row = await mediaRepo.findMediaRowById(trx, id)
+      if (row) await recordDiscarded(trx, row, 'deleted')
+      await mediaRepo.deleteMediaRow(trx, id)
+    })
     // The deleted media could have held any kind of association; not worth
     // fetching them first just to compute an exact subset.
     notifyEntitiesChanged(['tag', 'character', 'series', 'artist'])

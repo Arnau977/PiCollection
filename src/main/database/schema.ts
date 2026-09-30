@@ -98,6 +98,16 @@ export interface DanbooruCharacterCacheTable {
   fetched_at: number
 }
 
+/** See migration 0017. `route` is stored like media.route; `reason` is a DiscardReason. */
+export interface DiscardedMediaTable {
+  id: string
+  route: string
+  name: string
+  type: string
+  reason: string
+  discarded_at: number
+}
+
 export interface DB {
   artist: ArtistTable
   artist_social_link: ArtistSocialLinkTable
@@ -111,4 +121,5 @@ export interface DB {
   media_series: MediaSeriesTable
   tag_wiki_cache: TagWikiCacheTable
   danbooru_character_cache: DanbooruCharacterCacheTable
+  discarded_media: DiscardedMediaTable
 }

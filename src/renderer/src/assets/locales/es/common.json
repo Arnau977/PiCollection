@@ -186,7 +186,7 @@
     "clearSelection": "Deseleccionar todo",
     "deleteSelected": "Eliminar seleccionados",
     "editMetadata": "Editar metadatos",
-    "confirmDeleteSelected": "¿Quitar {{count}} medios seleccionados de PiCollection? Los archivos no se borrarán del disco.",
+    "confirmDeleteSelected": "¿Quitar {{count}} media seleccionados de PiCollection? Los archivos se quedan en el disco y aparecen en Gestionar > Eliminados.",
     "pagination": {
       "previous": "Anterior",
       "next": "Siguiente",
@@ -273,7 +273,7 @@
     "saving": "Guardando...",
     "markResolved": "Dar por válido",
     "saveAndResolve": "Guardar y dar por válido",
-    "confirmDelete": "¿Quitar este medio de PiCollection? El archivo no se borrará del disco.",
+    "confirmDelete": "¿Quitar este media de PiCollection? El archivo se queda en el disco y aparece en Gestionar > Eliminados.",
     "aiGeneratedTitle": "Generado mediante IA",
     "aiGeneratedBadge": "IA",
     "addedOnTitle": "Añadido el {{date}}",
@@ -367,7 +367,9 @@
     "exitDialogDiscard": "Descartar",
     "exitDialogKeepEditing": "Seguir editando",
     "addingToPending_one": "Añadiendo {{count}} archivo a pendientes…",
-    "addingToPending_other": "Añadiendo {{count}} archivos a pendientes…"
+    "addingToPending_other": "Añadiendo {{count}} archivos a pendientes…",
+    "skippedDiscarded_one": "Se ha omitido 1 archivo que eliminaste antes (Gestionar > Eliminados).",
+    "skippedDiscarded_other": "Se han omitido {{count}} archivos que eliminaste antes (Gestionar > Eliminados)."
   },
   "folderBrowser": {
     "root": "Carpeta origen",
@@ -534,6 +536,25 @@
       "discord": "Discord (≤ {{size}} MB)",
       "x": "X / Twitter (≤ {{size}} MB)",
       "gallery": "Galería (máxima calidad)"
+    }
+  },
+  "discarded": {
+    "tab": "Eliminados",
+    "intro": "Archivos quitados de PiCollection que siguen en el disco. Muévelos a la papelera o déjalos donde están (dejan de aparecer aquí y un batch import puede volver a ofrecerlos).",
+    "empty": "No hay nada eliminado",
+    "keep": "Conservar archivo",
+    "keepHint": "Deja el archivo en el disco y lo quita de esta lista",
+    "trash": "Mover a la papelera",
+    "trashAll_one": "Mover el archivo a la papelera",
+    "trashAll_other": "Mover los {{count}} a la papelera",
+    "trashAllConfirm_one": "¿Mover el archivo eliminado a la papelera?",
+    "trashAllConfirm_other": "¿Mover los {{count}} archivos eliminados a la papelera?",
+    "trashFailed_one": "No se ha podido mover un archivo a la papelera; sigue en la lista.",
+    "trashFailed_other": "No se han podido mover {{count}} archivos a la papelera; siguen en la lista.",
+    "working": "Procesando...",
+    "reason": {
+      "deleted": "Eliminado el {{date}}",
+      "replaced": "Reemplazado el {{date}}"
     }
   }
 }

@@ -183,6 +183,14 @@ export const SourceFolderExpandSelectionSchema = z.object({
   folders: z.array(z.string())
 })
 
+export const DiscardFileSchema = z.object({
+  route: z.string().min(1),
+  name: z.string(),
+  type: z.enum(['image', 'video', 'gif'])
+})
+
+export const IdListSchema = z.array(z.string().min(1))
+
 export const ExtensionBridgeSetEnabledSchema = z.object({ enabled: z.boolean() })
 export const ExtensionBridgeSetBackgroundModeSchema = z.object({ enabled: z.boolean() })
 
@@ -268,6 +276,12 @@ export const IPC = {
     pickFile: 'maintenance:pick-file',
     relinkMissingFiles: 'maintenance:relink-missing-files',
     relinkOne: 'maintenance:relink-one'
+  },
+  discardedMedia: {
+    list: 'db:discarded-media:list',
+    discardFile: 'db:discarded-media:discard-file',
+    trashFiles: 'db:discarded-media:trash-files',
+    keepFile: 'db:discarded-media:keep-file'
   },
   sourceFolder: {
     get: 'source-folder:get',
