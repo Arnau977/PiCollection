@@ -70,7 +70,7 @@ required.
   forms (Mythra finds Mythra (Pro Swimmer)), and a series its subseries.
   The crosshair on a selected chip switches that one to "only this one":
   media tagged with it directly, whether or not the form is there too.
-  The box at the start of a character or series chip flips it between
+  The box at the start of a tag, character or series chip flips it between
   included (check) and excluded (cross), e.g. Rex but not Pyra; excluding a
   character also leaves out its forms unless the crosshair is on.
 - **Fast thumbnails** — grid and list views load a small cached preview

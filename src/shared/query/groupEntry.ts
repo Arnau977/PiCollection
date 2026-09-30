@@ -1,5 +1,5 @@
 /**
- * A character/series filter group (`MediaFilters.characterGroups` etc.) holds
+ * A tag/character/series filter group (`MediaFilters.tagGroups` etc.) holds
  * entity ids, AND'd together. An entry prefixed with `-` is an exclusion:
  * `['mythra', '-pyra']` means "has Mythra and doesn't have Pyra". Entity ids
  * are UUIDs, so the prefix can't clash with a real id.

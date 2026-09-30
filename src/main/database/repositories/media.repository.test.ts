@@ -114,6 +114,34 @@ describe('media.repository tag/character grouped AND/OR filtering', () => {
     expect(result.map((r) => r.name)).toEqual(['ab'])
   })
 
+  it('excludes media carrying a "-" prefixed tag, also in a group with no included tags', async () => {
+    const tagA = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagA',
+      aliases_json: '[]',
+      created_at: Date.now()
+    })
+    const tagB = await tagRepo.insertTag(db, {
+      id: randomUUID(),
+      name: 'tagB',
+      aliases_json: '[]',
+      created_at: Date.now()
+    })
+    const onlyA = await insertMedia('onlyA')
+    const ab = await insertMedia('ab')
+    await insertMedia('none')
+    await mediaRepo.setMediaTags(db, onlyA.id, [tagA.id])
+    await mediaRepo.setMediaTags(db, ab.id, [tagA.id, tagB.id])
+
+    const withInclusion = await mediaRepo.findMediaRows(db, {
+      tagGroups: [[tagA.id, `-${tagB.id}`]]
+    })
+    const exclusionOnly = await mediaRepo.findMediaRows(db, { tagGroups: [[`-${tagB.id}`]] })
+
+    expect(withInclusion.map((r) => r.name)).toEqual(['onlyA'])
+    expect(exclusionOnly.map((r) => r.name).sort()).toEqual(['none', 'onlyA'])
+  })
+
   it('AND (single group) returns nothing when no single media has every requested tag', async () => {
     const tagA = await tagRepo.insertTag(db, {
       id: randomUUID(),
