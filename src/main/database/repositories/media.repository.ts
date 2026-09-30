@@ -31,7 +31,11 @@ function buildAndGroupSubquery(
   return sub
 }
 
-/** Combines a filter's OR-of-AND-groups into a single WHERE clause: media matching at least one group. */
+/**
+ * Combines a filter's OR-of-AND-groups into a single WHERE clause: media matching at least one
+ * group. An entry prefixed with `-` (see groupEntry.ts) is an exclusion: the media must not
+ * carry that id.
+ */
 function applyGroupedFilter<O>(
   qb: SelectQueryBuilder<DB, 'media', O>,
   db: Kysely<DB>,
@@ -44,9 +48,25 @@ function applyGroupedFilter<O>(
 
   return qb.where((eb) =>
     eb.or(
-      nonEmptyGroups.map((group) =>
-        eb('media.id', 'in', buildAndGroupSubquery(db, table, column, group))
-      )
+      nonEmptyGroups.map((group) => {
+        const entries = group.map(parseGroupEntry)
+        const included = entries.filter((e) => !e.excluded).map((e) => e.id)
+        const excluded = entries.filter((e) => e.excluded).map((e) => e.id)
+        return eb.and([
+          ...(included.length
+            ? [eb('media.id', 'in', buildAndGroupSubquery(db, table, column, included))]
+            : []),
+          ...(excluded.length
+            ? [
+                eb(
+                  'media.id',
+                  'not in',
+                  db.selectFrom(table).select('media_id').where(column, 'in', excluded)
+                )
+              ]
+            : [])
+        ])
+      })
     )
   )
 }

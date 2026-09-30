@@ -154,6 +154,7 @@ export function FilterBar({
             onChange={(tagGroups) =>
               onFiltersChange({ ...filters, tagGroups: normalizeGroups(tagGroups) })
             }
+            allowExclusion
             options={tags}
             getOptionLabel={getTagLabel}
             getOptionValue={(tag) => tag.id}
