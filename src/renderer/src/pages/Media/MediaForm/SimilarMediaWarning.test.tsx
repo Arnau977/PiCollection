@@ -9,7 +9,7 @@ function media(name: string, type: MediaModel['type'] = 'image'): MediaModel {
   return {
     id: name,
     type,
-    route: `C:/pics/${name}.png`,
+    route: `C:/pics/1790-${name}.png`,
     name,
     sfw: true,
     isAiGenerated: false,
@@ -18,9 +18,10 @@ function media(name: string, type: MediaModel['type'] = 'image'): MediaModel {
   }
 }
 
-const current = { route: 'C:/pics/new.png', name: 'This file', type: 'image' as const }
+const current = { route: 'C:/pics/1791-new.png', name: 'new.png', type: 'image' as const }
 
 describe('SimilarMediaWarning', () => {
+  // Named by file name, like the form's Location - not by media name.
   it('opens a full-size comparison with a movable divider when a match is clicked', async () => {
     const user = userEvent.setup()
     render(
@@ -31,9 +32,9 @@ describe('SimilarMediaWarning', () => {
       />
     )
 
-    await user.click(screen.getByRole('button', { name: 'Compare with "Other"' }))
+    await user.click(screen.getByRole('button', { name: 'Compare with "1790-Other.png"' }))
     const dialog = screen.getByRole('dialog', { name: 'Compare images' })
-    expect(dialog).toHaveTextContent('This file')
+    expect(dialog).toHaveTextContent('1791-new.png')
 
     const slider = screen.getByRole('slider', { name: 'Divider between the two images' })
     expect(slider).toHaveValue('50')
