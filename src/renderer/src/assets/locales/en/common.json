@@ -329,7 +329,10 @@
     "suggestionsTabsLabel": "Suggestion sources",
     "suggestionsTabSource": "Source",
     "suggestionsTabSauceNao": "SauceNAO",
-    "suggestionsTabWd14": "Local AI"
+    "suggestionsTabWd14": "Local AI",
+    "replace": "Replace with this file",
+    "replaceLabel": "Replace {{name}} with this file",
+    "replaceConfirm": "Replace \"{{name}}\" with this file? It keeps its tags, characters, series and date, and gains the ones in this form. \"{{name}}\" is listed under Manage > Discarded."
   },
   "aiMetadata": {
     "detected": "The file's metadata says it was made with {{generator}}.",
@@ -369,7 +372,8 @@
     "addingToPending_one": "Adding {{count}} file to Pending…",
     "addingToPending_other": "Adding {{count}} files to Pending…",
     "skippedDiscarded_one": "Skipped 1 file you discarded earlier (Manage > Discarded).",
-    "skippedDiscarded_other": "Skipped {{count}} files you discarded earlier (Manage > Discarded)."
+    "skippedDiscarded_other": "Skipped {{count}} files you discarded earlier (Manage > Discarded).",
+    "replaced": "Replaced the file of \"{{name}}\"."
   },
   "folderBrowser": {
     "root": "Source folder",

@@ -169,7 +169,10 @@ required.
   (e.g. a recompressed or resized copy) shows a non-blocking warning. The
   edit form and the detail page list visually similar media too; while
   editing, that includes other pending items, so duplicates inside an
-  import batch show up. In the add/edit form, hovering a similar item shows
+  import batch show up. "Replace with this file" on a similar item makes the
+  current file take its place: that media keeps its tags, characters, series
+  and date, gains what the form has, and its old file goes to Discarded.
+  In the add/edit form, hovering a similar item shows
   the whole picture, and clicking it opens a full-size comparison with a
   divider you drag across both images (images and GIFs); on the detail
   page, the compare button on a similar thumbnail does the same. The

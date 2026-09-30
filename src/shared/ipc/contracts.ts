@@ -45,6 +45,17 @@ export const MediaInputSchema = z.object({
 
 export const MediaCreateManySchema = z.array(MediaInputSchema).min(1)
 
+export const MediaReplaceSchema = z.object({
+  targetId: z.string().min(1),
+  route: z.string().min(1),
+  type: z.enum(['image', 'video', 'gif']),
+  sourceMediaId: z.string().min(1).optional(),
+  artistId: z.string().min(1).optional(),
+  tagIds: z.array(z.string().min(1)),
+  characterIds: z.array(z.string().min(1)),
+  seriesIds: z.array(z.string().min(1))
+})
+
 export const MediaBatchUpdateAssociationsSchema = z
   .object({
     mediaIds: z.array(z.string().min(1)).min(1),
@@ -210,6 +221,7 @@ export const IPC = {
     createMany: 'db:media:create-many',
     update: 'db:media:update',
     batchUpdateAssociations: 'db:media:batch-update-associations',
+    replace: 'db:media:replace',
     clearPendingTagging: 'db:media:clear-pending-tagging',
     delete: 'db:media:delete',
     cacheThumbnail: 'db:media:cache-thumbnail',

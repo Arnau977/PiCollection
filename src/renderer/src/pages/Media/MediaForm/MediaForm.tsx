@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { MediaDuplicateCheck, MediaInput, MediaModel } from '@shared/models'
 import { deriveMediaName, detectMediaType } from '@shared/utils'
 import { useArtists, useCharacters, useSeries, useTags } from '../../../hooks/useEntityLists'
 import { useGalleryDefaults } from '../../../hooks/useGalleryDefaults'
 import { sortCharactersByRelevance } from '../../../utils/sortCharactersBySeries'
+import { splitRoute } from '../../../utils/splitRoute'
+import { useConfirm } from '../../../components/ConfirmDialog/ConfirmDialogContext'
 import { MediaFormDetailsFields } from './MediaFormDetailsFields'
 import { MediaFormFileGroup } from './MediaFormFileGroup'
 import { MediaFormTaxonomyFields } from './MediaFormTaxonomyFields'
@@ -30,6 +33,8 @@ interface MediaFormProps {
   /** Removes the media from the app (never the file on disk); pending media only. */
   onDelete?: () => void
   deleting?: boolean
+  /** Offers "Replace with this file" on similar matches; gets the media that took the file. */
+  onReplaced?: (target: MediaModel) => void
 }
 
 function toInput(media?: MediaModel, initialFile?: InitialFile): MediaInput {
@@ -69,8 +74,11 @@ export function MediaForm({
   onSentToPending,
   onMarkResolved,
   onDelete,
-  deleting
+  deleting,
+  onReplaced
 }: MediaFormProps): JSX.Element {
+  const { t } = useTranslation()
+  const confirm = useConfirm()
   const isEditing = Boolean(media)
   const artists = useArtists()
   const tags = useTags()
@@ -227,6 +235,46 @@ export function MediaForm({
     else setError(toMediaFormError(result.error))
   }
 
+  // The current file takes over a similar match, which keeps its own
+  // metadata plus this form's tags/characters/series (see replaceMedia).
+  async function handleReplace(target: MediaModel): Promise<void> {
+    if (!onReplaced || saving) return
+    const targetName = splitRoute(target.route).fileName
+    const ok = await confirm({
+      message: t('addMedia.replaceConfirm', { name: targetName }),
+      confirmLabel: t('addMedia.replace')
+    })
+    if (!ok) return
+    setError(null)
+    setSaving(true)
+    let resolution: Awaited<ReturnType<typeof drafts.resolveForSave>>
+    try {
+      resolution = await drafts.resolveForSave()
+    } catch (err) {
+      setSaving(false)
+      setError({ message: err instanceof Error ? err.message : 'Failed to save' })
+      return
+    }
+    const { resolvedInput } = resolution
+    const result = await window.api.media.replace({
+      targetId: target.id,
+      route: resolvedInput.route,
+      type: resolvedInput.type,
+      sourceMediaId: (media ?? queueSavedMedia)?.id,
+      artistId: resolvedInput.artistId || undefined,
+      tagIds: resolvedInput.tagIds ?? [],
+      characterIds: resolvedInput.characterIds ?? [],
+      seriesIds: resolvedInput.seriesIds ?? []
+    })
+    setSaving(false)
+    if (!result.success) {
+      setError(toMediaFormError(result.error))
+      return
+    }
+    drafts.refetchCreated()
+    onReplaced(result.data)
+  }
+
   const sortedCharacterOptions = sortCharactersByRelevance(
     [...characters.data, ...drafts.pendingCharacters],
     input.seriesIds ?? []
@@ -263,6 +311,8 @@ export function MediaForm({
               input={input}
               duplicateCheck={duplicateCheck}
               onFileChange={handleFileChange}
+              onReplace={onReplaced ? (target): void => void handleReplace(target) : undefined}
+              busy={saving || deleting}
             />
 
             <MediaFormDetailsFields
@@ -297,7 +347,6 @@ export function MediaForm({
               onSeriesChange={(seriesIds) => setInput((prev) => ({ ...prev, seriesIds }))}
               onCreateSeries={drafts.createSeries}
             />
-
           </form>
 
           <SuggestionsRail

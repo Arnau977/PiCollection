@@ -243,6 +243,21 @@
   color: var(--color-text);
 }
 
+/* One similar match: name + difference, and "Replace with this file" at
+   the far right (wraps under it on narrow widths). */
+.duplicate-warning .similar-match {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.similar-match-replace {
+  margin-left: auto;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+}
+
 .sauce-panel {
   display: flex;
   flex-direction: column;

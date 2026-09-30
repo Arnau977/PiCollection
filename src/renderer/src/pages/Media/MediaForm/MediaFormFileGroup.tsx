@@ -44,6 +44,9 @@ interface MediaFormFileGroupProps {
   input: MediaInput
   duplicateCheck: MediaDuplicateCheck | null
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  /** See SimilarMediaWarning; unset where replacing isn't offered. */
+  onReplace?: (media: MediaModel) => void
+  busy?: boolean
 }
 
 export function MediaFormFileGroup({
@@ -53,7 +56,9 @@ export function MediaFormFileGroup({
   media,
   input,
   duplicateCheck,
-  onFileChange
+  onFileChange,
+  onReplace,
+  busy
 }: MediaFormFileGroupProps): JSX.Element {
   const { t } = useTranslation()
   // Only images/gifs open the Lightbox on click - video already has native
@@ -141,9 +146,13 @@ export function MediaFormFileGroup({
               ? { route: input.route, name: t('mediaCompare.thisFile'), type: input.type }
               : undefined
           }
+          onReplace={onReplace}
+          busy={busy}
         />
       )}
-      {isEditing && media && <EditedMediaSimilarWarning media={media} />}
+      {isEditing && media && (
+        <EditedMediaSimilarWarning media={media} onReplace={onReplace} busy={busy} />
+      )}
     </div>
   )
 }

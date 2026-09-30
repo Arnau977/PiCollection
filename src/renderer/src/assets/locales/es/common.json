@@ -329,7 +329,10 @@
     "suggestionsTabsLabel": "Fuentes de sugerencias",
     "suggestionsTabSource": "Origen",
     "suggestionsTabSauceNao": "SauceNAO",
-    "suggestionsTabWd14": "IA local"
+    "suggestionsTabWd14": "IA local",
+    "replace": "Reemplazar con este archivo",
+    "replaceLabel": "Reemplazar {{name}} con este archivo",
+    "replaceConfirm": "¿Reemplazar \"{{name}}\" con este archivo? Conserva sus etiquetas, personajes, series y fecha, y suma los de este formulario. \"{{name}}\" aparece en Gestionar > Eliminados."
   },
   "aiMetadata": {
     "detected": "Los metadatos del archivo dicen que se hizo con {{generator}}.",
@@ -369,7 +372,8 @@
     "addingToPending_one": "Añadiendo {{count}} archivo a pendientes…",
     "addingToPending_other": "Añadiendo {{count}} archivos a pendientes…",
     "skippedDiscarded_one": "Se ha omitido 1 archivo que eliminaste antes (Gestionar > Eliminados).",
-    "skippedDiscarded_other": "Se han omitido {{count}} archivos que eliminaste antes (Gestionar > Eliminados)."
+    "skippedDiscarded_other": "Se han omitido {{count}} archivos que eliminaste antes (Gestionar > Eliminados).",
+    "replaced": "Se ha reemplazado el archivo de \"{{name}}\"."
   },
   "folderBrowser": {
     "root": "Carpeta origen",

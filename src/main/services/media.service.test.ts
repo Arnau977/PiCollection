@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { initTestDbSingleton } from '../database/testHelpers'
 import { getDb } from '../database/connection'
 import * as mediaRepo from '../database/repositories/media.repository'
+import { listDiscarded } from '../database/repositories/discardedMedia.repository'
 import { mediaService } from './media.service'
 import { tagService } from './tag.service'
 import { characterService } from './character.service'
@@ -585,5 +586,33 @@ describe('mediaService.findSimilarMedia', () => {
     await mediaService.deleteMedia(media.id)
 
     expect(notifyEntitiesChanged).toHaveBeenCalledWith(['tag', 'character', 'series', 'artist'])
+  })
+})
+
+describe('mediaService.replaceMedia', () => {
+  it('moves the target to the new file, keeping its metadata plus the new tags, and discards the old file', async () => {
+    const kept = await tagService.createTag({ name: 'kept' })
+    const added = await tagService.createTag({ name: 'added' })
+    const target = await mediaService.addMedia(
+      baseInput({ name: 'Library pic', route: '/old.png', tagIds: [kept.id] })
+    )
+    const pending = await mediaService.addMedia(
+      baseInput({ name: 'Better copy', route: '/new.png', pendingTagging: true })
+    )
+
+    const replaced = await mediaService.replaceMedia({
+      targetId: target.id,
+      route: '/new.png',
+      type: 'image',
+      sourceMediaId: pending.id,
+      tagIds: [added.id],
+      characterIds: [],
+      seriesIds: []
+    })
+
+    expect(replaced).toMatchObject({ id: target.id, name: 'Library pic', route: '/new.png' })
+    expect(replaced.tags?.map((tag) => tag.name).sort()).toEqual(['added', 'kept'])
+    expect(await mediaService.getMediaById(pending.id)).toBeNull()
+    expect(await listDiscarded(getDb())).toMatchObject([{ route: '/old.png', reason: 'replaced' }])
   })
 })
