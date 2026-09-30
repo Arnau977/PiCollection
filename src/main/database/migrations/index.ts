@@ -16,6 +16,7 @@ import * as m0014MediaSourceMetadata from './0014_media_source_metadata'
 import * as m0015DanbooruCharacterCache from './0015_danbooru_character_cache'
 import * as m0016MediaDerivedFrom from './0016_media_derived_from'
 import * as m0017DiscardedMedia from './0017_discarded_media'
+import * as m0018MediaPhashDct from './0018_media_phash_dct'
 
 export const migrations: Record<string, Migration> = {
   '0001_initial_schema': m0001InitialSchema,
@@ -34,5 +35,6 @@ export const migrations: Record<string, Migration> = {
   '0014_media_source_metadata': m0014MediaSourceMetadata,
   '0015_danbooru_character_cache': m0015DanbooruCharacterCache,
   '0016_media_derived_from': m0016MediaDerivedFrom,
-  '0017_discarded_media': m0017DiscardedMedia
+  '0017_discarded_media': m0017DiscardedMedia,
+  '0018_media_phash_dct': m0018MediaPhashDct
 }

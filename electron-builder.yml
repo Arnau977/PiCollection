@@ -11,6 +11,9 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
+  # sharp loads native binaries (libvips), which cannot run from inside the asar.
+  - '**/node_modules/sharp/**/*'
+  - '**/node_modules/@img/**/*'
 win:
   executableName: PiCollection
 nsis:

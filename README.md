@@ -166,7 +166,10 @@ required.
 - **Duplicate detection** — adding media checks the new file's path and
   content against what's already in the library: an exact match (same file,
   even from a different path) blocks the add, and a visually similar file
-  (e.g. a recompressed or resized copy) shows a non-blocking warning. The
+  (e.g. a recompressed or resized copy, or the same picture saved as PNG and
+  WebP) shows a non-blocking warning. Similarity compares a perceptual hash
+  of the picture and its proportions, so unrelated pictures that merely
+  share a plain background don't match. The
   edit form and the detail page list visually similar media too; while
   editing, that includes other pending items, so duplicates inside an
   import batch show up. "Replace with this file" on a similar item makes the
@@ -193,6 +196,7 @@ PiCollection itself.
 - [Electron](https://www.electronjs.org/) + [electron-vite](https://electron-vite.org/) — desktop shell and build tooling
 - React 18 + TypeScript, [react-router-dom](https://reactrouter.com/) (`HashRouter`), [react-aria-components](https://react-spectrum.adobe.com/react-aria/) for accessible primitives
 - [Kysely](https://kysely.dev/) over [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) — typed SQL, plain `.ts` migrations, no ORM magic
+- [sharp](https://sharp.pixelplumbing.com/) — decodes images (WebP/AVIF included) in the main process for near-duplicate hashing; its libvips binaries (LGPL-3.0) ship unpacked from the asar with their license
 - [Zod](https://zod.dev/) validation at the IPC boundary between renderer and main process
 - [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/)
 

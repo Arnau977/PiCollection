@@ -53,8 +53,10 @@ export interface MediaTable {
   created_at: number
   /** SHA-256 of the file's content, null when never computed or the file was unreadable. */
   hash: string | null
-  /** 64-bit perceptual hash (hex), null under the same conditions as `hash`. */
+  /** 64-bit DCT perceptual hash (hex); null when not computed yet or undecodable. */
   phash: string | null
+  /** Width / height, compared alongside `phash`; 0 = couldn't be decoded, null = not computed yet. */
+  aspect_ratio?: number | null
   /** Set only at creation, via batch import's "send to pending" / "add remaining
       to pending" actions - cleared only via the dedicated clearPendingTagging
       action, never as a side effect of a normal update. */

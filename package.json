@@ -47,6 +47,7 @@
     "react-i18next": "^15.4.0",
     "react-router-dom": "^7.1.1",
     "resedit": "^3.0.2",
+    "sharp": "^0.34.5",
     "tar": "^7.5.22",
     "zod": "^4.4.3"
   },

@@ -308,24 +308,54 @@ export function findMediaRowByHash(db: Kysely<DB>, hash: string): Promise<MediaT
   return db.selectFrom('media').selectAll().where('hash', '=', hash).executeTakeFirst()
 }
 
-/** Only `id`/`phash` - the near-duplicate scan in checkDuplicate() doesn't need the rest of each row. */
+/** Only what the near-duplicate scan compares - it doesn't need the rest of each row. */
 export function listAllMediaHashes(
   db: Kysely<DB>
-): Promise<{ id: string; phash: string | null }[]> {
-  return db.selectFrom('media').select(['id', 'phash']).where('phash', 'is not', null).execute()
+): Promise<{ id: string; phash: string | null; aspect_ratio?: number | null }[]> {
+  return db
+    .selectFrom('media')
+    .select(['id', 'phash', 'aspect_ratio'])
+    .where('phash', 'is not', null)
+    .execute()
 }
 
 export function listMediaRowsMissingHash(db: Kysely<DB>, limit: number): Promise<MediaTable[]> {
   return db.selectFrom('media').selectAll().where('hash', 'is', null).limit(limit).execute()
 }
 
+/** Rows hashed (SHA-256) but still without a fingerprint - e.g. after migration 0018. */
+export function listMediaRowsMissingFingerprint(db: Kysely<DB>, limit: number): Promise<MediaTable[]> {
+  return db
+    .selectFrom('media')
+    .selectAll()
+    .where('hash', '!=', '')
+    .where('phash', 'is', null)
+    .where('aspect_ratio', 'is', null)
+    .limit(limit)
+    .execute()
+}
+
+export async function setMediaFingerprint(
+  db: Kysely<DB>,
+  id: string,
+  phash: string | null,
+  aspectRatio: number
+): Promise<void> {
+  await db.updateTable('media').set({ phash, aspect_ratio: aspectRatio }).where('id', '=', id).execute()
+}
+
 export async function setMediaHash(
   db: Kysely<DB>,
   id: string,
   hash: string | null,
-  phash: string | null
+  phash: string | null,
+  aspectRatio: number | null = null
 ): Promise<void> {
-  await db.updateTable('media').set({ hash, phash }).where('id', '=', id).execute()
+  await db
+    .updateTable('media')
+    .set({ hash, phash, aspect_ratio: aspectRatio })
+    .where('id', '=', id)
+    .execute()
 }
 
 /** Media made from `id` (its GIFs) plus the one `id` was made from, if any. */

@@ -14,7 +14,9 @@ import {
   computeFileHash,
   computePerceptualHash,
   hammingDistance,
-  PHASH_SIMILAR_THRESHOLD
+  PHASH_SIMILAR_THRESHOLD,
+  sameShape,
+  type VisualFingerprint
 } from './mediaHash'
 import { readSourceFolder, relativizeRoute, resolveRoute } from './sourceFolder'
 import { notifyEntitiesChanged } from '../events/entityEvents'
@@ -188,32 +190,36 @@ async function findDuplicates(
   db: Kysely<DB>,
   absoluteRoute: string,
   sourceFolder: string | null
-): Promise<{ exactRow: MediaTable | undefined; hash: string | null; phash: string | null }> {
+): Promise<{
+  exactRow: MediaTable | undefined
+  hash: string | null
+  fingerprint: VisualFingerprint | null
+}> {
   const storageRoute = relativizeRoute(absoluteRoute, sourceFolder)
   const byRoute = await mediaRepo.findMediaRowByRoute(db, storageRoute)
-  if (byRoute) return { exactRow: byRoute, hash: null, phash: null }
+  if (byRoute) return { exactRow: byRoute, hash: null, fingerprint: null }
 
   const hash = await computeFileHash(absoluteRoute)
   if (hash) {
     const byHash = await mediaRepo.findMediaRowByHash(db, hash)
-    if (byHash) return { exactRow: byHash, hash, phash: null }
+    if (byHash) return { exactRow: byHash, hash, fingerprint: null }
   }
 
-  const phash = hash ? await computePerceptualHash(absoluteRoute) : null
-  return { exactRow: undefined, hash, phash }
+  const fingerprint = hash ? await computePerceptualHash(absoluteRoute) : null
+  return { exactRow: undefined, hash, fingerprint }
 }
 
 /** Shared by checkDuplicate() (new-file near-duplicate warning) and findSimilarMedia() (detail-page panel). */
 async function findSimilarByPhash(
   db: Kysely<DB>,
-  phash: string,
+  { phash, aspectRatio }: { phash: string; aspectRatio: number | null },
   excludeId: string | null,
   limit: number,
   includePending = false
 ): Promise<{ media: MediaModel; distance: number }[]> {
   const candidates = await mediaRepo.listAllMediaHashes(db)
   const scored = candidates
-    .filter((row) => row.id !== excludeId)
+    .filter((row) => row.id !== excludeId && sameShape(aspectRatio, row.aspect_ratio ?? null))
     .map((row) => ({ id: row.id, distance: hammingDistance(phash, row.phash as string) }))
     .filter((row) => row.distance <= PHASH_SIMILAR_THRESHOLD)
     .sort((a, b) => a.distance - b.distance)
@@ -242,16 +248,16 @@ const SIMILAR_MEDIA_LIMIT = 12
 export const mediaService = {
   async checkDuplicate(route: string): Promise<MediaDuplicateCheck> {
     const db = getDb()
-    const { exactRow, phash } = await findDuplicates(db, route, readSourceFolder())
+    const { exactRow, fingerprint } = await findDuplicates(db, route, readSourceFolder())
 
     if (exactRow) {
       return { exactMatch: await getMediaModelById(db, exactRow.id), similar: [] }
     }
-    if (!phash) {
+    if (!fingerprint) {
       return { exactMatch: null, similar: [] }
     }
 
-    const similar = await findSimilarByPhash(db, phash, null, SIMILAR_MATCH_LIMIT)
+    const similar = await findSimilarByPhash(db, fingerprint, null, SIMILAR_MATCH_LIMIT)
 
     return { exactMatch: null, similar }
   },
@@ -282,7 +288,13 @@ export const mediaService = {
     if (!row?.phash) return relatives.slice(0, limit)
     const relativeIds = new Set(relatives.map(({ media }) => media.id))
     const lookalikes = (
-      await findSimilarByPhash(db, row.phash, mediaId, limit, includePending)
+      await findSimilarByPhash(
+        db,
+        { phash: row.phash, aspectRatio: row.aspect_ratio ?? null },
+        mediaId,
+        limit,
+        includePending
+      )
     ).filter(({ media }) => !relativeIds.has(media.id))
     return [...relatives, ...lookalikes].slice(0, limit)
   },
@@ -346,7 +358,7 @@ export const mediaService = {
     // (the renderer already showed a warning/block from its own pre-submit
     // call) - the perceptual "similar" check is advisory-only and never
     // blocks an insert.
-    const { exactRow, hash, phash } = await findDuplicates(db, input.route, sourceFolder)
+    const { exactRow, hash, fingerprint } = await findDuplicates(db, input.route, sourceFolder)
     if (exactRow) {
       throw new AppError(
         'DUPLICATE_MEDIA',
@@ -371,7 +383,8 @@ export const mediaService = {
         artist_id: input.artistId ?? null,
         created_at: Date.now(),
         hash,
-        phash,
+        phash: fingerprint?.phash ?? null,
+        aspect_ratio: hash ? (fingerprint?.aspectRatio ?? 0) : null,
         pending_tagging: input.pendingTagging ? 1 : 0,
         source_metadata: options.sourceMetadata ? JSON.stringify(options.sourceMetadata) : null,
         derived_from_id: options.derivedFromId ?? null
@@ -486,7 +499,7 @@ export const mediaService = {
     const route = relativizeRoute(input.route, sourceFolder)
     const absoluteRoute = resolveRoute(route, sourceFolder)
     const hash = await computeFileHash(absoluteRoute)
-    const phash = hash ? await computePerceptualHash(absoluteRoute) : null
+    const fingerprint = hash ? await computePerceptualHash(absoluteRoute) : null
 
     await db.transaction().execute(async (trx) => {
       // First: the source row holds the new route, which is UNIQUE.
@@ -497,7 +510,8 @@ export const mediaService = {
         route,
         type: input.type,
         hash,
-        phash,
+        phash: fingerprint?.phash ?? null,
+        aspect_ratio: hash ? (fingerprint?.aspectRatio ?? 0) : null,
         artist_id: target.artist_id ?? input.artistId ?? null
       })
       await mediaRepo.addMediaTagsBulk(trx, [target.id], input.tagIds)
