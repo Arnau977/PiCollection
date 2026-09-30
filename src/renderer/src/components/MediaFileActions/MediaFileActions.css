@@ -4,6 +4,26 @@
   gap: var(--space-1);
 }
 
+.media-file-actions .icon-btn:disabled {
+  cursor: progress;
+}
+
+.media-file-actions-spinner {
+  animation: media-file-actions-spin 0.9s linear infinite;
+}
+
+@keyframes media-file-actions-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-file-actions-spinner {
+    animation: none;
+  }
+}
+
 /* Inside the page action bar the file actions sit at the far right. */
 .media-page-actions .media-file-actions {
   margin-left: auto;
