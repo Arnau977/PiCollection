@@ -11,7 +11,7 @@ Docs are part of the change, not a follow-up. Before committing:
 
 | If the change touches... | Check |
 |---|---|
-| A user-visible feature, setting or behavior | `README.md` → "For users" and "Features" |
+| A user-visible feature, setting or behavior | The matching page in `docs/guide/` (one per area, index in `docs/guide/README.md`) with its exact UI labels; `README.md` "Features" only when a headline feature appears or goes |
 | Anything that sends data off the machine (new `fetch`, URL, download) | `README.md` privacy paragraph (intro + "Your data stays local"), `CLAUDE.md` "Where things live" |
 | Dev commands, requirements, build, tests, migrations | `README.md` "For developers", `CLAUDE.md` "Commands" |
 | Layering, IPC surface, push channels, invariants (e.g. what pending excludes) | `CLAUDE.md` "Architecture", `docs/ARCHITECTURE.md` |

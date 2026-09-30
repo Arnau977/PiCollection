@@ -8,7 +8,8 @@ PiCollection: a local-first Electron desktop gallery for images/GIFs/videos.
 Electron + electron-vite, React 18 + TypeScript (renderer), Kysely over
 better-sqlite3 (main process, plain `.ts` migrations, no ORM magic), Zod
 validation at the IPC boundary, Vitest + Testing Library for tests. See
-`README.md` for the full feature list and user-facing behavior.
+`docs/guide/` (user guide, one page per area) for user-facing behavior;
+`README.md` only summarizes the features.
 
 ## Commands
 
@@ -169,7 +170,7 @@ its sole series.
 Deleting media never deletes its file: `mediaService.deleteMedia` records
 the route in `discarded_media` (so do discarding an unsaved batch-import
 file and `mediaService.replaceMedia` for the file a similar media gave up),
-listed under Manage > Discarded. A batch import's `expandSelection`
+listed under Metadata > Discarded. A batch import's `expandSelection`
 skips discarded routes, and adding a file again removes its record. The only
 code that touches the file itself is `discardedMediaService.trashFiles`
 (`shell.trashItem`, i.e. the Recycle Bin).
