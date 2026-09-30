@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, Copy, FolderOpen, ImageDown } from 'lucide-react'
 import type { MediaModel } from '@shared/models'
+import { toMediaUrl } from '@shared/utils/mediaUrl'
+import { copyImageViaCanvas } from './copyImageViaCanvas'
 import './MediaFileActions.css'
 
 interface MediaFileActionsProps {
@@ -26,7 +28,7 @@ export function MediaFileActions({ route, type }: MediaFileActionsProps): JSX.El
 
   async function handleCopyMedia(): Promise<void> {
     const result = await window.api.system.copyImageToClipboard(route)
-    if (!result.success) return
+    if (!result.success && !(await copyImageViaCanvas(toMediaUrl(route)))) return
     setMediaCopied(true)
     setTimeout(() => setMediaCopied(false), 2000)
   }
