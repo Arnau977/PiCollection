@@ -33,6 +33,11 @@
     }
   }
 
+  /* The field a failed save points at: danger on field-background 6.59:1. */
+  &[data-invalid] .react-aria-Input {
+    border-color: var(--color-danger);
+  }
+
   .react-aria-Button {
     background: var(--highlight-background);
     color: var(--highlight-foreground);

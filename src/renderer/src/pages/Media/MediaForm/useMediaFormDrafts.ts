@@ -21,6 +21,8 @@ export interface MediaFormSaveResolution {
   resolvedInput: MediaInput
   resolvedSeriesIds: string[]
   resolvedCharacterIds: string[]
+  /** Draft id -> the real id it resolved to, for `commitSaved`. */
+  idMap: Map<string, string>
 }
 
 export interface MediaFormDrafts {
@@ -45,6 +47,13 @@ export interface MediaFormDrafts {
   /** Resolves every pending draft referenced by `input` into a real id (creating or
    * reusing a same-named library entity), ready to send over IPC. */
   resolveForSave: (overrides?: Partial<MediaInput>) => Promise<MediaFormSaveResolution>
+  /**
+   * After a successful save: points the form at the real ids its drafts
+   * became, so a later save (the queue's Save stays on the item) doesn't
+   * treat them as new again - or send them next to the same tag picked
+   * directly, which the main process rejects as a missing tag.
+   */
+  commitSaved: (idMap: Map<string, string>) => void
   /** Refetches only the entity lists that actually gained a new item this save. */
   refetchCreated: () => void
 }
@@ -70,6 +79,11 @@ export function useMediaFormDrafts({
   const [pendingArtists, setPendingArtists] = useState<ArtistModel[]>([])
   const pendingArtistSocials = useRef(new Map<string, { name: string; url: string }>())
   const pendingCharacterParents = useRef(new Map<string, string>())
+
+  // A committed draft keeps showing (under its real id) until the refetched
+  // list has it, so its chip never blinks out in between.
+  const notYetListed = <T extends { id: string }>(drafts: T[], listed: T[]): T[] =>
+    drafts.filter((draft) => !listed.some((entity) => entity.id === draft.id))
 
   function createArtist(name: string, social?: { name: string; url: string }): void {
     const draft: ArtistModel = { id: crypto.randomUUID(), name }
@@ -167,6 +181,9 @@ export function useMediaFormDrafts({
     return new Map(entries)
   }
 
+  // Resolving can turn a draft into a tag that's also selected directly.
+  const unique = (ids: string[]): string[] => [...new Set(ids)]
+
   async function resolvePendingArtistId(): Promise<string | undefined> {
     const draft = pendingArtists.find((p) => p.id === input.artistId)
     if (!draft) return input.artistId
@@ -221,19 +238,40 @@ export function useMediaFormDrafts({
       resolvePendingCharacterIds()
     ])
 
-    const resolvedSeriesIds = (input.seriesIds ?? []).map((id) => seriesIdMap.get(id) ?? id)
-    const resolvedCharacterIds = (input.characterIds ?? []).map(
-      (id) => characterIdMap.get(id) ?? id
-    )
-    const resolvedInput: MediaInput = {
-      ...input,
-      ...overrides,
-      artistId: resolvedArtistId,
-      tagIds: (input.tagIds ?? []).map((id) => tagIdMap.get(id) ?? id),
-      characterIds: resolvedCharacterIds,
-      seriesIds: resolvedSeriesIds
+    const idMap = new Map([...seriesIdMap, ...tagIdMap, ...characterIdMap])
+    if (input.artistId && resolvedArtistId && resolvedArtistId !== input.artistId) {
+      idMap.set(input.artistId, resolvedArtistId)
     }
-    return { resolvedInput, resolvedSeriesIds, resolvedCharacterIds }
+    const resolvedInput = remapIds({ ...input, ...overrides }, idMap)
+    return {
+      resolvedInput,
+      resolvedSeriesIds: resolvedInput.seriesIds ?? [],
+      resolvedCharacterIds: resolvedInput.characterIds ?? [],
+      idMap
+    }
+  }
+
+  function remapIds(target: MediaInput, idMap: Map<string, string>): MediaInput {
+    const remap = (ids: string[] | undefined): string[] =>
+      unique((ids ?? []).map((id) => idMap.get(id) ?? id))
+    return {
+      ...target,
+      artistId: target.artistId && (idMap.get(target.artistId) ?? target.artistId),
+      tagIds: remap(target.tagIds),
+      characterIds: remap(target.characterIds),
+      seriesIds: remap(target.seriesIds)
+    }
+  }
+
+  function commitSaved(idMap: Map<string, string>): void {
+    if (idMap.size === 0) return
+    const rekey = <T extends { id: string }>(drafts: T[]): T[] =>
+      drafts.map((draft) => ({ ...draft, id: idMap.get(draft.id) ?? draft.id }))
+    setInput((prev) => remapIds(prev, idMap))
+    setPendingTags(rekey)
+    setPendingSeries(rekey)
+    setPendingCharacters(rekey)
+    setPendingArtists(rekey)
   }
 
   function refetchCreated(): void {
@@ -244,16 +282,17 @@ export function useMediaFormDrafts({
   }
 
   return {
-    pendingArtists,
-    pendingTags,
-    pendingCharacters,
-    pendingSeries,
+    pendingArtists: notYetListed(pendingArtists, artists.data),
+    pendingTags: notYetListed(pendingTags, tags.data),
+    pendingCharacters: notYetListed(pendingCharacters, characters.data),
+    pendingSeries: notYetListed(pendingSeries, series.data),
     createArtist,
     createTag,
     createCharacter,
     createSeries,
     attachExistingOrCreateSeries,
     resolveForSave,
+    commitSaved,
     refetchCreated
   }
 }

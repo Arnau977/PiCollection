@@ -9,6 +9,8 @@ import { MediaFormFileGroup } from './MediaFormFileGroup'
 import { MediaFormTaxonomyFields } from './MediaFormTaxonomyFields'
 import { MediaFormTopActions } from './MediaFormTopActions'
 import type { InitialFile, QueueInfo } from './MediaForm.types'
+import { MediaFormSaveError } from './MediaFormSaveError'
+import { toMediaFormError, type MediaFormError } from './mediaFormError'
 import { SuggestionsRail } from './SuggestionsRail'
 import { useMediaFormDrafts } from './useMediaFormDrafts'
 import { useMediaFormSuggestions } from './useMediaFormSuggestions'
@@ -87,7 +89,7 @@ export function MediaForm({
   // record instead of creating a duplicate. Only relevant for brand-new
   // media (`media` is unset); an existing record already has its own id.
   const [queueSavedMedia, setQueueSavedMedia] = useState<MediaModel | undefined>(undefined)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<MediaFormError | null>(null)
   const [saving, setSaving] = useState(false)
   const [duplicateCheck, setDuplicateCheck] = useState<MediaDuplicateCheck | null>(null)
 
@@ -151,10 +153,10 @@ export function MediaForm({
       resolution = await drafts.resolveForSave()
     } catch (err) {
       setSaving(false)
-      setError(err instanceof Error ? err.message : 'Failed to save')
+      setError({ message: err instanceof Error ? err.message : 'Failed to save' })
       return null
     }
-    const { resolvedInput, resolvedSeriesIds, resolvedCharacterIds } = resolution
+    const { resolvedInput, resolvedSeriesIds, resolvedCharacterIds, idMap } = resolution
 
     const existingMedia = media ?? queueSavedMedia
     const result = existingMedia
@@ -162,14 +164,21 @@ export function MediaForm({
       : await window.api.media.create(resolvedInput)
     setSaving(false)
     if (!result.success) {
-      setError(result.error.message)
+      setError(toMediaFormError(result.error))
       return null
     }
     drafts.refetchCreated()
+    drafts.commitSaved(idMap)
     if (!result.data.pendingTagging)
       await suggestions.linkCharactersToSoleSeries(resolvedSeriesIds, resolvedCharacterIds)
     if (!media) setQueueSavedMedia(result.data)
-    setSavedSnapshot(JSON.stringify(input))
+    // What the form holds once commitSaved swaps drafts for their real ids.
+    const { artistId, tagIds, characterIds, seriesIds } = resolvedInput
+    setSavedSnapshot(
+      JSON.stringify(
+        idMap.size > 0 ? { ...input, artistId, tagIds, characterIds, seriesIds } : input
+      )
+    )
     return result.data
   }
 
@@ -190,7 +199,7 @@ export function MediaForm({
       resolution = await drafts.resolveForSave({ pendingTagging: true })
     } catch (err) {
       setSaving(false)
-      setError(err instanceof Error ? err.message : 'Failed to save')
+      setError({ message: err instanceof Error ? err.message : 'Failed to save' })
       return
     }
     // Character/series links wait until the media is marked resolved.
@@ -200,7 +209,7 @@ export function MediaForm({
       drafts.refetchCreated()
       ;(onSentToPending ?? onSaved)(result.data)
     } else {
-      setError(result.error.message)
+      setError(toMediaFormError(result.error))
     }
   }
 
@@ -215,7 +224,7 @@ export function MediaForm({
     const result = await window.api.media.clearPendingTagging(media.id)
     setSaving(false)
     if (result.success) onMarkResolved()
-    else setError(result.error.message)
+    else setError(toMediaFormError(result.error))
   }
 
   const sortedCharacterOptions = sortCharactersByRelevance(
@@ -241,6 +250,8 @@ export function MediaForm({
         onDelete={onDelete}
       />
 
+      {error && <MediaFormSaveError error={error} />}
+
       <div className="media-form-scroll-region">
         <div className="media-form-layout">
           <form id="media-form" className="media-form-card card" onSubmit={handleSubmit}>
@@ -255,6 +266,7 @@ export function MediaForm({
             />
 
             <MediaFormDetailsFields
+              invalidField={error?.field}
               isEditing={isEditing}
               hideNames={galleryDefaults.hideNames}
               input={input}
@@ -268,6 +280,7 @@ export function MediaForm({
             />
 
             <MediaFormTaxonomyFields
+              invalidField={error?.field}
               tagOptions={[...tags.data, ...drafts.pendingTags]}
               pendingTags={drafts.pendingTags}
               selectedTagIds={input.tagIds ?? []}
@@ -285,7 +298,6 @@ export function MediaForm({
               onCreateSeries={drafts.createSeries}
             />
 
-            {error && <p role="alert">{error}</p>}
           </form>
 
           <SuggestionsRail

@@ -101,7 +101,9 @@ describe('mediaService.addMedia', () => {
   })
 
   it('rejects media referencing a tag id that does not exist', async () => {
-    await expect(mediaService.addMedia(baseInput({ tagIds: ['nonexistent-id'] }))).rejects.toThrow()
+    await expect(
+      mediaService.addMedia(baseInput({ tagIds: ['nonexistent-id'] }))
+    ).rejects.toMatchObject({ code: 'MISSING_TAGS' })
   })
 
   it('rejects media referencing a character id that does not exist', async () => {

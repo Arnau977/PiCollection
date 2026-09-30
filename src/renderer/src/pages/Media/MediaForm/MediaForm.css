@@ -190,6 +190,35 @@
   outline-offset: 2px;
 }
 
+/* A failed save, between the fixed top bar and the scroll region.
+   text on danger-soft 12.20:1, danger icon on danger-soft 5.15:1. */
+.media-form-save-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-danger-soft);
+  box-shadow: inset 0 0 0 1px var(--color-danger);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: 0.88rem;
+
+  > svg {
+    flex: none;
+    color: var(--color-danger);
+  }
+
+  > p {
+    flex: 1;
+    margin: 0;
+  }
+
+  > .btn {
+    flex: none;
+  }
+}
+
 .duplicate-error {
   font-size: 0.85rem;
   color: var(--color-danger);

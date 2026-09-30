@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react'
 import type { AiMetadataDetection, ArtistModel, MediaInput } from '@shared/models'
 import { Autocomplete } from '../../../components/Autocomplete/Autocomplete'
+import type { MediaFormField } from './mediaFormError'
 
 interface MediaFormDetailsFieldsProps {
   isEditing: boolean
@@ -15,6 +16,8 @@ interface MediaFormDetailsFieldsProps {
   /** Generator traces found in the file itself - offered, never applied on their own. */
   aiDetection: AiMetadataDetection | null
   onMarkAiGenerated: () => void
+  /** The field a failed save pointed at (see MediaFormSaveError). */
+  invalidField?: MediaFormField
 }
 
 export function MediaFormDetailsFields({
@@ -27,7 +30,8 @@ export function MediaFormDetailsFields({
   onArtistSelect,
   onCreateArtist,
   aiDetection,
-  onMarkAiGenerated
+  onMarkAiGenerated,
+  invalidField
 }: MediaFormDetailsFieldsProps): JSX.Element {
   const { t } = useTranslation()
 
@@ -113,7 +117,7 @@ export function MediaFormDetailsFields({
         />
       </div>
 
-      <div className="field-accent field-accent-artist">
+      <div className="field-accent field-accent-artist" data-form-field="artist">
         <Autocomplete
           name="artist"
           label={t('filters.artist')}
@@ -128,6 +132,7 @@ export function MediaFormDetailsFields({
           selectedKey={input.artistId ?? null}
           onSelect={onArtistSelect}
           onCreate={onCreateArtist}
+          invalid={invalidField === 'artist'}
         />
       </div>
     </div>

@@ -294,6 +294,16 @@
     "sourceUrlTitle": "Abrir la publicación original"
   },
   "addMedia": {
+    "saveError": {
+      "title": "No se ha podido guardar.",
+      "goTo": "Ir a {{field}}",
+      "missing": {
+        "artist": "El artista ya no está en la biblioteca (¿eliminado o fusionado?). Vuelve a elegirlo y guarda.",
+        "tags": "Una de las etiquetas ya no está en la biblioteca (¿eliminada o fusionada?). Revisa las etiquetas y vuelve a guardar.",
+        "characters": "Uno de los personajes ya no está en la biblioteca (¿eliminado o fusionado?). Revisa los personajes y vuelve a guardar.",
+        "series": "Una de las series ya no está en la biblioteca (¿eliminada o fusionada?). Revisa las series y vuelve a guardar."
+      }
+    },
     "title": "Añadir nuevo media",
     "file": "Archivo",
     "submit": "Añadir",
