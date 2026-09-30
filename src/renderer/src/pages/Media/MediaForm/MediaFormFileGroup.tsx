@@ -5,6 +5,7 @@ import type { MediaDuplicateCheck, MediaInput, MediaModel } from '@shared/models
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { Lightbox } from '../../../components/Lightbox/Lightbox'
 import { MediaFileActions } from '../../../components/MediaFileActions/MediaFileActions'
+import { splitRoute } from '../../../utils/splitRoute'
 import type { InitialFile, QueueInfo } from './MediaForm.types'
 import { EditedMediaSimilarWarning, SimilarMediaWarning } from './SimilarMediaWarning'
 
@@ -21,9 +22,7 @@ function MediaFileLocation({
   type: MediaModel['type']
 }): JSX.Element {
   const { t } = useTranslation()
-  const lastSeparator = Math.max(route.lastIndexOf('/'), route.lastIndexOf('\\'))
-  const fileName = route.slice(lastSeparator + 1)
-  const folder = lastSeparator > 0 ? route.slice(0, lastSeparator) : ''
+  const { fileName, folder } = splitRoute(route)
 
   return (
     <div className="media-form-file-location">

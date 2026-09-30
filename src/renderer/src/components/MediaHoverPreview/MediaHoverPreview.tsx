@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import type { MediaModel } from '@shared/models'
+import { splitRoute } from '../../utils/splitRoute'
 import { MediaThumb } from '../MediaThumb/MediaThumb'
 import './MediaHoverPreview.css'
 
@@ -39,6 +40,8 @@ export function MediaHoverPreview({
   onClick
 }: MediaHoverPreviewProps): JSX.Element {
   const { t } = useTranslation()
+  // The list it serves names files as the form's Location does - by file name.
+  const { fileName } = splitRoute(media.route)
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
   const anchorRef = useRef<HTMLElement>(null)
@@ -79,11 +82,11 @@ export function MediaHoverPreview({
               hide()
               onClick()
             },
-            'aria-label': t('mediaCompare.openLabel', { name: media.name })
+            'aria-label': t('mediaCompare.openLabel', { name: fileName })
           }
         : {
             tabIndex: 0,
-            'aria-label': t('addMedia.duplicatePreviewLabel', { name: media.name })
+            'aria-label': t('addMedia.duplicatePreviewLabel', { name: fileName })
           })}
     >
       {children}
@@ -96,7 +99,7 @@ export function MediaHoverPreview({
             <div className="media-hover-preview-thumb">
               <MediaThumb type={media.type} route={media.route} alt={media.name} />
             </div>
-            <p className="media-hover-preview-name">{media.name}</p>
+            <p className="media-hover-preview-name">{fileName}</p>
             {onClick && <p className="media-hover-preview-hint">{t('mediaCompare.clickHint')}</p>}
             {media.tags && media.tags.length > 0 && (
               <ul className="chip-list chip-list-tags media-hover-preview-tags">

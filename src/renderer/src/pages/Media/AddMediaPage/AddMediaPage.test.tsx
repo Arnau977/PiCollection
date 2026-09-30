@@ -541,7 +541,9 @@ describe('AddMediaPage duplicate detection', () => {
       success: true,
       data: {
         exactMatch: null,
-        similar: [{ media: { id: 'similar1', name: 'Similar pic' }, distance: 4 }]
+        similar: [
+          { media: { id: 'similar1', name: 'Similar pic', route: 'C:/pics/similar.png' }, distance: 4 }
+        ]
       }
     })
     setApi({ media: { create: mediaCreate, checkDuplicate } })
@@ -551,7 +553,7 @@ describe('AddMediaPage duplicate detection', () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, makeFile('sunset.png'))
 
-    expect(await screen.findByText('Similar pic')).toBeInTheDocument()
+    expect(await screen.findByText('similar.png')).toBeInTheDocument()
     expect(screen.getByText('(4/64 difference)')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add' })).not.toBeDisabled()
 

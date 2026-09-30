@@ -5,6 +5,7 @@ import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { MediaCompare, type ComparedMedia } from '../../../components/MediaCompare/MediaCompare'
 import { MediaHoverPreview } from '../../../components/MediaHoverPreview/MediaHoverPreview'
 import { useSimilarMedia } from '../../../hooks/useSimilarMedia'
+import { splitRoute } from '../../../utils/splitRoute'
 
 /** The file being added/edited, compared against each match. */
 export interface CurrentFile {
@@ -48,13 +49,13 @@ export function SimilarMediaWarning({
                   ? (): void =>
                       setCompared({
                         src: toMediaUrl(media.route),
-                        name: media.name,
+                        name: splitRoute(media.route).fileName,
                         status: media.pendingTagging ? 'pending' : 'library'
                       })
                   : undefined
               }
             >
-              {media.name}
+              {splitRoute(media.route).fileName}
             </MediaHoverPreview>{' '}
             (
             {relation
@@ -68,7 +69,7 @@ export function SimilarMediaWarning({
         <MediaCompare
           left={{
             src: toMediaUrl(current.route),
-            name: current.name,
+            name: splitRoute(current.route).fileName,
             status:
               current.pendingTagging === undefined
                 ? 'new'
