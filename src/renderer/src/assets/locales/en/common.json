@@ -153,7 +153,10 @@
     "sourceFolderApply": "Apply",
     "sourceFolderCancel": "Cancel",
     "sourceFolderApplying": "Applying...",
-    "sourceFolderApplied": "Done. {{relocated}} files now relative, {{warned}} left absolute."
+    "sourceFolderApplied": "Done. {{relocated}} files now relative, {{warned}} left absolute.",
+    "licensesTitle": "Open-source licenses",
+    "licensesHint": "PiCollection is MIT-licensed and built on open-source software. The list of components and their licenses opens as a text file.",
+    "licensesOpen": "View licenses"
   },
   "home": {
     "title": "Home",

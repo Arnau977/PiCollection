@@ -4,6 +4,7 @@
   "description": "A local-first desktop gallery for images, GIFs and videos",
   "main": "./out/main/index.js",
   "author": "Arnau977",
+  "license": "MIT",
   "homepage": "https://github.com/Arnau977/PiCollection",
   "scripts": {
     "format": "prettier --write .",
@@ -16,8 +17,8 @@
     "posttest": "electron-builder install-app-deps",
     "test:watch": "vitest",
     "start": "electron-vite preview",
-    "dev": "electron-vite dev",
-    "build": "npm run typecheck && electron-vite build",
+    "dev": "node scripts/generate-third-party-notices.mjs && electron-vite dev",
+    "build": "npm run typecheck && node scripts/generate-third-party-notices.mjs && electron-vite build",
     "rebuild": "electron-builder install-app-deps",
     "migrate:create": "node scripts/create-migration.mjs",
     "migrate:up": "tsx scripts/migrate.ts up",

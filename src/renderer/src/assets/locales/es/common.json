@@ -153,7 +153,10 @@
     "sourceFolderApply": "Aplicar",
     "sourceFolderCancel": "Cancelar",
     "sourceFolderApplying": "Aplicando...",
-    "sourceFolderApplied": "Listo. {{relocated}} archivos ahora relativos, {{warned}} siguen absolutos."
+    "sourceFolderApplied": "Listo. {{relocated}} archivos ahora relativos, {{warned}} siguen absolutos.",
+    "licensesTitle": "Licencias de código abierto",
+    "licensesHint": "PiCollection tiene licencia MIT y se basa en software de código abierto. La lista de componentes y sus licencias se abre como archivo de texto.",
+    "licensesOpen": "Ver licencias"
   },
   "home": {
     "title": "Inicio",
