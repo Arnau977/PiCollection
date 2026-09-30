@@ -31,6 +31,7 @@ export const ExtensionBridgeCaptureInputSchema = z.object({
   seriesNames: z.array(z.string().min(1)).optional(),
   sfw: z.boolean().optional(),
   isAiGenerated: z.boolean().optional(),
+  /** Ignored: captures always go to Pending. Still accepted from older extension builds. */
   pendingTagging: z.boolean().optional(),
   /** Everything the site had, raw - stored as informational source metadata. */
   sourceMetadata: z
@@ -214,14 +215,18 @@ export const extensionBridgeService = {
           name: input.fileName,
           type: input.mediaType,
           route: absolutePath,
-          // Blurred until reviewed - the site's rating is only a suggestion.
-          sfw: false,
+          // Pending media is never shown in the gallery, so blurring it helped
+          // nothing: it starts SFW like any other new media, and the site's
+          // rating is offered as a hint when it's reviewed.
+          sfw: true,
           isAiGenerated: false,
           artistId,
           tagIds: [],
           characterIds: [],
           seriesIds: [],
-          pendingTagging: input.pendingTagging ?? true,
+          // Always an inbox to review: `pendingTagging: false` from an older
+          // extension build is ignored.
+          pendingTagging: true,
           sourceUrl: input.sourceUrl
         },
         { sourceMetadata: toSourceMetadata(input) }
