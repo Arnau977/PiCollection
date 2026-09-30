@@ -8,7 +8,8 @@ import {
   Type,
   RefreshCw,
   ScanSearch,
-  Bug
+  Bug,
+  Scale
 } from 'lucide-react'
 import type { MediaFilters, MediaSortableProp } from '@shared/models'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
@@ -97,6 +98,7 @@ export default function SettingsPage(): JSX.Element {
   const sauceNaoApiKey = useSauceNaoApiKeyField()
   const logging = useLoggingSettings()
   const autoBackup = useAutoBackup()
+  const [licensesError, setLicensesError] = useState<string | null>(null)
   const autoBackupFailed = Boolean(autoBackup.status?.enabled && autoBackup.status.lastError)
   const updateReady =
     updater.status.state === 'available' || updater.status.state === 'downloaded'
@@ -109,6 +111,11 @@ export default function SettingsPage(): JSX.Element {
       if (!confirmed) return
     }
     await updater.downloadUpdate()
+  }
+
+  async function openLicenses(): Promise<void> {
+    const result = await window.api.system.openThirdPartyNotices()
+    setLicensesError(result.success ? null : result.error.message)
   }
 
   return (
@@ -413,6 +420,20 @@ export default function SettingsPage(): JSX.Element {
           </section>
 
           <LocalTaggingSection />
+
+          <section className="card">
+            <SettingsRow
+              titleAs="h2"
+              icon={<Scale size={16} aria-hidden="true" />}
+              title={t('settings.licensesTitle')}
+              description={t('settings.licensesHint')}
+            >
+              <button type="button" className="btn" onClick={() => void openLicenses()}>
+                {t('settings.licensesOpen')}
+              </button>
+            </SettingsRow>
+            {licensesError && <p role="alert">{licensesError}</p>}
+          </section>
         </TabPanel>
       </Tabs>
     </div>

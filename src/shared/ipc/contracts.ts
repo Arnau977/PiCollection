@@ -260,6 +260,7 @@ export const IPC = {
     getSummary: 'db:stats:get-summary'
   },
   system: {
+    openThirdPartyNotices: 'system:open-third-party-notices',
     showInFolder: 'system:show-in-folder',
     showPathInFolder: 'system:show-path-in-folder',
     copyImageToClipboard: 'system:copy-image-to-clipboard',

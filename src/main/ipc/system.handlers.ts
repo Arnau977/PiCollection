@@ -1,4 +1,5 @@
 import { app, clipboard, ipcMain, shell } from 'electron'
+import { join } from 'path'
 import { z } from 'zod'
 import { ipcHandler } from './helpers'
 import { IPC } from '@shared/ipc/contracts'
@@ -8,7 +9,22 @@ import { logError } from '../logging/logger'
 import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
 import { getAutoStartStatus, setAutoStart } from '../window/autoStart'
 
+/** Written by scripts/generate-third-party-notices.mjs; unpacked from the asar with resources/. */
+function thirdPartyNoticesPath(): string {
+  return app.isPackaged
+    ? join(process.resourcesPath, 'app.asar.unpacked', 'resources', 'third-party-notices.txt')
+    : join(app.getAppPath(), 'resources', 'third-party-notices.txt')
+}
+
 export function registerSystemHandlers(): void {
+  ipcMain.handle(
+    IPC.system.openThirdPartyNotices,
+    ipcHandler(IPC.system.openThirdPartyNotices, z.void(), async () => {
+      // openPath resolves to an error message instead of rejecting.
+      const error = await shell.openPath(thirdPartyNoticesPath())
+      if (error) throw new Error(error)
+    })
+  )
   ipcMain.handle(
     IPC.system.showInFolder,
     ipcHandler(IPC.system.showInFolder, z.string().min(1), async (route) => {

@@ -311,3 +311,29 @@ entity or field.
 ### Recommended IDE setup
 
 [VS Code](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+
+## License
+
+PiCollection is released under the [MIT License](LICENSE).
+
+### Third-party licenses
+
+- **Bundled with the app:** every open-source package it ships with is listed,
+  with its full license text, in `resources/third-party-notices.txt`,
+  generated before each `dev`/`build` by
+  `scripts/generate-third-party-notices.mjs` and opened in the app from
+  Settings > Advanced > Open-source licenses. Electron's and Chromium's own
+  licenses (`LICENSE.electron.txt`, `LICENSES.chromium.html`) ship next to the
+  executable.
+- **libvips** (image decoding, bundled with [sharp](https://sharp.pixelplumbing.com/))
+  is LGPL-3.0-or-later. It is loaded as a separate library from
+  `resources/app.asar.unpacked`, so it can be replaced, and its source is
+  available at <https://github.com/libvips/libvips>.
+- **Downloaded on request, not bundled** (local AI tagging): a standalone
+  Python from [python-build-standalone](https://github.com/astral-sh/python-build-standalone)
+  (Python Software Foundation License), the onnxruntime (MIT), NumPy
+  (BSD-3-Clause) and Pillow (MIT-CMU) wheels from PyPI, and the
+  [SmilingWolf/wd-vit-tagger-v3](https://huggingface.co/SmilingWolf/wd-vit-tagger-v3)
+  model (Apache-2.0).
+- Online lookups (SauceNAO, Danbooru) use those services under their own
+  terms of use; nothing from them is bundled.

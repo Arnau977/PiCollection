@@ -424,6 +424,9 @@ docs/superpowers/
 
 .claude/worktrees/
 
+# Generated before dev/build by scripts/generate-third-party-notices.mjs.
+resources/third-party-notices.txt
+
 # Stray temp config electron-vite generates while loading electron.vite.config.ts;
 # normally self-deletes, but survives if the process is killed mid-run.
 electron.vite.config.*.mjs
