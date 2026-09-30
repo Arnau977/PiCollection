@@ -189,7 +189,7 @@
     "clearSelection": "Clear selection",
     "deleteSelected": "Delete selected",
     "editMetadata": "Edit metadata",
-    "confirmDeleteSelected": "Remove {{count}} selected media from PiCollection? The files stay on disk and are listed under Manage > Discarded.",
+    "confirmDeleteSelected": "Remove {{count}} selected media from PiCollection? The files stay on disk and are listed under Metadata > Discarded.",
     "pagination": {
       "previous": "Previous",
       "next": "Next",
@@ -276,7 +276,7 @@
     "saving": "Saving...",
     "markResolved": "Mark resolved",
     "saveAndResolve": "Save & mark resolved",
-    "confirmDelete": "Remove this media from PiCollection? The file stays on disk and is listed under Manage > Discarded.",
+    "confirmDelete": "Remove this media from PiCollection? The file stays on disk and is listed under Metadata > Discarded.",
     "aiGeneratedTitle": "Generated using AI",
     "aiGeneratedBadge": "AI",
     "addedOnTitle": "Added on {{date}}",
@@ -335,7 +335,7 @@
     "suggestionsTabWd14": "Local AI",
     "replace": "Replace with this file",
     "replaceLabel": "Replace {{name}} with this file",
-    "replaceConfirm": "Replace \"{{name}}\" with this file? It keeps its tags, characters, series and date, and gains the ones in this form. \"{{name}}\" is listed under Manage > Discarded."
+    "replaceConfirm": "Replace \"{{name}}\" with this file? It keeps its tags, characters, series and date, and gains the ones in this form. \"{{name}}\" is listed under Metadata > Discarded."
   },
   "aiMetadata": {
     "detected": "The file's metadata says it was made with {{generator}}.",
@@ -374,8 +374,8 @@
     "exitDialogKeepEditing": "Keep editing",
     "addingToPending_one": "Adding {{count}} file to Pending…",
     "addingToPending_other": "Adding {{count}} files to Pending…",
-    "skippedDiscarded_one": "Skipped 1 file you discarded earlier (Manage > Discarded).",
-    "skippedDiscarded_other": "Skipped {{count}} files you discarded earlier (Manage > Discarded).",
+    "skippedDiscarded_one": "Skipped 1 file you discarded earlier (Metadata > Discarded).",
+    "skippedDiscarded_other": "Skipped {{count}} files you discarded earlier (Metadata > Discarded).",
     "replaced": "Replaced the file of \"{{name}}\"."
   },
   "folderBrowser": {

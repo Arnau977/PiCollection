@@ -189,7 +189,7 @@
     "clearSelection": "Deseleccionar todo",
     "deleteSelected": "Eliminar seleccionados",
     "editMetadata": "Editar metadatos",
-    "confirmDeleteSelected": "¿Quitar {{count}} media seleccionados de PiCollection? Los archivos se quedan en el disco y aparecen en Gestionar > Eliminados.",
+    "confirmDeleteSelected": "¿Quitar {{count}} media seleccionados de PiCollection? Los archivos se quedan en el disco y aparecen en Metadatos > Eliminados.",
     "pagination": {
       "previous": "Anterior",
       "next": "Siguiente",
@@ -276,7 +276,7 @@
     "saving": "Guardando...",
     "markResolved": "Dar por válido",
     "saveAndResolve": "Guardar y dar por válido",
-    "confirmDelete": "¿Quitar este media de PiCollection? El archivo se queda en el disco y aparece en Gestionar > Eliminados.",
+    "confirmDelete": "¿Quitar este media de PiCollection? El archivo se queda en el disco y aparece en Metadatos > Eliminados.",
     "aiGeneratedTitle": "Generado mediante IA",
     "aiGeneratedBadge": "IA",
     "addedOnTitle": "Añadido el {{date}}",
@@ -335,7 +335,7 @@
     "suggestionsTabWd14": "IA local",
     "replace": "Reemplazar con este archivo",
     "replaceLabel": "Reemplazar {{name}} con este archivo",
-    "replaceConfirm": "¿Reemplazar \"{{name}}\" con este archivo? Conserva sus etiquetas, personajes, series y fecha, y suma los de este formulario. \"{{name}}\" aparece en Gestionar > Eliminados."
+    "replaceConfirm": "¿Reemplazar \"{{name}}\" con este archivo? Conserva sus etiquetas, personajes, series y fecha, y suma los de este formulario. \"{{name}}\" aparece en Metadatos > Eliminados."
   },
   "aiMetadata": {
     "detected": "Los metadatos del archivo dicen que se hizo con {{generator}}.",
@@ -374,8 +374,8 @@
     "exitDialogKeepEditing": "Seguir editando",
     "addingToPending_one": "Añadiendo {{count}} archivo a pendientes…",
     "addingToPending_other": "Añadiendo {{count}} archivos a pendientes…",
-    "skippedDiscarded_one": "Se ha omitido 1 archivo que eliminaste antes (Gestionar > Eliminados).",
-    "skippedDiscarded_other": "Se han omitido {{count}} archivos que eliminaste antes (Gestionar > Eliminados).",
+    "skippedDiscarded_one": "Se ha omitido 1 archivo que eliminaste antes (Metadatos > Eliminados).",
+    "skippedDiscarded_other": "Se han omitido {{count}} archivos que eliminaste antes (Metadatos > Eliminados).",
     "replaced": "Se ha reemplazado el archivo de \"{{name}}\"."
   },
   "folderBrowser": {
