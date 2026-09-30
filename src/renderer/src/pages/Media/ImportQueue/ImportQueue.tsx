@@ -146,17 +146,34 @@ export function ImportQueue({
       setToast(result.error.message)
       return
     }
+    removeCurrent()
+  }
+
+  // The current file now lives in the media it replaced; show the next one.
+  function handleReplaced(target: MediaModel): void {
+    setToast(t('importQueue.replaced', { name: target.name }))
+    // The target may be a file saved earlier in this queue: its old file is
+    // discarded now, so that item leaves the queue too.
+    removeCurrent((route) => saved.get(route)?.id === target.id)
+  }
+
+  // Drops the current file (and any matching `alsoRemove`) from the queue;
+  // the next one takes its place.
+  function removeCurrent(alsoRemove: (route: string) => boolean = () => false): void {
+    const gone = (file: ExpandedMediaFile, i: number): boolean =>
+      i === index || alsoRemove(file.route)
     setSaved((prev) => {
       const next = new Map(prev)
-      next.delete(current.route)
+      items.forEach((file, i) => gone(file, i) && next.delete(file.route))
       return next
     })
-    const rest = items.filter((_, i) => i !== index)
+    const rest = items.filter((file, i) => !gone(file, i))
     if (rest.length === 0) {
       onClose()
       return
     }
-    const nextIndex = Math.min(index, rest.length - 1)
+    const keptBefore = items.slice(0, index).filter((file, i) => !gone(file, i)).length
+    const nextIndex = Math.min(keptBefore, rest.length - 1)
     setState({
       kind: 'ready',
       items: rest,
@@ -256,6 +273,7 @@ export function ImportQueue({
         onSentToPending={handleSentToPending}
         onDelete={() => void handleDeleteCurrent()}
         deleting={deleting}
+        onReplaced={handleReplaced}
       />
       {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
       {showExitDialog && (

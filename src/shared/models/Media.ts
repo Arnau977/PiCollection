@@ -109,6 +109,22 @@ export interface MediaInput {
   pendingTagging?: boolean
 }
 
+/**
+ * "Replace with this file" on a similar match: `targetId` (the match) takes
+ * over `route` and keeps its own metadata, plus these ids. `sourceMediaId`
+ * is the current file's own row, when it has one (pending, or saved earlier).
+ */
+export interface MediaReplaceInput {
+  targetId: string
+  route: string
+  type: MediaModel['type']
+  sourceMediaId?: string
+  artistId?: string
+  tagIds: string[]
+  characterIds: string[]
+  seriesIds: string[]
+}
+
 export interface MediaBatchUpdateAssociationsInput {
   mediaIds: string[]
   addTagIds: string[]

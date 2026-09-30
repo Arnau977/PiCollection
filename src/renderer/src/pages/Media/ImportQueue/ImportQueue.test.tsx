@@ -10,6 +10,7 @@ const mediaCreateMany = vi.fn()
 const checkDuplicate = vi.fn()
 const confirmMock = vi.fn()
 const discardFile = vi.fn()
+const mediaReplace = vi.fn()
 
 vi.mock('../../../components/ConfirmDialog/ConfirmDialogContext', () => ({
   useConfirm: () => confirmMock
@@ -32,6 +33,7 @@ beforeEach(() => {
       media: {
         create: mediaCreate,
         createMany: mediaCreateMany,
+        replace: mediaReplace,
         checkDuplicate,
         detectAiMetadata: vi.fn().mockResolvedValue({ success: true, data: null })
       },
@@ -119,6 +121,34 @@ describe('ImportQueue', () => {
     expect(await screen.findByText('File 1 of 1')).toBeInTheDocument()
     expect(discardFile).toHaveBeenCalledWith({ route: '/src/a.png', name: 'a', type: 'image' })
     await vi.waitFor(() => expect(checkDuplicate).toHaveBeenCalledWith('/src/b.png'))
+  })
+
+  it('replaces a similar library media with the current file and moves on', async () => {
+    confirmMock.mockResolvedValue(true)
+    const libraryPic = {
+      id: 'lib1',
+      name: 'Library pic',
+      route: 'old.png',
+      type: 'image',
+      sfw: true,
+      isAiGenerated: false,
+      createdAt: 0,
+      pendingTagging: false
+    }
+    checkDuplicate.mockResolvedValue({
+      success: true,
+      data: { exactMatch: null, similar: [{ media: libraryPic, distance: 2 }] }
+    })
+    mediaReplace.mockResolvedValue({ success: true, data: libraryPic })
+    renderQueue()
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Replace old.png with this file' }))
+
+    expect(await screen.findByText('File 1 of 1')).toBeInTheDocument()
+    expect(mediaReplace).toHaveBeenCalledWith(
+      expect.objectContaining({ targetId: 'lib1', route: '/src/a.png', sourceMediaId: undefined })
+    )
   })
 
   it('sending an item to Pending advances to the next file automatically', async () => {

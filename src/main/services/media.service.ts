@@ -16,13 +16,14 @@ import {
   hammingDistance,
   PHASH_SIMILAR_THRESHOLD
 } from './mediaHash'
-import { readSourceFolder, relativizeRoute } from './sourceFolder'
+import { readSourceFolder, relativizeRoute, resolveRoute } from './sourceFolder'
 import { notifyEntitiesChanged } from '../events/entityEvents'
 import type {
   ArtistModel,
   CharacterModel,
   EntityKind,
   MediaBatchUpdateAssociationsInput,
+  MediaReplaceInput,
   MediaDuplicateCheck,
   MediaDuplicateMatch,
   MediaFilteredResult,
@@ -462,6 +463,52 @@ export const mediaService = {
     // media, even ones absent from the new input entirely.
     notifyEntitiesChanged(['tag', 'character', 'series', 'artist'])
     return updated
+  },
+
+  /**
+   * The current file takes over a similar media: the target keeps its id,
+   * added date, flags and links, gains the given tags/characters/series (its
+   * artist only if it had none) and points at the new file. Its old file goes
+   * to the Discarded list as replaced; the current file's own row (pending, or
+   * saved earlier in a batch import) is removed without being recorded, since
+   * its file lives on in the target.
+   */
+  async replaceMedia(input: MediaReplaceInput): Promise<MediaModel> {
+    const db = getDb()
+    await assertRelationsExist(db, input)
+    const target = await mediaRepo.findMediaRowById(db, input.targetId)
+    if (!target) throw new AppError('MISSING_TARGET', 'The media to replace no longer exists.')
+    if (input.sourceMediaId === input.targetId) {
+      throw new AppError('INVALID_REPLACE', 'A media cannot replace itself.')
+    }
+
+    const sourceFolder = readSourceFolder()
+    const route = relativizeRoute(input.route, sourceFolder)
+    const absoluteRoute = resolveRoute(route, sourceFolder)
+    const hash = await computeFileHash(absoluteRoute)
+    const phash = hash ? await computePerceptualHash(absoluteRoute) : null
+
+    await db.transaction().execute(async (trx) => {
+      // First: the source row holds the new route, which is UNIQUE.
+      if (input.sourceMediaId) await mediaRepo.deleteMediaRow(trx, input.sourceMediaId)
+      await recordDiscarded(trx, target, 'replaced')
+      await discardedRepo.deleteDiscardedByRoute(trx, route)
+      await mediaRepo.updateMediaRow(trx, target.id, {
+        route,
+        type: input.type,
+        hash,
+        phash,
+        artist_id: target.artist_id ?? input.artistId ?? null
+      })
+      await mediaRepo.addMediaTagsBulk(trx, [target.id], input.tagIds)
+      await mediaRepo.addMediaCharactersBulk(trx, [target.id], input.characterIds)
+      await mediaRepo.addMediaSeriesBulk(trx, [target.id], input.seriesIds)
+    })
+
+    const replaced = await getMediaModelById(db, target.id)
+    if (!replaced) throw new Error('Failed to load replaced media')
+    notifyEntitiesChanged(['tag', 'character', 'series', 'artist'])
+    return replaced
   },
 
   async batchUpdateAssociations(input: MediaBatchUpdateAssociationsInput): Promise<void> {

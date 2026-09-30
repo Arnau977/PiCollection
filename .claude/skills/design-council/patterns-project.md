@@ -139,7 +139,10 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   that entity, keeping the SFW default. Zero stays plain text. Where:
   `src/renderer/src/components/EntityCountButton/EntityCountButton.tsx` (#84).
 - **Non-blocking "looks similar" lists** with hover previews and the
-  "N/64 difference". Where:
+  "N/64 difference", and a compact "Replace with this file" button at the
+  right of each match (not for a video/GIF relation), behind a confirm that
+  says what the match keeps and that its file goes to Discarded; it locks
+  while the form saves. Where:
   `src/renderer/src/pages/Media/MediaForm/SimilarMediaWarning.tsx` (#91).
 - **Compare two images at full size with a drag divider** (`MediaCompare`):
   both fitted to the same box so identical pictures line up; the stage

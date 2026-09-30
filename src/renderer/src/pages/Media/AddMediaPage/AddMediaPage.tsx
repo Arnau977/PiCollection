@@ -67,6 +67,9 @@ export default function AddMediaPage(): JSX.Element {
         <MediaForm
           onCancel={goToGallery}
           onSaved={(created) => navigate(PATH.MEDIA.replace(':id', created.id), { replace: true })}
+          onReplaced={(target) =>
+            navigate(PATH.MEDIA.replace(':id', target.id), { replace: true })
+          }
         />
       )}
 

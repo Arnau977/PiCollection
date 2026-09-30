@@ -167,8 +167,9 @@ missing-file checks and backups include it. Resolving it
 its sole series.
 
 Deleting media never deletes its file: `mediaService.deleteMedia` records
-the route in `discarded_media` (so does discarding an unsaved batch-import
-file), listed under Manage > Discarded. A batch import's `expandSelection`
+the route in `discarded_media` (so do discarding an unsaved batch-import
+file and `mediaService.replaceMedia` for the file a similar media gave up),
+listed under Manage > Discarded. A batch import's `expandSelection`
 skips discarded routes, and adding a file again removes its record. The only
 code that touches the file itself is `discardedMediaService.trashFiles`
 (`shell.trashItem`, i.e. the Recycle Bin).

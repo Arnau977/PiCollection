@@ -263,6 +263,9 @@ const MediaPage: React.FC = () => {
             onMarkResolved={advanceQueue}
             onDelete={pendingQueue ? (): Promise<void> => handleDelete(media.id) : undefined}
             deleting={deleting}
+            // This media's row is gone once it replaced another: the pending
+            // queue moves on, otherwise show the media that took the file.
+            onReplaced={(target) => (pendingQueue ? advanceQueue() : goToMedia(target.id))}
           />
         ) : (
           <Media {...media} previousId={previousId} nextId={nextId} onNavigate={goToMedia} />

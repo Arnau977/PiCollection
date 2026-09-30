@@ -19,6 +19,7 @@ import type {
   DiscardFileInput,
   ExtensionBridgeStatus,
   MediaBatchUpdateAssociationsInput,
+  MediaReplaceInput,
   MediaDuplicateCheck,
   AiMetadataDetection,
   MediaDuplicateMatch,
@@ -77,6 +78,8 @@ export const api = {
       ipcRenderer.invoke(IPC.media.update, { id, input }),
     batchUpdateAssociations: (input: MediaBatchUpdateAssociationsInput): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.media.batchUpdateAssociations, input),
+    replace: (input: MediaReplaceInput): Promise<IpcResult<MediaModel>> =>
+      ipcRenderer.invoke(IPC.media.replace, input),
     clearPendingTagging: (id: string): Promise<IpcResult<MediaModel>> =>
       ipcRenderer.invoke(IPC.media.clearPendingTagging, id),
     delete: (id: string): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.media.delete, id),

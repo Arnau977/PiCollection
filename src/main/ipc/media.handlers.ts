@@ -12,6 +12,7 @@ import {
   IPC,
   IdSchema,
   MediaBatchUpdateAssociationsSchema,
+  MediaReplaceSchema,
   MediaCreateManySchema,
   MediaGetEntityThumbnailsSchema,
   MediaGetFilteredSchema,
@@ -64,6 +65,10 @@ export function registerMediaHandlers(): void {
     ipcHandler(IPC.media.batchUpdateAssociations, MediaBatchUpdateAssociationsSchema, (input) =>
       mediaService.batchUpdateAssociations(input)
     )
+  )
+  ipcMain.handle(
+    IPC.media.replace,
+    ipcHandler(IPC.media.replace, MediaReplaceSchema, (input) => mediaService.replaceMedia(input))
   )
   ipcMain.handle(
     IPC.media.clearPendingTagging,
