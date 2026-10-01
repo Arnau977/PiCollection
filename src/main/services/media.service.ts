@@ -50,6 +50,10 @@ function parseSourceMetadata(raw: string | null | undefined): MediaSourceMetadat
     return {
       site: typeof parsed.site === 'string' ? parsed.site : undefined,
       artist: typeof parsed.artist === 'string' ? parsed.artist : undefined,
+      artistUrl:
+        typeof parsed.artistUrl === 'string' && /^https?:\/\//.test(parsed.artistUrl)
+          ? parsed.artistUrl
+          : undefined,
       tags: names(parsed.tags),
       characters: names(parsed.characters),
       series: names(parsed.series),

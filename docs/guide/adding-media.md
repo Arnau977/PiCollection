@@ -42,8 +42,8 @@ folder, and a message says how many.
 ## Capturing from the browser
 
 The **PiCollection Capture** browser extension saves the post you're viewing
-(on Danbooru, Rule34, Safebooru, Gelbooru, Yande.re and Konachan) straight
-into the pending queue.
+(on Danbooru, Rule34, Safebooru, Gelbooru, Yande.re, Konachan and Pixiv)
+straight into the pending queue.
 
 1. **Settings > Advanced > Browser extension capture**: turn it on and pair
    the extension. The connection is local to your computer only; nothing
@@ -56,6 +56,12 @@ review there. It links the artist only when the site credits exactly one you
 already have, and never creates anything. Everything the site listed is kept,
 including its rating, and offered in the [suggestions
 panel](tagging.md#from-the-source-site) when you tag the media.
+
+**On Pixiv**: right-clicking a page of a multi-page post saves that page, and
+the popup offers **Save all N** to take every page (each becomes its own
+pending item). Tags come in English when Pixiv has a translation. Log in to
+Pixiv to capture age-restricted works. Pixiv animations (ugoira) can't be
+captured yet.
 
 ---
 ← [Getting started](getting-started.md) · [Guide index](README.md) · Next: [Tagging and suggestions](tagging.md) →

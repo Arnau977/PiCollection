@@ -37,6 +37,10 @@ export const ExtensionBridgeCaptureInputSchema = z.object({
   sourceMetadata: z
     .object({
       artist: z.string().optional(),
+      artistUrl: z
+        .string()
+        .regex(/^https?:\/\//)
+        .optional(),
       tags: z.array(z.string()).default([]),
       characters: z.array(z.string()).default([]),
       series: z.array(z.string()).default([])
@@ -136,6 +140,7 @@ function toSourceMetadata(input: ExtensionBridgeCaptureInput): MediaSourceMetada
   const metadata: MediaSourceMetadata = {
     site: input.sourceSite,
     artist: raw.artist?.trim() || undefined,
+    artistUrl: 'artistUrl' in raw ? raw.artistUrl : undefined,
     tags: cleanNames(raw.tags),
     characters: cleanNames(raw.characters),
     series: cleanNames(raw.series),

@@ -22,6 +22,27 @@ import {
   type SuggestionCategory
 } from './tagSuggestionMatching'
 
+/**
+ * Some sites (Pixiv) don't split characters and series from tags: every name
+ * arrives as a tag. One the library only knows as a series or a character
+ * (not as a tag) is offered as that instead - "Genshin Impact" as the series
+ * you already have, not as a new tag.
+ */
+export function routeSourceTags(
+  metadata: Pick<MediaSourceMetadata, 'tags' | 'characters' | 'series'>,
+  library: { tags: TagModel[]; characters: CharacterModel[]; series: SeriesModel[] }
+): { tags: string[]; characters: string[]; series: string[] } {
+  const routed = { tags: [] as string[], characters: [...metadata.characters], series: [...metadata.series] }
+  for (const tag of metadata.tags) {
+    const name = [{ name: cleanEntityName(tag) }]
+    if (matchEntityNames(name, library.tags).existing.length) routed.tags.push(tag)
+    else if (matchEntityNames(name, library.series).existing.length) routed.series.push(tag)
+    else if (matchEntityNames(name, library.characters).existing.length) routed.characters.push(tag)
+    else routed.tags.push(tag)
+  }
+  return routed
+}
+
 interface UseSourceSuggestionsArgs {
   metadata?: MediaSourceMetadata
   /** The form's current values - suggestions it already has are hidden. */
@@ -98,13 +119,14 @@ export function useSourceSuggestions({
     if (!metadata) {
       return { existing: EMPTY_EXISTING, missing: EMPTY_MISSING, characterParents: {} }
     }
+    const routed = routeSourceTags(metadata, { tags, characters, series })
     const result = matchSuggestionCandidate(
       {
         // Several credits are matched below, one chip each.
         artist: null,
-        tags: metadata.tags.map((name) => ({ name: cleanEntityName(name) })),
-        characters: splitBooruCharacterList(metadata.characters),
-        series: metadata.series.map((name) => ({ name: cleanEntityName(name) }))
+        tags: routed.tags.map((name) => ({ name: cleanEntityName(name) })),
+        characters: splitBooruCharacterList(routed.characters),
+        series: routed.series.map((name) => ({ name: cleanEntityName(name) }))
       },
       { artists, tags, characters, series },
       danbooru
