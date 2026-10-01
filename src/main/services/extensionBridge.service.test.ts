@@ -128,6 +128,29 @@ describe('extensionBridgeService.capture', () => {
     })
   })
 
+  it("keeps the artist's profile on the site (Pixiv) as source info", async () => {
+    writeSourceFolder(sourceDir)
+
+    const result = await extensionBridgeService.capture(
+      baseCapture({
+        sourceSite: 'pixiv',
+        sourceMetadata: {
+          artist: '赤倉',
+          artistUrl: 'https://www.pixiv.net/users/882569',
+          tags: ['Genshin Impact'],
+          characters: [],
+          series: []
+        }
+      })
+    )
+
+    const media = await mediaService.getMediaById(result.mediaId)
+    expect(media?.sourceMetadata).toMatchObject({
+      site: 'pixiv',
+      artistUrl: 'https://www.pixiv.net/users/882569'
+    })
+  })
+
   it('links only a sole artist, keeping names, rating and AI flag as suggestions', async () => {
     writeSourceFolder(sourceDir)
     const artist = await artistService.createArtist({ name: 'Some Artist' })

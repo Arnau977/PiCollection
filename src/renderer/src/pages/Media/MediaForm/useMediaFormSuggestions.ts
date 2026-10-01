@@ -15,7 +15,7 @@ import {
 import { useSourceSuggestions, type ExistingSuggestion } from '../../../hooks/useSourceSuggestions'
 import { useWd14Runtime } from '../../../hooks/useWd14Runtime'
 import { useWd14Suggestions } from '../../../hooks/useWd14Suggestions'
-import { titleCaseTagName } from '../../../utils/matchEntityNames'
+import { normalizeEntityName, titleCaseTagName } from '../../../utils/matchEntityNames'
 import { withImpliedSeries } from '../../../utils/withImpliedSeries'
 import type { MediaFormDrafts } from './useMediaFormDrafts'
 
@@ -201,8 +201,19 @@ export function useMediaFormSuggestions({
     series: [...series.data, ...drafts.pendingSeries]
   })
 
+  // The site's own profile of the credited artist (a capture from Pixiv)
+  // is linked when that artist is created from the suggestion.
+  function sourceArtistSocial(name: string): { name: string; url: string } | undefined {
+    const url = sourceMetadata?.artistUrl
+    if (!url || normalizeEntityName(sourceMetadata?.artist ?? '') !== normalizeEntityName(name)) {
+      return undefined
+    }
+    const host = new URL(url).hostname
+    return { name: host.endsWith('pixiv.net') ? 'Pixiv' : host.replace(/^www\./, ''), url }
+  }
+
   function addSourceSuggestion(category: SuggestionCategory, name: string): void {
-    if (category === 'artist') drafts.createArtist(name)
+    if (category === 'artist') drafts.createArtist(name, sourceArtistSocial(name))
     else if (category === 'tags') drafts.createTag(titleCaseTagName(name))
     else if (category === 'characters') drafts.createCharacter(name, source.characterParents[name])
     else drafts.attachExistingOrCreateSeries(name)

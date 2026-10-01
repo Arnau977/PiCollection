@@ -26,6 +26,8 @@ export interface MediaModel {
 export interface MediaSourceMetadata {
   site?: string
   artist?: string
+  /** The artist's profile on the site (Pixiv), linked if the artist is created from it. */
+  artistUrl?: string
   tags: string[]
   characters: string[]
   series: string[]

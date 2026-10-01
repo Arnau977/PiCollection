@@ -59,6 +59,11 @@ characters and series you already have (one by one, or **Add the N already
 in your library**), the ones you don't (marked "new", created on click), and
 the site's rating and AI-generated flag.
 
+Sites that don't tell characters and series apart from tags (Pixiv) send
+everything as tags: a name you already have as a series or character is
+offered as that. Creating the artist from a Pixiv capture also links their
+Pixiv profile.
+
 ### SauceNAO
 
 **Suggest tags** sends a small thumbnail to [SauceNAO](https://saucenao.com)
