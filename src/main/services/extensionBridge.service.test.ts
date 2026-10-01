@@ -140,7 +140,7 @@ describe('extensionBridgeService.capture', () => {
         artistName: 'some artist',
         tagNames: ['closed_eyes'],
         seriesNames: ['xenoblade_chronicles_(series)', 'xenoblade_chronicles_2'],
-        sfw: true,
+        sfw: false,
         isAiGenerated: true
       })
     )
@@ -149,12 +149,13 @@ describe('extensionBridgeService.capture', () => {
     expect(media?.artist?.id).toBe(artist.id)
     expect(media?.tags).toEqual([])
     expect(media?.series).toEqual([])
-    expect(media?.sfw).toBe(false)
+    // Starts SFW like any new media; the site's NSFW rating is only a hint.
+    expect(media?.sfw).toBe(true)
     expect(media?.isAiGenerated).toBe(false)
     expect(media?.sourceMetadata).toMatchObject({
       tags: ['closed_eyes'],
       series: ['xenoblade_chronicles_(series)', 'xenoblade_chronicles_2'],
-      sfw: true,
+      sfw: false,
       isAiGenerated: true
     })
   })
@@ -184,10 +185,10 @@ describe('extensionBridgeService.capture', () => {
     expect(second.mediaId).toBe(first.status === 'created' ? first.mediaId : undefined)
   })
 
-  it('defaults pendingTagging to true when not specified', async () => {
+  it('always creates pending media, even when an older extension asks otherwise', async () => {
     writeSourceFolder(sourceDir)
 
-    const result = await extensionBridgeService.capture(baseCapture())
+    const result = await extensionBridgeService.capture(baseCapture({ pendingTagging: false }))
 
     expect(result.status).toBe('created')
     const { mediaService } = await import('./media.service')

@@ -49,7 +49,8 @@ filters**. Default filters and sorting for the gallery are set in **Settings
 
 ## NSFW
 
-Mark media as NSFW in its edit form (captures start as NSFW). With **Blur
+Mark media as NSFW in its edit form (for a capture, the site's rating is
+offered as a suggestion). With **Blur
 NSFW** on, their thumbnails stay blurred until you open them. Toggle it from
 the gallery toolbar, with `Ctrl+B` on any page, or by default in **Settings >
 General**. **Hide names** there hides the name under each thumbnail.

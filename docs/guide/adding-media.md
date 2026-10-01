@@ -51,9 +51,10 @@ into the pending queue.
 2. While it's on, closing the window keeps PiCollection running in the system
    tray so captures keep working.
 
-A capture starts as NSFW (blurred), links the artist only when the site
-credits exactly one you already have, and never creates anything. Everything
-the site listed is kept, and offered in the [suggestions
+A capture always lands in the [pending queue](pending-and-discarded.md), to
+review there. It links the artist only when the site credits exactly one you
+already have, and never creates anything. Everything the site listed is kept,
+including its rating, and offered in the [suggestions
 panel](tagging.md#from-the-source-site) when you tag the media.
 
 ---
