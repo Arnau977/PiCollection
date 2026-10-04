@@ -102,6 +102,14 @@ export function MediaForm({
   const [duplicateCheck, setDuplicateCheck] = useState<MediaDuplicateCheck | null>(null)
 
   const aiDetection = useAiMetadataDetection(input.route, input.type)
+  // The file's own metadata is a fact about it, not a guess, so new and
+  // pending media take it right away (the hint below says why). Library
+  // media the user already reviewed only get the offer.
+  const autoAppliesAi = !isEditing || Boolean(media?.pendingTagging)
+  useEffect(() => {
+    if (aiDetection && autoAppliesAi) setInput((prev) => ({ ...prev, isAiGenerated: true }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per detection; turning it off afterwards sticks
+  }, [aiDetection])
   const drafts = useMediaFormDrafts({ input, setInput, artists, tags, characters, series })
   const suggestions = useMediaFormSuggestions({
     input,

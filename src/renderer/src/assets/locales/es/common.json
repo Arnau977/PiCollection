@@ -339,7 +339,8 @@
   },
   "aiMetadata": {
     "detected": "Los metadatos del archivo dicen que se hizo con {{generator}}.",
-    "markAsAi": "Marcar como IA"
+    "markAsAi": "Marcar como IA",
+    "applied": "Marcado como IA: los metadatos del archivo dicen que se hizo con {{generator}}."
   },
   "sourceSuggestions": {
     "hint": "Lo que tenía el post original. No se añade nada hasta que lo pulses; lo marcado como nuevo se crea.",

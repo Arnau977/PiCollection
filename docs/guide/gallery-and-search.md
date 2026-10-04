@@ -3,7 +3,8 @@
 The **Gallery** shows your whole library (pending items aside) as a grid of
 thumbnails, with the search bar and filters on top. Thumbnails are small
 cached previews, so large collections scroll smoothly; GIFs and videos only
-play while you hover them. **Grid size** and page size are in the toolbar.
+play while you hover them. A corner badge marks GIFs, videos and AI-generated
+media. **Grid size** and page size are in the toolbar.
 
 ## Search
 

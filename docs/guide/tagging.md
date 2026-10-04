@@ -101,9 +101,10 @@ suggestion is.
 
 The edit form reads the image's own metadata for traces AI generators leave
 (Stable Diffusion WebUI, ComfyUI, InvokeAI, NovelAI, or the "AI-generated"
-mark of Content Credentials/IPTC). When it finds one, it offers **Mark as AI**
-under the toggle. Most sites strip this metadata, so finding nothing proves
-nothing.
+mark of Content Credentials/IPTC). When it finds one on a new or pending
+media, it turns **AI** on by itself and says so under the toggle (you can
+still turn it off); on media already in your library it only offers **Mark
+as AI**. Most sites strip this metadata, so finding nothing proves nothing.
 
 ---
 ← [Adding media](adding-media.md) · [Guide index](README.md) · Next: [Pending and discarded](pending-and-discarded.md) →

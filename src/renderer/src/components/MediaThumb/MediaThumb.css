@@ -19,8 +19,9 @@
   inset: 0;
 }
 
-.media-thumb-play,
-.media-thumb-gif-badge {
+/* What the file is (AI-generated, GIF, video), gathered in one corner -
+   the top-left one belongs to the gallery's selection checkbox. */
+.media-thumb-badges {
   position: absolute;
   bottom: var(--space-2);
   right: var(--space-2);
@@ -29,12 +30,21 @@
   z-index: 2;
   display: flex;
   align-items: center;
+  gap: var(--space-1);
+  pointer-events: none;
+}
+
+/* White on this fill over a white picture: 4.74:1. */
+.media-thumb-play,
+.media-thumb-gif-badge,
+.media-thumb-ai-badge {
+  display: flex;
+  align-items: center;
   justify-content: center;
   border-radius: var(--radius-pill);
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(6px);
   color: #fff;
-  pointer-events: none;
 }
 
 .media-thumb-play {
@@ -42,7 +52,12 @@
   height: 2rem;
 }
 
-.media-thumb-gif-badge {
+.media-thumb-ai-badge {
+  gap: 0.2rem;
+}
+
+.media-thumb-gif-badge,
+.media-thumb-ai-badge {
   padding: 0.15rem var(--space-2);
   font-size: 0.65rem;
   font-weight: 700;

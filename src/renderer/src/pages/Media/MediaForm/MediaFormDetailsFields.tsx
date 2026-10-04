@@ -13,7 +13,7 @@ interface MediaFormDetailsFieldsProps {
   pendingArtists: ArtistModel[]
   onArtistSelect: (artist: ArtistModel | null) => void
   onCreateArtist: (name: string, social?: { name: string; url: string }) => void
-  /** Generator traces found in the file itself - offered, never applied on their own. */
+  /** Generator traces found in the file itself - MediaForm applies them to new and pending media. */
   aiDetection: AiMetadataDetection | null
   onMarkAiGenerated: () => void
   /** The field a failed save pointed at (see MediaFormSaveError). */
@@ -95,13 +95,19 @@ export function MediaFormDetailsFields({
         </label>
       </div>
 
-      {aiDetection && !input.isAiGenerated && (
+      {aiDetection && (
         <div className="media-form-ai-hint">
           <Sparkles size={14} aria-hidden="true" />
-          <span>{t('aiMetadata.detected', { generator: aiDetection.generator })}</span>
-          <button type="button" className="btn" onClick={onMarkAiGenerated}>
-            {t('aiMetadata.markAsAi')}
-          </button>
+          {input.isAiGenerated ? (
+            <span>{t('aiMetadata.applied', { generator: aiDetection.generator })}</span>
+          ) : (
+            <>
+              <span>{t('aiMetadata.detected', { generator: aiDetection.generator })}</span>
+              <button type="button" className="btn" onClick={onMarkAiGenerated}>
+                {t('aiMetadata.markAsAi')}
+              </button>
+            </>
+          )}
         </div>
       )}
 

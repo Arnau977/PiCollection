@@ -339,7 +339,8 @@
   },
   "aiMetadata": {
     "detected": "The file's metadata says it was made with {{generator}}.",
-    "markAsAi": "Mark as AI"
+    "markAsAi": "Mark as AI",
+    "applied": "Marked as AI: the file's metadata says it was made with {{generator}}."
   },
   "sourceSuggestions": {
     "hint": "What the original post had. Nothing is added until you click it; names marked new are created.",
