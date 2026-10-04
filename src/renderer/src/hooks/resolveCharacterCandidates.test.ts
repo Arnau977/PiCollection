@@ -16,12 +16,14 @@ describe('resolveCharacterCandidates', () => {
       {
         name: 'Pyra (Pro Swimmer)',
         altNames: ['pyra (pro swimmer) (xenoblade)'],
-        parent: { name: 'Pyra', altNames: ['pyra (xenoblade)'] }
+        parent: { name: 'Pyra', altNames: ['pyra (xenoblade)'], series: ['xenoblade'] },
+        series: ['xenoblade']
       },
       {
         name: 'Nia (Blade)',
         altNames: ['nia (blade) (xenoblade)'],
-        parent: { name: 'Nia', altNames: ['nia (xenoblade)'] }
+        parent: { name: 'Nia', altNames: ['nia (xenoblade)'], series: ['xenoblade'] },
+        series: ['xenoblade']
       }
     ])
     // "xenoblade" names no library series, so no new-series chip either.
@@ -52,7 +54,7 @@ describe('resolveCharacterCandidates', () => {
   it('keeps a single qualifier as a series to confirm when nothing else says which series', () => {
     const result = resolveCharacterCandidates([{ name: 'sylphiette (mushoku tensei)' }], [], [])
     expect(result.characters).toEqual([
-      { name: 'sylphiette', altNames: ['sylphiette (mushoku tensei)'] }
+      { name: 'sylphiette', altNames: ['sylphiette (mushoku tensei)'], series: ['mushoku tensei'] }
     ])
     expect(result.seriesHints).toEqual([{ name: 'mushoku tensei' }])
   })
@@ -119,5 +121,20 @@ describe('matchSuggestionCandidate with Danbooru answers', () => {
     expect(result.missing.characters).toEqual(['Inugami Korone (1st Costume)'])
     expect(result.characterParents).toEqual({ 'Inugami Korone (1st Costume)': 'Inugami Korone' })
     expect(result.missing.series).toEqual(['Hololive'])
+  })
+})
+
+describe('matchSuggestionCandidate with same-named characters', () => {
+  const blueArchive: SeriesModel = { id: 's-ba', name: 'Blue Archive' }
+  const sao: SeriesModel = { id: 's-sao', name: 'Sword Art Online' }
+  const saoAsuna: CharacterModel = { id: 'c-asuna', name: 'Asuna', series: [sao] }
+
+  it("doesn't apply SAO's Asuna to a tag that says Blue Archive, and offers a new one", () => {
+    const result = matchSuggestionCandidate(
+      { artist: null, tags: [], characters: [{ name: 'asuna (blue archive)' }], series: [] },
+      { artists: [], tags: [], characters: [saoAsuna], series: [blueArchive, sao] }
+    )
+    expect(result.applied.characterIds).toEqual([])
+    expect(result.missing.characters).toEqual(['Asuna'])
   })
 })

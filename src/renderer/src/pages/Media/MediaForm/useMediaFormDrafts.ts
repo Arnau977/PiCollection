@@ -79,6 +79,11 @@ export function useMediaFormDrafts({
   const [pendingArtists, setPendingArtists] = useState<ArtistModel[]>([])
   const pendingArtistSocials = useRef(new Map<string, { name: string; url: string }>())
   const pendingCharacterParents = useRef(new Map<string, string>())
+  // Same-named characters that already existed when a draft was made. The
+  // draft is someone else who shares the name ("Asuna" of Blue Archive next
+  // to SAO's): suggestion matching ruled them out, and the picker never
+  // offers "Create" for a name that exists - so saving must not reuse them.
+  const pendingCharacterNamesakes = useRef(new Map<string, Set<string>>())
 
   // A committed draft keeps showing (under its real id) until the refetched
   // list has it, so its chip never blinks out in between.
@@ -105,6 +110,12 @@ export function useMediaFormDrafts({
     const draft: CharacterModel = { id: crypto.randomUUID(), name, series: [] }
     setPendingCharacters((prev) => [...prev, draft])
     if (parentName) pendingCharacterParents.current.set(draft.id, parentName)
+    const namesakes = characters.data.filter(
+      (c) => normalizeEntityName(c.name) === normalizeEntityName(name)
+    )
+    if (namesakes.length > 0) {
+      pendingCharacterNamesakes.current.set(draft.id, new Set(namesakes.map((c) => c.id)))
+    }
     // The form replaces its base character (applied earlier by the suggestion):
     // searches for the base still find it through the character hierarchy.
     const parent = parentName
@@ -209,14 +220,20 @@ export function useMediaFormDrafts({
     const freshResult = await window.api.character.getAll()
     const freshCharacters = freshResult.success ? freshResult.data : characters.data
 
-    const idByName = new Map(freshCharacters.map((c) => [normalizeEntityName(c.name), c.id]))
-    async function findOrCreate(name: string, parentId?: string): Promise<string> {
+    const createdByName = new Map<string, string>()
+    async function findOrCreate(
+      name: string,
+      parentId?: string,
+      namesakes = new Set<string>()
+    ): Promise<string> {
       const key = normalizeEntityName(name)
-      const existing = idByName.get(key)
+      const existing =
+        createdByName.get(key) ??
+        freshCharacters.find((c) => normalizeEntityName(c.name) === key && !namesakes.has(c.id))?.id
       if (existing) return existing
       const result = await window.api.character.create({ name, seriesIds: [], parentId })
       if (!result.success) throw new Error(result.error.message)
-      idByName.set(key, result.data.id)
+      createdByName.set(key, result.data.id)
       return result.data.id
     }
 
@@ -225,7 +242,10 @@ export function useMediaFormDrafts({
     for (const draft of toResolve) {
       const parentName = pendingCharacterParents.current.get(draft.id)
       const parentId = parentName ? await findOrCreate(parentName) : undefined
-      resolved.set(draft.id, await findOrCreate(draft.name, parentId))
+      resolved.set(
+        draft.id,
+        await findOrCreate(draft.name, parentId, pendingCharacterNamesakes.current.get(draft.id))
+      )
     }
     return resolved
   }

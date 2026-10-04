@@ -1,6 +1,7 @@
 import type { DanbooruCharacterInfo, SauceNaoName, SeriesModel } from '@shared/models'
 import { cleanEntityName, parseCharacterTag, toBooruTag } from '@shared/utils'
 import { normalizeForMatch } from '../utils/fuzzyMatch'
+import { qualifierNamesSeries } from '../utils/matchEntityNames'
 
 export interface ResolvedCharacterCandidates {
   /** Each suggested character; a form/costume carries its base character in `parent`. */
@@ -17,13 +18,6 @@ function titleCaseWords(value: string): string {
     /(^|\s)(\S)/g,
     (_, space: string, letter: string) => space + letter.toUpperCase()
   )
-}
-
-/** "xenoblade" names "Xenoblade Chronicles 2" too: equal, or the start of it word-for-word. */
-function qualifierNamesSeries(qualifier: string, seriesName: string): boolean {
-  const q = normalizeForMatch(qualifier)
-  const s = normalizeForMatch(seriesName)
-  return q.length > 0 && (s === q || s.startsWith(`${q} `))
 }
 
 /**
@@ -76,12 +70,14 @@ export function resolveCharacterCandidates(
 
     const info = infoByTag.get(toBooruTag(full))
     if (info && (info.parentTag || info.series.length > 0)) {
+      const series: string[] = []
       for (const tag of info.series) {
         const name = titleCaseWords(cleanEntityName(tag))
         confirmedSeries.set(normalizeForMatch(name), { name })
+        series.push(name)
       }
       if (!info.parentTag) {
-        resolved.push({ ...character, name: base, altNames: [full] })
+        resolved.push({ ...character, name: base, altNames: [full], series })
         continue
       }
       const parentParts = parseCharacterTag(info.parentTag)
@@ -89,14 +85,16 @@ export function resolveCharacterCandidates(
       const forms = qualifiers.filter((q) => !parentQualifiers.has(normalizeForMatch(q)))
       const parent = {
         name: titleCaseWords(parentParts.base),
-        altNames: [cleanEntityName(info.parentTag)]
+        altNames: [cleanEntityName(info.parentTag)],
+        series
       }
       resolved.push(
         forms.length > 0
           ? {
               name: `${parent.name} ${forms.map((q) => `(${titleCaseWords(q)})`).join(' ')}`,
               altNames: [full],
-              parent
+              parent,
+              series
             }
           : { ...parent, altNames: [full, ...parent.altNames] }
       )
@@ -128,11 +126,13 @@ export function resolveCharacterCandidates(
     }
 
     const baseAltNames = seriesQualifier ? [`${base} (${seriesQualifier})`] : []
+    const series = seriesQualifier ? [seriesQualifier] : undefined
     if (formQualifiers.length === 0) {
       resolved.push({
         ...character,
         name: base,
-        altNames: Array.from(new Set([full, ...baseAltNames]))
+        altNames: Array.from(new Set([full, ...baseAltNames])),
+        series
       })
       continue
     }
@@ -142,7 +142,8 @@ export function resolveCharacterCandidates(
     resolved.push({
       name: formName,
       altNames: [full],
-      parent: { name: parentName, altNames: baseAltNames }
+      parent: { name: parentName, altNames: baseAltNames, series },
+      series
     })
   }
 

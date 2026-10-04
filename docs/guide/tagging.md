@@ -80,6 +80,11 @@ series and tags. It works for images, GIFs and videos.
   `pyra_(pro_swimmer)_(xenoblade)`, the last parenthesis is the series and
   the earlier one a form, so it's suggested as "Pyra (Pro Swimmer)", a form of
   "Pyra".
+- Two characters can share a name: when a tag names one of your series
+  (`asuna_(blue_archive)`), a same-named character linked only to other
+  series (SAO's Asuna) isn't applied; a new "Asuna" is offered instead, and
+  from then on each picture gets its own. The same applies to the local AI
+  and site suggestions.
 - With a Danbooru account (**Settings > Advanced**), the app asks Danbooru for
   the exact base character and the most specific series (by tag name only,
   cached for 30 days).

@@ -6,6 +6,12 @@ export interface SauceNaoName {
   altNames?: string[]
   /** Characters only: the base character this one is a form/costume of, e.g. "Pyra" for "Pyra (Pro Swimmer)". */
   parent?: SauceNaoName
+  /**
+   * Characters only: the series the character's own tag names - a qualifier
+   * ("Blue Archive" from "Asuna (Blue Archive)") or Danbooru's answer. Keeps
+   * a same-named character from another series from being taken for it.
+   */
+  series?: string[]
 }
 
 export interface SauceNaoArtist extends SauceNaoName {

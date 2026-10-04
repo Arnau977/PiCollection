@@ -145,3 +145,47 @@ describe('useMediaFormDrafts after a save', () => {
     expect(tagIds).toEqual(['t-body'])
   })
 })
+
+describe('useMediaFormDrafts same-named characters', () => {
+  it('creates a new character instead of reusing the namesake the suggestion ruled out', async () => {
+    const saoAsuna: CharacterModel = { id: 'c-sao', name: 'Asuna', series: [] }
+    const create = vi.fn().mockResolvedValue({
+      success: true,
+      data: { id: 'c-new', name: 'Asuna', series: [] }
+    })
+    Object.defineProperty(window, 'api', {
+      value: {
+        character: {
+          getAll: vi.fn().mockResolvedValue({ success: true, data: [saoAsuna] }),
+          create
+        }
+      },
+      configurable: true
+    })
+
+    const { result } = renderHook(() => {
+      const [input, setInput] = useState<MediaInput>({
+        route: 'a.png',
+        type: 'image'
+      } as MediaInput)
+      const drafts = useMediaFormDrafts({
+        input,
+        setInput,
+        artists: list([]),
+        tags: list([]),
+        characters: list([saoAsuna]),
+        series: list([])
+      })
+      return { drafts }
+    })
+
+    act(() => result.current.drafts.createCharacter('Asuna'))
+    let resolved: string[] = []
+    await act(async () => {
+      resolved = (await result.current.drafts.resolveForSave()).resolvedCharacterIds
+    })
+
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(resolved).toEqual(['c-new'])
+  })
+})
