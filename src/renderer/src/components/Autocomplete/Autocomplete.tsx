@@ -153,6 +153,11 @@ export function Autocomplete<T>({
       inputValue={query}
       onInputChange={handleInputChange}
       onSelectionChange={handleSelectionChange}
+      // The items are already filtered above (fuzzy, plus the "Create" item).
+      // Left to its own contains-filter, react-aria re-filters them against
+      // the previous render's items on each keystroke - the "Create" item
+      // holds the old text then, so the popover closed every other key.
+      defaultFilter={() => true}
       isDisabled={disabled}
       isInvalid={invalid}
     >

@@ -270,6 +270,19 @@ describe('Autocomplete', () => {
     expect(screen.getByRole('combobox')).toHaveValue('Portrait')
   })
 
+  it('keeps offering "Create" on every keystroke of a new name', async () => {
+    const user = userEvent.setup()
+    renderAutocomplete({ onCreate: vi.fn() })
+
+    const input = screen.getByRole('combobox')
+    // react-aria used to re-filter our list against the previous render's
+    // items, so the create item vanished on every other keystroke.
+    for (const typed of ['H', 'Ho', 'Hoo', 'Hook']) {
+      await user.type(input, typed.slice(-1))
+      expect(await screen.findByText(`Create "${typed}"`)).toBeInTheDocument()
+    }
+  })
+
   describe('create-suppression matching', () => {
     interface LabeledOption {
       id: string
