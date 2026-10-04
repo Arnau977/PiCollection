@@ -4,8 +4,8 @@ import { ChevronsLeftRight, X } from 'lucide-react'
 import { useZoomPan } from '../Lightbox/useZoomPan'
 import { ZoomControls } from '../Lightbox/ZoomControls'
 import '../Lightbox/Lightbox.css'
-import { dividerBounds, type Dimensions } from './dividerBounds'
-import { fetchFileSize, formatFileSize } from './fileSize'
+import { dividerBounds, isOverImage, type Dimensions } from './dividerBounds'
+import { fetchFileSize, fileFormat, formatFileSize } from './fileSize'
 import './MediaCompare.css'
 
 /** Where the file stands: already in the library, waiting in Pending, or not saved yet. */
@@ -25,6 +25,16 @@ interface MediaCompareProps {
 
 /** Grabbing within this many px of the divider line moves it, even while zoomed. */
 const DIVIDER_GRAB_PX = 14
+/** A press that moves less than this is a click, not a drag (same as useZoomPan). */
+const CLICK_SLOP_PX = 4
+
+/** Where a press on the stage started, and whether it has turned into a drag. */
+interface StagePress {
+  x: number
+  y: number
+  outside: boolean
+  moved: boolean
+}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
@@ -47,6 +57,10 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
   const [stage, setStage] = useState<Dimensions | null>(null)
   const [fileSizes, setFileSizes] = useState<{ left?: number; right?: number }>({})
   const draggingDivider = useRef(false)
+  const press = useRef<StagePress | null>(null)
+  // A press on the empty area around the stage (the labels row's gaps), so
+  // a drag that only ends there doesn't count as a click outside.
+  const pressedOnBackdrop = useRef(false)
 
   // Same-resolution copies can still differ a lot in weight (recompressed
   // re-uploads), which the picture alone doesn't show.
@@ -100,8 +114,30 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
     return Math.abs(clientX - (rect.left + (rect.width * shownSplit) / 100)) <= DIVIDER_GRAB_PX
   }
 
+  function stagePoint(e: React.PointerEvent<HTMLDivElement>): { x: number; y: number } {
+    const rect = e.currentTarget.getBoundingClientRect()
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+  }
+
+  function isOutsideImages(point: { x: number; y: number }): boolean {
+    return !isOverImage(point, [sizes.left, sizes.right], stage, {
+      scale: zoom.scale,
+      offsetX: zoom.offset.x,
+      offsetY: zoom.offset.y
+    })
+  }
+
   function handlePointerDown(e: React.PointerEvent<HTMLDivElement>): void {
     if (e.button !== 0) return
+    const point = stagePoint(e)
+    const outside = isOutsideImages(point)
+    press.current = { ...point, outside, moved: false }
+    // A press on the letterbox may just be a click to close: the divider
+    // only follows once it actually turns into a drag.
+    if (outside && !zoom.isZoomed) {
+      e.currentTarget.setPointerCapture(e.pointerId)
+      return
+    }
     // Unzoomed, pressing anywhere moves the divider there (and drags it);
     // zoomed, only the divider itself does - the rest of the stage pans.
     if (!zoom.isZoomed || isNearDivider(e.clientX)) {
@@ -114,23 +150,53 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
   }
 
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>): void {
+    const current = press.current
+    if (current && !current.moved) {
+      const point = stagePoint(e)
+      if (Math.hypot(point.x - current.x, point.y - current.y) >= CLICK_SLOP_PX) {
+        current.moved = true
+        if (current.outside && !zoom.isZoomed) draggingDivider.current = true
+      }
+    }
     if (draggingDivider.current) splitAt(e.clientX)
     else zoom.handlers.onPointerMove(e)
   }
 
   function handlePointerUp(e: React.PointerEvent<HTMLDivElement>): void {
+    const current = press.current
+    press.current = null
+    // Closes only on a click both pressed and released outside the images:
+    // a drag (divider or pan) that merely ends out there doesn't count.
+    const clickedOutside =
+      e.type === 'pointerup' &&
+      current !== null &&
+      current.outside &&
+      !current.moved &&
+      isOutsideImages(stagePoint(e))
     draggingDivider.current = false
     zoom.handlers.onPointerUp(e)
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId)
     }
+    if (clickedOutside) onClose()
+  }
+
+  // The backdrop, the body and the labels row's gaps - not the labels,
+  // buttons or the stage, which handles its own clicks outside the images.
+  function isEmptyArea(e: React.SyntheticEvent): boolean {
+    const target = e.target as HTMLElement
+    return (
+      target === e.currentTarget ||
+      target.classList.contains('media-compare-body') ||
+      target.classList.contains('media-compare-labels')
+    )
   }
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>): void {
     // Same as Lightbox: never let a click reach the page underneath, and a
     // pan that ends over the backdrop isn't a request to close.
     e.stopPropagation()
-    if (e.target === e.currentTarget && !zoom.wasDragged()) onClose()
+    if (pressedOnBackdrop.current && isEmptyArea(e) && !zoom.wasDragged()) onClose()
   }
 
   function recordSize(side: 'left' | 'right', img: HTMLImageElement): void {
@@ -142,6 +208,7 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
     const size = sizes[side]
     const bytes = fileSizes[side]
     const details = [
+      fileFormat(media.src),
       size && t('mediaCompare.dimensions', size),
       bytes !== undefined && formatFileSize(bytes, i18n.language)
     ].filter(Boolean)
@@ -168,6 +235,7 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
       role="dialog"
       aria-modal="true"
       aria-label={t('mediaCompare.title')}
+      onPointerDown={(e) => (pressedOnBackdrop.current = isEmptyArea(e))}
       onClick={handleBackdropClick}
     >
       <div className="media-compare-body">
