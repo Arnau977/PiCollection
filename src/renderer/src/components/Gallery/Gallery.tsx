@@ -93,7 +93,12 @@ export default function Gallery({
               }
             >
               <div className={blurred ? 'thumb-wrap nsfw-blur' : 'thumb-wrap'}>
-                <MediaThumb type={item.type} route={item.route} alt={item.name} />
+                <MediaThumb
+                  type={item.type}
+                  route={item.route}
+                  alt={item.name}
+                  isAiGenerated={item.isAiGenerated}
+                />
                 {blurred && <span className="nsfw-blur-overlay">{t('media.revealNsfw')}</span>}
               </div>
               {!hideNames && (

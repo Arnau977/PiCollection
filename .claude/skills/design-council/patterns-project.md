@@ -120,12 +120,14 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   already in your library" button (artists excluded) and the site's
   rating/AI flag as hint rows. Chips disappear once the form has them.
   Where: `SourceSuggestionsPanel.tsx`, `useSourceSuggestions.ts`.
-- **A hint about a record field sits under that field, never applies
-  itself.** The file-metadata AI detection shows "The file's metadata says
-  it was made with X - Mark as AI" right under the SFW/AI toggles
-  (`.media-form-ai-hint`, muted text 6.44:1 on surface) and hides once the
-  toggle is on. Where: `MediaFormDetailsFields.tsx`,
-  `useAiMetadataDetection.ts`.
+- **A hint about a record field sits under that field, and only applies
+  itself when the file itself is the source.** The file-metadata AI
+  detection turns AI on for new and pending media and says why ("Marked
+  as AI: the file's metadata says it was made with X"); for library media,
+  or once turned off, it offers "Mark as AI" instead. Right under the
+  SFW/AI toggles (`.media-form-ai-hint`, muted text 6.44:1 on surface).
+  Guesses (SauceNAO, WD14, source sites) still never apply themselves.
+  Where: `MediaFormDetailsFields.tsx`, `MediaForm.tsx`.
 - **A suggested form/costume is a child character**: its chip reads
   "Pyra (Pro Swimmer) · form of Pyra" (muted `.suggestion-form-of`); the
   base character is applied right away if it exists, and accepting the chip
@@ -173,6 +175,10 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   fit/2x, `+`/`-`/`0`, and -/%/+ buttons in the action pill. A pan that
   ends over the backdrop must not close it. Images/GIFs only. Where:
   `src/renderer/src/components/Lightbox/useZoomPan.ts`.
+- **Thumbnail badges share the bottom-right corner** (`.media-thumb-badges`):
+  AI (named for screen readers, since it isn't visible in the picture),
+  then GIF/play; top-left is the selection checkbox. Same dark translucent
+  pill, white text 4.74:1 over a white picture. Where: `MediaThumb.tsx`.
 - **Video frame fallback**: when the OS can't produce a thumbnail (e.g.
   cloud-synced folders), capture a frame with a `<video>` element and cache
   it. Where: `src/renderer/src/components/MediaThumb/captureVideoFrame.ts`

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ImageOff, Play } from 'lucide-react'
+import { ImageOff, Play, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl, toThumbUrl } from '@shared/utils/mediaUrl'
@@ -10,13 +10,15 @@ interface MediaThumbProps {
   type: MediaModel['type']
   route: string
   alt: string
+  /** Shows the AI badge next to the type badge (gallery and Home grids). */
+  isAiGenerated?: boolean
 }
 
 /**
  * Grid thumbnail. Shows a small cached preview while idle and only loads the
  * full-size file on hover, where videos start playing and GIFs start animating.
  */
-export function MediaThumb({ type, route, alt }: MediaThumbProps): JSX.Element {
+export function MediaThumb({ type, route, alt, isAiGenerated }: MediaThumbProps): JSX.Element {
   const { t } = useTranslation()
   const [hovered, setHovered] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -75,17 +77,30 @@ export function MediaThumb({ type, route, alt }: MediaThumbProps): JSX.Element {
         <video className="media-thumb-video" muted playsInline loop autoPlay src={fullUrl} />
       )}
 
-      {type === 'video' && !hovered && (
-        <span className="media-thumb-play" aria-hidden="true">
-          <Play size={20} />
-        </span>
-      )}
-
-      {type === 'gif' && !hovered && (
-        <span className="media-thumb-gif-badge" aria-hidden="true">
-          GIF
-        </span>
-      )}
+      <span className="media-thumb-badges">
+        {/* Named, unlike the type badges: whether it's AI-made isn't visible in the picture. */}
+        {isAiGenerated && (
+          <span
+            className="media-thumb-ai-badge"
+            role="img"
+            aria-label={t('media.aiGeneratedTitle')}
+            title={t('media.aiGeneratedTitle')}
+          >
+            <Sparkles size={11} aria-hidden="true" />
+            {t('media.aiGeneratedBadge')}
+          </span>
+        )}
+        {type === 'video' && !hovered && (
+          <span className="media-thumb-play" aria-hidden="true">
+            <Play size={20} />
+          </span>
+        )}
+        {type === 'gif' && !hovered && (
+          <span className="media-thumb-gif-badge" aria-hidden="true">
+            GIF
+          </span>
+        )}
+      </span>
 
       {failed && !capturedFrameUrl && (
         <span

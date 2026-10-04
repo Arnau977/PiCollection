@@ -901,7 +901,7 @@ describe('MediaForm source-site suggestions', () => {
     expect(screen.queryByText('Rating')).not.toBeInTheDocument()
   })
 
-  it('offers to mark the media as AI when its file metadata names a generator', async () => {
+  function detectGenerator(): void {
     setApi({
       media: {
         detectAiMetadata: vi
@@ -909,14 +909,29 @@ describe('MediaForm source-site suggestions', () => {
           .mockResolvedValue({ success: true, data: { generator: 'ComfyUI' } })
       }
     })
+  }
+
+  it('marks pending media as AI when its file metadata names a generator, and says why', async () => {
+    detectGenerator()
     const user = userEvent.setup()
     renderForm({ media: capturedMedia })
 
-    await screen.findByText("The file's metadata says it was made with ComfyUI.")
-    await user.click(screen.getByRole('button', { name: 'Mark as AI' }))
+    await screen.findByText("Marked as AI: the file's metadata says it was made with ComfyUI.")
+    const toggle = screen.getByRole('checkbox', { name: 'Generated using AI' })
+    expect(toggle).toBeChecked()
 
-    expect(screen.getByRole('checkbox', { name: 'Generated using AI' })).toBeChecked()
-    expect(screen.queryByRole('button', { name: 'Mark as AI' })).not.toBeInTheDocument()
+    // Turning it off sticks, and the offer comes back.
+    await user.click(toggle)
+    expect(toggle).not.toBeChecked()
+    expect(screen.getByRole('button', { name: 'Mark as AI' })).toBeInTheDocument()
+  })
+
+  it('only offers to mark library media as AI', async () => {
+    detectGenerator()
+    renderForm({ media: { ...capturedMedia, pendingTagging: false } })
+
+    await screen.findByText("The file's metadata says it was made with ComfyUI.")
+    expect(screen.getByRole('checkbox', { name: 'Generated using AI' })).not.toBeChecked()
   })
 
   it('shows the file name and folder of the edited media', () => {
