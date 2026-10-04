@@ -13,6 +13,8 @@ import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { useGallerySession } from '../../hooks/useGallerySession'
 import { hasActiveFilters } from '../../utils/hasActiveFilters'
+import { pruneMissingEntities } from '../../utils/pruneMissingEntities'
+import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
 import type { GalleryDensity } from '../../utils/gallerySettings'
 import './GalleryPage.css'
 
@@ -91,6 +93,30 @@ const GalleryPage: React.FC = () => {
     [filters, page, pageSize]
   )
   const { data: media, total, loading, error, refetch } = useMediaQuery(effectiveFilters, sorting)
+
+  // A filter on an entity deleted or merged since it was set has no chip
+  // to show (no name left) yet still applies - an invisible filter that can
+  // empty the gallery. Drop those ids once every list has loaded cleanly;
+  // a failed or in-flight load must never wipe the user's filters.
+  const artists = useArtists()
+  const tags = useTags()
+  const characters = useCharacters()
+  const series = useSeries()
+  const listsReady = [artists, tags, characters, series].every(
+    (list) => !list.loading && !list.error
+  )
+  useEffect(() => {
+    if (!listsReady) return
+    const ids = (items: { id: string }[]): Set<string> => new Set(items.map((item) => item.id))
+    const pruned = pruneMissingEntities(filters, {
+      artists: ids(artists.data),
+      tags: ids(tags.data),
+      characters: ids(characters.data),
+      series: ids(series.data)
+    })
+    if (pruned !== filters) setFilters(pruned)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setFilters is stable
+  }, [listsReady, filters, artists.data, tags.data, characters.data, series.data])
 
   // Selected ids may no longer be relevant once the filtered/sorted set changes.
   useEffect(() => {
@@ -276,6 +302,7 @@ const GalleryPage: React.FC = () => {
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             returnHighlightId={returnHighlightId}
+            filtered={filtersActive}
           />
         )}
       </div>

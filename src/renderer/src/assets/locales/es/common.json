@@ -179,6 +179,8 @@
     "loading": "Cargando...",
     "emptyTitle": "Todavía no hay media",
     "emptyHint": "Añade tu primera imagen o video para empezar.",
+    "noMatchesTitle": "Ningún media coincide con estos filtros",
+    "noMatchesHint": "Cambia o limpia los filtros para ver más.",
     "backToGallery": "Volver a la galería",
     "filtersActive": "Hay filtros ocultando media",
     "clearFilters": "Limpiar filtros",

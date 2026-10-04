@@ -231,6 +231,12 @@ of them.
   tags from anything passed through.
 - **Trusting the OS for video thumbnails.** Windows refuses them in
   cloud-synced folders; always keep the in-app frame fallback (#89).
+- **A filter value with no visible chip.** Chips are drawn from the entity
+  lists, so a filter id whose entity was deleted or merged stayed applied
+  but showed nothing: the gallery read "No media yet" under "Filters are
+  hiding some media" with every field empty. Drop ids that no longer
+  resolve (`pruneMissingEntities.ts`), and give a filtered empty result its
+  own message. Where: `GalleryPage.tsx`, `Gallery.tsx`.
 - **Reserving room for a floating overlay with a fixed padding.** The
   compare view's labels kept `padding-right: 3.5rem` for the close pill;
   once zoom controls joined it, the pill covered the right-hand label.

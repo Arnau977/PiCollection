@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import type { CharacterModel, MediaModel, SeriesModel, TagModel } from '@shared/models'
 import GalleryPage from './GalleryPage'
-import { resetGallerySession } from '../../hooks/useGallerySession'
+import { resetGallerySession, writeGallerySession } from '../../hooks/useGallerySession'
 
 vi.mock('../../components/FilterBar/FilterBar', () => ({
   FilterBar: () => null
@@ -22,6 +22,7 @@ let charactersData: CharacterModel[] = []
 let seriesData: SeriesModel[] = []
 
 vi.mock('../../hooks/useEntityLists', () => ({
+  useArtists: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
   useTags: () => ({ data: tagsData, loading: false, error: null, refetch: vi.fn() }),
   useCharacters: () => ({ data: charactersData, loading: false, error: null, refetch: vi.fn() }),
   useSeries: () => ({ data: seriesData, loading: false, error: null, refetch: vi.fn() })
@@ -164,6 +165,33 @@ describe('GalleryPage pagination', () => {
 describe('GalleryPage active filters indicator', () => {
   beforeEach(() => {
     window.localStorage.clear()
+  })
+
+  it('drops a filter on a tag that no longer exists instead of applying it invisibly', async () => {
+    tagsData = [{ id: 't1', name: 'Kept' } as TagModel]
+    writeGallerySession({
+      filters: { tagGroups: [['t1', 'deleted-tag']] },
+      sorting: { prop: 'createdAt', desc: true },
+      page: 0
+    })
+    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+    setApi(getFiltered)
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() =>
+      expect(getFiltered).toHaveBeenLastCalledWith(
+        expect.objectContaining({ tagGroups: [['t1']] }),
+        expect.anything()
+      )
+    )
+    // Filtered and empty: says nothing matches, not that the library is empty.
+    expect(await screen.findByText('No media matches these filters')).toBeInTheDocument()
+    expect(screen.queryByText('No media yet')).not.toBeInTheDocument()
   })
 
   it('does not show the active-filters banner when nothing is filtered', async () => {
@@ -463,7 +491,10 @@ describe('GalleryPage return-from-media scroll centering', () => {
       const offset = filters.offset ?? 0
       return Promise.resolve({
         success: true,
-        data: { items: makeMedia(60).map((item, i) => ({ ...item, id: String(offset + i) })), total: 130 }
+        data: {
+          items: makeMedia(60).map((item, i) => ({ ...item, id: String(offset + i) })),
+          total: 130
+        }
       })
     })
     setApi(getFiltered)
