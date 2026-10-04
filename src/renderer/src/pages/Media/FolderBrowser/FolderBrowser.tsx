@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronRight, Folder } from 'lucide-react'
+import { Check, ChevronRight, Folder, Trash2 } from 'lucide-react'
 import type { SourceFolderBrowseFile, SourceFolderBrowseResult } from '@shared/models'
 import { toThumbUrl } from '@shared/utils/mediaUrl'
 import { MediaThumb } from '../../../components/MediaThumb/MediaThumb'
@@ -63,6 +63,9 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   const [reloadToken, setReloadToken] = useState(0)
   const [filePage, setFilePage] = useState(0)
   const [preview, setPreview] = useState<PreviewState | null>(null)
+  // Folders whose files are all added or discarded are hidden unless asked
+  // for - after a few imports they'd otherwise crowd out the ones left to do.
+  const [showFinished, setShowFinished] = useState(false)
   const previewTimer = useRef<ReturnType<typeof setTimeout>>()
   const folderClickTimer = useRef<ReturnType<typeof setTimeout>>()
 
@@ -151,6 +154,9 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
 
   const breadcrumbSegments = currentPath === '' ? [] : currentPath.split(/[/\\]/)
   const selectedCount = selectedFiles.size + selectedFolders.size
+  const folders = state.kind === 'loaded' ? state.result.folders : []
+  const finishedCount = folders.filter((folder) => folder.fileCount === 0).length
+  const shownFolders = showFinished ? folders : folders.filter((folder) => folder.fileCount > 0)
 
   return (
     <>
@@ -180,6 +186,16 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
               </Fragment>
             )
           })}
+          {finishedCount > 0 && (
+            <label className="folder-browser-show-finished">
+              <input
+                type="checkbox"
+                checked={showFinished}
+                onChange={(e) => setShowFinished(e.target.checked)}
+              />
+              {t('folderBrowser.showFinished', { count: finishedCount })}
+            </label>
+          )}
         </nav>
 
         <div className="folder-browser-scroll">
@@ -198,32 +214,44 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
           {state.kind === 'loaded' && (
             <div className="folder-browser-grid">
               {filePage === 0 &&
-                state.result.folders.map((folder) => (
-                  <button
-                    key={folder.relativePath}
-                    type="button"
-                    title={folder.name}
-                    className={`folder-browser-tile${selectedFolders.has(folder.relativePath) ? ' is-selected' : ''}`}
-                    onClick={() => handleFolderClick(folder.relativePath)}
-                    onDoubleClick={() => handleFolderDoubleClick(folder.relativePath)}
-                  >
-                    <span className="folder-browser-tile-thumb">
-                      <Folder size={32} aria-hidden="true" />
-                      <span
-                        className="folder-browser-tile-count-badge"
-                        title={t('folderBrowser.fileCount', { count: folder.fileCount })}
-                      >
-                        {folder.fileCount.toLocaleString()}
+                shownFolders.map((folder) => {
+                  // Still opens on double-click (to see what's in it), but
+                  // there's nothing in it to select for import.
+                  const finished = folder.fileCount === 0
+                  return (
+                    <button
+                      key={folder.relativePath}
+                      type="button"
+                      title={folder.name}
+                      className={`folder-browser-tile${selectedFolders.has(folder.relativePath) ? ' is-selected' : ''}${finished ? ' is-cataloged' : ''}`}
+                      onClick={() => !finished && handleFolderClick(folder.relativePath)}
+                      onDoubleClick={() => handleFolderDoubleClick(folder.relativePath)}
+                    >
+                      <span className="folder-browser-tile-thumb">
+                        <Folder size={32} aria-hidden="true" />
+                        {finished ? (
+                          <span className="folder-browser-tile-badge">
+                            <Check size={12} aria-hidden="true" />
+                            {t('folderBrowser.nothingLeft')}
+                          </span>
+                        ) : (
+                          <span
+                            className="folder-browser-tile-count-badge"
+                            title={t('folderBrowser.fileCount', { count: folder.fileCount })}
+                          >
+                            {folder.fileCount.toLocaleString()}
+                          </span>
+                        )}
+                        {selectedFolders.has(folder.relativePath) && (
+                          <span className="folder-browser-tile-selected-badge">
+                            <Check size={14} aria-hidden="true" />
+                          </span>
+                        )}
                       </span>
-                      {selectedFolders.has(folder.relativePath) && (
-                        <span className="folder-browser-tile-selected-badge">
-                          <Check size={14} aria-hidden="true" />
-                        </span>
-                      )}
-                    </span>
-                    <span className="folder-browser-tile-name">{folder.name}</span>
-                  </button>
-                ))}
+                      <span className="folder-browser-tile-name">{folder.name}</span>
+                    </button>
+                  )
+                })}
               {state.result.files
                 .slice(filePage * FILES_PER_PAGE, (filePage + 1) * FILES_PER_PAGE)
                 .map((file) => (
@@ -243,10 +271,15 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                   >
                     <button
                       type="button"
-                      title={file.name}
-                      className={`folder-browser-tile${selectedFiles.has(file.relativePath) ? ' is-selected' : ''}${file.cataloged ? ' is-cataloged' : ''}`}
+                      title={
+                        file.discarded
+                          ? `${file.name} - ${t('folderBrowser.discardedTitle')}`
+                          : file.name
+                      }
+                      className={`folder-browser-tile${selectedFiles.has(file.relativePath) ? ' is-selected' : ''}${file.cataloged ? ' is-cataloged' : ''}${file.discarded ? ' is-discarded' : ''}`}
                       onClick={() => toggleFile(file.relativePath)}
-                      disabled={file.cataloged}
+                      // A batch import skips discarded files anyway.
+                      disabled={file.cataloged || file.discarded}
                     >
                       <span className="folder-browser-tile-thumb">
                         <MediaThumb type={file.type} route={file.relativePath} alt={file.name} />
@@ -254,6 +287,12 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                           <span className="folder-browser-tile-badge">
                             <Check size={12} aria-hidden="true" />
                             {t('folderBrowser.cataloged')}
+                          </span>
+                        )}
+                        {file.discarded && (
+                          <span className="folder-browser-tile-badge is-discarded">
+                            <Trash2 size={12} aria-hidden="true" />
+                            {t('folderBrowser.discarded')}
                           </span>
                         )}
                         {selectedFiles.has(file.relativePath) && (
@@ -266,8 +305,10 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                     </button>
                   </div>
                 ))}
-              {state.result.folders.length === 0 && state.result.files.length === 0 && (
-                <p className="folder-browser-status">{t('folderBrowser.empty')}</p>
+              {shownFolders.length === 0 && state.result.files.length === 0 && (
+                <p className="folder-browser-status">
+                  {finishedCount > 0 ? t('folderBrowser.allFinished') : t('folderBrowser.empty')}
+                </p>
               )}
             </div>
           )}

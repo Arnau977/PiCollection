@@ -387,6 +387,12 @@
     "breadcrumbLabel": "Ruta de carpeta",
     "retry": "Reintentar",
     "cataloged": "Ya añadido",
+    "discarded": "Eliminado",
+    "discardedTitle": "Lo eliminaste antes (Metadatos > Eliminados); una importación por lotes lo omite",
+    "nothingLeft": "Nada pendiente",
+    "showFinished_one": "Mostrar {{count}} carpeta sin nada que importar",
+    "showFinished_other": "Mostrar {{count}} carpetas sin nada que importar",
+    "allFinished": "Todo lo de esta carpeta ya está añadido o eliminado.",
     "fileCount_one": "{{count}} archivo",
     "fileCount_other": "{{count}} archivos"
   },

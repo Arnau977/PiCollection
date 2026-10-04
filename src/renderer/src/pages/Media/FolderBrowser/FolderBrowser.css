@@ -257,3 +257,32 @@
   max-width: 100%;
   object-fit: contain;
 }
+
+/* Discarded earlier: neutral, not the green "already added" - nothing was
+   imported, and it isn't an error either. text on surface-2: 13.17:1. */
+.folder-browser-tile.is-discarded {
+  border-style: dashed;
+  border-color: var(--border-color-strong);
+  color: var(--color-text-muted);
+}
+
+.folder-browser-tile.is-discarded .media-thumb {
+  filter: grayscale(1) brightness(0.45);
+}
+
+.folder-browser-tile-badge.is-discarded {
+  background: var(--color-surface-2);
+  border-top: 1px solid var(--border-color-strong);
+  color: var(--color-text);
+}
+
+/* Pushed to the end of the breadcrumb row; wraps under it when narrow. */
+.folder-browser-show-finished {
+  align-items: center;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  font-size: 0.85rem;
+  gap: var(--space-2);
+  margin-left: auto;
+}

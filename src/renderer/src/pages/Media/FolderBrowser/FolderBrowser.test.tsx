@@ -92,19 +92,29 @@ describe('FolderBrowser', () => {
     expect(browse).toHaveBeenCalledTimes(1)
   })
 
-  it('disables a cataloged file so it cannot be selected', async () => {
+  it('disables cataloged and discarded files so they cannot be selected', async () => {
     browse.mockResolvedValue({
       success: true,
       data: {
         folders: [],
-        files: [{ name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: true }]
+        files: [
+          {
+            name: 'a.png',
+            relativePath: 'a.png',
+            type: 'image',
+            cataloged: true,
+            discarded: false
+          },
+          { name: 'b.png', relativePath: 'b.png', type: 'image', cataloged: false, discarded: true }
+        ]
       }
     })
 
     render(<FolderBrowser onStartImport={vi.fn()} />)
 
-    const fileTile = (await screen.findByText('a.png')).closest('button') as HTMLButtonElement
-    expect(fileTile).toBeDisabled()
+    expect((await screen.findByText('a.png')).closest('button')).toBeDisabled()
+    expect(screen.getByText('b.png').closest('button')).toBeDisabled()
+    expect(screen.getByText('Discarded')).toBeInTheDocument()
   })
 
   it('shows an error message when browse fails', async () => {
@@ -175,13 +185,13 @@ describe('FolderBrowser', () => {
     expect(screen.queryByText('sub')).not.toBeInTheDocument()
   })
 
-  it('shows a recursive file-count badge on folder tiles, including 0 for an empty folder', async () => {
+  it('hides folders with nothing left to import until asked, and never selects them', async () => {
     browse.mockResolvedValue({
       success: true,
       data: {
         folders: [
           { name: 'Genshin', relativePath: 'Genshin', fileCount: 5 },
-          { name: 'Empty', relativePath: 'Empty', fileCount: 0 }
+          { name: 'Done', relativePath: 'Done', fileCount: 0 }
         ],
         files: []
       }
@@ -191,7 +201,14 @@ describe('FolderBrowser', () => {
 
     await screen.findByText('Genshin')
     expect(screen.getByText('5')).toBeInTheDocument()
-    expect(screen.getByText('0')).toBeInTheDocument()
+    expect(screen.queryByText('Done')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Show 1 folder with nothing left to import'))
+    fireEvent.click(screen.getByText('Done'))
+    await new Promise((resolve) => setTimeout(resolve, 250))
+
+    expect(screen.getByText('Nothing left')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Import selected/ })).toBeDisabled()
   })
 
   it('resets to page 1 when navigating into a different folder', async () => {

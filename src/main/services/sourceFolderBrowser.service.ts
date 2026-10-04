@@ -75,9 +75,10 @@ async function collectFilesRecursively(absoluteDir: string): Promise<FileCandida
 // manual per-directory walk - cheap enough to run for every folder tile shown
 // in the browser. A failure anywhere in the subtree (e.g. a permission-denied
 // nested folder) shouldn't take down the whole browse() listing. Cataloged
-// files are excluded - the badge is meant to answer "how much is left to
-// import here", not "how much media exists here".
-async function countUncatalogedMediaFilesRecursively(
+// and discarded files are excluded, same as expandSelection skips them - the
+// badge answers "how much is left to import here", not "how much media
+// exists here".
+async function countImportableMediaFilesRecursively(
   db: Kysely<DB>,
   absoluteDir: string,
   sourceFolder: string
@@ -91,7 +92,9 @@ async function countUncatalogedMediaFilesRecursively(
       relativizeRoute(join(entry.parentPath, entry.name), sourceFolder)
     )
     const catalogedRoutes = await mediaRepo.routesExist(db, relativeRoutes)
-    return relativeRoutes.filter((route) => !catalogedRoutes.has(route)).length
+    const discarded = await discardedRepo.discardedRoutes(db, relativeRoutes)
+    return relativeRoutes.filter((route) => !catalogedRoutes.has(route) && !discarded.has(route))
+      .length
   } catch {
     return 0
   }
@@ -143,7 +146,7 @@ export const sourceFolderBrowserService = {
             return {
               name: entry.name,
               relativePath: relativizeRoute(folderAbsolutePath, sourceFolder),
-              fileCount: await countUncatalogedMediaFilesRecursively(
+              fileCount: await countImportableMediaFilesRecursively(
                 db,
                 folderAbsolutePath,
                 sourceFolder
@@ -164,23 +167,22 @@ export const sourceFolderBrowserService = {
       relativizeRoute(join(absoluteDir, candidate.entry.name), sourceFolder)
     )
     const catalogedRoutes = await mediaRepo.routesExist(db, fileRelativePaths)
+    const discarded = await discardedRepo.discardedRoutes(db, fileRelativePaths)
 
     const files = fileCandidates
       .map((candidate, index) => ({
         name: candidate.entry.name,
         relativePath: fileRelativePaths[index],
         type: candidate.type,
-        cataloged: catalogedRoutes.has(fileRelativePaths[index])
+        cataloged: catalogedRoutes.has(fileRelativePaths[index]),
+        discarded: discarded.has(fileRelativePaths[index])
       }))
       .sort((a, b) => a.name.localeCompare(b.name))
 
     return { folders, files }
   },
 
-  async expandSelection(input: {
-    files: string[]
-    folders: string[]
-  }): Promise<ExpandedSelection> {
+  async expandSelection(input: { files: string[]; folders: string[] }): Promise<ExpandedSelection> {
     const sourceFolder = requireSourceFolder()
 
     const looseFiles: FileCandidate[] = input.files

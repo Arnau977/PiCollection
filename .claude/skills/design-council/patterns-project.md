@@ -179,6 +179,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   AI (named for screen readers, since it isn't visible in the picture),
   then GIF/play; top-left is the selection checkbox. Same dark translucent
   pill, white text 4.74:1 over a white picture. Where: `MediaThumb.tsx`.
+- **Batch-import tiles show why a file can't be picked**: green "Already
+  added" (`is-cataloged`), neutral dashed "Discarded" (`is-discarded`,
+  text on surface-2 13.17:1; the grey filter is on the image only so the
+  label keeps its contrast). Folder counts mean "left to import"; folders
+  at 0 are hidden behind a "Show N folders with nothing left" checkbox at
+  the end of the breadcrumb row and, when shown, reuse the added look and
+  open but can't be selected. Where: `FolderBrowser.tsx`.
 - **Video frame fallback**: when the OS can't produce a thumbnail (e.g.
   cloud-synced folders), capture a frame with a `<video>` element and cache
   it. Where: `src/renderer/src/components/MediaThumb/captureVideoFrame.ts`

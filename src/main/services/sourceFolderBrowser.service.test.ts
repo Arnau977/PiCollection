@@ -13,6 +13,7 @@ vi.mock('electron', () => ({
 const { initTestDbSingleton } = await import('../database/testHelpers')
 const { getDb } = await import('../database/connection')
 const mediaRepo = await import('../database/repositories/media.repository')
+const discardedRepo = await import('../database/repositories/discardedMedia.repository')
 const { writeSourceFolder, resetSourceFolderCache } = await import('./sourceFolder')
 const { sourceFolderBrowserService } = await import('./sourceFolderBrowser.service')
 
@@ -63,7 +64,7 @@ describe('sourceFolderBrowserService.browse', () => {
 
     expect(result.folders).toEqual([{ name: 'sub', relativePath: 'sub', fileCount: 0 }])
     expect(result.files).toEqual([
-      { name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false }
+      { name: 'a.png', relativePath: 'a.png', type: 'image', cataloged: false, discarded: false }
     ])
   })
 
@@ -77,7 +78,8 @@ describe('sourceFolderBrowserService.browse', () => {
       name: 'a.png',
       relativePath: 'a.png',
       type: 'image',
-      cataloged: true
+      cataloged: true,
+      discarded: false
     })
   })
 
@@ -88,7 +90,13 @@ describe('sourceFolderBrowserService.browse', () => {
     const result = await sourceFolderBrowserService.browse('sub')
 
     expect(result.files).toEqual([
-      { name: 'b.mp4', relativePath: join('sub', 'b.mp4'), type: 'video', cataloged: false }
+      {
+        name: 'b.mp4',
+        relativePath: join('sub', 'b.mp4'),
+        type: 'video',
+        cataloged: false,
+        discarded: false
+      }
     ])
   })
 
@@ -115,6 +123,27 @@ describe('sourceFolderBrowserService.browse', () => {
     const result = await sourceFolderBrowserService.browse('')
 
     expect(result.folders).toEqual([{ name: 'sub', relativePath: 'sub', fileCount: 2 }])
+  })
+
+  it('marks a discarded file and leaves it out of its folder count', async () => {
+    await fs.mkdir(join(sourceDir, 'sub'))
+    await fs.writeFile(join(sourceDir, 'sub', 'a.png'), 'x')
+    await fs.writeFile(join(sourceDir, 'sub', 'b.png'), 'x')
+    await discardedRepo.upsertDiscarded(getDb(), {
+      id: randomUUID(),
+      route: join('sub', 'a.png'),
+      name: 'a',
+      type: 'image',
+      reason: 'deleted',
+      discarded_at: Date.now()
+    })
+
+    expect((await sourceFolderBrowserService.browse('')).folders[0].fileCount).toBe(1)
+    const files = (await sourceFolderBrowserService.browse('sub')).files
+    expect(files.map((file) => [file.name, file.discarded])).toEqual([
+      ['a.png', true],
+      ['b.png', false]
+    ])
   })
 
   it('excludes already-cataloged files from a folder recursive count', async () => {
@@ -155,7 +184,9 @@ describe('sourceFolderBrowserService.expandSelection', () => {
       folders: []
     })
 
-    expect(result.files).toEqual([{ route: join(sourceDir, 'a.png'), fileName: 'a.png', type: 'image' }])
+    expect(result.files).toEqual([
+      { route: join(sourceDir, 'a.png'), fileName: 'a.png', type: 'image' }
+    ])
   })
 
   it('expands a selected folder recursively, skipping unsupported files', async () => {
