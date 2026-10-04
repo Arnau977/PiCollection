@@ -24,14 +24,17 @@ export interface SourceFolderBrowseEntry {
 }
 
 export interface SourceFolderBrowseFolder extends SourceFolderBrowseEntry {
-  /** Recursive count of media files anywhere under this folder, computed at
-   * request time (never persisted) - see sourceFolderBrowser.service.ts. */
+  /** Recursive count of media files anywhere under this folder still left to
+   * import (neither cataloged nor discarded), computed at request time (never
+   * persisted) - see sourceFolderBrowser.service.ts. */
   fileCount: number
 }
 
 export interface SourceFolderBrowseFile extends SourceFolderBrowseEntry {
   type: 'image' | 'video' | 'gif'
   cataloged: boolean
+  /** Deleted from the library before (Metadata > Discarded) - a batch import skips it. */
+  discarded: boolean
 }
 
 export interface SourceFolderBrowseResult {

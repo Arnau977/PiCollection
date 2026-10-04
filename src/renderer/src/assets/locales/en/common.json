@@ -387,6 +387,12 @@
     "breadcrumbLabel": "Folder path",
     "retry": "Retry",
     "cataloged": "Already added",
+    "discarded": "Discarded",
+    "discardedTitle": "You discarded it earlier (Metadata > Discarded); a batch import skips it",
+    "nothingLeft": "Nothing left",
+    "showFinished_one": "Show {{count}} folder with nothing left to import",
+    "showFinished_other": "Show {{count}} folders with nothing left to import",
+    "allFinished": "Everything in this folder is already added or discarded.",
     "fileCount_one": "{{count}} file",
     "fileCount_other": "{{count}} files"
   },
