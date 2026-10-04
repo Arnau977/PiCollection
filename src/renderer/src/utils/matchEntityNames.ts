@@ -1,4 +1,5 @@
-import type { CharacterModel, SauceNaoName } from '@shared/models'
+import type { CharacterModel, SauceNaoName, SeriesModel } from '@shared/models'
+import { normalizeForMatch } from './fuzzyMatch'
 
 export interface NameMatchable {
   id: string
@@ -118,10 +119,45 @@ export function formatCharacterOptionLabel(character: CharacterModel): string {
  * falls back to the first candidate in array order - never worse than the
  * old behavior, only better when series information actually helps.
  */
+/** "xenoblade" names "Xenoblade Chronicles 2" too: equal, or the start of it word-for-word. */
+export function qualifierNamesSeries(qualifier: string, seriesName: string): boolean {
+  const q = normalizeForMatch(qualifier)
+  const s = normalizeForMatch(seriesName)
+  return q.length > 0 && (s === q || s.startsWith(`${q} `))
+}
+
+/**
+ * The library series a suggestion's own tag names, plus their ancestors and
+ * descendants ("Fate" accepts a character linked to "Fate/Grand Order").
+ * Null when it names none - then there's nothing to contradict.
+ */
+function seriesNamedBy(suggestion: SauceNaoName, library: SeriesModel[]): Set<string> | null {
+  const named = library.filter((series) =>
+    (suggestion.series ?? []).some((qualifier) =>
+      [series.name, ...(series.aliases ?? [])].some((name) => qualifierNamesSeries(qualifier, name))
+    )
+  )
+  if (named.length === 0) return null
+  const related = new Set(named.map((series) => series.id))
+  const parentOf = new Map(library.map((series) => [series.id, series.parentId ?? null]))
+  const isUnder = (id: string, ancestor: string): boolean => {
+    for (let at = parentOf.get(id); at; at = parentOf.get(at)) if (at === ancestor) return true
+    return false
+  }
+  for (const series of library) {
+    if (named.some((n) => isUnder(series.id, n.id) || isUnder(n.id, series.id))) {
+      related.add(series.id)
+    }
+  }
+  return related
+}
+
 export function matchCharacterNames(
   suggestions: SauceNaoName[],
   characters: CharacterModel[],
-  seriesContext: string[]
+  seriesContext: string[],
+  /** Lets a series named by the tag itself rule out a character from another one. */
+  librarySeries: SeriesModel[] = []
 ): NameMatchResult<CharacterModel> {
   const seriesContextSet = new Set(seriesContext)
 
@@ -160,9 +196,23 @@ export function matchCharacterNames(
       .filter((value) => value.length > 0)
 
     let group: CharacterModel[] | undefined
+    let matchedName = ''
     for (const candidate of candidateNames) {
       group = index.get(normalizeEntityName(candidate))
+      matchedName = candidate
       if (group) break
+    }
+
+    // Found only by the bare name ("Asuna") while the tag itself names a
+    // library series ("Asuna (Blue Archive)"): a character linked only to
+    // other series is someone else who shares the name, not this one.
+    const named = seriesNamedBy(suggestion, librarySeries)
+    if (group && named && !matchedName.includes('(')) {
+      group = group.filter(
+        (character) =>
+          character.series.length === 0 || character.series.some((s) => named.has(s.id))
+      )
+      if (group.length === 0) group = undefined
     }
 
     if (group) {

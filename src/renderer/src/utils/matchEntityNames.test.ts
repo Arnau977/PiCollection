@@ -8,7 +8,7 @@ import {
   titleCaseTagName,
   type NameMatchable
 } from './matchEntityNames'
-import type { CharacterModel } from '@shared/models'
+import type { CharacterModel, SeriesModel } from '@shared/models'
 
 interface Entity extends NameMatchable {
   id: string
@@ -181,12 +181,60 @@ describe('matchCharacterNames', () => {
 
   it('matches the same entity only once even via two different suggestion keys', () => {
     const options = [character('1', 'Ishtar', [], ['Fate Ishtar'])]
-    const result = matchCharacterNames(
-      [{ name: 'Ishtar' }, { name: 'Fate Ishtar' }],
-      options,
-      []
-    )
+    const result = matchCharacterNames([{ name: 'Ishtar' }, { name: 'Fate Ishtar' }], options, [])
     expect(result.existing).toEqual([options[0]])
+  })
+
+  describe('when the tag names a series', () => {
+    const library: SeriesModel[] = [
+      { id: 'ba', name: 'Blue Archive' },
+      { id: 'sao', name: 'Sword Art Online' },
+      { id: 'fate', name: 'Fate' },
+      { id: 'fgo', name: 'Fate/Grand Order', parentId: 'fate' }
+    ]
+    const linked = (id: string, name: string, seriesIds: string[]): CharacterModel => ({
+      id,
+      name,
+      series: library.filter((s) => seriesIds.includes(s.id)).map(({ id, name }) => ({ id, name }))
+    })
+    const saoAsuna = linked('c1', 'Asuna', ['sao'])
+
+    it("won't take a same-named character from another series by its bare name", () => {
+      const blueArchive = {
+        name: 'asuna',
+        altNames: ['asuna (blue archive)'],
+        series: ['blue archive']
+      }
+      expect(matchCharacterNames([blueArchive], [saoAsuna], [], library)).toEqual({
+        existing: [],
+        missing: ['asuna']
+      })
+
+      // Once both exist, each image gets its own.
+      const baAsuna = linked('c2', 'Asuna', ['ba'])
+      expect(matchCharacterNames([blueArchive], [saoAsuna, baAsuna], [], library).existing).toEqual(
+        [baAsuna]
+      )
+    })
+
+    it('still matches when the qualifier names no library series, the character has none, or they are related', () => {
+      const alo = { name: 'asuna', altNames: ['asuna (sao-alo)'], series: ['sao-alo'] }
+      expect(matchCharacterNames([alo], [saoAsuna], [], library).existing).toEqual([saoAsuna])
+
+      const unlinked = linked('c3', 'Asuna', [])
+      const blueArchive = {
+        name: 'asuna',
+        altNames: ['asuna (blue archive)'],
+        series: ['blue archive']
+      }
+      expect(matchCharacterNames([blueArchive], [unlinked], [], library).existing).toEqual([
+        unlinked
+      ])
+
+      const fgoIshtar = linked('c4', 'Ishtar', ['fgo'])
+      const fate = { name: 'ishtar', altNames: ['ishtar (fate)'], series: ['fate'] }
+      expect(matchCharacterNames([fate], [fgoIshtar], [], library).existing).toEqual([fgoIshtar])
+    })
   })
 
   it('puts an unmatched suggestion in missing', () => {

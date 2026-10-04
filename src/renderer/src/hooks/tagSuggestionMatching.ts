@@ -124,7 +124,8 @@ export function matchSuggestionCandidate(
   const charactersMatch = matchCharacterNames(
     resolvedCharacters.characters.filter((character) => !character.parent),
     entities.characters,
-    seriesContext
+    seriesContext,
+    entities.series
   )
   // A form/costume ("Pyra (Pro Swimmer)") is applied if it already exists.
   // Otherwise its base character is applied right away when that exists, and
@@ -132,12 +133,22 @@ export function matchSuggestionCandidate(
   const characterParents: Record<string, string> = {}
   for (const form of resolvedCharacters.characters) {
     if (!form.parent) continue
-    const formMatch = matchCharacterNames([form], entities.characters, seriesContext)
+    const formMatch = matchCharacterNames(
+      [form],
+      entities.characters,
+      seriesContext,
+      entities.series
+    )
     if (formMatch.existing.length > 0) {
       charactersMatch.existing.push(...formMatch.existing)
       continue
     }
-    const parentMatch = matchCharacterNames([form.parent], entities.characters, seriesContext)
+    const parentMatch = matchCharacterNames(
+      [form.parent],
+      entities.characters,
+      seriesContext,
+      entities.series
+    )
     charactersMatch.existing.push(...parentMatch.existing)
     charactersMatch.missing.push(...formMatch.missing)
     characterParents[capitalizeFirstLetter(form.name)] =
