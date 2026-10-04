@@ -18,8 +18,8 @@ screen:
 
 ## File actions
 
-Next to the file's name and folder (on its page, in the edit form and in the
-viewer):
+Next to the file's name and folder (on its page, in the edit form - also
+while adding a file, before it's saved - and in the viewer):
 
 - **Copy image** puts the picture on the clipboard, ready to paste. GIFs and
   animated WebPs are copied as a file on Windows, so they paste *animated*
