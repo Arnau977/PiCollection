@@ -121,7 +121,9 @@ export function MediaFormFileGroup({
           )}
         </div>
       )}
-      {isEditing && media && <MediaFileLocation route={media.route} type={media.type} />}
+      {/* Also before saving: with a similar match listed below, the file's
+          own name and folder are what tell the two copies apart. */}
+      {previewMedia && <MediaFileLocation route={previewMedia.route} type={previewMedia.type} />}
       {lightboxOpen && previewMedia && (
         <Lightbox
           src={previewMedia.src}

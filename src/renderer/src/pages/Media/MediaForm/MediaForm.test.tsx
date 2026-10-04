@@ -94,6 +94,13 @@ describe('MediaForm initialFile', () => {
     expect(preview).toHaveAttribute('src', expect.stringContaining('app://media/'))
   })
 
+  it('shows the file name and folder before it is saved', () => {
+    renderForm({ initialFile: { route: 'C:/Pics/Trip/sunset.png', name: 'sunset', type: 'image' } })
+
+    expect(screen.getByText('sunset.png')).toBeInTheDocument()
+    expect(screen.getByText('C:/Pics/Trip')).toBeInTheDocument()
+  })
+
   it('runs the duplicate check for the initial route on mount', async () => {
     const checkDuplicate = vi.fn().mockResolvedValue({
       success: true,
