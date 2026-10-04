@@ -151,10 +151,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   to the images' on-screen span (`dividerBounds.ts`); shared zoom via
   `useZoomPan` + `ZoomControls`, with each image in an unzoomed clipping
   layer so the clip follows the divider; zoomed, drag pans and only the
-  divider line moves it (Lightroom). Each side shows its resolution, file
-  size (read from the protocol's Content-Range, one byte fetched) and a
+  divider line moves it (Lightroom). Each side shows its format ("PNG"),
+  resolution, file size (read from the protocol's Content-Range, one byte fetched) and a
   solid status pill (library / pending / being added); zoom + close sit
-  centered between the two labels. Images/GIFs only.
+  centered between the two labels.
+  A click (no drag) both pressed and released outside the images
+  closes it; a drag that only ends out there never does
+  (`isOverImage`). Images/GIFs only.
   Where: `src/renderer/src/components/MediaCompare/`, opened from
   `SimilarMediaWarning.tsx` and the detail page's `SimilarMediaPanel.tsx`
   (a compare button revealed on hover/focus).

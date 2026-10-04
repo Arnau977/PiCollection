@@ -27,3 +27,13 @@ export async function fetchFileSize(src: string): Promise<number | null> {
     return null
   }
 }
+
+/**
+ * The file's format as Explorer's Type column hints at it ("PNG", "JPG") -
+ * a re-saved copy often differs only in this. Null when the URL has none.
+ */
+export function fileFormat(src: string): string | null {
+  const path = src.split(/[?#]/)[0]
+  const match = path.match(/\.([a-z0-9]+)$/i)
+  return match ? match[1].toUpperCase() : null
+}

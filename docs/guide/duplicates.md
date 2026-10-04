@@ -37,9 +37,12 @@ comparison:
 - both pictures are lined up in the same frame, with a divider you drag
   across them to reveal one or the other;
 - each side is labelled (in library, pending, being added) with its
-  resolution and file size, so a heavier, better-quality copy stands out;
+  format (PNG, JPG...), resolution and file size, so a heavier,
+  better-quality copy stands out;
 - zoom works on both at once: mouse wheel, double-click, `+` / `-` / `0`;
   zoomed in, dragging pans and the divider moves by its handle.
+- click anywhere outside the pictures (or press `Esc`) to close it; a
+  drag that merely ends outside them doesn't.
 
 ## Replacing a copy
 
