@@ -45,7 +45,9 @@ Below the search bar:
 - **Sort by** date or name, ascending or descending.
 
 When filters hide part of your library, a notice says so, with **Clear
-filters**. Default filters and sorting for the gallery are set in **Settings
+filters**, and an empty result reads "No media matches these filters". A
+filter on an artist, tag, character or series you've since deleted or merged
+is dropped. Default filters and sorting for the gallery are set in **Settings
 > Filters**.
 
 ## NSFW

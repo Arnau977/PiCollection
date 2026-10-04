@@ -22,6 +22,8 @@ interface GalleryProps {
   selectedIds?: Set<string>
   onToggleSelect?: (id: string) => void
   returnHighlightId?: string
+  /** Filters are active: an empty result means nothing matches, not an empty library. */
+  filtered?: boolean
 }
 
 export default function Gallery({
@@ -31,9 +33,21 @@ export default function Gallery({
   density = 'comfortable',
   selectedIds,
   onToggleSelect,
-  returnHighlightId
+  returnHighlightId,
+  filtered = false
 }: GalleryProps): JSX.Element {
   const { t } = useTranslation()
+
+  // No action here: "Clear filters" already sits in the banner right above.
+  if (media.length === 0 && filtered) {
+    return (
+      <EmptyState
+        icon={<Images />}
+        title={t('gallery.noMatchesTitle')}
+        hint={t('gallery.noMatchesHint')}
+      />
+    )
+  }
 
   if (media.length === 0) {
     return (
@@ -58,10 +72,12 @@ export default function Gallery({
   return (
     <ul
       className={hasSelection ? 'gallery-grid has-selection' : 'gallery-grid'}
-      style={{
-        '--gallery-thumb-min': DENSITY_THUMB_MIN[density],
-        '--gallery-card-height': DENSITY_CARD_HEIGHT[density]
-      } as React.CSSProperties}
+      style={
+        {
+          '--gallery-thumb-min': DENSITY_THUMB_MIN[density],
+          '--gallery-card-height': DENSITY_CARD_HEIGHT[density]
+        } as React.CSSProperties
+      }
     >
       {media.map((item) => {
         const blurred = blurNsfw && !item.sfw
