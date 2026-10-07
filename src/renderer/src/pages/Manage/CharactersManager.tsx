@@ -9,7 +9,8 @@ import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
 import { MultiSelectAutocomplete } from '../../components/Autocomplete/MultiSelectAutocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
-import { fromCsv, toCsv } from '../../utils/csvList'
+import { fromAliasLines, toAliasLines } from '../../utils/aliasLines'
+import { AliasesField } from './AliasesField'
 import {
   loadManageSort,
   loadManageViewMode,
@@ -110,7 +111,7 @@ export function CharactersManager(): JSX.Element {
     setForm({
       name: character.name,
       seriesIds: character.series.map((s) => s.id),
-      aliases: toCsv(character.aliases ?? []),
+      aliases: toAliasLines(character.aliases ?? []),
       parentId: character.parentId ?? undefined
     })
   }
@@ -127,7 +128,7 @@ export function CharactersManager(): JSX.Element {
     const input = {
       name: trimmed,
       seriesIds: form.seriesIds,
-      aliases: fromCsv(form.aliases),
+      aliases: fromAliasLines(form.aliases),
       parentId: form.parentId
     }
     const result = editing
@@ -196,17 +197,12 @@ export function CharactersManager(): JSX.Element {
             />
           </div>
 
-          <div className="field">
-            <label htmlFor="character-aliases">{t('manage.aliases')}</label>
-            <input
-              id="character-aliases"
-              type="text"
-              value={form.aliases}
-              onChange={(e) => setForm((prev) => ({ ...prev, aliases: e.target.value }))}
-              placeholder={t('manage.aliasesPlaceholder')}
-            />
-            <span className="field-hint">{t('manage.aliasesHint')}</span>
-          </div>
+          <AliasesField
+            id="character-aliases"
+            value={form.aliases}
+            onChange={(aliases) => setForm((prev) => ({ ...prev, aliases }))}
+            hint={t('manage.aliasesHint')}
+          />
 
           <div className="manage-edit-actions">
             <button type="submit" className="btn btn-primary" disabled={!form.name.trim()}>
@@ -285,7 +281,7 @@ export function CharactersManager(): JSX.Element {
                       </span>
                     )}
                     {character.aliases && character.aliases.length > 0 && (
-                      <span className="manage-item-aliases">{character.aliases.join(', ')}</span>
+                      <span className="manage-item-aliases">{character.aliases.join(' · ')}</span>
                     )}
                   </div>
                   <EntityCountButton

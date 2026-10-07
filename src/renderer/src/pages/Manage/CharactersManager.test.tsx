@@ -82,7 +82,7 @@ describe('CharactersManager', () => {
     expect(screen.getByText('Wonderland', { selector: '.manage-item-meta' })).toBeInTheDocument()
   })
 
-  it('creates a new character with a selected series and comma-separated aliases', async () => {
+  it('creates a new character with a selected series and aliases one per line', async () => {
     const user = userEvent.setup()
     const create = vi.fn().mockResolvedValue({ success: true, data: {} })
     setApi({ create })
@@ -94,13 +94,13 @@ describe('CharactersManager', () => {
     await user.type(seriesInput, 'Wonderland')
     await user.click(await screen.findByRole('option', { name: 'Wonderland' }))
 
-    await user.type(screen.getByLabelText('Aliases'), 'Bobby')
+    await user.type(screen.getByLabelText('Aliases'), 'Bobby, the Builder{Enter}Bobby')
     await user.click(screen.getByRole('button', { name: 'Add' }))
 
     expect(create).toHaveBeenCalledWith({
       name: 'Bob',
       seriesIds: ['s1'],
-      aliases: ['Bobby']
+      aliases: ['Bobby, the Builder', 'Bobby']
     })
     expect(refetchCharacters).toHaveBeenCalled()
   })

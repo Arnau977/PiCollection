@@ -8,7 +8,8 @@ import { EntityThumbnail } from '../../components/EntityThumbnail/EntityThumbnai
 import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
-import { fromCsv, toCsv } from '../../utils/csvList'
+import { fromAliasLines, toAliasLines } from '../../utils/aliasLines'
+import { AliasesField } from './AliasesField'
 import {
   loadManageSort,
   loadManageViewMode,
@@ -106,7 +107,7 @@ export function SeriesManager(): JSX.Element {
     setEditing(series)
     setForm({
       name: series.name,
-      aliases: toCsv(series.aliases ?? []),
+      aliases: toAliasLines(series.aliases ?? []),
       parentId: series.parentId ?? undefined
     })
   }
@@ -120,7 +121,7 @@ export function SeriesManager(): JSX.Element {
     e.preventDefault()
     const trimmed = form.name.trim()
     if (!trimmed) return
-    const input = { name: trimmed, aliases: fromCsv(form.aliases), parentId: form.parentId }
+    const input = { name: trimmed, aliases: fromAliasLines(form.aliases), parentId: form.parentId }
     const result = editing
       ? await window.api.series.update(editing.id, input)
       : await window.api.series.create(input)
@@ -169,7 +170,7 @@ export function SeriesManager(): JSX.Element {
         <div className="manage-item-info">
           <span className="manage-item-name">{series.name}</span>
           {series.aliases && series.aliases.length > 0 && (
-            <span className="manage-item-aliases">{series.aliases.join(', ')}</span>
+            <span className="manage-item-aliases">{series.aliases.join(' · ')}</span>
           )}
         </div>
         <EntityCountButton kind="series" id={series.id} name={series.name} count={count} />
@@ -208,17 +209,12 @@ export function SeriesManager(): JSX.Element {
             />
           </div>
 
-          <div className="field">
-            <label htmlFor="series-aliases">{t('manage.aliases')}</label>
-            <input
-              id="series-aliases"
-              type="text"
-              value={form.aliases}
-              onChange={(e) => setForm((prev) => ({ ...prev, aliases: e.target.value }))}
-              placeholder={t('manage.aliasesPlaceholder')}
-            />
-            <span className="field-hint">{t('manage.seriesAliasesHint')}</span>
-          </div>
+          <AliasesField
+            id="series-aliases"
+            value={form.aliases}
+            onChange={(aliases) => setForm((prev) => ({ ...prev, aliases }))}
+            hint={t('manage.seriesAliasesHint')}
+          />
 
           <div className="field">
             <Autocomplete
