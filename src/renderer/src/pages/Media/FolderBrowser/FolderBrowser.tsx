@@ -54,12 +54,34 @@ function computePreviewPosition(anchor: DOMRect): { top: number; left: number; s
   return { top, left, size }
 }
 
+function isInsideFolder(relativePath: string, folder: string): boolean {
+  return relativePath.startsWith(`${folder}/`) || relativePath.startsWith(`${folder}\\`)
+}
+
+/**
+ * How many files "Import" will actually queue: each selected folder's
+ * count (files still to import, subfolders included) plus each selected
+ * file, skipping anything inside another selected folder - the import
+ * dedupes those, so counting them again would overstate it.
+ */
+function countFilesToImport(files: Set<string>, folders: Map<string, number>): number {
+  const selected = [...folders.keys()]
+  const covered = (path: string): boolean =>
+    selected.some((folder) => folder !== path && isInsideFolder(path, folder))
+  let count = 0
+  for (const [folder, fileCount] of folders) if (!covered(folder)) count += fileCount
+  for (const file of files) if (!covered(file)) count += 1
+  return count
+}
+
 export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Element {
   const { t } = useTranslation()
   const [currentPath, setCurrentPath] = useState('')
   const [state, setState] = useState<BrowseState>({ kind: 'loading' })
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
-  const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set())
+  // Each selected folder with its file count (files still to import, from its
+  // tile), kept so the total survives navigating away from where it was picked.
+  const [selectedFolders, setSelectedFolders] = useState<Map<string, number>>(new Map())
   const [reloadToken, setReloadToken] = useState(0)
   const [filePage, setFilePage] = useState(0)
   const [preview, setPreview] = useState<PreviewState | null>(null)
@@ -115,11 +137,11 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
     })
   }
 
-  function toggleFolder(relativePath: string): void {
+  function toggleFolder(relativePath: string, fileCount: number): void {
     setSelectedFolders((prev) => {
-      const next = new Set(prev)
+      const next = new Map(prev)
       if (next.has(relativePath)) next.delete(relativePath)
-      else next.add(relativePath)
+      else next.set(relativePath, fileCount)
       return next
     })
   }
@@ -127,10 +149,10 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   // Toggling selection on a plain click's mousedown-up-click sequence briefly
   // flashes the selected state before the matching double-click navigates
   // away. Defer the toggle so a following double-click can cancel it instead.
-  function handleFolderClick(relativePath: string): void {
+  function handleFolderClick(relativePath: string, fileCount: number): void {
     clearTimeout(folderClickTimer.current)
     folderClickTimer.current = setTimeout(() => {
-      toggleFolder(relativePath)
+      toggleFolder(relativePath, fileCount)
     }, FOLDER_CLICK_DELAY_MS)
   }
 
@@ -153,7 +175,7 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   }
 
   const breadcrumbSegments = currentPath === '' ? [] : currentPath.split(/[/\\]/)
-  const selectedCount = selectedFiles.size + selectedFolders.size
+  const importCount = countFilesToImport(selectedFiles, selectedFolders)
   const folders = state.kind === 'loaded' ? state.result.folders : []
   const finishedCount = folders.filter((folder) => folder.fileCount === 0).length
   const shownFolders = showFinished ? folders : folders.filter((folder) => folder.fileCount > 0)
@@ -224,7 +246,9 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                       type="button"
                       title={folder.name}
                       className={`folder-browser-tile${selectedFolders.has(folder.relativePath) ? ' is-selected' : ''}${finished ? ' is-cataloged' : ''}`}
-                      onClick={() => !finished && handleFolderClick(folder.relativePath)}
+                      onClick={() =>
+                        !finished && handleFolderClick(folder.relativePath, folder.fileCount)
+                      }
                       onDoubleClick={() => handleFolderDoubleClick(folder.relativePath)}
                     >
                       <span className="folder-browser-tile-thumb">
@@ -328,12 +352,12 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
           <button
             type="button"
             className="btn btn-primary"
-            disabled={selectedCount === 0}
+            disabled={importCount === 0}
             onClick={() =>
-              onStartImport({ files: [...selectedFiles], folders: [...selectedFolders] })
+              onStartImport({ files: [...selectedFiles], folders: [...selectedFolders.keys()] })
             }
           >
-            {t('folderBrowser.importSelected', { count: selectedCount })}
+            {t('folderBrowser.importFiles', { count: importCount })}
           </button>
         </div>
       </div>

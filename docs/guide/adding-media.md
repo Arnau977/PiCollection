@@ -22,7 +22,9 @@ Needs a [source folder](getting-started.md#pick-a-source-folder-recommended).
    Files already in your library (*Already added*) and files you discarded
    earlier (*Discarded*) are greyed out and can't be selected. Each folder's
    number counts only the files still left to import; folders with nothing
-   left are hidden, and a checkbox next to the path shows them again.
+   left are hidden, and a checkbox next to the path shows them again. The
+   button says how many files will actually be imported (**Import N
+   files**), whichever folders you picked them in.
 2. The files open one by one in the edit form, **File N of M** at the top.
    They come folder by folder, oldest first, so pictures you saved together
    stay together.
