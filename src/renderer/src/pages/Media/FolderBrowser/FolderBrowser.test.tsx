@@ -53,7 +53,7 @@ describe('FolderBrowser', () => {
     expect(browse).toHaveBeenLastCalledWith('Genshin')
   })
 
-  it('a single click selects a file, and Import selected fires onStartImport with it', async () => {
+  it('a single click selects a file, and Import fires onStartImport with it', async () => {
     browse.mockResolvedValue({
       success: true,
       data: {
@@ -67,7 +67,7 @@ describe('FolderBrowser', () => {
 
     const fileTile = await screen.findByText('a.png')
     fireEvent.click(fileTile)
-    fireEvent.click(screen.getByRole('button', { name: /Import selected/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Import \d+ files?$/ }))
 
     expect(onStartImport).toHaveBeenCalledWith({ files: ['a.png'], folders: [] })
   })
@@ -86,10 +86,45 @@ describe('FolderBrowser', () => {
     // Selecting a folder is deferred briefly so a following double-click can
     // cancel it instead of flashing the selected state before navigating away.
     await new Promise((resolve) => setTimeout(resolve, 250))
-    fireEvent.click(screen.getByRole('button', { name: /Import selected/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Import \d+ files?$/ }))
 
     expect(onStartImport).toHaveBeenCalledWith({ files: [], folders: ['Genshin'] })
     expect(browse).toHaveBeenCalledTimes(1)
+  })
+
+  it("counts the files to import, not the selected tiles, without counting a folder's contents twice", async () => {
+    browse.mockImplementation(async (path: string) => ({
+      success: true,
+      data:
+        path === 'A'
+          ? {
+              folders: [{ name: 'B', relativePath: 'A\\B', fileCount: 2 }],
+              files: [{ name: 'x.png', relativePath: 'A\\x.png', type: 'image', cataloged: false }]
+            }
+          : {
+              folders: [
+                { name: 'A', relativePath: 'A', fileCount: 4 },
+                { name: 'C', relativePath: 'C', fileCount: 3 }
+              ],
+              files: []
+            }
+    }))
+    const selectFolder = async (name: string): Promise<void> => {
+      fireEvent.click(await screen.findByText(name))
+      await new Promise((resolve) => setTimeout(resolve, 250))
+    }
+
+    render(<FolderBrowser onStartImport={vi.fn()} />)
+
+    await selectFolder('A')
+    await selectFolder('C')
+    expect(screen.getByRole('button', { name: 'Import 7 files' })).toBeEnabled()
+
+    // Inside A, already counted in its 4: still 7.
+    fireEvent.doubleClick(screen.getByText('A'))
+    await selectFolder('B')
+    fireEvent.click(await screen.findByText('x.png'))
+    expect(screen.getByRole('button', { name: 'Import 7 files' })).toBeInTheDocument()
   })
 
   it('disables cataloged and discarded files so they cannot be selected', async () => {
@@ -128,12 +163,12 @@ describe('FolderBrowser', () => {
     expect(await screen.findByText('Folder is gone')).toBeInTheDocument()
   })
 
-  it('disables Import selected when nothing is selected', async () => {
+  it('disables Import when nothing is selected', async () => {
     browse.mockResolvedValue({ success: true, data: { folders: [], files: [] } })
 
     render(<FolderBrowser onStartImport={vi.fn()} />)
 
-    expect(await screen.findByRole('button', { name: /Import selected/ })).toBeDisabled()
+    expect(await screen.findByRole('button', { name: /^Import \d+ files?$/ })).toBeDisabled()
   })
 
   it('retries the same folder when Retry is clicked after a browse error', async () => {
@@ -208,7 +243,7 @@ describe('FolderBrowser', () => {
     await new Promise((resolve) => setTimeout(resolve, 250))
 
     expect(screen.getByText('Nothing left')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Import selected/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /^Import \d+ files?$/ })).toBeDisabled()
   })
 
   it('resets to page 1 when navigating into a different folder', async () => {

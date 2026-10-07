@@ -1033,11 +1033,11 @@ describe('AddMediaPage folder tab', () => {
 
     const fileTile = await screen.findByText('a.png')
     await user.click(fileTile)
-    await user.click(screen.getByRole('button', { name: /Import selected/ }))
+    await user.click(screen.getByRole('button', { name: /^Import \d+ files?$/ }))
 
-    // Import started: the queue is mounted (browser's "Import selected" button is gone).
+    // Import started: the queue is mounted (browser's "Import" button is gone).
     await vi.waitFor(() => expect(expandSelection).toHaveBeenCalled())
-    expect(screen.queryByRole('button', { name: /Import selected/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Import \d+ files?$/ })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: 'Single file' }))
     expect(document.querySelector('input[type="file"]')).toBeInTheDocument()
@@ -1046,7 +1046,7 @@ describe('AddMediaPage folder tab', () => {
 
     // Back on the folder tab: the browser is shown again, not a resumed/stale queue.
     expect(await screen.findByText('a.png')).toBeInTheDocument()
-    expect(await screen.findByRole('button', { name: /Import selected/ })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /^Import \d+ files?$/ })).toBeInTheDocument()
     expect(browse).toHaveBeenCalledTimes(2)
   })
 })
