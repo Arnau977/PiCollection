@@ -9,6 +9,7 @@ the field.
 | Anywhere | `Ctrl+B` | Toggle NSFW blur |
 | Media page | `←` / `→` | Previous / next item |
 | Media page | `E` | Edit |
+| Media page, edit form | `Ctrl+F` | [Find a tag](viewing-media.md#finding-a-tag) on this item (`Esc` closes it) |
 | Edit form | `Ctrl+S` | Save |
 | Edit form | `Ctrl+Shift+S` | Save & mark resolved (pending items) |
 | Edit form | `Ctrl+Shift+A` | Suggest tags locally (local AI) |

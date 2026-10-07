@@ -442,6 +442,37 @@ describe('MediaForm onMarkResolved', () => {
   })
 })
 
+describe('MediaForm tag finder', () => {
+  it('Ctrl+F narrows the tag chips while editing, and removing a found one still works', async () => {
+    const user = userEvent.setup()
+    tagsData = [
+      { id: 't1', name: 'Smile' },
+      { id: 't2', name: 'Meme' }
+    ]
+    renderForm({
+      media: {
+        id: 'a',
+        name: 'Picture',
+        type: 'image',
+        route: '/pics/a.png',
+        sfw: true,
+        isAiGenerated: false,
+        createdAt: Date.now(),
+        tags: tagsData,
+        pendingTagging: false
+      }
+    })
+
+    await user.keyboard('{Control>}f{/Control}')
+    await user.type(screen.getByRole('searchbox', { name: 'Find a tag on this media' }), 'meme')
+
+    expect(screen.queryByText('Smile')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('1 of 2 tags')
+    await user.click(screen.getByRole('button', { name: 'Quitar Meme' }))
+    expect(screen.getByRole('status')).toHaveTextContent('Not on this media')
+  })
+})
+
 describe('MediaForm remount on media change', () => {
   it("discards the previous item's loaded fields (e.g. tags) when re-keyed for a different media item", () => {
     const mediaA = {

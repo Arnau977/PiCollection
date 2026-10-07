@@ -5,6 +5,14 @@ artist, tags, characters and series, and **Similar media** below (see
 [Duplicates](duplicates.md)). `←` / `→` move to the previous or next item in
 the gallery's current order, and **Edit** (`E`) opens the edit form.
 
+## Finding a tag
+
+To check whether an item has a given tag, press `Ctrl+F` (or the magnifier
+next to **Tags**) on its page or in the edit form, including during a batch
+import. Typing narrows the tags to the ones whose name or alias contains
+the text, with a count ("1 of 37 tags") or **Not on this media**. `Esc` or
+the × closes it and shows them all again.
+
 ## Full-size viewer
 
 Click an image or GIF (on its page or in the edit form) to open it full

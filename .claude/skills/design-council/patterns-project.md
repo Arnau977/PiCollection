@@ -103,6 +103,15 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   the third "not filtered" state. Excluded chips get a danger outline and a
   struck-through name, so the state never relies on color alone. Where:
   `MultiSelectAutocomplete.tsx`, `GroupedEntityFilter.tsx`.
+- **Finding within a media's tags filters the chips, it doesn't just
+  highlight them** (Ctrl+F or a magnifier by the Tags title): a highlight
+  among dozens of same-colored chips still has to be scanned. The bar says
+  "N of M tags" or "Not on this media" in a `role="status"`, matches
+  aliases too, and `Esc`/× restores every chip (Esc stops there, so it
+  doesn't also leave the edit form). Where: `hooks/useTagFinder.ts`,
+  `components/TagFinder/`, used by `Media.tsx` and
+  `MediaFormTaxonomyFields.tsx` (`chipFilter`/`chipsHeader` on
+  `MultiSelectAutocomplete`).
 - **A list of free-text names is a textarea, one per line** (not a
   comma-separated input: titles contain commas). It grows with its content
   (`field-sizing: content`) from 2 to 6 lines, then scrolls, so the form's

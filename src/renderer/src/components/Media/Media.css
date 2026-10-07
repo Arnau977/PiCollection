@@ -206,3 +206,34 @@
 .chip-list-tags li {
   color: var(--color-tag);
 }
+
+/* Section title with a small action at its right (the tag finder's button). */
+.media-detail-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.media-detail-section-header h2 {
+  margin-bottom: 0;
+}
+
+.media-detail-find-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.media-detail-find-tag:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}

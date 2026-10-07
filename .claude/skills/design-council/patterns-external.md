@@ -75,3 +75,10 @@ here.
 ## Trends
 
 (none recorded yet)
+
+### Low-visibility "find in page" highlight
+- Kind: anti-pattern
+- Use when / avoid when: browsers' find bars are repeatedly criticized because the current match is hard to spot among the page (requests for stronger color, blinking, scrolling). When the goal is a yes/no "is it here?" among many similar items, filtering to the matches plus a stated count/"none" answers it without scanning.
+- Takeaway for PiCollection: the tag finder filters chips and states the result in words (see patterns-project.md).
+- Source: Mozilla Connect - "Increased visibility for current find in page match" - https://connect.mozilla.org/t5/ideas/increased-visibility-for-current-quot-find-in-page-quot-match/idi-p/26500
+- Checked: 2026-10-07

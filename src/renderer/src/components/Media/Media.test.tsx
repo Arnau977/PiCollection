@@ -110,6 +110,40 @@ describe('Media', () => {
     expect(screen.getByText('Elizabeth Bathory (Brave)')).toBeInTheDocument()
   })
 
+  it('Ctrl+F narrows the tags to the ones matching, says when none does, and Esc restores them', async () => {
+    const user = userEvent.setup()
+    render(
+      <Media
+        {...makeMedia({
+          tags: [
+            { id: 't1', name: 'Smile' },
+            { id: 't2', name: 'Reaction image', aliases: ['meme'] },
+            { id: 't3', name: 'Blush' }
+          ]
+        })}
+      />
+    )
+
+    await user.keyboard('{Control>}f{/Control}')
+    const field = screen.getByRole('searchbox', { name: 'Find a tag on this media' })
+    expect(field).toHaveFocus()
+
+    // Matched through its alias.
+    await user.type(field, 'mem')
+    expect(screen.getByText('Reaction image')).toBeInTheDocument()
+    expect(screen.queryByText('Smile')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('1 of 3 tags')
+
+    await user.clear(field)
+    await user.type(field, 'sweat')
+    expect(screen.getByRole('status')).toHaveTextContent('Not on this media')
+
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
+    expect(screen.getByText('Smile')).toBeInTheDocument()
+    expect(screen.getByText('Blush')).toBeInTheDocument()
+  })
+
   it('does not crash when tags/characters are omitted', () => {
     render(<Media {...makeMedia({ tags: undefined, characters: undefined })} />)
     expect(screen.getByText('My picture')).toBeInTheDocument()

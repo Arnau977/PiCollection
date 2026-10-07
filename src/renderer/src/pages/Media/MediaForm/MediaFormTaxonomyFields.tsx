@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import type { CharacterModel, SeriesModel, TagModel } from '@shared/models'
 import { MultiSelectAutocomplete } from '../../../components/Autocomplete/MultiSelectAutocomplete'
+import { TagFinder } from '../../../components/TagFinder/TagFinder'
+import { useTagFinder } from '../../../hooks/useTagFinder'
 import { formatCharacterOptionLabel } from '../../../utils/matchEntityNames'
 import type { MediaFormField } from './mediaFormError'
 
@@ -45,6 +47,8 @@ export function MediaFormTaxonomyFields({
   onCreateSeries
 }: MediaFormTaxonomyFieldsProps): JSX.Element {
   const { t } = useTranslation()
+  const tagFinder = useTagFinder()
+  const selectedTags = tagOptions.filter((tag) => selectedTagIds.includes(tag.id))
 
   return (
     <div className="media-form-group">
@@ -65,6 +69,14 @@ export function MediaFormTaxonomyFields({
           onChange={onTagsChange}
           onCreate={onCreateTag}
           invalid={invalidField === 'tags'}
+          chipFilter={tagFinder.matches}
+          chipsHeader={
+            <TagFinder
+              finder={tagFinder}
+              matchCount={selectedTags.filter(tagFinder.matches).length}
+              total={selectedTags.length}
+            />
+          }
         />
       </div>
       <div className="field-accent field-accent-characters" data-form-field="characters">

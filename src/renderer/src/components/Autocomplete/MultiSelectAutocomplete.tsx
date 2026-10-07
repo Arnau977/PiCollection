@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { Crosshair, SquareCheck, SquareX, X } from 'lucide-react'
 import { Autocomplete } from './Autocomplete'
 
@@ -48,6 +48,10 @@ interface MultiSelectAutocompleteProps<T> {
   chipToggle?: ChipToggle
   chipExclusion?: ChipExclusion
   invalid?: boolean
+  /** Shows only the chips it accepts (e.g. the tag finder's matches). */
+  chipFilter?: (option: T) => boolean
+  /** Rendered between the picker and the chips (e.g. the tag finder's bar). */
+  chipsHeader?: ReactNode
 }
 
 export function MultiSelectAutocomplete<T>({
@@ -65,13 +69,16 @@ export function MultiSelectAutocomplete<T>({
   noneToggle,
   chipToggle,
   chipExclusion,
-  invalid
+  invalid,
+  chipFilter,
+  chipsHeader
 }: MultiSelectAutocompleteProps<T>): JSX.Element {
   const selectedSet = useMemo(() => new Set(selectedValues), [selectedValues])
   const selectedOptions = useMemo(
     () => options.filter((option) => selectedSet.has(getOptionValue(option))),
     [options, selectedSet, getOptionValue]
   )
+  const shownChips = chipFilter ? selectedOptions.filter(chipFilter) : selectedOptions
   const availableOptions = useMemo(
     () => options.filter((option) => !selectedSet.has(getOptionValue(option))),
     [options, selectedSet, getOptionValue]
@@ -107,9 +114,10 @@ export function MultiSelectAutocomplete<T>({
         noneToggle={noneToggle}
         invalid={invalid}
       />
-      {selectedOptions.length > 0 && (
+      {chipsHeader}
+      {shownChips.length > 0 && (
         <ul className="multi-select-chips">
-          {selectedOptions.map((option) => {
+          {shownChips.map((option) => {
             const excluded = chipExclusion?.isExcluded(getOptionValue(option)) ?? false
             return (
               <li key={getOptionValue(option)} className={excluded ? 'chip is-excluded' : 'chip'}>
