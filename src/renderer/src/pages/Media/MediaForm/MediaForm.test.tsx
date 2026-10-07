@@ -468,7 +468,7 @@ describe('MediaForm tag finder', () => {
 
     expect(screen.queryByText('Smile')).not.toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('1 of 2 tags')
-    await user.click(screen.getByRole('button', { name: 'Quitar Meme' }))
+    await user.click(screen.getByRole('button', { name: 'Remove Meme' }))
     expect(screen.getByRole('status')).toHaveTextContent('Not on this media')
   })
 })

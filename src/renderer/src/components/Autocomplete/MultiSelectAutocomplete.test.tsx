@@ -36,6 +36,33 @@ function openDropdown(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('MultiSelectAutocomplete', () => {
+  it('says an already-picked name is added instead of offering to create it again', async () => {
+    const user = userEvent.setup()
+    const onCreate = vi.fn()
+    render(
+      <MultiSelectAutocomplete
+        name="tags"
+        label="Tags"
+        options={OPTIONS}
+        getOptionLabel={(o) => o.name}
+        getOptionValue={(o) => o.id}
+        selectedValues={['1']}
+        onChange={vi.fn()}
+        onCreate={onCreate}
+      />
+    )
+
+    await user.type(screen.getByRole('combobox'), 'landscape')
+
+    const added = await screen.findByRole('option', { name: '"Landscape" is already added' })
+    expect(added).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.queryByText(/^Create/)).not.toBeInTheDocument()
+    await user.click(added)
+    expect(onCreate).not.toHaveBeenCalled()
+    await user.keyboard('{Escape}')
+    expect(screen.getByRole('button', { name: 'Remove Landscape' })).toBeInTheDocument()
+  })
+
   it('renders no chips when nothing is selected', () => {
     render(<Wrapper />)
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
@@ -118,7 +145,7 @@ describe('MultiSelectAutocomplete', () => {
     expect(screen.getByText('Landscape')).toBeInTheDocument()
     expect(screen.getByText('Portrait')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /quitar landscape/i }))
+    await user.click(screen.getByRole('button', { name: /remove landscape/i }))
 
     expect(screen.queryByText('Landscape')).not.toBeInTheDocument()
     expect(screen.getByText('Portrait')).toBeInTheDocument()

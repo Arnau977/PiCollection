@@ -365,7 +365,9 @@
   "autocomplete": {
     "noResults": "No results",
     "createOption": "Create \"{{name}}\"",
-    "pendingLabel": "{{name}} (new)"
+    "pendingLabel": "{{name}} (new)",
+    "alreadyAdded": "\"{{name}}\" is already added",
+    "removeChip": "Remove {{name}}"
   },
   "importQueue": {
     "loading": "Preparing files…",

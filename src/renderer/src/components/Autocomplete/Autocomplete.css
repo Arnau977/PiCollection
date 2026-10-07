@@ -276,3 +276,11 @@
 .react-aria-ListBox:has(> .autocomplete-create-item:not(:first-child)) {
   scroll-padding-bottom: 2.4rem;
 }
+
+/* "Already added": in Create's spot, but a statement, not an action.
+   text-muted on color-surface 6.44:1. */
+.react-aria-Popover[data-trigger='ComboBox'] .autocomplete-added-item {
+  color: var(--color-text-muted);
+  font-weight: 400;
+  cursor: default;
+}

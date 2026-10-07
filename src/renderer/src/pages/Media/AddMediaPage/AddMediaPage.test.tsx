@@ -228,7 +228,7 @@ describe('AddMediaPage', () => {
     await user.type(tagsInput, 'landscape')
     await user.click(await screen.findByText('Create "landscape"'))
 
-    await user.click(screen.getByRole('button', { name: 'Quitar landscape (new)' }))
+    await user.click(screen.getByRole('button', { name: 'Remove landscape (new)' }))
     await user.type(tagsInput, 'landscape')
 
     expect(screen.queryByText('Create "landscape"')).not.toBeInTheDocument()
