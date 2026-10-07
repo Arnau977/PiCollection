@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Search,
   ShieldAlert,
   ShieldCheck,
   Sparkles
@@ -12,9 +13,12 @@ import { useTranslation } from 'react-i18next'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { useCharacters, useSeries } from '../../hooks/useEntityLists'
+import { ariaShortcut, formatShortcut, SHORTCUTS } from '../../hooks/useShortcut'
+import { useTagFinder } from '../../hooks/useTagFinder'
 import { buildAncestorAwareEntityTree } from '../../utils/buildEntityTree'
 import { formatDate, formatDateTime } from '../../utils/formatDate'
 import { Lightbox } from '../Lightbox/Lightbox'
+import { TagFinder } from '../TagFinder/TagFinder'
 import { SimilarMediaPanel } from './SimilarMediaPanel'
 import './Media.css'
 
@@ -46,6 +50,8 @@ export default function Media({
 }: MediaProps): JSX.Element {
   const { t } = useTranslation()
   const mediaUrl = toMediaUrl(route)
+  const tagFinder = useTagFinder()
+  const shownTags = tags.filter(tagFinder.matches)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const { data: allSeries } = useSeries()
   const { data: allCharacters } = useCharacters()
@@ -195,14 +201,32 @@ export default function Media({
           </div>
         )}
 
-        {tags.length > 0 && (
+        {/* Shown while finding even without tags: "not on this media" is the answer. */}
+        {(tags.length > 0 || tagFinder.open) && (
           <div className="media-detail-section media-detail-section-tags">
-            <h2>{t('filters.tags')}</h2>
-            <ul className="chip-list chip-list-tags">
-              {tags.map((tag) => (
-                <li key={tag.id}>{tag.name}</li>
-              ))}
-            </ul>
+            <div className="media-detail-section-header">
+              <h2>{t('filters.tags')}</h2>
+              {!tagFinder.open && (
+                <button
+                  type="button"
+                  className="media-detail-find-tag"
+                  onClick={tagFinder.openFinder}
+                  aria-label={t('tagFinder.open')}
+                  title={`${t('tagFinder.open')} (${formatShortcut(SHORTCUTS.findTag)})`}
+                  aria-keyshortcuts={ariaShortcut(SHORTCUTS.findTag)}
+                >
+                  <Search size={14} aria-hidden="true" />
+                </button>
+              )}
+            </div>
+            <TagFinder finder={tagFinder} matchCount={shownTags.length} total={tags.length} />
+            {shownTags.length > 0 && (
+              <ul className="chip-list chip-list-tags">
+                {shownTags.map((tag) => (
+                  <li key={tag.id}>{tag.name}</li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 

@@ -353,6 +353,15 @@
     "addAllExisting": "Añadir los {{count}} que ya tienes",
     "aiLabel": "IA"
   },
+  "tagFinder": {
+    "open": "Buscar un tag",
+    "label": "Buscar un tag en este media",
+    "placeholder": "Buscar un tag en este media...",
+    "matches_one": "{{count}} de {{total}} tags",
+    "matches_other": "{{count}} de {{total}} tags",
+    "none": "No está en este media",
+    "close": "Cerrar búsqueda de tags"
+  },
   "autocomplete": {
     "noResults": "Sin resultados",
     "createOption": "Crear \"{{name}}\"",

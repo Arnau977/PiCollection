@@ -1,0 +1,57 @@
+/* A find bar above a media's tag chips: icon, field, status, close. */
+.tag-finder {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.tag-finder-icon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.tag-finder input[type='search'] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.6rem;
+}
+
+.tag-finder-status {
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* The answer to "is it on this media?" - no: stated in words, and in the
+   text color rather than muted so it reads as a result, not a hint. */
+.tag-finder-status.is-none {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.tag-finder-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.tag-finder-close:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+/* The bar's own × closes it; Chromium's blue clear button would be a second,
+   off-palette one. */
+.tag-finder input[type='search']::-webkit-search-cancel-button {
+  display: none;
+}
