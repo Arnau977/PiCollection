@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from 'react'
 import { Crosshair, SquareCheck, SquareX, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Autocomplete } from './Autocomplete'
 
 /** An on/off switch on each selected chip that supports it (e.g. "only this one, without its forms"). */
@@ -73,6 +74,7 @@ export function MultiSelectAutocomplete<T>({
   chipFilter,
   chipsHeader
 }: MultiSelectAutocompleteProps<T>): JSX.Element {
+  const { t } = useTranslation()
   const selectedSet = useMemo(() => new Set(selectedValues), [selectedValues])
   const selectedOptions = useMemo(
     () => options.filter((option) => selectedSet.has(getOptionValue(option))),
@@ -112,6 +114,7 @@ export function MultiSelectAutocomplete<T>({
         getOptionMatchName={getOptionMatchName}
         disabled={disabled}
         noneToggle={noneToggle}
+        addedOptions={selectedOptions}
         invalid={invalid}
       />
       {chipsHeader}
@@ -148,7 +151,7 @@ export function MultiSelectAutocomplete<T>({
                 <button
                   type="button"
                   onClick={() => handleRemove(getOptionValue(option))}
-                  aria-label={`Quitar ${getOptionLabel(option)}`}
+                  aria-label={t('autocomplete.removeChip', { name: getOptionLabel(option) })}
                 >
                   <X size={12} />
                 </button>
