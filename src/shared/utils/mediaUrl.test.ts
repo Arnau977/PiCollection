@@ -18,6 +18,12 @@ describe('toMediaUrl', () => {
     expect(url).toBe('app://media//my%20pictures/pic%20(1).png')
     expect(url).not.toContain(' ')
   })
+
+  it("encodes '#' and '?' so they aren't read as a fragment or query", () => {
+    const url = toMediaUrl('D:\\pics\\a (# clash #)?.jpg')
+    expect(url).toBe('app://media/D:/pics/a%20(%23%20clash%20%23)%3F.jpg')
+    expect(decodeURIComponent(new URL(url).pathname).slice(1)).toBe('D:/pics/a (# clash #)?.jpg')
+  })
 })
 
 describe('toThumbUrl', () => {

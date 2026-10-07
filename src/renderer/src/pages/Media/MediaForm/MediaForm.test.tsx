@@ -104,14 +104,17 @@ describe('MediaForm initialFile', () => {
   it('runs the duplicate check for the initial route on mount', async () => {
     const checkDuplicate = vi.fn().mockResolvedValue({
       success: true,
-      data: { exactMatch: { id: 'existing', name: 'Existing pic' }, similar: [] }
+      data: {
+        exactMatch: { id: 'existing', name: 'Existing pic', route: 'existing.png', type: 'image' },
+        similar: []
+      }
     })
     setApi({ media: { checkDuplicate } })
 
     renderForm({ initialFile: { route: '/pics/sunset.png', name: 'sunset', type: 'image' } })
 
     expect(
-      await screen.findByText('This file is already in the library as "Existing pic".')
+      await screen.findByText("This exact file is already in the app, so it can't be saved again:")
     ).toBeInTheDocument()
     expect(checkDuplicate).toHaveBeenCalledWith('/pics/sunset.png')
   })
