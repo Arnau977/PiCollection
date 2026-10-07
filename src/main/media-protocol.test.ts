@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { promises as fs } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
+import { toMediaUrl } from '@shared/utils/mediaUrl'
 
 let userDataDir = ''
 let protocolHandler: ((request: Request) => Promise<Response>) | null = null
@@ -46,13 +47,22 @@ afterEach(async () => {
 })
 
 function mediaRequestFor(route: string): Request {
-  const encoded = encodeURI(route.replace(/\\/g, '/'))
-  return new Request(`app://media/${encoded}`)
+  return new Request(toMediaUrl(route))
 }
 
 describe('media protocol source folder resolution', () => {
   it('serves an absolute route unchanged with no source folder configured', async () => {
     const file = join(sourceDir, 'a.png')
+    await fs.writeFile(file, 'hello')
+
+    const response = await protocolHandler!(mediaRequestFor(file))
+
+    expect(response.status).toBe(200)
+    await response.arrayBuffer()
+  })
+
+  it("serves a file whose name has '#' in it", async () => {
+    const file = join(sourceDir, 'a (# clash #).png')
     await fs.writeFile(file, 'hello')
 
     const response = await protocolHandler!(mediaRequestFor(file))

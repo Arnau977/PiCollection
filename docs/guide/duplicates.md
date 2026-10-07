@@ -7,7 +7,11 @@ fill up with repeats.
 
 When you add a file, the app compares it with your library by path and by
 content. The same file, even from another folder or with another name, can't
-be added twice: the form says where it already is.
+be added twice: the form lists the copy already in the app (in the library
+or pending) as an **identical file**, with the same preview, comparison and
+**Replace with this file** as a similar copy (see below). Replacing is how you
+keep this file instead - for example after sending a `.jpg` to Pending and
+then finding the same picture as a `.jpeg`.
 
 ## Similar copies
 

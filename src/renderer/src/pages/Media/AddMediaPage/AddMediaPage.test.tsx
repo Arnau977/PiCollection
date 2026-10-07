@@ -514,7 +514,7 @@ describe('AddMediaPage duplicate detection', () => {
     const checkDuplicate = vi.fn().mockResolvedValue({
       success: true,
       data: {
-        exactMatch: { id: 'existing', name: 'Existing pic' },
+        exactMatch: { id: 'existing', name: 'Existing pic', route: 'existing.png', type: 'image' },
         similar: []
       }
     })
@@ -526,7 +526,7 @@ describe('AddMediaPage duplicate detection', () => {
     await user.upload(fileInput, makeFile('sunset.png'))
 
     expect(
-      await screen.findByText('This file is already in the library as "Existing pic".')
+      await screen.findByText("This exact file is already in the app, so it can't be saved again:")
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled()
 
@@ -542,7 +542,10 @@ describe('AddMediaPage duplicate detection', () => {
       data: {
         exactMatch: null,
         similar: [
-          { media: { id: 'similar1', name: 'Similar pic', route: 'C:/pics/similar.png' }, distance: 4 }
+          {
+            media: { id: 'similar1', name: 'Similar pic', route: 'C:/pics/similar.png' },
+            distance: 4
+          }
         ]
       }
     })

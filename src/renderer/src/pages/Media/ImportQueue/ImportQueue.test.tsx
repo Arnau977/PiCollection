@@ -151,6 +151,40 @@ describe('ImportQueue', () => {
     )
   })
 
+  it('offers replacing an identical copy waiting in Pending, while Save stays blocked', async () => {
+    confirmMock.mockResolvedValue(true)
+    const pendingCopy = {
+      id: 'p1',
+      name: 'Pending copy',
+      route: 'copy (#1).jpeg',
+      type: 'image',
+      sfw: true,
+      isAiGenerated: false,
+      createdAt: 0,
+      pendingTagging: true
+    }
+    checkDuplicate.mockResolvedValue({
+      success: true,
+      data: { exactMatch: pendingCopy, similar: [] }
+    })
+    mediaReplace.mockResolvedValue({ success: true, data: pendingCopy })
+    renderQueue()
+    await screen.findByText('File 1 of 2')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This exact file is already in the app'
+    )
+    expect(screen.getByText(/identical file · pending/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Replace copy (#1).jpeg with this file' }))
+
+    expect(await screen.findByText('File 1 of 1')).toBeInTheDocument()
+    expect(mediaReplace).toHaveBeenCalledWith(
+      expect.objectContaining({ targetId: 'p1', route: '/src/a.png' })
+    )
+  })
+
   it('sending an item to Pending advances to the next file automatically', async () => {
     renderQueue()
     await screen.findByText('File 1 of 2')

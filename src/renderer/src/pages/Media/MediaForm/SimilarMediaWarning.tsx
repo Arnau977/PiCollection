@@ -25,15 +25,24 @@ interface SimilarMediaWarningProps {
   onReplace?: (media: MediaModel) => void
   /** Locks the replace buttons while the form saves or replaces. */
   busy?: boolean
+  /**
+   * The matches are byte-identical copies, which block saving: the title is
+   * an alert and each match reads "identical file" instead of a difference.
+   */
+  identical?: boolean
 }
 
-/** Non-blocking "looks similar to…" list, with a hover preview of each match. */
+/**
+ * "Looks similar to…" list, with a hover preview of each match. Non-blocking,
+ * except for an identical copy, where replacing it is the way forward.
+ */
 export function SimilarMediaWarning({
   matches,
   title,
   current,
   onReplace,
-  busy = false
+  busy = false,
+  identical = false
 }: SimilarMediaWarningProps): JSX.Element | null {
   const { t } = useTranslation()
   const [compared, setCompared] = useState<ComparedMedia | null>(null)
@@ -45,7 +54,13 @@ export function SimilarMediaWarning({
 
   return (
     <div className="duplicate-warning">
-      <p>{title}</p>
+      {identical ? (
+        <p role="alert" className="duplicate-error">
+          {title}
+        </p>
+      ) : (
+        <p>{title}</p>
+      )}
       <ul className="chip-list">
         {matches.map(({ media, distance, relation }) => (
           <li key={media.id} className="similar-match">
@@ -67,7 +82,9 @@ export function SimilarMediaWarning({
             (
             {relation
               ? t(`media.relation.${relation}`)
-              : t('addMedia.duplicateSimilarMatch', { distance })}
+              : identical
+                ? t('addMedia.duplicateExactMatch')
+                : t('addMedia.duplicateSimilarMatch', { distance })}
             {media.pendingTagging && ` · ${t('addMedia.similarPendingBadge')}`})
             {/* A GIF made from a video (relation) isn't a copy to swap. */}
             {onReplace && !relation && (

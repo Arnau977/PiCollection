@@ -144,7 +144,9 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   "N/64 difference", and a compact "Replace with this file" button at the
   right of each match (not for a video/GIF relation), behind a confirm that
   says what the match keeps and that its file goes to Discarded; it locks
-  while the form saves. Where:
+  while the form saves. An exact copy uses the same list (`identical`: an
+  alert title, "identical file", Save blocked) so it can still be replaced -
+  a bare blocking error left a pending copy impossible to swap. Where:
   `src/renderer/src/pages/Media/MediaForm/SimilarMediaWarning.tsx` (#91).
 - **Compare two images at full size with a drag divider** (`MediaCompare`):
   both fitted to the same box so identical pictures line up; the stage

@@ -134,15 +134,21 @@ export function MediaFormFileGroup({
         />
       )}
 
-      {duplicateCheck?.exactMatch && (
-        <p role="alert" className="duplicate-error">
-          {t('addMedia.duplicateExact', { name: duplicateCheck.exactMatch.name })}
-        </p>
-      )}
-      {!duplicateCheck?.exactMatch && duplicateCheck && (
+      {/* An identical copy blocks saving, but can still be replaced - e.g.
+          one sent to Pending earlier without knowing this file existed. */}
+      {duplicateCheck && (
         <SimilarMediaWarning
-          matches={duplicateCheck.similar}
-          title={t('addMedia.duplicateSimilar')}
+          matches={
+            duplicateCheck.exactMatch
+              ? [{ media: duplicateCheck.exactMatch, distance: 0 }]
+              : duplicateCheck.similar
+          }
+          identical={Boolean(duplicateCheck.exactMatch)}
+          title={
+            duplicateCheck.exactMatch
+              ? t('addMedia.duplicateExact')
+              : t('addMedia.duplicateSimilar')
+          }
           current={
             input.route
               ? { route: input.route, name: t('mediaCompare.thisFile'), type: input.type }
