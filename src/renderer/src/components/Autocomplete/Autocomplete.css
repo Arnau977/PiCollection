@@ -184,14 +184,20 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   padding: 0.3rem;
-  /* Fits ~5 options (1.86rem each incl. padding) before scrolling kicks in. */
-  max-height: 9.6rem;
+  /* No max-height of its own: react-aria sets one from the room left below
+     the field, and flips above when the popover's scrollHeight (one page of
+     options, capped on the ListBox below) doesn't fit. A cap here, inherited
+     by the ListBox, hid that overflow inside the list, so it never flipped
+     and a lone option could end up behind a scrollbar near the window's
+     bottom edge. Still scrolls if neither side has room for a full page. */
   overflow: auto;
 
   .react-aria-ListBox {
     display: block;
     width: unset;
-    max-height: inherit;
+    /* One page: ~5 options (1.86rem each incl. padding). */
+    max-height: 9rem;
+    overflow: auto;
     min-height: unset;
     border: none;
 
