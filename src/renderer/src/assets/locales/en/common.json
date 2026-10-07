@@ -421,7 +421,7 @@
     "series": "Series",
     "seriesFilterAll": "All series",
     "aliases": "Aliases",
-    "aliasesPlaceholder": "Comma-separated",
+    "aliasesPlaceholder": "One per line",
     "aliasesHint": "Alternate names or nicknames for this character.",
     "seriesAliasesHint": "Alternate or original titles for this series.",
     "tagAliasesHint": "Alternate names or synonyms for this tag.",

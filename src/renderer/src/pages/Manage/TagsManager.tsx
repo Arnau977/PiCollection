@@ -10,7 +10,8 @@ import { DanbooruTagAutocomplete } from '../../components/DanbooruTagAutocomplet
 import { TagWikiInfo } from '../../components/TagWikiInfo/TagWikiInfo'
 import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
-import { fromCsv, toCsv } from '../../utils/csvList'
+import { fromAliasLines, toAliasLines } from '../../utils/aliasLines'
+import { AliasesField } from './AliasesField'
 import {
   loadManageSort,
   saveManageSort,
@@ -58,7 +59,7 @@ export function TagsManager(): JSX.Element {
 
   function startEdit(tag: TagModel): void {
     setEditing(tag)
-    setForm({ name: tag.name, aliases: toCsv(tag.aliases ?? []) })
+    setForm({ name: tag.name, aliases: toAliasLines(tag.aliases ?? []) })
   }
 
   function resetForm(): void {
@@ -70,7 +71,7 @@ export function TagsManager(): JSX.Element {
     e.preventDefault()
     const trimmed = form.name.trim()
     if (!trimmed) return
-    const input = { name: trimmed, aliases: fromCsv(form.aliases) }
+    const input = { name: trimmed, aliases: fromAliasLines(form.aliases) }
     const result = editing
       ? await window.api.tag.update(editing.id, input)
       : await window.api.tag.create(input)
@@ -114,17 +115,12 @@ export function TagsManager(): JSX.Element {
             />
           </div>
 
-          <div className="field">
-            <label htmlFor="tag-aliases">{t('manage.aliases')}</label>
-            <input
-              id="tag-aliases"
-              type="text"
-              value={form.aliases}
-              onChange={(e) => setForm((prev) => ({ ...prev, aliases: e.target.value }))}
-              placeholder={t('manage.aliasesPlaceholder')}
-            />
-            <span className="field-hint">{t('manage.tagAliasesHint')}</span>
-          </div>
+          <AliasesField
+            id="tag-aliases"
+            value={form.aliases}
+            onChange={(aliases) => setForm((prev) => ({ ...prev, aliases }))}
+            hint={t('manage.tagAliasesHint')}
+          />
 
           <div className="manage-edit-actions">
             <button type="submit" className="btn btn-primary" disabled={!form.name.trim()}>
@@ -180,7 +176,7 @@ export function TagsManager(): JSX.Element {
                   <div className="manage-item-info">
                     <span className="manage-item-name">{tag.name}</span>
                     {tag.aliases && tag.aliases.length > 0 && (
-                      <span className="manage-item-aliases">{tag.aliases.join(', ')}</span>
+                      <span className="manage-item-aliases">{tag.aliases.join(' · ')}</span>
                     )}
                   </div>
                   <TagWikiInfo tagName={tag.name} />

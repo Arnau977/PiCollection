@@ -25,8 +25,8 @@ it's about, and **Go to <field>** jumps there.
 ## Managing your metadata
 
 The **Metadata** page lists your artists, tags, characters and series: add,
-rename, set aliases (other names a search should also match) and delete
-them. Deleting one never deletes media, it only removes the link. Each entry's
+rename, set aliases (other names a search should also match, one per line,
+so a long title can keep its commas) and delete them. Deleting one never deletes media, it only removes the link. Each entry's
 media count opens the gallery filtered to it. The ⓘ next to a tag (here and on
 suggested tags) shows what it means, from Danbooru's tag wiki.
 

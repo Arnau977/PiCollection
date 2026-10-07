@@ -103,6 +103,11 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   the third "not filtered" state. Excluded chips get a danger outline and a
   struck-through name, so the state never relies on color alone. Where:
   `MultiSelectAutocomplete.tsx`, `GroupedEntityFilter.tsx`.
+- **A list of free-text names is a textarea, one per line** (not a
+  comma-separated input: titles contain commas). It grows with its content
+  (`field-sizing: content`) from 2 to 6 lines, then scrolls, so the form's
+  Save stays in view; shown elsewhere joined with " · ". Where:
+  `src/renderer/src/pages/Manage/AliasesField.tsx`, `utils/aliasLines.ts`.
 - **Autocomplete "Create ..." goes last, pinned to the list's bottom**
   (opaque, separated only when matches sit above it): a typed name is
   usually one that exists, yet a long fuzzy list never hides Create; a
