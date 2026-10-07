@@ -1,4 +1,4 @@
-import { Ban, ChevronDown, Plus } from 'lucide-react'
+import { Ban, Check, ChevronDown, Plus } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -18,6 +18,7 @@ import { normalizeForMatch } from '../../utils/fuzzyMatch'
 import './Autocomplete.css'
 
 const CREATE_KEY = '__create_new__'
+const ALREADY_ADDED_KEY = '__already_added__'
 // Caps the option pool shown before the user has typed anything - browsing the
 // full list (which can be hundreds of tags/characters) isn't useful and makes
 // the popover feel overwhelming; typing narrows it down instead.
@@ -57,6 +58,12 @@ interface AutocompleteProps<T> {
     onChange: (checked: boolean) => void
     label: string
   }
+  /**
+   * Options already picked elsewhere (a multi-select's chips), left out of
+   * `options`. Typing one's name says it's already added instead of offering
+   * to create it again.
+   */
+  addedOptions?: T[]
   /** Marks the field as the cause of an error (danger outline, aria-invalid). */
   invalid?: boolean
 }
@@ -75,6 +82,7 @@ export function Autocomplete<T>({
   getOptionMatchName = getOptionLabel,
   disabled = false,
   noneToggle,
+  addedOptions = [],
   invalid
 }: AutocompleteProps<T>): JSX.Element {
   const { t } = useTranslation()
@@ -117,7 +125,11 @@ export function Autocomplete<T>({
   const hasExactMatch = options.some(
     (option) => normalizeForMatch(getOptionMatchName(option)) === normalizedQuery
   )
-  const showCreateOption = Boolean(onCreate) && trimmedQuery.length > 0 && !hasExactMatch
+  const alreadyAdded = addedOptions.find(
+    (option) => normalizeForMatch(getOptionMatchName(option)) === normalizedQuery
+  )
+  const showCreateOption =
+    Boolean(onCreate) && trimmedQuery.length > 0 && !hasExactMatch && !alreadyAdded
 
   function handleInputChange(value: string): void {
     setQuery(value)
@@ -217,6 +229,18 @@ export function Autocomplete<T>({
             >
               <Plus size={14} />
               {t('autocomplete.createOption', { name: trimmedQuery })}
+            </ListBoxItem>
+          )}
+          {/* Where "Create" would be: an answer, not an action. */}
+          {alreadyAdded && trimmedQuery.length > 0 && (
+            <ListBoxItem
+              id={ALREADY_ADDED_KEY}
+              textValue={trimmedQuery}
+              className="autocomplete-create-item autocomplete-added-item"
+              isDisabled
+            >
+              <Check size={14} aria-hidden="true" />
+              {t('autocomplete.alreadyAdded', { name: getOptionMatchName(alreadyAdded) })}
             </ListBoxItem>
           )}
         </ListBox>
