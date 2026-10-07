@@ -180,16 +180,18 @@
 .react-aria-Popover[data-trigger='ComboBox'] {
   width: var(--trigger-width);
   background: var(--color-surface);
-  border: 1px solid var(--border-color);
+  /* The border is drawn as a shadow: react-aria measures the popover's
+     scrollHeight (see Autocomplete.tsx), which leaves out a real border, so
+     it would be clipped by a couple of pixels where the fit is exact. */
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    inset 0 0 0 1px var(--border-color),
+    var(--shadow-md);
   padding: 0.3rem;
-  /* No max-height of its own: react-aria sets one from the room left below
-     the field, and flips above when the popover's scrollHeight (one page of
-     options, capped on the ListBox below) doesn't fit. A cap here, inherited
-     by the ListBox, hid that overflow inside the list, so it never flipped
-     and a lone option could end up behind a scrollbar near the window's
-     bottom edge. Still scrolls if neither side has room for a full page. */
+  /* No max-height of its own: react-aria sets one from the room left on the
+     chosen side, and flips above when one page of options (capped on the
+     ListBox below) plus this padding doesn't fit under the field. Still
+     scrolls if neither side has room for a full page. */
   overflow: auto;
 
   .react-aria-ListBox {
@@ -253,7 +255,24 @@
   gap: 0.4rem;
   color: var(--accent-fg);
   font-weight: 600;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 0.25rem;
-  padding-bottom: 0.5rem !important;
+}
+
+/* Below the matches, separated from them (alone, it needs no separator) and
+   pinned to the list's bottom edge, so a long list of fuzzy matches never
+   pushes it out of reach. Opaque background, so nothing shows through. */
+.autocomplete-create-item:not(:first-child) {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background: var(--color-surface);
+  border-top: 1px solid var(--border-color);
+  border-radius: 0 !important;
+  margin-top: 0.25rem;
+  padding-top: 0.5rem !important;
+}
+
+/* Keyboard navigation scrolls an option clear of the pinned item, not under
+   it (react-aria's scrollIntoView honors scroll-padding). */
+.react-aria-ListBox:has(> .autocomplete-create-item:not(:first-child)) {
+  scroll-padding-bottom: 2.4rem;
 }

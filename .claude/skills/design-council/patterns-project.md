@@ -103,6 +103,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   the third "not filtered" state. Excluded chips get a danger outline and a
   struck-through name, so the state never relies on color alone. Where:
   `MultiSelectAutocomplete.tsx`, `GroupedEntityFilter.tsx`.
+- **Autocomplete "Create ..." goes last, pinned to the list's bottom**
+  (opaque, separated only when matches sit above it): a typed name is
+  usually one that exists, yet a long fuzzy list never hides Create; a
+  `scroll-padding-bottom` keeps keyboard focus clear of it. The popover
+  opens above when one page of options doesn't fit below - react-aria
+  measures the popover (`scrollRef`), not the full ListBox. Where:
+  `src/renderer/src/components/Autocomplete/Autocomplete.tsx` + `.css`.
 
 ## Suggestions and metadata
 
