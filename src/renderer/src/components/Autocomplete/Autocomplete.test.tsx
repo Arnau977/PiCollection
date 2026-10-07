@@ -312,6 +312,10 @@ describe('Autocomplete', () => {
       // The typed text doesn't exactly match the rendered label ("Ishtar (Fate)"),
       // so without an explicit getOptionMatchName the create option is still offered.
       expect(await screen.findByText('Create "Ishtar"')).toBeInTheDocument()
+      // Below the matches: a typed name is usually one that already exists.
+      const options = screen.getAllByRole('option')
+      expect(options[0]).toHaveTextContent('Ishtar (Fate)')
+      expect(options.at(-1)).toHaveTextContent('Create "Ishtar"')
     })
 
     it('uses getOptionMatchName instead of getOptionLabel to suppress the "Create" option', async () => {

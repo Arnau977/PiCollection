@@ -79,6 +79,7 @@ export function Autocomplete<T>({
 }: AutocompleteProps<T>): JSX.Element {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
+  const popoverRef = useRef<HTMLElement>(null)
 
   // Keeps the displayed text in sync when `selectedKey` changes from outside
   // a direct pick in this dropdown - e.g. a newly-created option is linked
@@ -183,12 +184,31 @@ export function Autocomplete<T>({
       </div>
       <Text slot="description" />
       <FieldError />
-      <Popover>
+      {/* react-aria flips the popover above the field when what it measures
+          doesn't fit below. ComboBox points that at the ListBox, whose
+          scrollHeight is every option and leaves out the popover's padding:
+          a long list flipped even with room for a page below, and a short
+          one stayed below by a few pixels, clipped behind a scrollbar.
+          Measuring the popover itself gives one page (or fewer options)
+          plus padding - exactly what has to fit. */}
+      <Popover ref={popoverRef} scrollRef={popoverRef}>
         <ListBox
           renderEmptyState={() => (
             <div className="autocomplete-empty">{t('autocomplete.noResults')}</div>
           )}
         >
+          {filteredOptions.map((option) => (
+            <ListBoxItem
+              key={getOptionValue(option)}
+              id={getOptionValue(option)}
+              textValue={getOptionLabel(option)}
+            >
+              {getOptionLabel(option)}
+            </ListBoxItem>
+          ))}
+          {/* Last: typing a name usually means looking for one that exists, so
+              the matches come first. Opened above the field, it also sits
+              right next to the input. */}
           {showCreateOption && (
             <ListBoxItem
               id={CREATE_KEY}
@@ -199,15 +219,6 @@ export function Autocomplete<T>({
               {t('autocomplete.createOption', { name: trimmedQuery })}
             </ListBoxItem>
           )}
-          {filteredOptions.map((option) => (
-            <ListBoxItem
-              key={getOptionValue(option)}
-              id={getOptionValue(option)}
-              textValue={getOptionLabel(option)}
-            >
-              {getOptionLabel(option)}
-            </ListBoxItem>
-          ))}
         </ListBox>
       </Popover>
     </ComboBox>
