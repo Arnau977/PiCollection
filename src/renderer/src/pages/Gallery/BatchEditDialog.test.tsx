@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { CharacterModel, SeriesModel, TagModel } from '@shared/models'
 import { BatchEditDialog } from './BatchEditDialog'
@@ -63,14 +63,18 @@ describe('BatchEditDialog', () => {
       removeCharacterIds: [],
       addSeriesIds: [],
       removeSeriesIds: [],
-      sfw: null
+      sfw: null,
+      isAiGenerated: null
     })
   })
 
-  it('leaves SFW/NSFW at "Don\'t change" by default', () => {
+  it('leaves SFW/NSFW and AI at "Don\'t change" by default', () => {
     render(<BatchEditDialog count={1} onApply={vi.fn()} onCancel={vi.fn()} />)
 
-    expect(screen.getByRole('radio', { name: "Don't change" })).toBeChecked()
+    for (const group of ['SFW / NSFW', 'AI']) {
+      const radios = within(screen.getByRole('group', { name: group }))
+      expect(radios.getByRole('radio', { name: "Don't change" })).toBeChecked()
+    }
     expect(screen.getByRole('radio', { name: 'Mark as SFW' })).not.toBeChecked()
     expect(screen.getByRole('radio', { name: 'Mark as NSFW' })).not.toBeChecked()
   })
@@ -97,6 +101,19 @@ describe('BatchEditDialog', () => {
     await user.click(screen.getByRole('button', { name: 'Apply' }))
 
     expect(onApply).toHaveBeenCalledWith(expect.objectContaining({ sfw: false }))
+  })
+
+  it('calls onApply with only the AI flag set when Mark as AI is chosen', async () => {
+    const user = userEvent.setup()
+    const onApply = vi.fn()
+    render(<BatchEditDialog count={1} onApply={onApply} onCancel={vi.fn()} />)
+
+    await user.click(screen.getByRole('radio', { name: 'Mark as AI' }))
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    expect(onApply).toHaveBeenCalledWith(
+      expect.objectContaining({ sfw: null, isAiGenerated: true })
+    )
   })
 
   it('excludes a tag from Remove options once it is selected in Add', async () => {

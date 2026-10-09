@@ -62,8 +62,8 @@ General**. **Hide names** there hides the name under each thumbnail.
 
 Select thumbnails with their checkbox (or **Select all on this page**), then:
 
-- **Edit metadata**: add or remove tags, characters and series, and set SFW
-  or NSFW, on all of them at once;
+- **Edit metadata**: add or remove tags, characters and series, set SFW or
+  NSFW, and mark them as AI-generated or not, on all of them at once;
 - **Delete selected**: removes them from the app; the files stay on disk and
   go to [Metadata > Discarded](pending-and-discarded.md#discarded-files).
 

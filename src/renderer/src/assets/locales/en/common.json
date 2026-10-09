@@ -216,9 +216,12 @@
     "addSeries": "Add series",
     "removeSeries": "Remove series",
     "sfwLabel": "SFW / NSFW",
-    "sfwNoChange": "Don't change",
+    "noChange": "Don't change",
     "sfwMarkSfw": "Mark as SFW",
     "sfwMarkNsfw": "Mark as NSFW",
+    "aiLabel": "AI",
+    "aiMarkAi": "Mark as AI",
+    "aiMarkNotAi": "Mark as not AI",
     "apply": "Apply",
     "cancel": "Cancel"
   },

@@ -65,7 +65,8 @@ export const MediaBatchUpdateAssociationsSchema = z
     removeCharacterIds: z.array(z.string().min(1)).default([]),
     addSeriesIds: z.array(z.string().min(1)).default([]),
     removeSeriesIds: z.array(z.string().min(1)).default([]),
-    sfw: z.boolean().optional()
+    sfw: z.boolean().optional(),
+    isAiGenerated: z.boolean().optional()
   })
   .refine(
     (data) =>
@@ -76,8 +77,10 @@ export const MediaBatchUpdateAssociationsSchema = z
         data.removeCharacterIds,
         data.addSeriesIds,
         data.removeSeriesIds
-      ].some((list) => list.length > 0) || data.sfw !== undefined,
-    { message: 'At least one add, remove, or SFW/NSFW selection is required.' }
+      ].some((list) => list.length > 0) ||
+      data.sfw !== undefined ||
+      data.isAiGenerated !== undefined,
+    { message: 'At least one add, remove, SFW/NSFW or AI selection is required.' }
   )
 
 export const IdSchema = z.string().min(1)

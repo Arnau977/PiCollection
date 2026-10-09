@@ -439,6 +439,27 @@ describe('mediaService.batchUpdateAssociations', () => {
     expect((await mediaService.getMediaById(mediaC.id))?.sfw).toBe(true)
   })
 
+  it('sets the AI flag for every given media id, leaving sfw untouched', async () => {
+    const mediaA = await mediaService.addMedia(baseInput({ sfw: true }))
+    const mediaB = await mediaService.addMedia(baseInput({ route: '/b.png', sfw: true }))
+
+    await mediaService.batchUpdateAssociations({
+      mediaIds: [mediaA.id],
+      addTagIds: [],
+      removeTagIds: [],
+      addCharacterIds: [],
+      removeCharacterIds: [],
+      addSeriesIds: [],
+      removeSeriesIds: [],
+      isAiGenerated: true
+    })
+
+    const reloadedA = await mediaService.getMediaById(mediaA.id)
+    expect(reloadedA?.isAiGenerated).toBe(true)
+    expect(reloadedA?.sfw).toBe(true)
+    expect((await mediaService.getMediaById(mediaB.id))?.isAiGenerated).toBe(false)
+  })
+
   it('leaves sfw untouched when omitted', async () => {
     const media = await mediaService.addMedia(baseInput({ sfw: true }))
 
