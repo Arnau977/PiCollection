@@ -137,4 +137,6 @@ export interface MediaBatchUpdateAssociationsInput {
   removeSeriesIds: string[]
   /** Omitted (not `undefined` vs `false`-checked) means "leave unchanged". */
   sfw?: boolean
+  /** Same convention as `sfw`. */
+  isAiGenerated?: boolean
 }

@@ -410,6 +410,19 @@ export async function setMediaSfwBulk(
     .execute()
 }
 
+export async function setMediaAiGeneratedBulk(
+  db: Kysely<DB>,
+  mediaIds: string[],
+  isAiGenerated: boolean
+): Promise<void> {
+  if (!mediaIds.length) return
+  await db
+    .updateTable('media')
+    .set({ is_ai_generated: isAiGenerated ? 1 : 0 })
+    .where('id', 'in', mediaIds)
+    .execute()
+}
+
 export async function deleteMediaRow(db: Kysely<DB>, id: string): Promise<void> {
   await db.deleteFrom('media').where('id', '=', id).execute()
 }

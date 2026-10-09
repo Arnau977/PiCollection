@@ -16,6 +16,8 @@ export interface BatchEditSelections {
   removeSeriesIds: string[]
   /** `null` means "don't change" - the only way to represent that for a boolean field. */
   sfw: boolean | null
+  /** Same `null` = "don't change" convention as `sfw`. */
+  isAiGenerated: boolean | null
 }
 
 const EMPTY_SELECTIONS: BatchEditSelections = {
@@ -25,7 +27,8 @@ const EMPTY_SELECTIONS: BatchEditSelections = {
   removeCharacterIds: [],
   addSeriesIds: [],
   removeSeriesIds: [],
-  sfw: null
+  sfw: null,
+  isAiGenerated: null
 }
 
 interface BatchEditDialogProps {
@@ -37,6 +40,48 @@ interface BatchEditDialogProps {
 function excluding<T extends { id: string }>(options: T[], excludedIds: string[]): T[] {
   const excluded = new Set(excludedIds)
   return options.filter((option) => !excluded.has(option.id))
+}
+
+interface FlagRadioGroupProps {
+  name: string
+  label: string
+  value: boolean | null
+  onChange: (value: boolean | null) => void
+  trueLabel: string
+  falseLabel: string
+}
+
+/** A boolean field that's left as is (`null`) or set to true/false on every selected media. */
+function FlagRadioGroup({
+  name,
+  label,
+  value,
+  onChange,
+  trueLabel,
+  falseLabel
+}: FlagRadioGroupProps): JSX.Element {
+  const { t } = useTranslation()
+  const options: Array<[boolean | null, string]> = [
+    [null, t('batchEdit.noChange')],
+    [true, trueLabel],
+    [false, falseLabel]
+  ]
+  return (
+    <fieldset className="batch-edit-flag">
+      <legend className="filter-label">{label}</legend>
+      {options.map(([optionValue, optionLabel]) => (
+        <label key={String(optionValue)} className="radio-row">
+          <input
+            type="radio"
+            name={name}
+            checked={value === optionValue}
+            onChange={() => onChange(optionValue)}
+          />
+          {optionLabel}
+        </label>
+      ))}
+    </fieldset>
+  )
 }
 
 export function BatchEditDialog({ count, onApply, onCancel }: BatchEditDialogProps): JSX.Element {
@@ -54,14 +99,16 @@ export function BatchEditDialog({ count, onApply, onCancel }: BatchEditDialogPro
       selections.removeCharacterIds,
       selections.addSeriesIds,
       selections.removeSeriesIds
-    ].some((list) => list.length > 0) || selections.sfw !== null
+    ].some((list) => list.length > 0) ||
+    selections.sfw !== null ||
+    selections.isAiGenerated !== null
 
   function updateSelection<K extends keyof BatchEditSelections>(key: K, values: string[]): void {
     setSelections((prev) => ({ ...prev, [key]: values }))
   }
 
-  function updateSfw(value: boolean | null): void {
-    setSelections((prev) => ({ ...prev, sfw: value }))
+  function updateFlag(key: 'sfw' | 'isAiGenerated', value: boolean | null): void {
+    setSelections((prev) => ({ ...prev, [key]: value }))
   }
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>): void {
@@ -138,35 +185,23 @@ export function BatchEditDialog({ count, onApply, onCancel }: BatchEditDialogPro
               onChange={(values) => updateSelection('removeSeriesIds', values)}
             />
           </div>
-          <div className="batch-edit-section">
-            <span className="filter-label">{t('batchEdit.sfwLabel')}</span>
-            <label className="radio-row">
-              <input
-                type="radio"
-                name="batch-sfw"
-                checked={selections.sfw === null}
-                onChange={() => updateSfw(null)}
-              />
-              {t('batchEdit.sfwNoChange')}
-            </label>
-            <label className="radio-row">
-              <input
-                type="radio"
-                name="batch-sfw"
-                checked={selections.sfw === true}
-                onChange={() => updateSfw(true)}
-              />
-              {t('batchEdit.sfwMarkSfw')}
-            </label>
-            <label className="radio-row">
-              <input
-                type="radio"
-                name="batch-sfw"
-                checked={selections.sfw === false}
-                onChange={() => updateSfw(false)}
-              />
-              {t('batchEdit.sfwMarkNsfw')}
-            </label>
+          <div className="batch-edit-section batch-edit-flags">
+            <FlagRadioGroup
+              name="batch-sfw"
+              label={t('batchEdit.sfwLabel')}
+              value={selections.sfw}
+              onChange={(value) => updateFlag('sfw', value)}
+              trueLabel={t('batchEdit.sfwMarkSfw')}
+              falseLabel={t('batchEdit.sfwMarkNsfw')}
+            />
+            <FlagRadioGroup
+              name="batch-ai"
+              label={t('batchEdit.aiLabel')}
+              value={selections.isAiGenerated}
+              onChange={(value) => updateFlag('isAiGenerated', value)}
+              trueLabel={t('batchEdit.aiMarkAi')}
+              falseLabel={t('batchEdit.aiMarkNotAi')}
+            />
           </div>
         </div>
         <div className="confirm-dialog-actions">

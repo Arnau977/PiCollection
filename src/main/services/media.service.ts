@@ -541,6 +541,9 @@ export const mediaService = {
       if (input.sfw !== undefined) {
         await mediaRepo.setMediaSfwBulk(trx, input.mediaIds, input.sfw)
       }
+      if (input.isAiGenerated !== undefined) {
+        await mediaRepo.setMediaAiGeneratedBulk(trx, input.mediaIds, input.isAiGenerated)
+      }
     })
 
     const touchedKinds: EntityKind[] = []

@@ -239,7 +239,8 @@ const GalleryPage: React.FC = () => {
     await window.api.media.batchUpdateAssociations({
       mediaIds: [...selectedIds],
       ...selections,
-      sfw: selections.sfw ?? undefined
+      sfw: selections.sfw ?? undefined,
+      isAiGenerated: selections.isAiGenerated ?? undefined
     })
     setShowBatchEdit(false)
     clearSelection()
