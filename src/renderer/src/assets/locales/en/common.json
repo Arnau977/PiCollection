@@ -554,6 +554,7 @@
     "width": "Width",
     "fps": "Frame rate",
     "summary": "{{width}} px wide · {{fps}} fps · {{frames}} frames",
+    "summarySource": "The video's own size and frame rate (up to {{maxFps}} fps) · smooth colors · large file",
     "progressLabel": "GIF progress",
     "encoding": "Encoding frame {{done}} of {{total}}…",
     "retrying": "{{size}} MB is over {{limit}} MB - trying again at {{width}} px…",

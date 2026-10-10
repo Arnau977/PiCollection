@@ -44,8 +44,12 @@ entirely on your computer:
 1. Set the clip's **Start** and **End** (up to 10 seconds); **Use current time**
    takes the video's current position.
 2. Choose a size: **Discord (≤ 10 MB)** or **X / Twitter (≤ 15 MB)** re-encode
-   smaller until the file fits; **Gallery (best quality)** keeps it as good
-   as possible; **Custom** lets you set the width and frame rate.
+   smaller until the file fits; **Gallery (best quality)** keeps the video's
+   own size and every frame (up to 50 fps, the fastest a GIF plays) and
+   smooths colors with dithering, so the file is large - use it to rebuild a
+   GIF that a site saved as MP4 (the original GIF can't be recovered exactly,
+   but this gets as close as possible); **Custom** lets you set the width and
+   frame rate.
 3. **Create GIF**. Progress is shown, and **Stop** cancels it.
 4. The GIF is saved next to the video and added to your library with the
    video's artist, tags, characters, series and rating. The two list each

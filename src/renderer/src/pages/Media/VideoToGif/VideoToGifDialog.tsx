@@ -5,6 +5,7 @@ import { toMediaUrl } from '@shared/utils/mediaUrl'
 import {
   GIF_PRESETS,
   MAX_CLIP_SECONDS,
+  MAX_GIF_FPS,
   formatMegabytes,
   type GifPresetId,
   type GifSettings
@@ -55,7 +56,14 @@ export function VideoToGifDialog({
   }, [busy, onClose])
 
   const currentTime = (): number => round1(previewRef.current?.currentTime ?? 0)
-  const frames = Math.max(0, Math.round((clip.end - clip.start) * settings.fps))
+  const summary =
+    settings.width === 'source' || settings.fps === 'source'
+      ? t('videoGif.summarySource', { maxFps: MAX_GIF_FPS })
+      : t('videoGif.summary', {
+          width: settings.width,
+          fps: settings.fps,
+          frames: Math.max(0, Math.round((clip.end - clip.start) * settings.fps))
+        })
 
   function presetLabel(id: GifPresetId): string {
     if (id === 'custom') return t('videoGif.presetCustom')
@@ -173,9 +181,7 @@ export function VideoToGifDialog({
               </label>
             </div>
           )}
-          <p className="video-gif-summary">
-            {t('videoGif.summary', { width: settings.width, fps: settings.fps, frames })}
-          </p>
+          <p className="video-gif-summary">{summary}</p>
         </fieldset>
 
         {state.kind === 'encoding' && (

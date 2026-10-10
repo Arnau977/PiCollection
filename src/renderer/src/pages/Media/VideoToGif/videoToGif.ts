@@ -1,4 +1,4 @@
-import { MIN_WIDTH, SHRINK_FACTOR, type GifSettings } from './gifPresets'
+import { MAX_GIF_FPS, MIN_WIDTH, SHRINK_FACTOR, frameDelays, type GifSettings } from './gifPresets'
 import type { GifWorkerRequest, GifWorkerResponse } from './gifEncoder.worker'
 
 export interface Clip {
@@ -82,11 +82,67 @@ function nextMessage(worker: Worker, signal: AbortSignal): Promise<GifWorkerResp
   })
 }
 
+/** Used when the frame rate can't be measured (no frame callbacks, or too few frames). */
+const FALLBACK_FPS = 25
+const FRAME_SAMPLES = 12
+const DETECT_TIMEOUT_MS = 3000
+
+/**
+ * Measures the video's own frame rate by playing it briefly from `from` and
+ * timing the frames the decoder presents. The median gap ignores a frame the
+ * compositor dropped. Capped at what a GIF can play.
+ */
+async function detectFrameRate(
+  video: HTMLVideoElement,
+  from: number,
+  signal: AbortSignal
+): Promise<number> {
+  if (!('requestVideoFrameCallback' in video)) return FALLBACK_FPS
+  await seek(video, from, signal)
+  const times: number[] = []
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(resolve, DETECT_TIMEOUT_MS)
+      const finish = (): void => {
+        clearTimeout(timeout)
+        resolve()
+      }
+      signal.addEventListener(
+        'abort',
+        () => {
+          clearTimeout(timeout)
+          reject(abortError())
+        },
+        { once: true }
+      )
+      video.addEventListener('ended', finish, { once: true })
+      const onFrame: VideoFrameRequestCallback = (_now, metadata) => {
+        times.push(metadata.mediaTime)
+        if (times.length >= FRAME_SAMPLES) finish()
+        else video.requestVideoFrameCallback(onFrame)
+      }
+      video.requestVideoFrameCallback(onFrame)
+      video.play().catch(finish)
+    })
+  } finally {
+    video.pause()
+  }
+  const gaps = times
+    .slice(1)
+    .map((time, i) => time - times[i])
+    .filter((gap) => gap > 0)
+    .sort((a, b) => a - b)
+  if (gaps.length < 3) return FALLBACK_FPS
+  const fps = 1 / gaps[Math.floor(gaps.length / 2)]
+  return Math.min(MAX_GIF_FPS, Math.round(fps * 100) / 100)
+}
+
 async function encodeOnce(
   video: HTMLVideoElement,
   clip: Clip,
   width: number,
   fps: number,
+  dither: boolean,
   onFrame: (done: number, total: number) => void,
   signal: AbortSignal
 ): Promise<GifResult> {
@@ -98,7 +154,7 @@ async function encodeOnce(
   if (!ctx) throw new Error('encoder-failed')
 
   const total = Math.max(1, Math.round((clip.end - clip.start) * fps))
-  const delay = Math.round(1000 / fps)
+  const delays = frameDelays(total, fps)
   const worker = new Worker(new URL('./gifEncoder.worker.ts', import.meta.url), {
     type: 'module'
   })
@@ -107,11 +163,13 @@ async function encodeOnce(
 
   try {
     for (let i = 0; i < total; i++) {
-      await seek(video, clip.start + i / fps, signal)
+      // The middle of each frame's slot, so a seek never lands on a frame boundary
+      // and shows the previous frame (which would duplicate it at the native rate).
+      await seek(video, clip.start + (i + 0.5) / fps, signal)
       ctx.drawImage(video, 0, 0, width, height)
       const { data } = ctx.getImageData(0, 0, width, height)
       const encoded = nextMessage(worker, signal)
-      post({ type: 'frame', rgba: data, width, height, delay }, [data.buffer])
+      post({ type: 'frame', rgba: data, width, height, delay: delays[i], dither }, [data.buffer])
       await encoded
       onFrame(i + 1, total)
     }
@@ -141,14 +199,25 @@ export async function convertVideoToGif(
 ): Promise<GifResult> {
   const video = await loadVideo(src, signal)
   try {
-    let width = Math.min(settings.width, video.videoWidth)
+    let width =
+      settings.width === 'source' ? video.videoWidth : Math.min(settings.width, video.videoWidth)
+    const fps =
+      settings.fps === 'source' ? await detectFrameRate(video, clip.start, signal) : settings.fps
     let attempt = 1
     let previousBytes: number | undefined
     for (;;) {
       const report = (done: number, total: number): void =>
         onProgress({ done, total, width, attempt, previousBytes })
       report(0, 1)
-      const result = await encodeOnce(video, clip, width, settings.fps, report, signal)
+      const result = await encodeOnce(
+        video,
+        clip,
+        width,
+        fps,
+        settings.dither ?? false,
+        report,
+        signal
+      )
       const tooBig = settings.maxBytes !== undefined && result.bytes.length > settings.maxBytes
       const nextWidth = Math.round(width * SHRINK_FACTOR)
       if (!tooBig || nextWidth < MIN_WIDTH) return result
