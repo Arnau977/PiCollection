@@ -554,6 +554,7 @@
     "width": "Ancho",
     "fps": "Fotogramas",
     "summary": "{{width}} px de ancho · {{fps}} fps · {{frames}} fotogramas",
+    "summarySource": "Tamaño y fotogramas del vídeo original (hasta {{maxFps}} fps) · colores suavizados · archivo grande",
     "progressLabel": "Progreso del GIF",
     "encoding": "Codificando fotograma {{done}} de {{total}}…",
     "retrying": "{{size}} MB supera {{limit}} MB - reintentando a {{width}} px…",

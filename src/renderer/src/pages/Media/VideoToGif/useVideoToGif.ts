@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
-import { GIF_PRESETS, MAX_CLIP_SECONDS, type GifPresetId, type GifSettings } from './gifPresets'
+import {
+  DEFAULT_CUSTOM_SETTINGS,
+  GIF_PRESETS,
+  MAX_CLIP_SECONDS,
+  type GifPresetId,
+  type GifSettings
+} from './gifPresets'
 import { convertVideoToGif, type Clip, type GifProgress } from './videoToGif'
 
 export type ConvertState =
@@ -40,7 +46,7 @@ export function useVideoToGif({ video, onCreated, describeError }: UseVideoToGif
   const [clip, setClip] = useState<Clip>({ start: 0, end: MAX_CLIP_SECONDS })
   const [duration, setDurationState] = useState<number | null>(null)
   const [preset, setPreset] = useState<GifPresetId>('discord')
-  const [custom, setCustom] = useState<GifSettings>(GIF_PRESETS.gallery)
+  const [custom, setCustom] = useState<GifSettings>(DEFAULT_CUSTOM_SETTINGS)
   const [state, setState] = useState<ConvertState>({ kind: 'idle' })
   const abortRef = useRef<AbortController | null>(null)
 
@@ -63,7 +69,7 @@ export function useVideoToGif({ video, onCreated, describeError }: UseVideoToGif
     abortRef.current = controller
     setState({
       kind: 'encoding',
-      progress: { done: 0, total: 1, width: settings.width, attempt: 1 }
+      progress: { done: 0, total: 1, width: 0, attempt: 1 }
     })
     try {
       const gif = await convertVideoToGif(
