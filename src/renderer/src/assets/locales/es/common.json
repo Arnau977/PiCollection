@@ -413,7 +413,7 @@
     "allFinished": "Todo lo de esta carpeta ya está añadido o eliminado.",
     "fileCount_one": "{{count}} archivo",
     "fileCount_other": "{{count}} archivos",
-    "selectionHint": "Arrastra para seleccionar varios · Mayús+clic: rango · Ctrl+A: todo · Esc: quitar"
+    "selectionHint": "Como en el Explorador: Ctrl+clic suma · Mayús+clic: rango · arrastra desde un hueco o el margen · Ctrl+A: todo"
   },
   "search": {
     "label": "Buscar",

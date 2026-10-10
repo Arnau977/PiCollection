@@ -413,7 +413,7 @@
     "allFinished": "Everything in this folder is already added or discarded.",
     "fileCount_one": "{{count}} file",
     "fileCount_other": "{{count}} files",
-    "selectionHint": "Drag to select several · Shift+click: range · Ctrl+A: all · Esc: clear"
+    "selectionHint": "As in Explorer: Ctrl+click adds · Shift+click: range · drag from a gap or the margin · Ctrl+A: all"
   },
   "search": {
     "label": "Search",

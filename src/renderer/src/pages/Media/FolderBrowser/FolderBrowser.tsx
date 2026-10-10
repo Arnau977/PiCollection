@@ -7,7 +7,12 @@ import { toThumbUrl } from '@shared/utils/mediaUrl'
 import { MediaThumb } from '../../../components/MediaThumb/MediaThumb'
 import { Pagination } from '../../../components/Pagination/Pagination'
 import { SHORTCUTS, useShortcut } from '../../../hooks/useShortcut'
-import { itemKey, useFolderSelection, type SelectableItem } from './useFolderSelection'
+import {
+  itemKey,
+  useFolderSelection,
+  type ClickModifiers,
+  type SelectableItem
+} from './useFolderSelection'
 import { MARQUEE_KEY_ATTR, useMarqueeSelection } from './useMarqueeSelection'
 import './FolderBrowser.css'
 
@@ -64,6 +69,10 @@ function isPickable(file: SourceFolderBrowseFile): boolean {
 
 function toFileItem(file: SourceFolderBrowseFile): SelectableItem {
   return { kind: 'file', path: file.relativePath }
+}
+
+function modifiers(e: React.MouseEvent): ClickModifiers {
+  return { ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey }
 }
 
 function isInsideFolder(relativePath: string, folder: string): boolean {
@@ -147,16 +156,13 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   // Shift+click (a range) applies at once: nobody double-clicks with Shift.
   function handleFolderClick(item: SelectableItem, e: React.MouseEvent): void {
     clearTimeout(folderClickTimer.current)
-    if (e.shiftKey) {
-      selection.selectRange(item, visibleItems)
-      return
-    }
-    folderClickTimer.current = setTimeout(() => selection.toggle(item), FOLDER_CLICK_DELAY_MS)
+    const click = (): void => selection.click(item, modifiers(e), visibleItems, allItemsHere)
+    if (e.shiftKey) click()
+    else folderClickTimer.current = setTimeout(click, FOLDER_CLICK_DELAY_MS)
   }
 
   function handleFileClick(item: SelectableItem, e: React.MouseEvent): void {
-    if (e.shiftKey) selection.selectRange(item, visibleItems)
-    else selection.toggle(item)
+    selection.click(item, modifiers(e), visibleItems, allItemsHere)
   }
 
   function handleFolderDoubleClick(relativePath: string): void {
@@ -200,24 +206,33 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
 
   const marquee = useMarqueeSelection({
     containerRef: scrollRef,
-    isSelected: selection.isSelected,
+    // The page's side margins count too, not just the gaps in the grid.
+    surfaceSelector: '.app-content',
     onCommit: (keys, mode) => {
       const picked = new Set(keys)
-      selection.setSelected(
-        visibleItems.filter((item) => picked.has(itemKey(item))),
-        mode === 'select'
-      )
+      const covered = visibleItems.filter((item) => picked.has(itemKey(item)))
+      if (mode === 'replace') {
+        selection.replaceWithin(allItemsHere, covered)
+        return
+      }
+      selection.setSelected(covered.filter((item) => !selection.isSelected(itemKey(item))), true)
+      selection.setSelected(covered.filter((item) => selection.isSelected(itemKey(item))), false)
+    },
+    onEmptyClick: (ctrl) => {
+      if (!ctrl) selection.setSelected(allItemsHere, false)
     }
   })
 
   useShortcut(SHORTCUTS.selectAll, () => selection.setSelected(allItemsHere, true))
   useShortcut(SHORTCUTS.clearSelection, () => selection.setSelected(allItemsHere, false))
 
-  /** What a tile shows: its selection, or what releasing the rectangle over it will make it. */
+  /** What a tile shows: its selection, or what releasing the rectangle will make it. */
   function showsSelected(item: SelectableItem): boolean {
     const key = itemKey(item)
-    if (marquee.preview?.keys.has(key)) return marquee.preview.mode === 'select'
-    return selection.isSelected(key)
+    const selected = selection.isSelected(key)
+    if (!marquee.preview) return selected
+    const covered = marquee.preview.keys.has(key)
+    return marquee.preview.mode === 'replace' ? covered : selected !== covered
   }
 
   return (
@@ -263,7 +278,6 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
         <div
           ref={scrollRef}
           className={`folder-browser-scroll${marquee.rect ? ' is-marquee-dragging' : ''}`}
-          onMouseDown={marquee.onMouseDown}
         >
           {state.kind === 'loading' && (
             <p className="folder-browser-status">{t('folderBrowser.loading')}</p>
@@ -388,18 +402,6 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
               )}
             </div>
           )}
-          {marquee.rect && (
-            <div
-              className="folder-browser-marquee"
-              style={{
-                left: marquee.rect.left,
-                top: marquee.rect.top,
-                width: marquee.rect.width,
-                height: marquee.rect.height
-              }}
-              aria-hidden="true"
-            />
-          )}
         </div>
 
         {state.kind === 'loaded' && state.result.files.length > FILES_PER_PAGE && (
@@ -426,6 +428,20 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
           </button>
         </div>
       </div>
+      {marquee.rect &&
+        createPortal(
+          <div
+            className="folder-browser-marquee"
+            style={{
+              left: marquee.rect.left,
+              top: marquee.rect.top,
+              width: marquee.rect.width,
+              height: marquee.rect.height
+            }}
+            aria-hidden="true"
+          />,
+          document.body
+        )}
       {preview &&
         createPortal(
           <div

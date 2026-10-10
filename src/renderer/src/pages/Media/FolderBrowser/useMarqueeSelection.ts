@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 
-/** Movement (px) before a press on a tile becomes a drag instead of a click. */
+/** Movement (px) before a press becomes a drag instead of a click. */
 const DRAG_THRESHOLD = 6
 /** Distance (px) from the scroll region's top/bottom edge that scrolls it while dragging. */
 const AUTO_SCROLL_EDGE = 40
 const AUTO_SCROLL_MAX_STEP = 18
+/** A press on any of these is theirs (a tile, a button, a checkbox...), never a drag start. */
+const INTERACTIVE = 'button, a, input, label, select, textarea, [role="button"], [aria-modal="true"]'
 
 /** Attribute that marks a tile the rectangle can pick; its value is the tile's key. */
 export const MARQUEE_KEY_ATTR = 'data-marquee-key'
@@ -16,11 +18,14 @@ export interface MarqueeRect {
   height: number
 }
 
-export type MarqueeMode = 'select' | 'deselect'
+/** As in Windows Explorer: a plain drag replaces the selection, Ctrl+drag flips what it covers. */
+export type MarqueeMode = 'replace' | 'toggle'
 
 interface Drag {
   startX: number
   startY: number
+  pressX: number
+  pressY: number
   clientX: number
   clientY: number
   active: boolean
@@ -30,88 +35,53 @@ interface Drag {
 interface UseMarqueeSelectionArgs {
   /** The scroll region the tiles live in; the rectangle is drawn in its content. */
   containerRef: RefObject<HTMLElement>
-  isSelected: (key: string) => boolean
+  /**
+   * Where a drag may start: anywhere inside the closest ancestor matching
+   * this (e.g. the page's side margins), level with the scroll region.
+   */
+  surfaceSelector: string
   onCommit: (keys: string[], mode: MarqueeMode) => void
+  /** A press on empty space released without dragging (Ctrl held or not). */
+  onEmptyClick: (ctrl: boolean) => void
 }
 
 export interface MarqueeSelection {
+  /** Where to draw the rectangle, in viewport coordinates (a fixed overlay). */
   rect: MarqueeRect | null
-  /** Keys under the rectangle right now, and what releasing will do to them. */
+  /** Keys under the rectangle right now, and how releasing will apply them. */
   preview: { keys: Set<string>; mode: MarqueeMode } | null
-  onMouseDown: (e: React.MouseEvent<HTMLElement>) => void
 }
 
 /**
- * Rubber-band selection over a grid of tiles, as in a file manager: press
- * and drag (from a gap or from a tile) to draw a rectangle, and every tile
- * it touches is picked on release. A drag that starts on a selected tile
- * deselects instead. Scrolls the region near its edges, Esc cancels, and
- * the click that ends a drag is swallowed so it doesn't also toggle a tile.
+ * Rubber-band selection over a grid of tiles, as in Windows Explorer: press
+ * on empty space - a gap between tiles, below them, or the page margins
+ * beside the grid - and drag to draw a rectangle; the tiles it touches are
+ * picked on release. Scrolls the region near its edges and Esc cancels.
  */
 export function useMarqueeSelection({
   containerRef,
-  isSelected,
-  onCommit
+  surfaceSelector,
+  onCommit,
+  onEmptyClick
 }: UseMarqueeSelectionArgs): MarqueeSelection {
   const [rect, setRect] = useState<MarqueeRect | null>(null)
   const [preview, setPreview] = useState<MarqueeSelection['preview']>(null)
-  const dragRef = useRef<Drag | null>(null)
-  const cleanupRef = useRef<() => void>()
-  const suppressClickRef = useRef(false)
-  const isSelectedRef = useRef(isSelected)
-  isSelectedRef.current = isSelected
-  const onCommitRef = useRef(onCommit)
-  onCommitRef.current = onCommit
+  const callbacksRef = useRef({ onCommit, onEmptyClick })
+  callbacksRef.current = { onCommit, onEmptyClick }
 
-  useEffect(() => (): void => cleanupRef.current?.(), [])
-
-  // Capture phase, so it beats the tiles' own click handlers.
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
-    function swallowClick(e: MouseEvent): void {
-      if (!suppressClickRef.current) return
-      suppressClickRef.current = false
-      e.stopPropagation()
-      e.preventDefault()
-    }
-    container.addEventListener('click', swallowClick, true)
-    return (): void => container.removeEventListener('click', swallowClick, true)
-  }, [containerRef])
-
-  function onMouseDown(e: React.MouseEvent<HTMLElement>): void {
-    const container = containerRef.current
-    if (e.button !== 0 || e.shiftKey || !container) return
-    suppressClickRef.current = false
-    const startKey = (e.target as HTMLElement)
-      .closest(`[${MARQUEE_KEY_ATTR}]`)
-      ?.getAttribute(MARQUEE_KEY_ATTR)
-    const start = toContent(container, e.clientX, e.clientY)
-    dragRef.current = {
-      startX: start.x,
-      startY: start.y,
-      clientX: e.clientX,
-      clientY: e.clientY,
-      active: false,
-      mode: startKey && isSelectedRef.current(startKey) ? 'deselect' : 'select'
-    }
-
+    let drag: Drag | null = null
     let frame = 0
+
     const update = (): void => {
-      const drag = dragRef.current
       if (!drag?.active) return
-      const end = toContent(container, drag.clientX, drag.clientY)
-      const next = {
-        left: Math.min(drag.startX, end.x),
-        top: Math.min(drag.startY, end.y),
-        width: Math.abs(end.x - drag.startX),
-        height: Math.abs(end.y - drag.startY)
-      }
-      setRect(next)
+      const next = rectBetween(drag, toContent(container, drag.clientX, drag.clientY))
+      setRect(onScreen(container, next))
       setPreview({ keys: keysInside(container, next), mode: drag.mode })
     }
     const autoScroll = (): void => {
-      const drag = dragRef.current
       if (!drag?.active) return
       const bounds = container.getBoundingClientRect()
       const step =
@@ -126,61 +96,78 @@ export function useMarqueeSelection({
       }
       frame = requestAnimationFrame(autoScroll)
     }
-
+    const stop = (): void => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('mousemove', handleMove)
+      window.removeEventListener('mouseup', handleUp)
+      window.removeEventListener('keydown', handleKey, true)
+      drag = null
+      setRect(null)
+      setPreview(null)
+    }
     const handleMove = (event: MouseEvent): void => {
-      const drag = dragRef.current
       if (!drag) return
       drag.clientX = event.clientX
       drag.clientY = event.clientY
       if (!drag.active) {
-        const moved = Math.hypot(event.clientX - e.clientX, event.clientY - e.clientY)
+        const moved = Math.hypot(event.clientX - drag.pressX, event.clientY - drag.pressY)
         if (moved < DRAG_THRESHOLD) return
         drag.active = true
         frame = requestAnimationFrame(autoScroll)
       }
       update()
     }
-    const finish = (commit: boolean): void => {
-      const drag = dragRef.current
-      if (drag?.active) {
-        suppressClickRef.current = true
-        if (commit) {
-          const end = toContent(container, drag.clientX, drag.clientY)
-          const keys = keysInside(container, {
-            left: Math.min(drag.startX, end.x),
-            top: Math.min(drag.startY, end.y),
-            width: Math.abs(end.x - drag.startX),
-            height: Math.abs(end.y - drag.startY)
-          })
-          if (keys.size > 0) onCommitRef.current([...keys], drag.mode)
-        }
+    const handleUp = (event: MouseEvent): void => {
+      if (!drag) return
+      if (drag.active) {
+        const area = rectBetween(drag, toContent(container, drag.clientX, drag.clientY))
+        callbacksRef.current.onCommit([...keysInside(container, area)], drag.mode)
+      } else {
+        callbacksRef.current.onEmptyClick(event.ctrlKey || event.metaKey)
       }
-      cleanupRef.current?.()
+      stop()
     }
-    const handleUp = (): void => finish(true)
     const handleKey = (event: KeyboardEvent): void => {
-      if (event.key !== 'Escape' || !dragRef.current?.active) return
+      if (event.key !== 'Escape' || !drag?.active) return
       // Stops the "clear selection" Esc shortcut from also running.
       event.stopImmediatePropagation()
-      finish(false)
+      stop()
+    }
+    const handleDown = (event: MouseEvent): void => {
+      const target = event.target as HTMLElement | null
+      if (event.button !== 0 || event.shiftKey || !target) return
+      if (!target.closest(surfaceSelector) || target.closest(INTERACTIVE)) return
+      if (document.querySelector('[aria-modal="true"]')) return
+      // Only the band level with the grid: not the header or the actions row.
+      const bounds = container.getBoundingClientRect()
+      if (event.clientY < bounds.top || event.clientY > bounds.bottom) return
+      if (event.clientX >= bounds.right - scrollbarWidth(container) && event.clientX <= bounds.right)
+        return
+      event.preventDefault()
+      const start = toContent(container, event.clientX, event.clientY)
+      drag = {
+        startX: start.x,
+        startY: start.y,
+        pressX: event.clientX,
+        pressY: event.clientY,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        active: false,
+        mode: event.ctrlKey || event.metaKey ? 'toggle' : 'replace'
+      }
+      window.addEventListener('mousemove', handleMove)
+      window.addEventListener('mouseup', handleUp)
+      window.addEventListener('keydown', handleKey, true)
     }
 
-    window.addEventListener('mousemove', handleMove)
-    window.addEventListener('mouseup', handleUp)
-    window.addEventListener('keydown', handleKey, true)
-    cleanupRef.current = (): void => {
-      cancelAnimationFrame(frame)
-      window.removeEventListener('mousemove', handleMove)
-      window.removeEventListener('mouseup', handleUp)
-      window.removeEventListener('keydown', handleKey, true)
-      dragRef.current = null
-      cleanupRef.current = undefined
-      setRect(null)
-      setPreview(null)
+    document.addEventListener('mousedown', handleDown)
+    return (): void => {
+      document.removeEventListener('mousedown', handleDown)
+      if (drag) stop()
     }
-  }
+  }, [containerRef, surfaceSelector])
 
-  return { rect, preview, onMouseDown }
+  return { rect, preview }
 }
 
 function toContent(
@@ -193,6 +180,33 @@ function toContent(
     x: clientX - bounds.left + container.scrollLeft,
     y: clientY - bounds.top + container.scrollTop
   }
+}
+
+function rectBetween(drag: Drag, end: { x: number; y: number }): MarqueeRect {
+  return {
+    left: Math.min(drag.startX, end.x),
+    top: Math.min(drag.startY, end.y),
+    width: Math.abs(end.x - drag.startX),
+    height: Math.abs(end.y - drag.startY)
+  }
+}
+
+/**
+ * The rectangle in viewport coordinates, for a fixed overlay: it spans the
+ * page margins it was started in, but is cut to the region's height so it
+ * never covers the header or the actions row while the content scrolls.
+ */
+function onScreen(container: HTMLElement, rect: MarqueeRect): MarqueeRect {
+  const bounds = container.getBoundingClientRect()
+  const left = rect.left + bounds.left - container.scrollLeft
+  const top = Math.max(bounds.top, rect.top + bounds.top - container.scrollTop)
+  const bottom = Math.min(bounds.bottom, rect.top + rect.height + bounds.top - container.scrollTop)
+  return { left, top, width: rect.width, height: Math.max(0, bottom - top) }
+}
+
+/** Pressing the region's own scrollbar must scroll it, not start a rectangle. */
+function scrollbarWidth(container: HTMLElement): number {
+  return container.offsetWidth - container.clientWidth
 }
 
 function edgeSpeed(depth: number): number {

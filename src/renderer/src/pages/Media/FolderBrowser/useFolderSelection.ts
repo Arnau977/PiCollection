@@ -9,23 +9,38 @@ export function itemKey(item: { kind: 'folder' | 'file'; path: string }): string
   return `${item.kind}:${item.path}`
 }
 
+export interface ClickModifiers {
+  ctrl: boolean
+  shift: boolean
+}
+
 export interface FolderSelection {
   selectedFiles: Set<string>
   /** Each selected folder with its file count (files still to import, from its tile). */
   selectedFolders: Map<string, number>
   isSelected: (key: string) => boolean
-  /** A plain click: flips one tile and makes it the anchor for Shift+click. */
-  toggle: (item: SelectableItem) => void
-  /** Shift+click: selects every item from the anchor to this one (inclusive). */
-  selectRange: (item: SelectableItem, ordered: SelectableItem[]) => void
+  /**
+   * A click on a tile, as in Windows Explorer: plain selects only it, Ctrl
+   * flips it, Shift selects the range from the last clicked tile, and
+   * Ctrl+Shift adds that range. `ordered` is the grid on screen, `scope`
+   * everything in the current folder.
+   */
+  click: (
+    item: SelectableItem,
+    modifiers: ClickModifiers,
+    ordered: SelectableItem[],
+    scope: SelectableItem[]
+  ) => void
+  /** Makes `items` the whole selection within `scope`. */
+  replaceWithin: (scope: SelectableItem[], items: SelectableItem[]) => void
   setSelected: (items: SelectableItem[], selected: boolean) => void
 }
 
 /**
- * Selection for the batch-import browser. It's additive and survives
- * navigating between folders (the import takes picks from several places),
- * so bulk gestures only ever add or remove the items they're given - none
- * replaces the whole selection.
+ * Selection for the batch-import browser. It follows Windows Explorer's
+ * rules, but scoped to the folder on screen: the import gathers picks from
+ * several folders, so "replace the selection" never drops what was picked
+ * in another folder (that would happen out of sight).
  */
 export function useFolderSelection(): FolderSelection {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
@@ -66,21 +81,38 @@ export function useFolderSelection(): FolderSelection {
     }
   }
 
-  function toggle(item: SelectableItem): void {
-    anchorRef.current = itemKey(item)
-    setSelected([item], !isSelected(itemKey(item)))
+  function replaceWithin(scope: SelectableItem[], items: SelectableItem[]): void {
+    const keep = new Set(items.map(itemKey))
+    setSelected(
+      scope.filter((item) => !keep.has(itemKey(item))),
+      false
+    )
+    setSelected(items, true)
   }
 
-  function selectRange(item: SelectableItem, ordered: SelectableItem[]): void {
-    const keys = ordered.map(itemKey)
-    const from = anchorRef.current === null ? -1 : keys.indexOf(anchorRef.current)
-    const to = keys.indexOf(itemKey(item))
-    if (from === -1 || to === -1) {
-      toggle(item)
-      return
+  function click(
+    item: SelectableItem,
+    { ctrl, shift }: ClickModifiers,
+    ordered: SelectableItem[],
+    scope: SelectableItem[]
+  ): void {
+    const key = itemKey(item)
+    if (shift) {
+      const keys = ordered.map(itemKey)
+      const from = anchorRef.current === null ? -1 : keys.indexOf(anchorRef.current)
+      const to = keys.indexOf(key)
+      if (from !== -1 && to !== -1) {
+        const range = ordered.slice(Math.min(from, to), Math.max(from, to) + 1)
+        // The anchor stays put, so the next Shift+click re-ranges from it.
+        if (ctrl) setSelected(range, true)
+        else replaceWithin(scope, range)
+        return
+      }
     }
-    setSelected(ordered.slice(Math.min(from, to), Math.max(from, to) + 1), true)
+    anchorRef.current = key
+    if (ctrl) setSelected([item], !isSelected(key))
+    else replaceWithin(scope, [item])
   }
 
-  return { selectedFiles, selectedFolders, isSelected, toggle, selectRange, setSelected }
+  return { selectedFiles, selectedFolders, isSelected, click, replaceWithin, setSelected }
 }

@@ -109,21 +109,21 @@ describe('FolderBrowser', () => {
               files: []
             }
     }))
-    const selectFolder = async (name: string): Promise<void> => {
-      fireEvent.click(await screen.findByText(name))
+    const selectFolder = async (name: string, ctrlKey = false): Promise<void> => {
+      fireEvent.click(await screen.findByText(name), { ctrlKey })
       await new Promise((resolve) => setTimeout(resolve, 250))
     }
 
     render(<FolderBrowser onStartImport={vi.fn()} />)
 
     await selectFolder('A')
-    await selectFolder('C')
+    await selectFolder('C', true)
     expect(screen.getByRole('button', { name: 'Import 7 files' })).toBeEnabled()
 
     // Inside A, already counted in its 4: still 7.
     fireEvent.doubleClick(screen.getByText('A'))
     await selectFolder('B')
-    fireEvent.click(await screen.findByText('x.png'))
+    fireEvent.click(await screen.findByText('x.png'), { ctrlKey: true })
     expect(screen.getByRole('button', { name: 'Import 7 files' })).toBeInTheDocument()
   })
 
@@ -284,6 +284,18 @@ describe('FolderBrowser', () => {
       browse.mockResolvedValue({ success: true, data: { folders: [], files: fourFiles } })
     })
 
+    it('a plain click selects only that tile and Ctrl+click adds to it, as in Explorer', async () => {
+      const onStartImport = vi.fn()
+      render(<FolderBrowser onStartImport={onStartImport} />)
+
+      fireEvent.click(await screen.findByText('a.png'))
+      fireEvent.click(screen.getByText('b.png'))
+      fireEvent.click(screen.getByText('d.png'), { ctrlKey: true })
+      fireEvent.click(importButton())
+
+      expect(onStartImport).toHaveBeenCalledWith({ files: ['b.png', 'd.png'], folders: [] })
+    })
+
     it('Shift+click selects the range from the last clicked tile, skipping added files', async () => {
       const onStartImport = vi.fn()
       render(<FolderBrowser onStartImport={onStartImport} />)
@@ -309,20 +321,26 @@ describe('FolderBrowser', () => {
       expect(importButton()).toBeDisabled()
     })
 
-    it('dragging a rectangle over tiles selects them without also toggling the first one', async () => {
+    it('a rectangle dragged from the page margin replaces the selection with the tiles it covers', async () => {
       const onStartImport = vi.fn()
-      render(<FolderBrowser onStartImport={onStartImport} />)
-      await screen.findByText('a.png')
-      // jsdom has no layout: put the tiles in a row, 100px apart.
+      const { container } = render(
+        <div className="app-content">
+          <FolderBrowser onStartImport={onStartImport} />
+        </div>
+      )
+      fireEvent.click(await screen.findByText('d.png'))
+      // jsdom has no layout: the grid starts 100px in, tiles in a row 100px apart.
+      const scroll = container.querySelector<HTMLElement>('.folder-browser-scroll')!
+      scroll.getBoundingClientRect = () => new DOMRect(100, 0, 500, 200)
       for (const [i, name] of ['a', 'b', 'c', 'd'].entries()) {
         const tile = screen.getByText(`${name}.png`).closest('button')!
-        tile.getBoundingClientRect = () => new DOMRect(i * 100, 0, 90, 90)
+        tile.getBoundingClientRect = () => new DOMRect(110 + i * 100, 0, 90, 90)
       }
 
-      fireEvent.mouseDown(screen.getByText('a.png'), { button: 0, clientX: 10, clientY: 10 })
-      fireEvent.mouseMove(window, { clientX: 150, clientY: 50 })
+      const margin = container.querySelector<HTMLElement>('.app-content')!
+      fireEvent.mouseDown(margin, { button: 0, clientX: 20, clientY: 10 })
+      fireEvent.mouseMove(window, { clientX: 260, clientY: 50 })
       fireEvent.mouseUp(window)
-      fireEvent.click(screen.getByText('a.png'))
       fireEvent.click(importButton())
 
       expect(onStartImport).toHaveBeenCalledWith({ files: ['a.png', 'b.png'], folders: [] })

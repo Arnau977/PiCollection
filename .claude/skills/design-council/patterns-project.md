@@ -209,15 +209,20 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   at 0 are hidden behind a "Show N folders with nothing left" checkbox at
   the end of the breadcrumb row and, when shown, reuse the added look and
   open but can't be selected. Where: `FolderBrowser.tsx`.
-- **Bulk selection in a tile grid adds, never replaces**: the batch-import
-  selection spans folders, so a rectangle drag (from a gap or a tile, after
-  6px), Shift+click range and Ctrl+A only add, Esc only clears the current
-  folder, and a drag that starts on a selected tile deselects. The tiles
-  under the rectangle preview their new state; the ending click is
-  swallowed. The rectangle border is `--accent-fg` (5.10:1), fill
-  `--accent-soft`; a muted hint line in the actions row names the
-  gestures. Where: `FolderBrowser/useMarqueeSelection.ts`,
-  `useFolderSelection.ts`.
+- **Bulk selection in a tile grid follows Windows Explorer, scoped to the
+  current folder**: click selects only that tile, Ctrl+click flips it,
+  Shift+click ranges (Ctrl+Shift adds), a drag from empty space - grid
+  gaps, below the tiles, or the page margins beside the grid (anywhere in
+  `.app-content` level with the scroll region) - draws a rectangle that
+  replaces the selection (Ctrl+drag flips), and a click on empty space
+  clears. "Replace" only ever touches the folder on screen, because the
+  batch-import selection spans folders and replacing it would drop picks
+  out of sight. A first version that only added (and let drags start on
+  tiles) was redone at the user's request for Explorer behavior. The
+  rectangle is a fixed overlay so it shows over the margins, cut to the
+  grid's height; border `--accent-fg` (5.10:1), fill `--accent-soft`; a
+  muted hint line in the actions row names the gestures. Where:
+  `FolderBrowser/useMarqueeSelection.ts`, `useFolderSelection.ts`.
 - **Video frame fallback**: when the OS can't produce a thumbnail (e.g.
   cloud-synced folders), capture a frame with a `<video>` element and cache
   it. Where: `src/renderer/src/components/MediaThumb/captureVideoFrame.ts`
