@@ -267,4 +267,65 @@ describe('FolderBrowser', () => {
     expect(browse).toHaveBeenLastCalledWith('')
     expect(screen.queryByText('file-40.png')).not.toBeInTheDocument()
   })
+
+  describe('bulk selection', () => {
+    const fourFiles = ['a', 'b', 'c', 'd'].map((name) => ({
+      name: `${name}.png`,
+      relativePath: `${name}.png`,
+      type: 'image',
+      cataloged: name === 'c'
+    }))
+
+    function importButton(): HTMLElement {
+      return screen.getByRole('button', { name: /^Import \d+ files?$/ })
+    }
+
+    beforeEach(() => {
+      browse.mockResolvedValue({ success: true, data: { folders: [], files: fourFiles } })
+    })
+
+    it('Shift+click selects the range from the last clicked tile, skipping added files', async () => {
+      const onStartImport = vi.fn()
+      render(<FolderBrowser onStartImport={onStartImport} />)
+
+      fireEvent.click(await screen.findByText('a.png'))
+      fireEvent.click(screen.getByText('d.png'), { shiftKey: true })
+      fireEvent.click(importButton())
+
+      expect(onStartImport).toHaveBeenCalledWith({
+        files: ['a.png', 'b.png', 'd.png'],
+        folders: []
+      })
+    })
+
+    it('Ctrl+A selects every pickable file and Esc clears them', async () => {
+      render(<FolderBrowser onStartImport={vi.fn()} />)
+      await screen.findByText('a.png')
+
+      fireEvent.keyDown(document, { key: 'a', ctrlKey: true })
+      expect(importButton()).toHaveTextContent('Import 3 files')
+
+      fireEvent.keyDown(document, { key: 'Escape' })
+      expect(importButton()).toBeDisabled()
+    })
+
+    it('dragging a rectangle over tiles selects them without also toggling the first one', async () => {
+      const onStartImport = vi.fn()
+      render(<FolderBrowser onStartImport={onStartImport} />)
+      await screen.findByText('a.png')
+      // jsdom has no layout: put the tiles in a row, 100px apart.
+      for (const [i, name] of ['a', 'b', 'c', 'd'].entries()) {
+        const tile = screen.getByText(`${name}.png`).closest('button')!
+        tile.getBoundingClientRect = () => new DOMRect(i * 100, 0, 90, 90)
+      }
+
+      fireEvent.mouseDown(screen.getByText('a.png'), { button: 0, clientX: 10, clientY: 10 })
+      fireEvent.mouseMove(window, { clientX: 150, clientY: 50 })
+      fireEvent.mouseUp(window)
+      fireEvent.click(screen.getByText('a.png'))
+      fireEvent.click(importButton())
+
+      expect(onStartImport).toHaveBeenCalledWith({ files: ['a.png', 'b.png'], folders: [] })
+    })
+  })
 })
