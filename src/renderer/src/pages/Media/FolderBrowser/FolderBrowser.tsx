@@ -6,6 +6,14 @@ import type { SourceFolderBrowseFile, SourceFolderBrowseResult } from '@shared/m
 import { toThumbUrl } from '@shared/utils/mediaUrl'
 import { MediaThumb } from '../../../components/MediaThumb/MediaThumb'
 import { Pagination } from '../../../components/Pagination/Pagination'
+import { SHORTCUTS, useShortcut } from '../../../hooks/useShortcut'
+import {
+  itemKey,
+  useFolderSelection,
+  type ClickModifiers,
+  type SelectableItem
+} from './useFolderSelection'
+import { MARQUEE_KEY_ATTR, useMarqueeSelection } from './useMarqueeSelection'
 import './FolderBrowser.css'
 
 interface FolderBrowserProps {
@@ -54,6 +62,19 @@ function computePreviewPosition(anchor: DOMRect): { top: number; left: number; s
   return { top, left, size }
 }
 
+/** Already-added and discarded files show in the grid but can't be picked. */
+function isPickable(file: SourceFolderBrowseFile): boolean {
+  return !file.cataloged && !file.discarded
+}
+
+function toFileItem(file: SourceFolderBrowseFile): SelectableItem {
+  return { kind: 'file', path: file.relativePath }
+}
+
+function modifiers(e: React.MouseEvent): ClickModifiers {
+  return { ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey }
+}
+
 function isInsideFolder(relativePath: string, folder: string): boolean {
   return relativePath.startsWith(`${folder}/`) || relativePath.startsWith(`${folder}\\`)
 }
@@ -78,10 +99,11 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   const { t } = useTranslation()
   const [currentPath, setCurrentPath] = useState('')
   const [state, setState] = useState<BrowseState>({ kind: 'loading' })
-  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
-  // Each selected folder with its file count (files still to import, from its
-  // tile), kept so the total survives navigating away from where it was picked.
-  const [selectedFolders, setSelectedFolders] = useState<Map<string, number>>(new Map())
+  // Folder counts are kept with the selection so the total survives navigating
+  // away from where a folder was picked.
+  const selection = useFolderSelection()
+  const { selectedFiles, selectedFolders } = selection
+  const scrollRef = useRef<HTMLDivElement>(null)
   const [reloadToken, setReloadToken] = useState(0)
   const [filePage, setFilePage] = useState(0)
   const [preview, setPreview] = useState<PreviewState | null>(null)
@@ -128,32 +150,19 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
     setCurrentPath(path)
   }
 
-  function toggleFile(relativePath: string): void {
-    setSelectedFiles((prev) => {
-      const next = new Set(prev)
-      if (next.has(relativePath)) next.delete(relativePath)
-      else next.add(relativePath)
-      return next
-    })
-  }
-
-  function toggleFolder(relativePath: string, fileCount: number): void {
-    setSelectedFolders((prev) => {
-      const next = new Map(prev)
-      if (next.has(relativePath)) next.delete(relativePath)
-      else next.set(relativePath, fileCount)
-      return next
-    })
-  }
-
   // Toggling selection on a plain click's mousedown-up-click sequence briefly
   // flashes the selected state before the matching double-click navigates
   // away. Defer the toggle so a following double-click can cancel it instead.
-  function handleFolderClick(relativePath: string, fileCount: number): void {
+  // Shift+click (a range) applies at once: nobody double-clicks with Shift.
+  function handleFolderClick(item: SelectableItem, e: React.MouseEvent): void {
     clearTimeout(folderClickTimer.current)
-    folderClickTimer.current = setTimeout(() => {
-      toggleFolder(relativePath, fileCount)
-    }, FOLDER_CLICK_DELAY_MS)
+    const click = (): void => selection.click(item, modifiers(e), visibleItems, allItemsHere)
+    if (e.shiftKey) click()
+    else folderClickTimer.current = setTimeout(click, FOLDER_CLICK_DELAY_MS)
+  }
+
+  function handleFileClick(item: SelectableItem, e: React.MouseEvent): void {
+    selection.click(item, modifiers(e), visibleItems, allItemsHere)
   }
 
   function handleFolderDoubleClick(relativePath: string): void {
@@ -179,6 +188,52 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   const folders = state.kind === 'loaded' ? state.result.folders : []
   const finishedCount = folders.filter((folder) => folder.fileCount === 0).length
   const shownFolders = showFinished ? folders : folders.filter((folder) => folder.fileCount > 0)
+  const files = state.kind === 'loaded' ? state.result.files : []
+  const pageFiles = files.slice(filePage * FILES_PER_PAGE, (filePage + 1) * FILES_PER_PAGE)
+  const selectableFolders: SelectableItem[] = folders
+    .filter((folder) => folder.fileCount > 0)
+    .map((folder) => ({ kind: 'folder', path: folder.relativePath, fileCount: folder.fileCount }))
+  // In grid order, for Shift+click ranges: folders only show on the first page.
+  const visibleItems: SelectableItem[] = [
+    ...(filePage === 0 ? selectableFolders : []),
+    ...pageFiles.filter(isPickable).map(toFileItem)
+  ]
+  // Every page of this folder, not just the one on screen.
+  const allItemsHere: SelectableItem[] = [
+    ...selectableFolders,
+    ...files.filter(isPickable).map(toFileItem)
+  ]
+
+  const marquee = useMarqueeSelection({
+    containerRef: scrollRef,
+    // The page's side margins count too, not just the gaps in the grid.
+    surfaceSelector: '.app-content',
+    onCommit: (keys, mode) => {
+      const picked = new Set(keys)
+      const covered = visibleItems.filter((item) => picked.has(itemKey(item)))
+      if (mode === 'replace') {
+        selection.replaceWithin(allItemsHere, covered)
+        return
+      }
+      selection.setSelected(covered.filter((item) => !selection.isSelected(itemKey(item))), true)
+      selection.setSelected(covered.filter((item) => selection.isSelected(itemKey(item))), false)
+    },
+    onEmptyClick: (ctrl) => {
+      if (!ctrl) selection.setSelected(allItemsHere, false)
+    }
+  })
+
+  useShortcut(SHORTCUTS.selectAll, () => selection.setSelected(allItemsHere, true))
+  useShortcut(SHORTCUTS.clearSelection, () => selection.setSelected(allItemsHere, false))
+
+  /** What a tile shows: its selection, or what releasing the rectangle will make it. */
+  function showsSelected(item: SelectableItem): boolean {
+    const key = itemKey(item)
+    const selected = selection.isSelected(key)
+    if (!marquee.preview) return selected
+    const covered = marquee.preview.keys.has(key)
+    return marquee.preview.mode === 'replace' ? covered : selected !== covered
+  }
 
   return (
     <>
@@ -220,7 +275,10 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
           )}
         </nav>
 
-        <div className="folder-browser-scroll">
+        <div
+          ref={scrollRef}
+          className={`folder-browser-scroll${marquee.rect ? ' is-marquee-dragging' : ''}`}
+        >
           {state.kind === 'loading' && (
             <p className="folder-browser-status">{t('folderBrowser.loading')}</p>
           )}
@@ -240,15 +298,20 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                   // Still opens on double-click (to see what's in it), but
                   // there's nothing in it to select for import.
                   const finished = folder.fileCount === 0
+                  const item: SelectableItem = {
+                    kind: 'folder',
+                    path: folder.relativePath,
+                    fileCount: folder.fileCount
+                  }
+                  const selected = showsSelected(item)
                   return (
                     <button
                       key={folder.relativePath}
                       type="button"
                       title={folder.name}
-                      className={`folder-browser-tile${selectedFolders.has(folder.relativePath) ? ' is-selected' : ''}${finished ? ' is-cataloged' : ''}`}
-                      onClick={() =>
-                        !finished && handleFolderClick(folder.relativePath, folder.fileCount)
-                      }
+                      className={`folder-browser-tile${selected ? ' is-selected' : ''}${finished ? ' is-cataloged' : ''}`}
+                      {...(!finished && { [MARQUEE_KEY_ATTR]: itemKey(item) })}
+                      onClick={(e) => !finished && handleFolderClick(item, e)}
                       onDoubleClick={() => handleFolderDoubleClick(folder.relativePath)}
                     >
                       <span className="folder-browser-tile-thumb">
@@ -266,7 +329,7 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                             {folder.fileCount.toLocaleString()}
                           </span>
                         )}
-                        {selectedFolders.has(folder.relativePath) && (
+                        {selected && (
                           <span className="folder-browser-tile-selected-badge">
                             <Check size={14} aria-hidden="true" />
                           </span>
@@ -276,9 +339,10 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                     </button>
                   )
                 })}
-              {state.result.files
-                .slice(filePage * FILES_PER_PAGE, (filePage + 1) * FILES_PER_PAGE)
-                .map((file) => (
+              {pageFiles.map((file) => {
+                const item = toFileItem(file)
+                const selected = showsSelected(item)
+                return (
                   // Hover detection lives on this wrapper, not the button: disabled
                   // buttons (cataloged files) don't dispatch mouse events, and the
                   // preview should still work for them.
@@ -300,8 +364,9 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                           ? `${file.name} - ${t('folderBrowser.discardedTitle')}`
                           : file.name
                       }
-                      className={`folder-browser-tile${selectedFiles.has(file.relativePath) ? ' is-selected' : ''}${file.cataloged ? ' is-cataloged' : ''}${file.discarded ? ' is-discarded' : ''}`}
-                      onClick={() => toggleFile(file.relativePath)}
+                      className={`folder-browser-tile${selected ? ' is-selected' : ''}${file.cataloged ? ' is-cataloged' : ''}${file.discarded ? ' is-discarded' : ''}`}
+                      {...(isPickable(file) && { [MARQUEE_KEY_ATTR]: itemKey(item) })}
+                      onClick={(e) => handleFileClick(item, e)}
                       // A batch import skips discarded files anyway.
                       disabled={file.cataloged || file.discarded}
                     >
@@ -319,7 +384,7 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                             {t('folderBrowser.discarded')}
                           </span>
                         )}
-                        {selectedFiles.has(file.relativePath) && (
+                        {selected && (
                           <span className="folder-browser-tile-selected-badge">
                             <Check size={14} aria-hidden="true" />
                           </span>
@@ -328,7 +393,8 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                       <span className="folder-browser-tile-name">{file.name}</span>
                     </button>
                   </div>
-                ))}
+                )
+              })}
               {shownFolders.length === 0 && state.result.files.length === 0 && (
                 <p className="folder-browser-status">
                   {finishedCount > 0 ? t('folderBrowser.allFinished') : t('folderBrowser.empty')}
@@ -349,6 +415,7 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
         )}
 
         <div className="folder-browser-actions">
+          <p className="folder-browser-hint">{t('folderBrowser.selectionHint')}</p>
           <button
             type="button"
             className="btn btn-primary"
@@ -361,6 +428,20 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
           </button>
         </div>
       </div>
+      {marquee.rect &&
+        createPortal(
+          <div
+            className="folder-browser-marquee"
+            style={{
+              left: marquee.rect.left,
+              top: marquee.rect.top,
+              width: marquee.rect.width,
+              height: marquee.rect.height
+            }}
+            aria-hidden="true"
+          />,
+          document.body
+        )}
       {preview &&
         createPortal(
           <div

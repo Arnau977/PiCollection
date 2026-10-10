@@ -63,6 +63,13 @@ here.
 - Source: WAI-ARIA APG, Tabs pattern - https://www.w3.org/WAI/ARIA/apg/patterns/tabs/ ; Fluent 2 TabList - https://fluent2.microsoft.design/components/web/react/core/tablist/usage
 - Checked: 2026-09-29
 
+### Rubber-band (marquee) selection in file managers
+- Kind: pattern
+- Use when / avoid when: a grid/list of files where several are picked at once. Dragging draws a rectangle and every item it touches is selected live; Ctrl+click toggles one, Shift+click selects a consecutive range (Dolphin, GNOME, Explorer). Known friction points: a drag that starts on an item (move it vs. start a rectangle), whether the rectangle replaces or adds to the selection, and where the Shift anchor sits after a rectangle (Nautilus users expect it to follow the latest gesture). Total Commander starts the rectangle on empty space and offers a setting to turn it off.
+- Takeaway for PiCollection: tiles here aren't draggable, so a drag may start on a tile; selection is additive across folders, so the rectangle adds instead of replacing (see patterns-project.md).
+- Source: FileVoyager release notes - https://www.filevoyager.com/filevoyager-16-11-26-0-released/ ; KDE Dolphin file management - https://userbase.kde.org/Translations:Dolphin/File_Management/15/en ; Nautilus issue 3108 - https://gitlab.gnome.org/GNOME/nautilus/-/issues/3108 ; Total Commander forum - https://ghisler.ch/board/viewtopic.php?p=313142
+- Checked: 2026-10-10
+
 ## Anti-patterns
 
 ### Tooltip on a natively disabled button

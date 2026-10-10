@@ -18,7 +18,9 @@ export const SHORTCUTS = {
   toggleBlur: { key: 'b', ctrl: true },
   saveAndResolve: { key: 's', ctrl: true, shift: true },
   leaveEdit: { key: 'Escape' },
-  findTag: { key: 'f', ctrl: true }
+  findTag: { key: 'f', ctrl: true },
+  selectAll: { key: 'a', ctrl: true },
+  clearSelection: { key: 'Escape' }
 } satisfies Record<string, Shortcut>
 
 const TEXT_INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])

@@ -18,8 +18,15 @@ visually similar one shows a warning.
 
 Needs a [source folder](getting-started.md#pick-a-source-folder-recommended).
 
-1. **Add new media > From folder**, then select files and/or whole folders.
-   Files already in your library (*Already added*) and files you discarded
+1. **Add new media > From folder**, then select files and/or whole folders
+   as in Windows Explorer: a click selects only that tile, **Ctrl+click**
+   adds or removes one, **Shift+click** selects a range (**Ctrl+Shift+click**
+   adds it), and dragging from a gap, below the tiles or the page margins
+   draws a rectangle that selects what it covers (**Ctrl+drag** flips them
+   instead). A click on empty space or **Esc** clears the selection and
+   **Ctrl+A** selects everything (all pages). All of this applies to the
+   folder you're in: picks in other folders stay selected. Files already in
+   your library (*Already added*) and files you discarded
    earlier (*Discarded*) are greyed out and can't be selected. Each folder's
    number counts only the files still left to import; folders with nothing
    left are hidden, and a checkbox next to the path shows them again. The

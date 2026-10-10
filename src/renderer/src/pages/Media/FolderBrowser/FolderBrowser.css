@@ -24,6 +24,28 @@
   margin: -4px;
 }
 
+/* Tiles don't react to hover while the rectangle is being drawn. */
+.folder-browser-scroll.is-marquee-dragging .folder-browser-tile {
+  pointer-events: none;
+}
+
+/* A fixed overlay so it also spans the page margins a drag can start in.
+   Border carries the meaning (accent-fg 5.10:1 on background, 4.72:1 on
+   surface); the soft fill is decoration. */
+.folder-browser-marquee {
+  position: fixed;
+  z-index: 50;
+  border: 1px solid var(--accent-fg);
+  background: var(--accent-soft);
+  pointer-events: none;
+}
+
+.folder-browser-hint {
+  margin: 0 auto 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
 .folder-browser-breadcrumb {
   align-items: center;
   border-bottom: 1px solid var(--border-color);
