@@ -25,7 +25,7 @@ const MEDIA_EXTENSIONS: Record<string, MediaType> = {
   '.mov': 'video'
 }
 
-function typeForExtension(fileName: string): MediaType | null {
+export function typeForExtension(fileName: string): MediaType | null {
   return MEDIA_EXTENSIONS[extname(fileName).toLowerCase()] ?? null
 }
 
@@ -78,11 +78,11 @@ async function collectFilesRecursively(absoluteDir: string): Promise<FileCandida
 // and discarded files are excluded, same as expandSelection skips them - the
 // badge answers "how much is left to import here", not "how much media
 // exists here".
-async function countImportableMediaFilesRecursively(
+async function listImportableMediaFiles(
   db: Kysely<DB>,
   absoluteDir: string,
   sourceFolder: string
-): Promise<number> {
+): Promise<string[]> {
   try {
     const entries = await fs.readdir(absoluteDir, { recursive: true, withFileTypes: true })
     const mediaEntries = entries.filter(
@@ -93,11 +93,24 @@ async function countImportableMediaFilesRecursively(
     )
     const catalogedRoutes = await mediaRepo.routesExist(db, relativeRoutes)
     const discarded = await discardedRepo.discardedRoutes(db, relativeRoutes)
-    return relativeRoutes.filter((route) => !catalogedRoutes.has(route) && !discarded.has(route))
-      .length
+    return mediaEntries
+      .map((entry, index) => ({
+        path: join(entry.parentPath, entry.name),
+        route: relativeRoutes[index]
+      }))
+      .filter(({ route }) => !catalogedRoutes.has(route) && !discarded.has(route))
+      .map(({ path }) => path)
   } catch {
-    return 0
+    return []
   }
+}
+
+async function countImportableMediaFilesRecursively(
+  db: Kysely<DB>,
+  absoluteDir: string,
+  sourceFolder: string
+): Promise<number> {
+  return (await listImportableMediaFiles(db, absoluteDir, sourceFolder)).length
 }
 
 const naturalCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
@@ -230,9 +243,12 @@ export const sourceFolderBrowserService = {
 /**
  * Files under the source folder still left to import (neither cataloged nor
  * discarded); null when no source folder is set or it can't be read (e.g.
- * an unplugged drive) - "unknown", not zero.
+ * an unplugged drive) - "unknown", not zero. With `createdSince`, only files
+ * created at or after it count (the bell's "new files" baseline).
  */
-export async function countImportableInSourceFolder(): Promise<number | null> {
+export async function countImportableInSourceFolder(
+  createdSince: number | null = null
+): Promise<number | null> {
   const sourceFolder = readSourceFolder()
   if (!sourceFolder) return null
   try {
@@ -240,5 +256,13 @@ export async function countImportableInSourceFolder(): Promise<number | null> {
   } catch {
     return null
   }
-  return countImportableMediaFilesRecursively(getDb(), sourceFolder, sourceFolder)
+  const files = await listImportableMediaFiles(getDb(), sourceFolder, sourceFolder)
+  if (createdSince === null) return files.length
+  let count = 0
+  for (const path of files) {
+    const stat = await fs.stat(path).catch(() => null)
+    const created = stat ? (stat.birthtimeMs > 0 ? stat.birthtimeMs : stat.ctimeMs) : 0
+    if (created >= createdSince) count++
+  }
+  return count
 }

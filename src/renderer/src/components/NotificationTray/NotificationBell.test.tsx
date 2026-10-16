@@ -72,3 +72,14 @@ describe('NotificationBell', () => {
     expect(screen.getByTestId('where')).toHaveTextContent('/settings{"settingsTab":"data"}')
   })
 })
+
+describe('NotificationBell new files', () => {
+  it('offers "Mark as seen" instead of a snooze for new source-folder files', async () => {
+    setApi([{ kind: 'source-folder-new', severity: 'info', snoozable: true, count: 2 }])
+    renderBell()
+    await userEvent.click(await screen.findByRole('button', { name: 'Notifications, 1 pending' }))
+
+    expect(screen.getByRole('button', { name: 'Mark as seen' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Snooze for 7 days' })).not.toBeInTheDocument()
+  })
+})

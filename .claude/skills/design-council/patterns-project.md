@@ -110,7 +110,9 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   `--color-danger`, `role="alert"`) for failures, whose "View" opens the
   Settings tab in question via `navigate(PATH.SETTINGS, { state: { settingsTab } })`.
   Toasts share one corner, so a later one waits for the earlier one instead
-  of stacking on it. Where: `useBackupToast.ts`, `AppHeader.tsx`.
+  of stacking on it. Where: `useBackupToast.ts`, `AppHeader.tsx`. The source-folder
+  watcher's "N pictures added to Pending" toast (`useAutoImportToast.ts`)
+  follows it, waiting for both the update and the backup toast.
 
 - **A per-chip on/off option is a small round toggle inside the chip**
   (`ChipToggle` in `MultiSelectAutocomplete`), shown only where it

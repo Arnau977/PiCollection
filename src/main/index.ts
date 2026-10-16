@@ -30,6 +30,11 @@ import {
   stopNotifications
 } from './services/notifications/notifications.service'
 import { setNotificationEventsWindow } from './events/notificationEvents'
+import { setAutoImportEventsWindow } from './events/autoImportEvents'
+import {
+  startSourceFolderWatcher,
+  stopSourceFolderWatcher
+} from './services/sourceFolderWatcher/sourceFolderWatcher'
 
 // Two instances writing to the same SQLite file (and racing each other's
 // windowState/settings writes) would corrupt state with no user-visible
@@ -127,6 +132,7 @@ function createWindow(): BrowserWindow {
   setWd14RuntimeWindow(mainWindow)
   setAutoBackupEventsWindow(mainWindow)
   setNotificationEventsWindow(mainWindow)
+  setAutoImportEventsWindow(mainWindow)
 
   mainWindow.on('close', (event) => {
     if (!isQuitting && readExtensionBridgeSettings().backgroundModeEnabled) {
@@ -238,6 +244,7 @@ app.whenReady().then(async () => {
     if (dailyUpdateCheckTimer) clearInterval(dailyUpdateCheckTimer)
     stopAutoBackupScheduler()
     stopNotifications()
+    stopSourceFolderWatcher()
   })
 
   try {
@@ -286,6 +293,7 @@ app.whenReady().then(async () => {
   // Checks are cheap no-ops unless automatic backups are on and one is due.
   startAutoBackupScheduler()
   startNotifications()
+  startSourceFolderWatcher()
 
   initAutoUpdater(mainWindow)
   // A quiet startup check - the renderer surfaces the result and lets the

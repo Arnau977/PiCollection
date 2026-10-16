@@ -1,5 +1,12 @@
 /** What changed, so a listener can decide how much to recompute. */
-export type AppStateChange = 'updater' | 'backup' | 'media' | 'missing-files' | 'source-folder'
+export type AppStateChange =
+  | 'updater'
+  | 'backup'
+  | 'media'
+  | 'missing-files'
+  | 'source-folder'
+  /** New files under the source folder (the watcher) - rescan only that count. */
+  | 'source-folder-files'
 
 type Listener = (change: AppStateChange) => void
 const listeners = new Set<Listener>()

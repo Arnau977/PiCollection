@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { ipcHandler } from './helpers'
 import { notifyAppStateChanged } from '../events/appStateEvents'
 import {
+  AutoImportSetSchema,
   IPC,
   SourceFolderBrowsePathSchema,
   SourceFolderExpandSelectionSchema,
@@ -11,6 +12,8 @@ import {
 import { readSourceFolder } from '../services/sourceFolder'
 import { sourceFolderBrowserService } from '../services/sourceFolderBrowser.service'
 import { sourceFolderMigrationService } from '../services/sourceFolderMigration.service'
+import { restartSourceFolderWatcher } from '../services/sourceFolderWatcher/sourceFolderWatcher'
+import { readWatcherSettings, setAutoImport } from '../services/sourceFolderWatcher/watcherSettings'
 
 export function registerSourceFolderHandlers(): void {
   ipcMain.handle(
@@ -29,6 +32,7 @@ export function registerSourceFolderHandlers(): void {
     IPC.sourceFolder.applyMigration,
     ipcHandler(IPC.sourceFolder.applyMigration, SourceFolderPathSchema, async ({ path }) => {
       const result = await sourceFolderMigrationService.apply(path)
+      restartSourceFolderWatcher()
       notifyAppStateChanged('source-folder')
       return result
     })
@@ -45,6 +49,18 @@ export function registerSourceFolderHandlers(): void {
     IPC.sourceFolder.expandSelection,
     ipcHandler(IPC.sourceFolder.expandSelection, SourceFolderExpandSelectionSchema, (selection) =>
       sourceFolderBrowserService.expandSelection(selection)
+    )
+  )
+
+  ipcMain.handle(
+    IPC.autoImport.getSettings,
+    ipcHandler(IPC.autoImport.getSettings, z.void(), async () => readWatcherSettings())
+  )
+
+  ipcMain.handle(
+    IPC.autoImport.setEnabled,
+    ipcHandler(IPC.autoImport.setEnabled, AutoImportSetSchema, async ({ enabled }) =>
+      setAutoImport(enabled)
     )
   )
 }

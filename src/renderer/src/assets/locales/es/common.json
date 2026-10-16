@@ -11,6 +11,9 @@
     "notifications": "Notificaciones"
   },
   "notifications": {
+    "markSeen": "Marcar como visto",
+    "autoImportToast_one": "Se añadió {{count}} imagen a Pendientes",
+    "autoImportToast_other": "Se añadieron {{count}} imágenes a Pendientes",
     "settingsTitle": "Notificaciones",
     "settingsHint": "Elige qué avisos aparecen en la campana y como notificaciones.",
     "alert_backup-failed": "Copia automática fallida",
@@ -50,6 +53,8 @@
     "cancel": "Cancelar"
   },
   "settings": {
+    "autoImportTitle": "Añadir archivos nuevos a Pendientes automáticamente",
+    "autoImportHint": "Lo que guardes en la carpeta de origen a partir de ahora pasa solo a Pendientes. Lo que ya hay no se toca.",
     "title": "Ajustes",
     "tabGeneral": "General",
     "tabFilters": "Filtros",

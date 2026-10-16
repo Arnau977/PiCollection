@@ -19,10 +19,11 @@ import {
 import {
   isAlertEnabled,
   readSnoozes,
+  setNewFilesSince,
   writeSnoozes,
   type NotificationSnoozes
 } from './notificationSettings'
-import { getScanResults, runScans } from './notificationScans'
+import { getScanResults, markNewFilesSeen, runScans } from './notificationScans'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 export const SNOOZE_MS = 7 * DAY_MS
@@ -108,6 +109,14 @@ export function snoozeNotification(
   now: number = Date.now()
 ): Promise<AppNotification[]> {
   return serialized(async () => {
+    // "New files" against a big backlog would resurface on every saved file;
+    // dismissing it marks them seen instead (a new baseline), so it only
+    // comes back for files saved afterwards.
+    if (kind === 'source-folder-new') {
+      setNewFilesSince(now)
+      markNewFilesSeen()
+      return recompute(now)
+    }
     const item = listed(await collect(now)).find((candidate) => candidate.kind === kind)
     if (item?.snoozable) {
       writeSnoozes({
@@ -137,6 +146,7 @@ export function startNotifications(): void {
   unsubscribe = onAppStateChanged((change) => {
     if (change === 'missing-files') return scanThenRefresh({ missing: true })
     if (change === 'source-folder') return scanThenRefresh()
+    if (change === 'source-folder-files') return scanThenRefresh({ sourceFolder: true })
     refresh()
     if (change === 'media') {
       if (mediaScanTimer) clearTimeout(mediaScanTimer)

@@ -6,6 +6,9 @@ import { tmpdir } from 'os'
 let userDataDir = ''
 
 vi.mock('electron', () => ({ app: { getPath: () => userDataDir, isPackaged: false } }))
+vi.mock('../sourceFolderWatcher/sourceFolderWatcher', () => ({
+  ensureSourceFolderWatcher: vi.fn()
+}))
 
 const { initTestDbSingleton } = await import('../../database/testHelpers')
 const { runScans, getScanResults, __resetScansForTests } = await import('./notificationScans')
@@ -49,6 +52,19 @@ describe('notification scans', () => {
     writeSourceFolder(join(folder, 'gone'))
     await runScans({ sourceFolder: true })
     expect(getScanResults().newFilesCount).toBeNull()
+  })
+
+  it('counts only files created after the new-files baseline', async () => {
+    const folder = join(userDataDir, 'source')
+    await fs.mkdir(folder)
+    await fs.writeFile(join(folder, 'backlog.png'), '')
+    writeSourceFolder(folder)
+
+    await runScans({ sourceFolder: true }, Date.now() + 60_000)
+    expect(getScanResults().newFilesCount).toBe(0)
+
+    await runScans({ sourceFolder: true }, 0)
+    expect(getScanResults().newFilesCount).toBe(1)
   })
 
   it('reports no missing files for an empty library', async () => {

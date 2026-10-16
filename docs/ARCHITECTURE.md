@@ -60,7 +60,8 @@ A few things worth knowing before you touch any of this:
   `updater:event` (see [`docs/auto-update.md`](auto-update.md) and
   `src/renderer/src/hooks/useAppUpdater.ts` for how the renderer
   subscribes), `entities:changed`, `auto-backup:changed`,
-  `wd14-runtime:event` and `notifications:changed` (the sidebar bell's list,
+  `wd14-runtime:event`, `auto-import:added` (the source-folder watcher's
+  "added to Pending" toast) and `notifications:changed` (the sidebar bell's list,
   recomputed in `src/main/services/notifications/` whenever the updater,
   backups or media announce a change on `src/main/events/appStateEvents.ts`).
 

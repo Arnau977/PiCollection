@@ -52,6 +52,22 @@ Needs a [source folder](getting-started.md#pick-a-source-folder-recommended).
 Files you discarded earlier are skipped the next time you import their
 folder, and a message says how many.
 
+## Saving straight into the source folder
+
+While PiCollection runs (open or in the tray), it watches the source folder
+and its subfolders:
+
+- **Moved or renamed files are followed.** Move a tagged picture, or rename
+  a whole subfolder, in Explorer and the media keeps its tags and points at
+  the new place; it never shows up as missing. Copies of something already
+  in your library and files you discarded are left alone.
+- **Automatic import (optional).** Turn on **Add new files to Pending
+  automatically** in **Settings > Data > Source folder** and pictures you
+  save there from then on (for example with "Save image as" from a site
+  the browser extension doesn't support) go to Pending by themselves, with
+  a notice saying how many. Files already in the folder when you turn it on
+  are never imported this way; bring those in with *From folder*.
+
 ## Capturing from the browser
 
 The **PiCollection Capture** browser extension saves the post you're viewing

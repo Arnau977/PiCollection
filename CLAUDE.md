@@ -135,10 +135,12 @@ Key invariants:
   main to the renderer unprompted (`webContents.send` / `ipcRenderer.on`,
   not `invoke`): `updater:event` (see `docs/auto-update.md`),
   `entities:changed` (`src/main/events/entityEvents.ts` — refetch hints for
-  entity lists), `auto-backup:changed`, `wd14-runtime:event` and
-  `notifications:changed` (`src/main/services/notifications/` — the sidebar
-  bell's list, recomputed when the updater, backups or media announce a
-  change on `src/main/events/appStateEvents.ts`).
+  entity lists), `auto-backup:changed`, `wd14-runtime:event`,
+  `auto-import:added` (`src/main/events/autoImportEvents.ts` - "N pictures
+  added to Pending" toast) and `notifications:changed`
+  (`src/main/services/notifications/` — the sidebar bell's list, recomputed
+  when the updater, backups or media announce a change on
+  `src/main/events/appStateEvents.ts`).
 - Tests don't need an Electron runtime: `initTestDbSingleton()`
   (`src/main/database/testHelpers.ts`) spins up a real temporary SQLite file
   per test, migrated the same way the app migrates on startup.
@@ -200,3 +202,4 @@ code that touches the file itself is `discardedMediaService.trashFiles`
 | Discarded files (deleted media still on disk) | `src/main/services/discardedMedia.service.ts` + `discarded_media` table; UI in `src/renderer/src/pages/Manage/DiscardedManager.tsx` |
 | Licenses | `LICENSE` (MIT); `scripts/generate-third-party-notices.mjs` writes `resources/third-party-notices.txt` (gitignored) before `dev`/`build`, opened from Settings > Advanced. A new bundled dependency with an unusual license (LGPL like libvips, anything copyleft) also gets a line in README "Third-party licenses" |
 | Browser extension bridge | `src/main/services/extensionBridge.*.ts` — local HTTP API on 127.0.0.1 for PiCollection Capture; captures always go to Pending, start SFW, never create entities and link only a sole credited artist - the rest is source metadata offered as suggestions |
+| Source-folder watcher | `src/main/services/sourceFolderWatcher/` - recursive `fs.watch` on the source folder while the app runs; a settle-and-batch queue (`settleQueue.ts`) feeds one sequential pass (`processNewFiles.ts`) that relinks moved/renamed media by content hash, skips copies and discarded files (`discarded_media.hash`), and - with auto-import on (`watcherSettings.ts`, off by default) - adds files created after it was turned on to Pending |

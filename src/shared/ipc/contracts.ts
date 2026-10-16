@@ -166,6 +166,8 @@ export const MediaGetEntityThumbnailsSchema = z.object({
 export const BackupExportSchema = z.object({ gallerySettings: z.unknown() })
 export const NotificationSnoozeSchema = z.object({ kind: z.enum(APP_NOTIFICATION_KINDS) })
 
+export const AutoImportSetSchema = z.object({ enabled: z.boolean() })
+
 export const NotificationSetEnabledSchema = z.object({
   kind: z.enum(APP_ALERT_KINDS),
   enabled: z.boolean()
@@ -293,6 +295,12 @@ export const IPC = {
     runNow: 'auto-backup:run-now',
     /** main -> renderer push (webContents.send), not an invoke channel. */
     changed: 'auto-backup:changed'
+  },
+  autoImport: {
+    getSettings: 'auto-import:get-settings',
+    setEnabled: 'auto-import:set-enabled',
+    /** main -> renderer push (webContents.send), not an invoke channel. */
+    added: 'auto-import:added'
   },
   notifications: {
     getAll: 'notifications:get-all',
