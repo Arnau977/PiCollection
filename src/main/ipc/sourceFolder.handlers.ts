@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { ipcHandler } from './helpers'
+import { notifyAppStateChanged } from '../events/appStateEvents'
 import {
   IPC,
   SourceFolderBrowsePathSchema,
@@ -26,8 +27,11 @@ export function registerSourceFolderHandlers(): void {
 
   ipcMain.handle(
     IPC.sourceFolder.applyMigration,
-    ipcHandler(IPC.sourceFolder.applyMigration, SourceFolderPathSchema, ({ path }) =>
-      sourceFolderMigrationService.apply(path)
+    ipcHandler(IPC.sourceFolder.applyMigration, SourceFolderPathSchema, async ({ path }) => {
+      const result = await sourceFolderMigrationService.apply(path)
+      notifyAppStateChanged('source-folder')
+      return result
+    }
     )
   )
 

@@ -226,3 +226,19 @@ export const sourceFolderBrowserService = {
     return { files, skippedDiscarded: uncataloged.length - kept.length }
   }
 }
+
+/**
+ * Files under the source folder still left to import (neither cataloged nor
+ * discarded); null when no source folder is set or it can't be read (e.g.
+ * an unplugged drive) - "unknown", not zero.
+ */
+export async function countImportableInSourceFolder(): Promise<number | null> {
+  const sourceFolder = readSourceFolder()
+  if (!sourceFolder) return null
+  try {
+    await fs.access(sourceFolder)
+  } catch {
+    return null
+  }
+  return countImportableMediaFilesRecursively(getDb(), sourceFolder, sourceFolder)
+}
