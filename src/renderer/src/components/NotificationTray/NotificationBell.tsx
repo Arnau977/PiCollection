@@ -15,9 +15,7 @@ export function NotificationBell(): JSX.Element {
   const { items, snooze } = useNotifications()
   const [open, setOpen] = useState(false)
   const count = items.length
-  const label = count
-    ? t('notifications.bellLabelCount', { count })
-    : t('notifications.bellLabel')
+  const label = count ? t('notifications.bellLabelCount', { count }) : t('notifications.bellLabel')
 
   return (
     <DialogTrigger isOpen={open} onOpenChange={setOpen}>

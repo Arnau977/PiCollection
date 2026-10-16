@@ -25,7 +25,10 @@ import { setTrayWindow, syncAppTray } from './window/tray'
 import { isHiddenLaunch } from './window/autoStart'
 import { setAutoBackupEventsWindow } from './events/autoBackupEvents'
 import { startAutoBackupScheduler, stopAutoBackupScheduler } from './services/autoBackup.service'
-import { startNotifications, stopNotifications } from './services/notifications/notifications.service'
+import {
+  startNotifications,
+  stopNotifications
+} from './services/notifications/notifications.service'
 import { setNotificationEventsWindow } from './events/notificationEvents'
 
 // Two instances writing to the same SQLite file (and racing each other's

@@ -5,7 +5,7 @@ How to use PiCollection, one topic per page. New here? Start with
 
 | Page | What it covers |
 |---|---|
-| [Getting started](getting-started.md) | Installing, updates, the source folder, a tour of the app, what stays on your machine |
+| [Getting started](getting-started.md) | Installing, updates, the source folder, a tour of the app, notifications, what stays on your machine |
 | [Adding media](adding-media.md) | Adding a single file, batch-importing folders, capturing from the browser |
 | [Tagging and suggestions](tagging.md) | Artists, tags, characters and series; forms and subseries; SauceNAO, local AI and site suggestions |
 | [Pending and discarded](pending-and-discarded.md) | The pending queue for tagging later, and what happens to files you delete |

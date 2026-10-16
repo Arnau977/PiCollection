@@ -98,6 +98,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   the list's scroll box clips outer shadows; no background tint, which would
   drop `accent-fg` below AA). Both fade over 1.7s, static ring under reduced
   motion.
+- **Things still waiting for the user go in the sidebar bell, not a toast
+  that vanishes.** Each row is a condition (it leaves once resolved) with
+  one action that lands on the right tab and, unless it must be fixed, a
+  7-day snooze. One badge color (accent, count capped 9+, count in the
+  bell's accessible name); severity is the row's icon. Toasts stay for
+  one-off events; the sidebar Settings dot was dropped as a duplicate.
+  Where: `components/NotificationTray/`, `services/notifications/`.
 - **Background work that finishes on its own reports with a global toast**
   from `AppHeader` (portaled to `<body>`): `variant="error"` (warning icon in
   `--color-danger`, `role="alert"`) for failures, whose "View" opens the

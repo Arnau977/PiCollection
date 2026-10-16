@@ -55,11 +55,14 @@ A few things worth knowing before you touch any of this:
   Once a migration has shipped, treat it as immutable — add a new one, even
   for a one-column change. See `src/main/database/migrations/0003_media_ai_generated.ts`
   for the smallest possible example (adds `media.is_ai_generated`).
-- **Not everything is request/response.** The auto-updater is the one place
-  main pushes to the renderer unprompted, over a dedicated `updater:event`
-  channel (`ipcRenderer.on`, not `invoke`) — see
-  [`docs/auto-update.md`](auto-update.md) and
-  `src/renderer/src/hooks/useAppUpdater.ts` for how the renderer subscribes.
+- **Not everything is request/response.** A few channels are pushed from
+  main to the renderer unprompted (`ipcRenderer.on`, not `invoke`):
+  `updater:event` (see [`docs/auto-update.md`](auto-update.md) and
+  `src/renderer/src/hooks/useAppUpdater.ts` for how the renderer
+  subscribes), `entities:changed`, `auto-backup:changed`,
+  `wd14-runtime:event` and `notifications:changed` (the sidebar bell's list,
+  recomputed in `src/main/services/notifications/` whenever the updater,
+  backups or media announce a change on `src/main/events/appStateEvents.ts`).
 
 ## Worked example 1 — adding a new field to `Media`
 

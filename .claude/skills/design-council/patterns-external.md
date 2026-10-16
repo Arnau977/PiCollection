@@ -70,7 +70,21 @@ here.
 - Source: FileVoyager release notes - https://www.filevoyager.com/filevoyager-16-11-26-0-released/ ; KDE Dolphin file management - https://userbase.kde.org/Translations:Dolphin/File_Management/15/en ; Nautilus issue 3108 - https://gitlab.gnome.org/GNOME/nautilus/-/issues/3108 ; Total Commander forum - https://ghisler.ch/board/viewtopic.php?p=313142
 - Checked: 2026-10-10
 
+### Notification center with a count badge
+- Kind: pattern
+- Use when / avoid when: an app has things waiting for the user that aren't urgent enough for a dialog. Separate action-required items from passive info (NN/g, via ICDS); badge with a number rather than a dot (how much is waiting), capped (99+ / 9+), on the trigger's top-right; the count goes in the accessible name ("Notifications, 3 pending"); reserve red for items needing immediate attention (PatternFly); rows with a specific, front-loaded title, a muted detail line and one action.
+- Takeaway for PiCollection: the tray lists only conditions that still need doing, so the badge counts real work; severity is shown per row (danger icon), not by recoloring the badge.
+- Source: ICDS badge accessibility - https://design.sis.gov.uk/components/badge/accessibility ; PatternFly notification badge - https://patternfly.org/components/notification-badge/design-guidelines ; Courier, best practices for notification centers - https://www.courier.com/guides/how-to-build-a-notification-center/chapter-3-best-practices-for-notification-centers
+- Checked: 2026-10-16
+
 ## Anti-patterns
+
+### A badge that is almost always lit
+- Kind: anti-pattern
+- Use when / avoid when: when unread/pending items are nearly always present the badge stops meaning anything and only distracts (PatternFly). Badges belong to items that can be cleared - resolved, read or snoozed.
+- Takeaway for PiCollection: every tray item disappears when its condition is resolved or is snoozable, and thresholds (Pending older than 7 days, not "anything in Pending") keep the badge off on a normal day.
+- Source: PatternFly notification badge - https://patternfly.org/components/notification-badge/design-guidelines
+- Checked: 2026-10-16
 
 ### Tooltip on a natively disabled button
 - Kind: anti-pattern
