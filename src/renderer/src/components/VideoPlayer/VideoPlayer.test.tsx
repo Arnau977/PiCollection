@@ -202,7 +202,7 @@ describe('VideoPlayer section, frames and volume keys', () => {
     expect(video().currentTime).toBe(before)
   })
 
-  it('↑ raises the volume 5% with keyboard focus inside, and shows it', () => {
+  it('↑ raises the volume 1% with keyboard focus inside, and shows it', () => {
     window.localStorage.setItem(
       'picollection:video-player',
       JSON.stringify({ loop: false, volume: 0.5, muted: false })
@@ -213,8 +213,8 @@ describe('VideoPlayer section, frames and volume keys', () => {
 
     key('ArrowUp')
 
-    expect(video().volume).toBeCloseTo(0.55)
-    expect(screen.getByText('Volume 55%')).toBeInTheDocument()
+    expect(video().volume).toBeCloseTo(0.51)
+    expect(screen.getByText('Volume 51%')).toBeInTheDocument()
   })
 
   it('arrows go to the player in full screen even with nothing focused', () => {
@@ -318,7 +318,7 @@ describe('VideoPlayer section edge cases', () => {
     key('ArrowDown')
 
     expect(video().muted).toBe(true)
-    expect(video().volume).toBeCloseTo(0.45)
+    expect(video().volume).toBeCloseTo(0.49)
   })
 
   it('folds speed and the section into a More menu in compact mode', async () => {
@@ -381,5 +381,32 @@ describe('VideoPlayer range mode (Make GIF)', () => {
       )
     })
     expect(onChange).toHaveBeenLastCalledWith({ start: 5, end: 8 })
+  })
+})
+
+describe('VideoPlayer volume steps', () => {
+  it('keeps changing the volume while ↑ is held down, 1% per step', () => {
+    window.localStorage.setItem(
+      'picollection:video-player',
+      JSON.stringify({ loop: false, volume: 0.5, muted: false })
+    )
+    render(<VideoPlayer src="app://x.mp4" />)
+    fireEvent.keyDown(document.body, { key: 'Tab' })
+    act(() => screen.getByRole('button', { name: /^Play/ }).focus())
+
+    for (const repeat of [false, true, true, true]) {
+      act(() => {
+        document.body.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'ArrowUp', repeat, bubbles: true, cancelable: true })
+        )
+      })
+    }
+
+    expect(video().volume).toBeCloseTo(0.54)
+  })
+
+  it('moves the volume slider in 1% steps', () => {
+    render(<VideoPlayer src="app://x.mp4" />)
+    expect(screen.getByRole('slider', { name: 'Volume' })).toHaveAttribute('step', '0.01')
   })
 })

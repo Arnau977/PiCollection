@@ -109,8 +109,10 @@ export function usePlayerShortcuts(
     }
 
     function handleKeyDown(e: KeyboardEvent): void {
-      if (!container || e.repeat) return
+      if (!container) return
       const action = actionFor(e)
+      // Holding ↑ / ↓ keeps changing the volume; every other key acts once.
+      if (e.repeat && action !== 'volumeUp' && action !== 'volumeDown') return
       const run = action ? actionsRef.current[action] : undefined
       if (!action || !run || !isFrontPlayer(container)) return
 

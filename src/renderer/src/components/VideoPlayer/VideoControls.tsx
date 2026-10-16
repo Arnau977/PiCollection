@@ -29,7 +29,7 @@ import type { UseSection } from './useSection'
 import { VideoTimeline } from './VideoTimeline'
 import { formatTime } from './formatTime'
 import { PLAYER_SHORTCUT_LABELS, type PlayerAction } from './usePlayerShortcuts'
-import { PLAYBACK_RATES, SKIP_SECONDS } from './playerConstants'
+import { PLAYBACK_RATES, SKIP_SECONDS, VOLUME_STEP } from './playerConstants'
 
 interface VideoControlsProps {
   player: VideoPlayerState
@@ -264,7 +264,7 @@ export function VideoControls({
               className="video-volume"
               minValue={0}
               maxValue={1}
-              step={0.05}
+              step={VOLUME_STEP}
               value={player.muted ? 0 : player.volume}
               onChange={(value) => player.setVolume(value as number)}
             >
