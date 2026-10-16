@@ -2,11 +2,14 @@ import type { AppNotification, AppNotificationKind } from '@shared/models'
 import { getDb, isDbOpen } from '../../database/connection'
 import { getStatus as getUpdaterStatus } from '../../updater/autoUpdater'
 import { getAutoBackupStatus } from '../autoBackup.service'
+import { readAutoBackupSettings } from '../autoBackupSettings'
+import * as mediaRepo from '../../database/repositories/media.repository'
 import { onAppStateChanged } from '../../events/appStateEvents'
 import { notifyNotificationsChanged } from '../../events/notificationEvents'
 import { logError } from '../../logging/logger'
 import {
   backupFailedProvider,
+  backupStaleProvider,
   missingFilesProvider,
   pendingStaleProvider,
   sourceFolderNewProvider,
@@ -32,10 +35,16 @@ let unsubscribe: (() => void) | undefined
 
 async function collect(now: number): Promise<ProviderResult[]> {
   const scans = getScanResults()
+  const db = isDbOpen() ? getDb() : null
   return [
     updateProvider(getUpdaterStatus()),
     backupFailedProvider(getAutoBackupStatus()),
-    await pendingStaleProvider(isDbOpen() ? getDb() : null, now),
+    backupStaleProvider(
+      readAutoBackupSettings(),
+      db ? await mediaRepo.countLibraryMedia(db) : null,
+      now
+    ),
+    await pendingStaleProvider(db, now),
     missingFilesProvider(scans.missingCount),
     sourceFolderNewProvider(scans.newFilesCount)
   ]

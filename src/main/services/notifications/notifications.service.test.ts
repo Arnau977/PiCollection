@@ -72,6 +72,8 @@ beforeEach(async () => {
   runScans.mockClear()
   pushed.mockReset()
   ;({ cleanup: cleanupDb } = await initTestDbSingleton())
+  // A recent backup, so only the overdue-backup test sees that item.
+  updateAutoBackupSettings({ lastManualBackupAt: NOW })
 })
 
 afterEach(async () => {
@@ -175,6 +177,27 @@ describe('notifications', () => {
     scanResults.sourceFolderScannedAt = NOW - 11 * 60 * 1000
     refreshSourceFolderScanIfStale(NOW)
     expect(runScans).toHaveBeenCalledWith({ sourceFolder: true })
+  })
+
+  it('flags an overdue backup only with automatic backups off and media in the library', async () => {
+    updateAutoBackupSettings({ lastManualBackupAt: null })
+    expect(await refreshNotifications(NOW)).toEqual([]) // empty library
+
+    await addPending('a', NOW) // any media counts, pending included
+    expect(await refreshNotifications(NOW)).toEqual([
+      { kind: 'backup-stale', severity: 'info', snoozable: true, since: null }
+    ])
+
+    updateAutoBackupSettings({ lastManualBackupAt: NOW - 29 * DAY_MS })
+    expect(await refreshNotifications(NOW)).toEqual([])
+
+    updateAutoBackupSettings({ lastManualBackupAt: NOW - 31 * DAY_MS })
+    expect(await refreshNotifications(NOW)).toEqual([
+      { kind: 'backup-stale', severity: 'info', snoozable: true, since: NOW - 31 * DAY_MS }
+    ])
+
+    updateAutoBackupSettings({ enabled: true })
+    expect(await refreshNotifications(NOW)).toEqual([])
   })
 
   it('serializes overlapping refreshes so pushes stay in order', async () => {

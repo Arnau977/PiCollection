@@ -845,3 +845,12 @@ export async function pendingSummary(
     oldest: row?.oldest == null ? null : Number(row.oldest)
   }
 }
+
+/** Every media row, pending included - what a backup would hold. */
+export async function countLibraryMedia(db: Kysely<DB>): Promise<number> {
+  const row = await db
+    .selectFrom('media')
+    .select((eb) => eb.fn.countAll<number>().as('count'))
+    .executeTakeFirst()
+  return Number(row?.count ?? 0)
+}
