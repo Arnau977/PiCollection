@@ -13,10 +13,12 @@ import { EntityCountButton } from '../../components/EntityCountButton/EntityCoun
 import { linkedMediaCount } from '../../utils/linkedMediaCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { ArtistModel } from '@shared/models'
+import { useRevealAfterSave } from './useRevealAfterSave'
 
 export function ArtistsManager(): JSX.Element {
   const { t } = useTranslation()
   const { data: artists, loading, refetch } = useArtists()
+  const { listRef, reveal } = useRevealAfterSave(artists)
   const confirm = useConfirm()
   const [name, setName] = useState('')
   const [editing, setEditing] = useState<ArtistModel | null>(null)
@@ -66,6 +68,7 @@ export function ArtistsManager(): JSX.Element {
     if (result.success) {
       resetForm()
       setError(null)
+      reveal(result.data.id)
       refetch()
     } else {
       setError(result.error.message)
@@ -207,8 +210,8 @@ export function ArtistsManager(): JSX.Element {
           <ManageSortControl sort={sort} onChange={updateSort} />
         </div>
 
-        <div className="manage-list-scroll">
-          {loading ? (
+        <div className="manage-list-scroll" ref={listRef}>
+          {loading && artists.length === 0 ? (
             <p className="loading-state">{t('gallery.loading')}</p>
           ) : artists.length === 0 ? (
             <EmptyState icon={<Palette />} title={t('manage.empty')} />
@@ -219,6 +222,7 @@ export function ArtistsManager(): JSX.Element {
               {visibleArtists.map((artist) => (
                 <li
                   key={artist.id}
+                  data-entity-id={artist.id}
                   className={
                     editingArtist?.id === artist.id
                       ? 'manage-list-item manage-list-item-editing'

@@ -9,9 +9,15 @@ import { SeriesManager } from './SeriesManager'
 const refetchSeries = vi.fn()
 const confirmMock = vi.fn().mockResolvedValue(true)
 let seriesData: SeriesModel[] = []
+let seriesLoading = false
 
 vi.mock('../../hooks/useEntityLists', () => ({
-  useSeries: () => ({ data: seriesData, loading: false, error: null, refetch: refetchSeries })
+  useSeries: () => ({
+    data: seriesData,
+    loading: seriesLoading,
+    error: null,
+    refetch: refetchSeries
+  })
 }))
 
 vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
@@ -49,6 +55,7 @@ beforeEach(() => {
     },
     { id: 's2', name: 'Neverland', aliases: [], createdAt: 1700000001000 }
   ]
+  seriesLoading = false
   refetchSeries.mockReset()
   confirmMock.mockReset()
   confirmMock.mockResolvedValue(true)
@@ -106,6 +113,29 @@ describe('SeriesManager', () => {
       aliases: ['Alice in Wonderland']
     })
     expect(refetchSeries).toHaveBeenCalled()
+  })
+
+  it('keeps the list while refetching after a save, then scrolls the saved series into view and highlights it', async () => {
+    const scrollIntoView = vi.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
+    const user = userEvent.setup()
+    const { rerender } = render(<SeriesManager />, { wrapper: MemoryRouter })
+
+    await user.click(screen.getByRole('button', { name: 'Edit Wonderland' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    // A refetch with data already loaded must not swap the list for "Loading",
+    // which would reset the scroll position.
+    seriesLoading = true
+    rerender(<SeriesManager />)
+    expect(screen.getByText('Wonderland')).toBeInTheDocument()
+
+    seriesLoading = false
+    seriesData = [...seriesData]
+    rerender(<SeriesManager />)
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' })
+    expect(scrollIntoView.mock.contexts[0]).toHaveAttribute('data-entity-id', 's1')
+    expect(scrollIntoView.mock.contexts[0]).toHaveClass('manage-reveal-highlight')
   })
 
   it('returns to the add-new form when editing is cancelled', async () => {

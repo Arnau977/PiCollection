@@ -12,6 +12,7 @@ import { useEntityThumbnails } from '../../hooks/useEntityThumbnail'
 import { filterByQuery } from '../../utils/filterByQuery'
 import { fromAliasLines, toAliasLines } from '../../utils/aliasLines'
 import { AliasesField } from './AliasesField'
+import { useRevealAfterSave } from './useRevealAfterSave'
 import {
   loadManageSort,
   saveManageSort,
@@ -34,6 +35,7 @@ export function TagsManager(): JSX.Element {
   const { t } = useTranslation()
   const confirm = useConfirm()
   const { data: tags, loading, refetch } = useTags()
+  const { listRef, reveal } = useRevealAfterSave(tags)
   const [form, setForm] = useState<TagFormValues>(EMPTY_FORM)
   const [editing, setEditing] = useState<TagModel | null>(null)
   const [search, setSearch] = useState('')
@@ -78,6 +80,7 @@ export function TagsManager(): JSX.Element {
     if (result.success) {
       resetForm()
       setError(null)
+      reveal(result.data.id)
       refetch()
     } else {
       setError(result.error.message)
@@ -151,8 +154,8 @@ export function TagsManager(): JSX.Element {
           <ManageSortControl sort={sort} onChange={updateSort} />
         </div>
 
-        <div className="manage-list-scroll">
-          {loading ? (
+        <div className="manage-list-scroll" ref={listRef}>
+          {loading && tags.length === 0 ? (
             <p className="loading-state">{t('gallery.loading')}</p>
           ) : tags.length === 0 ? (
             <EmptyState icon={<TagsIcon />} title={t('manage.empty')} />
@@ -163,6 +166,7 @@ export function TagsManager(): JSX.Element {
               {visibleTags.map((tag) => (
                 <li
                   key={tag.id}
+                  data-entity-id={tag.id}
                   className={
                     editing?.id === tag.id
                       ? 'manage-list-item manage-list-item-editing'

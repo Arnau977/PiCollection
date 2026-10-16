@@ -11,6 +11,7 @@ import { MultiSelectAutocomplete } from '../../components/Autocomplete/MultiSele
 import { filterByQuery } from '../../utils/filterByQuery'
 import { fromAliasLines, toAliasLines } from '../../utils/aliasLines'
 import { AliasesField } from './AliasesField'
+import { useRevealAfterSave } from './useRevealAfterSave'
 import {
   loadManageSort,
   loadManageViewMode,
@@ -51,6 +52,7 @@ function getCharacterLabel(character: CharacterModel): string {
 export function CharactersManager(): JSX.Element {
   const { t } = useTranslation()
   const { data: characters, loading, refetch } = useCharacters()
+  const { listRef, reveal } = useRevealAfterSave(characters)
   const series = useSeries()
   const confirm = useConfirm()
   const [form, setForm] = useState<CharacterFormValues>(EMPTY_FORM)
@@ -137,6 +139,7 @@ export function CharactersManager(): JSX.Element {
     if (result.success) {
       resetForm()
       setError(null)
+      reveal(result.data.id)
       refetch()
     } else {
       setError(result.error.message)
@@ -249,8 +252,8 @@ export function CharactersManager(): JSX.Element {
           </label>
         </div>
 
-        <div className="manage-list-scroll">
-          {loading ? (
+        <div className="manage-list-scroll" ref={listRef}>
+          {loading && characters.length === 0 ? (
             <p className="loading-state">{t('gallery.loading')}</p>
           ) : characters.length === 0 ? (
             <EmptyState icon={<Users />} title={t('manage.empty')} />
@@ -261,6 +264,7 @@ export function CharactersManager(): JSX.Element {
               {treeNodes.map(({ entity: character, depth, rolledUpCount }) => (
                 <li
                   key={character.id}
+                  data-entity-id={character.id}
                   className={`manage-list-item depth-${depth}${editing?.id === character.id ? ' manage-list-item-editing' : ''}`}
                   style={depth > 0 ? { marginLeft: depth * 20 } : undefined}
                 >
