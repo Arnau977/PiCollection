@@ -25,6 +25,12 @@ export const SHORTCUTS = {
 
 const TEXT_INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
+/** Whether a key event lands in a text field (where plain-key shortcuts must not fire). */
+export function isTypingTarget(target: EventTarget | null): target is HTMLElement {
+  const element = target as HTMLElement | null
+  return Boolean(element && (TEXT_INPUT_TAGS.has(element.tagName) || element.isContentEditable))
+}
+
 const KEY_LABELS: Record<string, string> = { ArrowLeft: '←', ArrowRight: '→', Escape: 'Esc' }
 
 function matches(e: KeyboardEvent, shortcut: Shortcut): boolean {
@@ -69,9 +75,8 @@ export function useShortcut(shortcut: Shortcut, handler: () => void, enabled = t
     if (!enabled) return
     function handleKeyDown(e: KeyboardEvent): void {
       if (e.repeat || !matches(e, { key, ctrl, shift, alt })) return
-      const target = e.target as HTMLElement | null
-      const typing = target && (TEXT_INPUT_TAGS.has(target.tagName) || target.isContentEditable)
-      if (typing && !ctrl && !alt) {
+      const target = e.target
+      if (isTypingTarget(target) && !ctrl && !alt) {
         if (e.key === 'Escape') target.blur()
         return
       }
