@@ -42,3 +42,16 @@ describe('useSection', () => {
     expect(result.current.pendingStart).toBeNull()
   })
 })
+
+describe('useSection edits', () => {
+  it('keeps the section when an edit would make it too short to loop', () => {
+    const { result } = renderHook(() => useSection(10))
+    act(() => result.current.setA(2))
+    act(() => result.current.setB(4))
+
+    act(() => result.current.setSection({ start: 3.95, end: 4 }))
+    expect(result.current.section).toEqual({ start: 2, end: 4 })
+    act(() => result.current.setA(3.98))
+    expect(result.current.section).toEqual({ start: 2, end: 4 })
+  })
+})

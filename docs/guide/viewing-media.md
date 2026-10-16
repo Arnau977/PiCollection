@@ -22,7 +22,8 @@ Keys go to the player only when no other control on the page has focus.
 While paused, `,` / `.` step one frame back or forward. To loop just part
 of a video, press **Loop section** at the start and again at the end (or
 `[` and `]`): only that part plays and repeats, and its two markers on the
-timeline can be dragged. Press it once more (or `Shift+L`) to clear it.
+timeline can be dragged. Press it once more (or `Shift+L`) to clear it. In the edit form's
+smaller preview, speed and the section are under the **More** (⋯) button.
 
 ## Finding a tag
 

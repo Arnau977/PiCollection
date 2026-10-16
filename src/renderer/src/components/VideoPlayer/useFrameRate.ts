@@ -16,10 +16,12 @@ type VideoWithFrames = HTMLVideoElement & {
  * skew it). Never plays the video itself; 30 fps until measured. Used for
  * frame-by-frame stepping.
  */
-export function useFrameRate(videoRef: RefObject<HTMLVideoElement>): number {
+export function useFrameRate(videoRef: RefObject<HTMLVideoElement>, src?: string): number {
   const [fps, setFps] = useState(FALLBACK_FPS)
 
   useEffect(() => {
+    // A new video (the same player reused across videos) is measured afresh.
+    setFps(FALLBACK_FPS)
     const video = videoRef.current as VideoWithFrames | null
     if (!video?.requestVideoFrameCallback) return
     const times: number[] = []
@@ -43,7 +45,7 @@ export function useFrameRate(videoRef: RefObject<HTMLVideoElement>): number {
     return (): void => {
       stopped = true
     }
-  }, [videoRef])
+  }, [videoRef, src])
 
   return fps
 }

@@ -3,6 +3,7 @@ import {
   Brackets,
   Maximize,
   Minimize,
+  MoreHorizontal,
   Pause,
   Play,
   Repeat,
@@ -15,6 +16,7 @@ import {
   Button,
   Menu,
   MenuItem,
+  MenuSection,
   MenuTrigger,
   Popover,
   Slider,
@@ -63,6 +65,26 @@ export function VideoControls({
   }
 
   const rateLabel = (rate: number): string => (rate === 1 ? t('videoPlayer.normal') : `${rate}×`)
+
+  // The section control cycles: mark A, then B, then clear.
+  const sectionLabel = t(
+    section.section
+      ? 'videoPlayer.clearSection'
+      : section.pendingStart !== null
+        ? 'videoPlayer.setSectionEnd'
+        : 'videoPlayer.loopSection'
+  )
+  const sectionShortcut: PlayerAction = section.section
+    ? 'clearSection'
+    : section.pendingStart !== null
+      ? 'setB'
+      : 'setA'
+  function sectionAction(): void {
+    const time = player.currentTime
+    if (section.section) section.clear()
+    else if (section.pendingStart !== null) section.setB(time)
+    else section.setA(time)
+  }
 
   return (
     <div className="video-controls" onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
@@ -117,62 +139,96 @@ export function VideoControls({
         >
           <Repeat size={16} />
         </button>
-        {/* Compact (the edit-form preview) leaves it out to keep the pill narrow;
-            [ and ] still set a section there. */}
-        {!compact && (
-          <button
-            type="button"
-            className="video-ctrl"
-            aria-pressed={section.section !== null || section.pendingStart !== null}
-            onClick={() => {
-              const time = player.currentTime
-              if (section.section) section.clear()
-              else if (section.pendingStart !== null) section.setB(time)
-              else section.setA(time)
-            }}
-            {...shortcutProps(
-              t(
-                section.section
-                  ? 'videoPlayer.clearSection'
-                  : section.pendingStart !== null
-                    ? 'videoPlayer.setSectionEnd'
-                    : 'videoPlayer.loopSection'
-              ),
-              section.section ? 'clearSection' : section.pendingStart !== null ? 'setB' : 'setA'
-            )}
-          >
-            <Brackets size={16} />
-          </button>
-        )}
-        <MenuTrigger>
-          <Button className="video-ctrl video-ctrl-text" aria-label={t('videoPlayer.speed')}>
-            {player.rate === 1 ? '1×' : `${player.rate}×`}
-          </Button>
-          <Popover
-            placement="top"
-            className="video-menu-popover"
-            UNSTABLE_portalContainer={portalContainer}
-          >
-            <Menu
-              className="video-menu"
-              aria-label={t('videoPlayer.speed')}
-              selectionMode="single"
-              selectedKeys={[String(player.rate)]}
-              onAction={(key) => player.setRate(Number(key))}
+        {compact ? (
+          // The narrow edit-form preview folds speed and the section into one
+          // menu, as the spec asks, instead of two more pill buttons.
+          <MenuTrigger>
+            <Button className="video-ctrl" aria-label={t('videoPlayer.more')}>
+              <MoreHorizontal size={16} />
+            </Button>
+            <Popover
+              placement="top"
+              className="video-menu-popover"
+              UNSTABLE_portalContainer={portalContainer}
             >
-              {PLAYBACK_RATES.map((rate) => (
-                <MenuItem
-                  key={rate}
-                  id={String(rate)}
-                  className="video-menu-item"
-                  textValue={rateLabel(rate)}
+              <Menu
+                className="video-menu"
+                aria-label={t('videoPlayer.more')}
+                onAction={(key) => {
+                  if (key === 'section') sectionAction()
+                }}
+              >
+                <MenuSection
+                  aria-label={t('videoPlayer.speed')}
+                  selectionMode="single"
+                  selectedKeys={[String(player.rate)]}
+                  onSelectionChange={(keys) => {
+                    const [key] = [...(keys as Set<string>)]
+                    if (key) player.setRate(Number(key))
+                  }}
                 >
-                  {rateLabel(rate)}
-                </MenuItem>
-              ))}
-            </Menu>
-          </Popover>
-        </MenuTrigger>
+                  {PLAYBACK_RATES.map((rate) => (
+                    <MenuItem
+                      key={rate}
+                      id={String(rate)}
+                      className="video-menu-item"
+                      textValue={rateLabel(rate)}
+                    >
+                      {rateLabel(rate)}
+                    </MenuItem>
+                  ))}
+                </MenuSection>
+                <MenuSection aria-label={t('videoPlayer.loopSection')}>
+                  <MenuItem id="section" className="video-menu-item" textValue={sectionLabel}>
+                    {sectionLabel}
+                  </MenuItem>
+                </MenuSection>
+              </Menu>
+            </Popover>
+          </MenuTrigger>
+        ) : (
+          <>
+            {/* An action button named for what it does next (no pressed
+                state: its label already changes A -> B -> clear). */}
+            <button
+              type="button"
+              className="video-ctrl"
+              onClick={sectionAction}
+              {...shortcutProps(sectionLabel, sectionShortcut)}
+            >
+              <Brackets size={16} />
+            </button>
+            <MenuTrigger>
+              <Button className="video-ctrl video-ctrl-text" aria-label={t('videoPlayer.speed')}>
+                {player.rate === 1 ? '1×' : `${player.rate}×`}
+              </Button>
+              <Popover
+                placement="top"
+                className="video-menu-popover"
+                UNSTABLE_portalContainer={portalContainer}
+              >
+                <Menu
+                  className="video-menu"
+                  aria-label={t('videoPlayer.speed')}
+                  selectionMode="single"
+                  selectedKeys={[String(player.rate)]}
+                  onAction={(key) => player.setRate(Number(key))}
+                >
+                  {PLAYBACK_RATES.map((rate) => (
+                    <MenuItem
+                      key={rate}
+                      id={String(rate)}
+                      className="video-menu-item"
+                      textValue={rateLabel(rate)}
+                    >
+                      {rateLabel(rate)}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </Popover>
+            </MenuTrigger>
+          </>
+        )}
         <button
           type="button"
           className="video-ctrl"

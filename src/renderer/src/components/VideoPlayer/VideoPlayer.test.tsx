@@ -178,6 +178,9 @@ describe('VideoPlayer section, frames and volume keys', () => {
     key('[')
     at(4)
     key(']')
+    act(() => {
+      void video().play()
+    })
 
     at(4.01)
     expect(video().currentTime).toBe(2)
@@ -227,5 +230,105 @@ describe('VideoPlayer section, frames and volume keys', () => {
 
     expect(video().currentTime).toBe(8)
     Object.defineProperty(document, 'fullscreenElement', { configurable: true, get: () => null })
+  })
+})
+
+describe('VideoPlayer section edge cases', () => {
+  function at(time: number): void {
+    act(() => {
+      video().currentTime = time
+      video().dispatchEvent(new Event('timeupdate'))
+    })
+  }
+  function key(k: string, init: KeyboardEventInit = {}): void {
+    act(() => {
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...init })
+      )
+    })
+  }
+  function withDuration(seconds: number): void {
+    Object.defineProperty(video(), 'duration', { configurable: true, value: seconds })
+    act(() => {
+      video().dispatchEvent(new Event('loadedmetadata'))
+    })
+  }
+  function markSection(start: number, end: number): void {
+    at(start)
+    key('[')
+    at(end)
+    key(']')
+  }
+
+  it('lets you seek outside the section while paused', () => {
+    render(<VideoPlayer src="app://x.mp4" />)
+    withDuration(10)
+    markSection(2, 4)
+
+    at(7)
+    expect(video().currentTime).toBe(7)
+  })
+
+  it('keeps looping a section that ends at the end of the video', () => {
+    render(<VideoPlayer src="app://x.mp4" />)
+    withDuration(10)
+    markSection(6, 10)
+    act(() => {
+      void video().play()
+    })
+    const play = vi.mocked(HTMLMediaElement.prototype.play)
+    play.mockClear()
+
+    act(() => {
+      video().dispatchEvent(new Event('ended'))
+    })
+    expect(video().currentTime).toBe(6)
+    expect(play).toHaveBeenCalled()
+  })
+
+  it('clears the section when the video changes', () => {
+    const { rerender } = render(<VideoPlayer src="app://one.mp4" />)
+    withDuration(10)
+    markSection(2, 4)
+    expect(screen.getByRole('button', { name: /^Clear section/ })).toBeInTheDocument()
+
+    rerender(<VideoPlayer src="app://two.mp4" />)
+    expect(screen.getByRole('button', { name: /^Loop section/ })).toBeInTheDocument()
+  })
+
+  it('names the section button for what it does next, without a pressed state', () => {
+    render(<VideoPlayer src="app://x.mp4" />)
+    withDuration(10)
+    at(2)
+    key('[')
+
+    const button = screen.getByRole('button', { name: /^Set section end/ })
+    expect(button).not.toHaveAttribute('aria-pressed')
+  })
+
+  it('↓ on a muted video lowers the volume without unmuting it', () => {
+    window.localStorage.setItem(
+      'picollection:video-player',
+      JSON.stringify({ loop: false, volume: 0.5, muted: true })
+    )
+    render(<VideoPlayer src="app://x.mp4" />)
+    fireEvent.keyDown(document.body, { key: 'Tab' })
+    act(() => screen.getByRole('button', { name: /^Play/ }).focus())
+
+    key('ArrowDown')
+
+    expect(video().muted).toBe(true)
+    expect(video().volume).toBeCloseTo(0.45)
+  })
+
+  it('folds speed and the section into a More menu in compact mode', async () => {
+    render(<VideoPlayer src="app://x.mp4" compact />)
+
+    expect(screen.queryByRole('button', { name: /^Speed/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Loop section/ })).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'More' }))
+    expect(screen.getByRole('menuitemradio', { name: '1.5×' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Loop section' })).toBeInTheDocument()
   })
 })

@@ -36,7 +36,9 @@ export function useSection(duration: number | null): UseSection {
   const setA = useCallback(
     (time: number) => {
       if (section) {
-        setSectionState(normalizeSection(time, section.end, duration))
+        // An edit that would leave it too short keeps the current section.
+        const next = normalizeSection(time, section.end, duration)
+        if (next) setSectionState(next)
       } else {
         setPendingStart(Math.min(Math.max(time, 0), duration ?? Number.POSITIVE_INFINITY))
       }
@@ -47,14 +49,21 @@ export function useSection(duration: number | null): UseSection {
   const setB = useCallback(
     (time: number) => {
       const start = section?.start ?? pendingStart ?? 0
-      setSectionState(normalizeSection(start, time, duration))
+      const next = normalizeSection(start, time, duration)
+      // Too short (B on top of A): keep waiting for a real end.
+      if (!next) return
+      setSectionState(next)
       setPendingStart(null)
     },
     [section, pendingStart, duration]
   )
 
   const setSection = useCallback(
-    (next: Section) => setSectionState(normalizeSection(next.start, next.end, duration)),
+    (next: Section) => {
+      // A marker dragged onto the other one stops there instead of deleting it.
+      const normalized = normalizeSection(next.start, next.end, duration)
+      if (normalized) setSectionState(normalized)
+    },
     [duration]
   )
 

@@ -59,7 +59,7 @@ export function VideoPlayer({
     if (rootRef.current) player.toggleFullscreen(rootRef.current)
   }, [player])
 
-  const fps = useFrameRate(videoRef)
+  const fps = useFrameRate(videoRef, src)
   const sectionState = useSection(player.duration)
   const { section } = sectionState
   const [flash, setFlash] = useState<string | null>(null)
@@ -70,7 +70,8 @@ export function VideoPlayer({
 
   function changeVolume(delta: number): void {
     const next = Math.round(Math.min(Math.max(player.volume + delta, 0), 1) * 100) / 100
-    player.setVolume(next)
+    // The level changes but sound stays off while muted: M unmutes.
+    player.setVolume(next, { keepMuted: true })
     setFlash(t('videoPlayer.volumeLevel', { percent: Math.round(next * 100) }))
     if (flashTimer.current) clearTimeout(flashTimer.current)
     flashTimer.current = setTimeout(() => setFlash(null), FLASH_MS)
@@ -98,23 +99,40 @@ export function VideoPlayer({
     clearSection: sectionState.clear
   })
 
+  // The section is per video: a new src (the detail page reuses this player
+  // from one video to the next) starts without one.
+  const { clear: clearSection } = sectionState
+  useEffect(() => clearSection(), [src, clearSection])
+
   // The section loops on its own, whatever the Loop toggle says: reaching B
-  // goes back to A, and playing from outside it starts at A.
+  // while playing goes back to A, playing from outside it starts at A, and a
+  // section ending at the video's end restarts from A instead of stopping.
+  // While paused, seeking and frame-stepping outside it are left alone.
+  const { seek } = player
   useEffect(() => {
     const video = videoRef.current
     if (!video || !section) return
-    const keepInside = (): void => {
-      if (video.currentTime >= section.end || video.currentTime < section.start) {
-        player.seek(section.start)
-      }
+    const outside = (): boolean =>
+      video.currentTime >= section.end || video.currentTime < section.start
+    const onTimeUpdate = (): void => {
+      if (!video.paused && !video.seeking && outside()) seek(section.start)
     }
-    video.addEventListener('timeupdate', keepInside)
-    video.addEventListener('play', keepInside)
+    const onPlay = (): void => {
+      if (outside()) seek(section.start)
+    }
+    const onEnded = (): void => {
+      seek(section.start)
+      void Promise.resolve(video.play()).catch(() => undefined)
+    }
+    video.addEventListener('timeupdate', onTimeUpdate)
+    video.addEventListener('play', onPlay)
+    video.addEventListener('ended', onEnded)
     return (): void => {
-      video.removeEventListener('timeupdate', keepInside)
-      video.removeEventListener('play', keepInside)
+      video.removeEventListener('timeupdate', onTimeUpdate)
+      video.removeEventListener('play', onPlay)
+      video.removeEventListener('ended', onEnded)
     }
-  }, [section, player])
+  }, [section, seek])
 
   useEffect(() => {
     onSectionChange?.(section)
