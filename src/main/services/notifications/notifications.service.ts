@@ -7,26 +7,37 @@ import { notifyNotificationsChanged } from '../../events/notificationEvents'
 import { logError } from '../../logging/logger'
 import {
   backupFailedProvider,
+  missingFilesProvider,
   pendingStaleProvider,
+  sourceFolderNewProvider,
   updateProvider,
   type ProviderResult
 } from './notificationProviders'
 import { readSnoozes, writeSnoozes, type NotificationSnoozes } from './notificationSettings'
+import { getScanResults, runScans } from './notificationScans'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 export const SNOOZE_MS = 7 * DAY_MS
 const REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000
+const SCAN_STARTUP_DELAY_MS = 2 * 60 * 1000
+const MEDIA_SCAN_DEBOUNCE_MS = 30 * 1000
+const SOURCE_FOLDER_STALE_MS = 10 * 60 * 1000
 
 let lastPushed = '[]'
 let queue: Promise<unknown> = Promise.resolve()
 let intervalTimer: NodeJS.Timeout | undefined
+let scanStartupTimer: NodeJS.Timeout | undefined
+let mediaScanTimer: NodeJS.Timeout | undefined
 let unsubscribe: (() => void) | undefined
 
 async function collect(now: number): Promise<ProviderResult[]> {
+  const scans = getScanResults()
   return [
     updateProvider(getUpdaterStatus()),
     backupFailedProvider(getAutoBackupStatus()),
-    await pendingStaleProvider(isDbOpen() ? getDb() : null, now)
+    await pendingStaleProvider(isDbOpen() ? getDb() : null, now),
+    missingFilesProvider(scans.missingCount),
+    sourceFolderNewProvider(scans.newFilesCount)
   ]
 }
 
@@ -92,19 +103,58 @@ export function snoozeNotification(
   })
 }
 
+function refresh(): void {
+  refreshNotifications().catch((err) => logError('notifications', 'Refresh failed', err))
+}
+
+function scanThenRefresh(which?: Parameters<typeof runScans>[0]): void {
+  runScans(which).then(refresh)
+}
+
+/**
+ * The cheap checks run on every change and every 6 h; the disk scans run 2
+ * min after startup, every 6 h, and when something they depend on changed
+ * (media added/removed - debounced, since a batch import saves many in a
+ * row - a relink, a new source folder).
+ */
 export function startNotifications(): void {
-  const refresh = (): void => {
-    refreshNotifications().catch((err) => logError('notifications', 'Refresh failed', err))
-  }
-  unsubscribe = onAppStateChanged(refresh)
-  intervalTimer = setInterval(refresh, REFRESH_INTERVAL_MS)
+  unsubscribe = onAppStateChanged((change) => {
+    if (change === 'missing-files') return scanThenRefresh({ missing: true })
+    if (change === 'source-folder') return scanThenRefresh()
+    refresh()
+    if (change === 'media') {
+      if (mediaScanTimer) clearTimeout(mediaScanTimer)
+      mediaScanTimer = setTimeout(
+        () => scanThenRefresh({ sourceFolder: true }),
+        MEDIA_SCAN_DEBOUNCE_MS
+      )
+      mediaScanTimer.unref()
+    }
+  })
+  intervalTimer = setInterval(() => scanThenRefresh(), REFRESH_INTERVAL_MS)
   intervalTimer.unref()
+  scanStartupTimer = setTimeout(() => scanThenRefresh(), SCAN_STARTUP_DELAY_MS)
+  scanStartupTimer.unref()
   refresh()
+}
+
+/**
+ * For the renderer's asks (mount, window focus): rescans the source folder
+ * in the background when its count is older than 10 min, so files dropped
+ * into it while the app sat in the tray show up without waiting 6 h.
+ */
+export function refreshSourceFolderScanIfStale(now: number = Date.now()): void {
+  const scannedAt = getScanResults().sourceFolderScannedAt
+  if (scannedAt !== null && now - scannedAt > SOURCE_FOLDER_STALE_MS) {
+    scanThenRefresh({ sourceFolder: true })
+  }
 }
 
 export function stopNotifications(): void {
   unsubscribe?.()
   if (intervalTimer) clearInterval(intervalTimer)
+  if (scanStartupTimer) clearTimeout(scanStartupTimer)
+  if (mediaScanTimer) clearTimeout(mediaScanTimer)
 }
 
 /** Test-only. */

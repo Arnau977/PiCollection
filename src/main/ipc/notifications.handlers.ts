@@ -4,13 +4,17 @@ import { ipcHandler } from './helpers'
 import { IPC, NotificationSnoozeSchema } from '@shared/ipc/contracts'
 import {
   refreshNotifications,
+  refreshSourceFolderScanIfStale,
   snoozeNotification
 } from '../services/notifications/notifications.service'
 
 export function registerNotificationHandlers(): void {
   ipcMain.handle(
     IPC.notifications.getAll,
-    ipcHandler(IPC.notifications.getAll, z.void(), () => refreshNotifications())
+    ipcHandler(IPC.notifications.getAll, z.void(), () => {
+      refreshSourceFolderScanIfStale()
+      return refreshNotifications()
+    })
   )
 
   ipcMain.handle(

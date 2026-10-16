@@ -999,6 +999,23 @@ describe('AddMediaPage folder tab', () => {
     expect(document.querySelector('input[type="file"]')).not.toBeInTheDocument()
   })
 
+  it('opens on From folder when navigated with addMediaTab: folder (the notification bell)', async () => {
+    const browse = vi.fn().mockResolvedValue({ success: true, data: { folders: [], files: [] } })
+    setApi({
+      sourceFolder: {
+        get: vi.fn().mockResolvedValue({ success: true, data: 'D:\\Multimedia' }),
+        browse
+      }
+    })
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/media/add', state: { addMediaTab: 'folder' } }]}>
+        <AddMediaPage />
+      </MemoryRouter>
+    )
+
+    await vi.waitFor(() => expect(browse).toHaveBeenCalledWith(''))
+  })
+
   it('keeps the single-file tab active by default, unaffected by the new tab', async () => {
     setApi({
       sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: 'D:\\Multimedia' }) }

@@ -1,6 +1,7 @@
 import { dialog, ipcMain } from 'electron'
 import { z } from 'zod'
 import { ipcHandler } from './helpers'
+import { notifyAppStateChanged } from '../events/appStateEvents'
 import { mediaMaintenanceService } from '../services/mediaMaintenance.service'
 import { IPC, RelinkMissingFilesSchema, RelinkOneFileSchema } from '@shared/ipc/contracts'
 import type { PickFolderResult, RelinkOneResult } from '@shared/models'
@@ -36,7 +37,11 @@ export function registerMediaMaintenanceHandlers(): void {
     ipcHandler(
       IPC.maintenance.relinkMissingFiles,
       RelinkMissingFilesSchema,
-      ({ oldRoot, newRoot }) => mediaMaintenanceService.relinkMissingFiles(oldRoot, newRoot)
+      async ({ oldRoot, newRoot }) => {
+        const result = await mediaMaintenanceService.relinkMissingFiles(oldRoot, newRoot)
+        notifyAppStateChanged('missing-files')
+        return result
+      }
     )
   )
 
@@ -45,8 +50,11 @@ export function registerMediaMaintenanceHandlers(): void {
     ipcHandler(
       IPC.maintenance.relinkOne,
       RelinkOneFileSchema,
-      ({ mediaId, newRoute }): Promise<RelinkOneResult> =>
-        mediaMaintenanceService.relinkOne(mediaId, newRoute)
+      async ({ mediaId, newRoute }): Promise<RelinkOneResult> => {
+        const result = await mediaMaintenanceService.relinkOne(mediaId, newRoute)
+        notifyAppStateChanged('missing-files')
+        return result
+      }
     )
   )
 }

@@ -11,11 +11,26 @@ vi.mock('electron', () => ({ app: { getPath: () => userDataDir, isPackaged: fals
 vi.mock('../../events/notificationEvents', () => ({ notifyNotificationsChanged: pushed }))
 vi.mock('../../events/autoBackupEvents', () => ({ notifyAutoBackupChanged: vi.fn() }))
 vi.mock('../../updater/autoUpdater', () => ({ getStatus: () => updaterStatus }))
+const scanResults = {
+  missingCount: null as number | null,
+  newFilesCount: null as number | null,
+  sourceFolderScannedAt: null as number | null
+}
+const runScans = vi.fn().mockResolvedValue(undefined)
+vi.mock('./notificationScans', () => ({
+  getScanResults: () => ({ ...scanResults }),
+  runScans: (...args: unknown[]) => runScans(...args)
+}))
 
 const { initTestDbSingleton } = await import('../../database/testHelpers')
 const { getDb } = await import('../../database/connection')
-const { refreshNotifications, snoozeNotification, SNOOZE_MS, __resetNotificationsForTests } =
-  await import('./notifications.service')
+const {
+  refreshNotifications,
+  refreshSourceFolderScanIfStale,
+  snoozeNotification,
+  SNOOZE_MS,
+  __resetNotificationsForTests
+} = await import('./notifications.service')
 const { resetNotificationSettingsCache, readSnoozes } = await import('./notificationSettings')
 const { resetAutoBackupSettingsCache, updateAutoBackupSettings } = await import(
   '../autoBackupSettings'
@@ -51,6 +66,10 @@ beforeEach(async () => {
   resetAutoBackupSettingsCache()
   __resetNotificationsForTests()
   updaterStatus = null
+  scanResults.missingCount = null
+  scanResults.newFilesCount = null
+  scanResults.sourceFolderScannedAt = null
+  runScans.mockClear()
   pushed.mockReset()
   ;({ cleanup: cleanupDb } = await initTestDbSingleton())
 })
@@ -125,6 +144,37 @@ describe('notifications', () => {
     expect(pushed).toHaveBeenCalledWith([
       { kind: 'update-available', severity: 'info', snoozable: true, version: '2.0.0' }
     ])
+  })
+
+  it('lists scanned missing and new files, and keeps their snooze while a scan result is unknown', async () => {
+    scanResults.missingCount = 4
+    scanResults.newFilesCount = 0
+    expect(await refreshNotifications(NOW)).toEqual([
+      { kind: 'missing-files', severity: 'attention', snoozable: true, count: 4 }
+    ])
+    await snoozeNotification('missing-files', NOW)
+
+    scanResults.missingCount = null
+    await refreshNotifications(NOW + DAY_MS)
+    expect(readSnoozes()['missing-files']).toBeDefined()
+
+    scanResults.newFilesCount = 12
+    expect(await refreshNotifications(NOW + DAY_MS)).toEqual([
+      { kind: 'source-folder-new', severity: 'info', snoozable: true, count: 12 }
+    ])
+  })
+
+  it('rescans the source folder on an ask only when its count is over 10 min old', () => {
+    refreshSourceFolderScanIfStale(NOW)
+    expect(runScans).not.toHaveBeenCalled() // never scanned: the startup scan handles it
+
+    scanResults.sourceFolderScannedAt = NOW - 5 * 60 * 1000
+    refreshSourceFolderScanIfStale(NOW)
+    expect(runScans).not.toHaveBeenCalled()
+
+    scanResults.sourceFolderScannedAt = NOW - 11 * 60 * 1000
+    refreshSourceFolderScanIfStale(NOW)
+    expect(runScans).toHaveBeenCalledWith({ sourceFolder: true })
   })
 
   it('serializes overlapping refreshes so pushes stay in order', async () => {

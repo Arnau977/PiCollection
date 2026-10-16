@@ -53,3 +53,20 @@ export async function pendingStaleProvider(
       : null
   }
 }
+
+export function missingFilesProvider(count: number | null): ProviderResult {
+  if (count === null) return null
+  return {
+    kind: 'missing-files',
+    item:
+      count > 0 ? { kind: 'missing-files', severity: 'attention', snoozable: true, count } : null
+  }
+}
+
+export function sourceFolderNewProvider(count: number | null): ProviderResult {
+  if (count === null) return null
+  return {
+    kind: 'source-folder-new',
+    item: count > 0 ? { kind: 'source-folder-new', severity: 'info', snoozable: true, count } : null
+  }
+}
