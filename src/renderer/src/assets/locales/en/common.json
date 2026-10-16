@@ -10,6 +10,23 @@
     "manage": "Metadata",
     "notifications": "Notifications"
   },
+  "videoPlayer": {
+    "play": "Play",
+    "pause": "Pause",
+    "back": "Back 5 seconds",
+    "forward": "Forward 5 seconds",
+    "loop": "Loop",
+    "speed": "Speed",
+    "normal": "Normal",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "volume": "Volume",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen",
+    "more": "More",
+    "seek": "Seek",
+    "withShortcut": "{{label}} ({{key}})"
+  },
   "notifications": {
     "markSeen": "Mark as seen",
     "autoImportToast_one": "{{count}} picture added to Pending",

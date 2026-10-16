@@ -4,11 +4,7 @@ import { fireEvent, render } from '@testing-library/react'
 import { useRef } from 'react'
 import { usePlayerShortcuts, type PlayerAction } from './usePlayerShortcuts'
 
-function Player({
-  actions
-}: {
-  actions: Partial<Record<PlayerAction, () => void>>
-}): JSX.Element {
+function Player({ actions }: { actions: Partial<Record<PlayerAction, () => void>> }): JSX.Element {
   const ref = useRef<HTMLDivElement>(null)
   usePlayerShortcuts(ref, actions)
   return <div ref={ref} />
