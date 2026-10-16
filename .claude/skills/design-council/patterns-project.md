@@ -91,6 +91,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   toast** when the change isn't otherwise visible (Ctrl+B on a page without
   the gallery toolbar). Gallery view settings are a shared store
   (`useGalleryDefaults`), so every consumer updates at once.
+- **"You are here" uses the teal return glow** (`--gallery-return-glow`),
+  never the accent used for hover/selection: the gallery card you come back
+  to (`Gallery.css`, outer glow + scale pulse) and the Metadata entry just
+  saved (`useRevealAfterSave.ts` + `ManagePage.css`, an inset ring because
+  the list's scroll box clips outer shadows; no background tint, which would
+  drop `accent-fg` below AA). Both fade over 1.7s, static ring under reduced
+  motion.
 - **Background work that finishes on its own reports with a global toast**
   from `AppHeader` (portaled to `<body>`): `variant="error"` (warning icon in
   `--color-danger`, `role="alert"`) for failures, whose "View" opens the

@@ -115,7 +115,7 @@ describe('SeriesManager', () => {
     expect(refetchSeries).toHaveBeenCalled()
   })
 
-  it('keeps the list while refetching after a save, then scrolls the saved series into view', async () => {
+  it('keeps the list while refetching after a save, then scrolls the saved series into view and highlights it', async () => {
     const scrollIntoView = vi.fn()
     Element.prototype.scrollIntoView = scrollIntoView
     const user = userEvent.setup()
@@ -135,6 +135,7 @@ describe('SeriesManager', () => {
     rerender(<SeriesManager />)
     expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' })
     expect(scrollIntoView.mock.contexts[0]).toHaveAttribute('data-entity-id', 's1')
+    expect(scrollIntoView.mock.contexts[0]).toHaveClass('manage-reveal-highlight')
   })
 
   it('returns to the add-new form when editing is cancelled', async () => {
