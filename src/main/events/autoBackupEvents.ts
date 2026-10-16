@@ -1,6 +1,7 @@
 import type { BrowserWindow } from 'electron'
 import { IPC } from '@shared/ipc/contracts'
 import type { AutoBackupStatus } from '@shared/models'
+import { notifyAppStateChanged } from './appStateEvents'
 
 let autoBackupEventsWindow: BrowserWindow | null = null
 
@@ -18,4 +19,5 @@ export function notifyAutoBackupChanged(status: AutoBackupStatus): void {
   if (autoBackupEventsWindow && !autoBackupEventsWindow.isDestroyed()) {
     autoBackupEventsWindow.webContents.send(IPC.autoBackup.changed, status)
   }
+  notifyAppStateChanged('backup')
 }
