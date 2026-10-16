@@ -81,3 +81,31 @@ describe('usePlayerShortcuts', () => {
     expect(loop).not.toHaveBeenCalled()
   })
 })
+
+describe('usePlayerShortcuts arrows', () => {
+  it('seeks only while the pointer is over or focus is inside the player, and then claims the key', () => {
+    const forward = vi.fn()
+    const { container } = render(<Player actions={{ forward }} />)
+    const player = container.firstElementChild as HTMLElement
+
+    // Not engaged: left to the page (the media page uses arrows for previous/next).
+    const pageKey = new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      bubbles: true,
+      cancelable: true
+    })
+    document.body.dispatchEvent(pageKey)
+    expect(forward).not.toHaveBeenCalled()
+    expect(pageKey.defaultPrevented).toBe(false)
+
+    fireEvent.pointerEnter(player)
+    const playerKey = new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      bubbles: true,
+      cancelable: true
+    })
+    document.body.dispatchEvent(playerKey)
+    expect(forward).toHaveBeenCalledTimes(1)
+    expect(playerKey.defaultPrevented).toBe(true)
+  })
+})

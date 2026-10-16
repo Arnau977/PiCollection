@@ -18,6 +18,7 @@ import { useTagFinder } from '../../hooks/useTagFinder'
 import { buildAncestorAwareEntityTree } from '../../utils/buildEntityTree'
 import { formatDate, formatDateTime } from '../../utils/formatDate'
 import { Lightbox } from '../Lightbox/Lightbox'
+import { VideoPlayer } from '../VideoPlayer/VideoPlayer'
 import { TagFinder } from '../TagFinder/TagFinder'
 import { SimilarMediaPanel } from './SimilarMediaPanel'
 import './Media.css'
@@ -66,12 +67,10 @@ export default function Media({
           <img src={mediaUrl} alt={name} onClick={() => setLightboxOpen(true)} />
         )}
         {type === 'video' && (
-          // No onClick here: the native controls already handle play/fullscreen,
+          // Never opens the Lightbox: the player handles play/fullscreen itself,
           // and opening the Lightbox on top of an already-playing video used to
           // start a second, independent playback (double audio).
-          <video controls src={mediaUrl}>
-            Your browser does not support the video tag.
-          </video>
+          <VideoPlayer src={mediaUrl} className="media-detail-player" />
         )}
         {showNavZones && previousId && (
           <button

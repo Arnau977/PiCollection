@@ -5,6 +5,19 @@ artist, tags, characters and series, and **Similar media** below (see
 [Duplicates](duplicates.md)). `←` / `→` move to the previous or next item in
 the gallery's current order, and **Edit** (`E`) opens the edit form.
 
+## Playing videos
+
+Videos play in PiCollection's own player: a bar over the bottom of the
+video with play/pause, back and forward 5 seconds, the timeline (hover it to
+see the time under the cursor), **Loop**, **Speed** (0.25× to 2×), volume and
+full screen. The bar fades out while the video plays and you don't move the
+mouse, and stays up while it's paused or you're using the keyboard in it.
+Loop, volume and mute carry over to the next video; speed goes back to
+normal. Keys: `Space` play/pause, `L` loop, `M` mute, `F` full screen, and
+`←` / `→` go back or forward 5 seconds while the mouse is over the video (or
+you're in its controls) - elsewhere on the page they still move to the
+previous or next item.
+
 ## Finding a tag
 
 To check whether an item has a given tag, press `Ctrl+F` (or the magnifier

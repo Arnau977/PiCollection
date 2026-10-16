@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Inbox } from 'lucide-react'
 import type { MediaDuplicateCheck, MediaInput, MediaModel } from '@shared/models'
+import { VideoPlayer } from '../../../components/VideoPlayer/VideoPlayer'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { Lightbox } from '../../../components/Lightbox/Lightbox'
 import { MediaFileActions } from '../../../components/MediaFileActions/MediaFileActions'
@@ -111,7 +112,7 @@ export function MediaFormFileGroup({
       {previewMedia && (
         <div className="media-preview">
           {previewMedia.type === 'video' ? (
-            <video muted controls src={previewMedia.src} />
+            <VideoPlayer src={previewMedia.src} muted compact className="media-preview-player" />
           ) : (
             <img
               src={previewMedia.src}

@@ -122,7 +122,9 @@ export function useVideoPlayer(
     togglePlay: (): void => {
       const video = videoRef.current
       if (!video) return
-      if (video.paused || video.ended) void video.play().catch(() => undefined)
+      // play() can reject (autoplay policy, source gone) - and isn't a promise
+      // at all in some environments (jsdom); neither should throw here.
+      if (video.paused || video.ended) void Promise.resolve(video.play()).catch(() => undefined)
       else video.pause()
     },
     seek,
@@ -152,8 +154,10 @@ export function useVideoPlayer(
       setRateState(next)
     },
     toggleFullscreen: (container): void => {
-      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined)
-      else void container.requestFullscreen?.().catch(() => undefined)
+      const request = document.fullscreenElement
+        ? document.exitFullscreen?.()
+        : container.requestFullscreen?.()
+      void Promise.resolve(request).catch(() => undefined)
     }
   }
 }

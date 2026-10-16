@@ -84,19 +84,42 @@ export function usePlayerShortcuts(
   actionsRef.current = actions
 
   useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    let hovered = false
+    const enter = (): void => {
+      hovered = true
+    }
+    const leave = (): void => {
+      hovered = false
+    }
+
     function handleKeyDown(e: KeyboardEvent): void {
-      const container = containerRef.current
       if (!container || e.repeat || isTypingTarget(e.target)) return
       const action = actionFor(e)
       const run = action ? actionsRef.current[action] : undefined
       if (!action || !run || !isFrontPlayer(container)) return
-      const onSlider =
-        (document.activeElement as HTMLElement | null)?.getAttribute('role') === 'slider'
-      if (onSlider && (action === 'back' || action === 'forward')) return
+      if (action === 'back' || action === 'forward') {
+        // Arrows are the media page's previous/next: the player only takes
+        // them while it's engaged (pointer over it, or focus inside), and
+        // never from a focused slider, which moves its own value with them.
+        const engaged = hovered || container.contains(document.activeElement)
+        const onSlider =
+          (document.activeElement as HTMLElement | null)?.getAttribute('role') === 'slider'
+        if (!engaged || onSlider) return
+      }
+      // preventDefault tells the page's own listeners (e.g. MediaPage) the key
+      // is taken; the capture phase makes sure this runs before them.
       e.preventDefault()
       run()
     }
-    document.addEventListener('keydown', handleKeyDown)
-    return (): void => document.removeEventListener('keydown', handleKeyDown)
+    container.addEventListener('pointerenter', enter)
+    container.addEventListener('pointerleave', leave)
+    document.addEventListener('keydown', handleKeyDown, true)
+    return (): void => {
+      container.removeEventListener('pointerenter', enter)
+      container.removeEventListener('pointerleave', leave)
+      document.removeEventListener('keydown', handleKeyDown, true)
+    }
   }, [containerRef])
 }

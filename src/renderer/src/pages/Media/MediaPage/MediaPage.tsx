@@ -145,6 +145,8 @@ const MediaPage: React.FC = () => {
     function handleKeyDown(e: KeyboardEvent): void {
       const target = e.target as HTMLElement | null
       if (target && (TEXT_INPUT_TAGS.has(target.tagName) || target.isContentEditable)) return
+      // The video player took it (pointer over the video): it seeks instead.
+      if (e.defaultPrevented) return
       // A dialog (lightbox, compare, Make GIF) owns the arrow keys while open.
       if (document.querySelector('[aria-modal="true"]')) return
 

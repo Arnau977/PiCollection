@@ -40,6 +40,13 @@
   box-shadow: var(--shadow-lg);
 }
 
+/* The player wrapper fills the box like the image does; the video inside
+   letterboxes through the rule below. */
+.media-detail-media .media-detail-player {
+  width: 100%;
+  height: 100%;
+}
+
 .media-detail-media img,
 .media-detail-media video {
   width: 100%;
@@ -73,7 +80,7 @@
   right: 0;
 }
 
-/* A video's native transport controls (play, volume, fullscreen) live under
+/* A video's player pill (play, timeline, volume, fullscreen) lives under
    this same strip, so the strip itself must not intercept clicks - only the
    visible arrow icon, which sits well clear of the bottom controls bar, is
    click-through-blocking. */
