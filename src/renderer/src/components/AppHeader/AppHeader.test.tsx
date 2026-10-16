@@ -31,6 +31,11 @@ beforeEach(() => {
       series: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
       artist: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
       entities: { onChanged: vi.fn().mockReturnValue(() => {}) },
+      notifications: {
+        getAll: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        snooze: vi.fn(),
+        onChanged: vi.fn().mockReturnValue(() => {})
+      },
       autoBackup: {
         openFolder: vi.fn().mockResolvedValue({ success: true, data: undefined }),
         onChanged: vi.fn((listener: (status: Partial<AutoBackupStatus>) => void) => {
@@ -83,17 +88,7 @@ describe('AppHeader', () => {
     expect(screen.getByRole('link', { name: 'PiCollection' })).toHaveAttribute('href', '/')
   })
 
-  it('shows no update badge by default', () => {
-    const { container } = render(
-      <MemoryRouter>
-        <AppHeader />
-      </MemoryRouter>
-    )
-
-    expect(container.querySelector('.app-sidebar-badge')).not.toBeInTheDocument()
-  })
-
-  it('shows a badge on Settings when an update is available', () => {
+  it('leaves the update to the notification bell: no dot on Settings', () => {
     const { container } = render(
       <MemoryRouter>
         <AppHeader />
@@ -102,19 +97,7 @@ describe('AppHeader', () => {
 
     act(() => emit({ type: 'available', version: '2.0.0', highlights: null }))
 
-    expect(container.querySelector('.app-sidebar-badge')).toBeInTheDocument()
-  })
-
-  it('shows a badge on Settings when an update has finished downloading', () => {
-    const { container } = render(
-      <MemoryRouter>
-        <AppHeader />
-      </MemoryRouter>
-    )
-
-    act(() => emit({ type: 'downloaded', version: '2.0.0' }))
-
-    expect(container.querySelector('.app-sidebar-badge')).toBeInTheDocument()
+    expect(container.querySelector('.app-sidebar-badge')).not.toBeInTheDocument()
   })
 
   it('shows an update toast once, and dismisses it for the rest of the session', () => {
