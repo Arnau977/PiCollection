@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { loadGalleryDefaults } from '../../utils/gallerySettings'
 import { AppHeader } from './AppHeader'
 import type { AutoBackupStatus } from '@shared/models'
 
 let emit: (event: unknown) => void = () => {}
 let emitBackup: (status: Partial<AutoBackupStatus>) => void = () => {}
+let emitAutoImported: (count: number) => void = () => {}
 
 beforeEach(() => {
   emit = () => {}
@@ -31,6 +32,12 @@ beforeEach(() => {
       series: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
       artist: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
       entities: { onChanged: vi.fn().mockReturnValue(() => {}) },
+      autoImport: {
+        onAdded: vi.fn((listener: (count: number) => void) => {
+          emitAutoImported = listener
+          return () => {}
+        })
+      },
       notifications: {
         getAll: vi.fn().mockResolvedValue({ success: true, data: [] }),
         snooze: vi.fn(),
@@ -178,5 +185,28 @@ describe('AppHeader backup toast', () => {
 
     finishRun({ lastError: 'disk full' })
     expect(screen.getByRole('alert')).toHaveTextContent('The automatic backup failed')
+  })
+})
+
+describe('AppHeader auto-import toast', () => {
+  function Where(): JSX.Element {
+    return <p data-testid="where">{useLocation().pathname}</p>
+  }
+
+  it('announces auto-imported pictures, and opens Pending', () => {
+    render(
+      <MemoryRouter>
+        <AppHeader />
+        <Routes>
+          <Route path="*" element={<Where />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    act(() => emitAutoImported(3))
+    expect(screen.getByText('3 pictures added to Pending')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Pending' }))
+    expect(screen.getByTestId('where')).toHaveTextContent('/pending')
   })
 })

@@ -25,6 +25,13 @@ function setApi(overrides: {
       maintenance: {
         pickFolder: vi.fn(),
         ...overrides.maintenance
+      },
+      autoImport: {
+        getSettings: vi.fn().mockResolvedValue({
+          success: true,
+          data: { autoImport: false, autoImportEnabledAt: null }
+        }),
+        setEnabled: vi.fn()
       }
     },
     writable: true,

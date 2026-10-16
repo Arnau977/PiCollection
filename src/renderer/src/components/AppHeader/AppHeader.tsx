@@ -6,6 +6,7 @@ import { Home, Images, Inbox, Database, Settings } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import { useAppUpdater } from '../../hooks/useAppUpdater'
 import { useBackupToast } from '../../hooks/useBackupToast'
+import { useAutoImportToast } from '../../hooks/useAutoImportToast'
 import { useEntityCacheSync } from '../../hooks/useEntityLists'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { SHORTCUTS, useShortcut } from '../../hooks/useShortcut'
@@ -53,6 +54,7 @@ export function AppHeader(): JSX.Element {
   const [updateToastDismissed, setUpdateToastDismissed] = useState(false)
   const showUpdateToast = status.state === 'available' && !updateToastDismissed
   const backupToast = useBackupToast()
+  const autoImportToast = useAutoImportToast()
 
   const isMediaDetail = MEDIA_DETAIL_PATTERN.test(location.pathname)
   const fromPendingQueue = Boolean(
@@ -146,6 +148,23 @@ export function AppHeader(): JSX.Element {
               onDismiss={backupToast.dismiss}
             />
           ),
+          document.body
+        )}
+      {/* Like the backup toast: waits instead of stacking. */}
+      {autoImportToast.count !== null &&
+        !showUpdateToast &&
+        !backupToast.toast &&
+        createPortal(
+          <Toast
+            key={autoImportToast.count}
+            message={t('notifications.autoImportToast', { count: autoImportToast.count })}
+            actionLabel={t('notifications.actionGo')}
+            onAction={() => {
+              autoImportToast.dismiss()
+              navigate(PATH.PENDING)
+            }}
+            onDismiss={autoImportToast.dismiss}
+          />,
           document.body
         )}
       {blurToast &&

@@ -84,8 +84,7 @@ export function setAlertEnabled(
   enabled: boolean
 ): Record<AppAlertKind, boolean> {
   const current = settingsFile.read()
-  const newFilesSince =
-    kind === 'source-folder-new' && enabled ? Date.now() : current.newFilesSince
+  const newFilesSince = kind === 'source-folder-new' && enabled ? Date.now() : current.newFilesSince
   settingsFile.write({ ...current, alerts: { ...current.alerts, [kind]: enabled }, newFilesSince })
   return readAlertSettings()
 }

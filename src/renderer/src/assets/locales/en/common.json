@@ -11,6 +11,9 @@
     "notifications": "Notifications"
   },
   "notifications": {
+    "markSeen": "Mark as seen",
+    "autoImportToast_one": "{{count}} picture added to Pending",
+    "autoImportToast_other": "{{count}} pictures added to Pending",
     "settingsTitle": "Notifications",
     "settingsHint": "Choose which alerts appear in the bell and as notifications.",
     "alert_backup-failed": "Failed automatic backup",
@@ -50,6 +53,8 @@
     "cancel": "Cancel"
   },
   "settings": {
+    "autoImportTitle": "Add new files to Pending automatically",
+    "autoImportHint": "Files saved into the source folder from now on go to Pending on their own. Files already there aren't touched.",
     "title": "Settings",
     "tabGeneral": "General",
     "tabFilters": "Filters",

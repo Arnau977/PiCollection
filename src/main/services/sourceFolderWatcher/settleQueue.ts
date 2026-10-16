@@ -34,7 +34,7 @@ export function createSettleQueue(options: SettleQueueOptions): {
   add: (path: string) => void
   stop: () => void
 } {
-  const stat = options.stat ?? ((path: string) => fs.stat(path))
+  const stat = options.stat ?? ((path: string): Promise<FileSnapshot> => fs.stat(path))
   /** Waiting to settle: the last snapshot seen, or null before the first check. */
   const settling = new Map<string, FileSnapshot | null>()
   const ready = new Set<string>()

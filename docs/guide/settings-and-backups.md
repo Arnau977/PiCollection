@@ -61,6 +61,10 @@ you when files go missing.
 The folder your media lives under (see [Getting
 started](getting-started.md#pick-a-source-folder-recommended)). Choosing or
 changing it shows which files it affects before you **Apply**.
+With a source folder set, **Add new files to Pending automatically** sends
+pictures saved there from then on to Pending by themselves (see [Saving
+straight into the source folder](adding-media.md#saving-straight-into-the-source-folder)).
+It starts off.
 
 ## Advanced
 

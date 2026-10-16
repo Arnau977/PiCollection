@@ -28,6 +28,10 @@ export function NotificationPanel({
       {items.map((item) => {
         const row = notificationRow(item, t, i18n.language)
         const Icon = item.severity === 'attention' ? AlertTriangle : Info
+        // Dismissing "new files" marks them seen (a new baseline), not a 7-day snooze.
+        const snoozeLabel = t(
+          item.kind === 'source-folder-new' ? 'notifications.markSeen' : 'notifications.snooze'
+        )
         return (
           <li key={item.kind} className={`notification-row is-${item.severity}`}>
             <Icon size={18} className="notification-icon" aria-hidden="true" />
@@ -50,8 +54,8 @@ export function NotificationPanel({
                 <button
                   type="button"
                   className="icon-btn"
-                  aria-label={t('notifications.snooze')}
-                  title={t('notifications.snooze')}
+                  aria-label={snoozeLabel}
+                  title={snoozeLabel}
                   onClick={() => onSnooze(item.kind)}
                 >
                   <BellOff size={15} />

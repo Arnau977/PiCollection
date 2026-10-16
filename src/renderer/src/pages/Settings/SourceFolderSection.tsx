@@ -4,6 +4,7 @@ import { FolderOpen } from 'lucide-react'
 import type { SourceFolderMigrationPlan } from '@shared/models'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
+import { AutoImportRow } from './AutoImportRow'
 
 type State =
   | { kind: 'idle' }
@@ -101,6 +102,7 @@ export function SourceFolderSection(): JSX.Element {
           ? t('settings.sourceFolderCurrentValue', { path: current })
           : t('settings.sourceFolderNone')}
       </p>
+      {current && <AutoImportRow />}
 
       {state.kind === 'scanning' && (
         <p className="settings-version">{t('settings.sourceFolderScanning')}</p>
