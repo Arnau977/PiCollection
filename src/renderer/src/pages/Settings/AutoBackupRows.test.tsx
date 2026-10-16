@@ -19,6 +19,7 @@ function makeStatus(overrides: Partial<AutoBackupStatus> = {}): AutoBackupStatus
     lastError: null,
     nextDueAt: null,
     running: false,
+    lastRunWroteBackup: false,
     ...overrides
   }
 }
