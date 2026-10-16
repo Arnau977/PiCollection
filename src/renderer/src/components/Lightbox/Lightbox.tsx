@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { MediaFileActions } from '../MediaFileActions/MediaFileActions'
+import { VideoPlayer } from '../VideoPlayer/VideoPlayer'
 import { useZoomPan } from './useZoomPan'
 import { ZoomControls } from './ZoomControls'
 import './Lightbox.css'
@@ -65,9 +66,7 @@ export function Lightbox({ src, type, alt, route, onClose }: LightboxProps): JSX
       </div>
       <div className="lightbox-content">
         {type === 'video' ? (
-          <video controls autoPlay src={src}>
-            Your browser does not support the video tag.
-          </video>
+          <VideoPlayer src={src} autoPlay className="lightbox-player" />
         ) : (
           <img
             ref={imageRef}

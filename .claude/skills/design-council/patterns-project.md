@@ -250,6 +250,15 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   it. Where: `src/renderer/src/components/MediaThumb/captureVideoFrame.ts`
   (#89).
 
+- **Videos play in the app's own player** (`components/VideoPlayer/`), never
+  native `controls`: a floating pill in the Lightbox pill's language but 0.85
+  opaque (text 8.86:1 even over a white frame), fading 2 s after the last
+  pointer move while playing - never while paused, hovered or focused. Seek
+  and volume are react-aria `Slider`s; the fill is `--video-progress`
+  (`accent-fg` drops to 1.86:1 over a bright frame). Shortcuts go to the
+  player in front (`usePlayerShortcuts`: the topmost modal's, else the
+  page's), since `useShortcut` stands down while any modal is open.
+
 - **A task dialog (e.g. Make GIF) reuses the ConfirmDialog shell**
   (`.confirm-dialog-backdrop` / `.confirm-dialog`), wider and capped to
   the viewport so its actions row never scrolls away; while it works, the

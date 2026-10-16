@@ -17,6 +17,11 @@ the field.
 | Batch import, pending queue | `Alt+←` / `Alt+→` | Previous / next file |
 | Full-size viewer, comparison | `+` / `-` / `0` | Zoom in / out / fit |
 | Full-size viewer, comparison | `Esc` | Close |
+| Video player | `Space` / `K` | Play / pause |
+| Video player (keyboard focus in its controls) | `←` / `→` | Back / forward 5 seconds |
+| Video player | `L` | Loop on / off |
+| Video player | `M` | Mute |
+| Video player | `F` | Full screen |
 
 ---
 ← [Settings and backups](settings-and-backups.md) · [Guide index](README.md)

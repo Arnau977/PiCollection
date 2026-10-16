@@ -1,0 +1,214 @@
+/* Wraps the native <video>; hosts keep sizing the <video> itself as before. */
+.video-player {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.video-player-media {
+  display: block;
+  max-width: 100%;
+}
+
+/* Floating pill, in the Lightbox action pill's language (Lightbox.css), but
+   more opaque: over a white frame, text stays 8.86:1 (0.72 left the muted
+   text at 3.29:1). */
+.video-controls {
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: rgba(30, 31, 38, 0.85);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(12px);
+  color: var(--color-text);
+  transition: opacity 180ms ease;
+}
+
+.video-player[data-controls-visible='false'] {
+  cursor: none;
+}
+
+.video-player[data-controls-visible='false'] .video-controls {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-controls {
+    transition: none;
+  }
+}
+
+.video-controls-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.video-controls-spacer {
+  flex: 1;
+}
+
+.video-ctrl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 var(--space-1);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.video-ctrl:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.video-ctrl[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.video-ctrl:focus-visible,
+.video-timeline-thumb[data-focus-visible] {
+  outline: 2px solid var(--video-progress);
+  outline-offset: 2px;
+}
+
+.video-time {
+  padding: 0 var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+/* Timeline and volume share one slider look. */
+.video-timeline {
+  width: 100%;
+}
+
+.video-timeline-track,
+.video-volume-track {
+  position: relative;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.video-timeline-track::before,
+.video-volume-track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.video-timeline-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 4px;
+  background: var(--video-progress);
+}
+
+.video-timeline-thumb {
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(155, 67, 88, 0.55);
+}
+
+.video-timeline-hover {
+  position: absolute;
+  bottom: 100%;
+  transform: translateX(-50%);
+  margin-bottom: var(--space-1);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(30, 31, 38, 0.92);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.video-volume {
+  width: 5rem;
+}
+
+.video-menu-popover {
+  background: var(--color-surface);
+  border: 1px solid var(--border-color-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-1);
+}
+
+.video-menu {
+  outline: none;
+}
+
+.video-menu-item {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.video-menu-item[data-focused] {
+  background: var(--color-surface-hover);
+}
+
+.video-menu-item[data-selected] {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .video-volume {
+    display: none;
+  }
+}
+
+/* Full screen: the hosts size the <video> for their own boxes (the Lightbox
+   caps its height below the viewport), so the player takes over here. */
+.video-player:fullscreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.video-player:fullscreen .video-player-media {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  border-radius: 0;
+  box-shadow: none;
+}

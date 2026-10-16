@@ -41,6 +41,9 @@
      that role, verified >=4.5:1 against every real backdrop it appears on
      (background, surface, and the flattened --accent-soft chip). */
   --accent-fg: #c27285;
+  /* Video player progress fill: light accent tint, 3.76:1 against the track even
+     over a white frame (accent-fg fails there), see VideoPlayer.css. */
+  --video-progress: #f2c4cf;
 
   /* Semantic aliases used by react-aria-components based CSS */
   --text-color: var(--color-text);

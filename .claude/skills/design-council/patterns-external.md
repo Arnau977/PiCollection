@@ -77,6 +77,13 @@ here.
 - Source: ICDS badge accessibility - https://design.sis.gov.uk/components/badge/accessibility ; PatternFly notification badge - https://patternfly.org/components/notification-badge/design-guidelines ; Courier, best practices for notification centers - https://www.courier.com/guides/how-to-build-a-notification-center/chapter-3-best-practices-for-notification-centers
 - Checked: 2026-10-16
 
+### Custom video controls
+- Kind: pattern
+- Use when / avoid when: replacing native video controls. Arrow keys belong to a focused slider (ARIA slider pattern), so player-wide arrow shortcuts must stand down while a slider has focus; controls that auto-hide must stay visible while keyboard focus is inside them; every control needs a visible focus outline; common keys: Space/K play, M mute, arrows seek, F fullscreen.
+- Takeaway for PiCollection: `usePlayerShortcuts` skips arrows on `role="slider"`, the pill stays up on `:focus-within`, shortcuts are named in tooltips and `aria-keyshortcuts`.
+- Source: W3C WAI-IG thread on custom HTML5 video controls - https://lists.w3.org/Archives/Public/w3c-wai-ig/2015JulSep/0045.html ; Gumlet player accessibility - https://docs.gumlet.com/video/player-customization/player-accessibility ; SitePoint, video player UX - https://www.sitepoint.com/how-to-design-your-video-player-with-ux-in-mind/
+- Checked: 2026-10-17
+
 ## Anti-patterns
 
 ### A badge that is almost always lit

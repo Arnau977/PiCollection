@@ -10,6 +10,23 @@
     "manage": "Metadatos",
     "notifications": "Notificaciones"
   },
+  "videoPlayer": {
+    "play": "Reproducir",
+    "pause": "Pausa",
+    "back": "Retroceder 5 segundos",
+    "forward": "Avanzar 5 segundos",
+    "loop": "Bucle",
+    "speed": "Velocidad",
+    "normal": "Normal",
+    "mute": "Silenciar",
+    "unmute": "Activar sonido",
+    "volume": "Volumen",
+    "fullscreen": "Pantalla completa",
+    "exitFullscreen": "Salir de pantalla completa",
+    "more": "Más",
+    "seek": "Posición",
+    "withShortcut": "{{label}} ({{key}})"
+  },
   "notifications": {
     "markSeen": "Marcar como visto",
     "autoImportToast_one": "Se añadió {{count}} imagen a Pendientes",
