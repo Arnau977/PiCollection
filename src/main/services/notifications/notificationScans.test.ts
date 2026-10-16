@@ -6,6 +6,7 @@ import { tmpdir } from 'os'
 let userDataDir = ''
 
 vi.mock('electron', () => ({ app: { getPath: () => userDataDir, isPackaged: false } }))
+vi.mock('../sourceFolderWatcher/sourceFolderWatcher', () => ({ ensureSourceFolderWatcher: vi.fn() }))
 
 const { initTestDbSingleton } = await import('../../database/testHelpers')
 const { runScans, getScanResults, __resetScansForTests } = await import('./notificationScans')

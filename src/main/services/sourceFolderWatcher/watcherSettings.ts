@@ -1,14 +1,5 @@
+import type { WatcherSettings } from '@shared/models'
 import { createJsonSettingsFile } from '../jsonSettingsFile'
-
-export interface WatcherSettings {
-  /** Add files saved into the source folder to Pending on their own. Off by default. */
-  autoImport: boolean
-  /**
-   * When auto-import was last turned on: only files created at or after it
-   * are imported, so the backlog already in the folder is never touched.
-   */
-  autoImportEnabledAt: number | null
-}
 
 const DEFAULTS: WatcherSettings = { autoImport: false, autoImportEnabledAt: null }
 

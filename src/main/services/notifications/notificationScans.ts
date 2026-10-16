@@ -1,6 +1,7 @@
 import { isDbOpen } from '../../database/connection'
 import { mediaMaintenanceService } from '../mediaMaintenance.service'
 import { countImportableInSourceFolder } from '../sourceFolderBrowser.service'
+import { ensureSourceFolderWatcher } from '../sourceFolderWatcher/sourceFolderWatcher'
 import { logError } from '../../logging/logger'
 
 export interface ScanResults {
@@ -29,6 +30,7 @@ export function runScans(which: { missing?: boolean; sourceFolder?: boolean } = 
         results.missingCount = (await mediaMaintenanceService.checkMissingFiles()).missingCount
       }
       if (all || which.sourceFolder) {
+        ensureSourceFolderWatcher()
         results.newFilesCount = await countImportableInSourceFolder()
         results.sourceFolderScannedAt = Date.now()
       }

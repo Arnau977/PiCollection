@@ -1,6 +1,7 @@
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type {
+  WatcherSettings,
   AppAlertKind,
   AppNotification,
   AppNotificationKind,
@@ -186,6 +187,18 @@ export const api = {
         listener(payload)
       ipcRenderer.on(IPC.autoBackup.changed, handler)
       return () => ipcRenderer.removeListener(IPC.autoBackup.changed, handler)
+    }
+  },
+  autoImport: {
+    getSettings: (): Promise<IpcResult<WatcherSettings>> =>
+      ipcRenderer.invoke(IPC.autoImport.getSettings),
+    setEnabled: (enabled: boolean): Promise<IpcResult<WatcherSettings>> =>
+      ipcRenderer.invoke(IPC.autoImport.setEnabled, { enabled }),
+    /** "N pictures added to Pending" after an auto-import batch; returns an unsubscribe function. */
+    onAdded: (listener: (count: number) => void): (() => void) => {
+      const handler = (_event: IpcRendererEvent, count: number): void => listener(count)
+      ipcRenderer.on(IPC.autoImport.added, handler)
+      return () => ipcRenderer.removeListener(IPC.autoImport.added, handler)
     }
   },
   notifications: {

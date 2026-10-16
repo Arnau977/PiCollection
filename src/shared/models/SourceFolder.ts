@@ -55,3 +55,13 @@ export interface ExpandedSelection {
   /** Left out because they're in the Discarded list. */
   skippedDiscarded: number
 }
+
+export interface WatcherSettings {
+  /** Add files saved into the source folder to Pending on their own. Off by default. */
+  autoImport: boolean
+  /**
+   * When auto-import was last turned on: only files created at or after it
+   * are imported, so the backlog already in the folder is never touched.
+   */
+  autoImportEnabledAt: number | null
+}

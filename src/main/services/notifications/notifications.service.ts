@@ -137,6 +137,7 @@ export function startNotifications(): void {
   unsubscribe = onAppStateChanged((change) => {
     if (change === 'missing-files') return scanThenRefresh({ missing: true })
     if (change === 'source-folder') return scanThenRefresh()
+    if (change === 'source-folder-files') return scanThenRefresh({ sourceFolder: true })
     refresh()
     if (change === 'media') {
       if (mediaScanTimer) clearTimeout(mediaScanTimer)

@@ -5,6 +5,10 @@ import { notifyAppStateChanged } from '../events/appStateEvents'
 import { updateAutoBackupSettings } from '../services/autoBackupSettings'
 import { createBackupZip, getBackupBuildKind, restoreBackupZip } from '../services/backupService'
 import { BackupExportSchema, IPC } from '@shared/ipc/contracts'
+import {
+  startSourceFolderWatcher,
+  stopSourceFolderWatcher
+} from '../services/sourceFolderWatcher/sourceFolderWatcher'
 import type { BackupExportResult, BackupImportResult } from '@shared/models'
 
 export function registerBackupHandlers(): void {
@@ -39,7 +43,11 @@ export function registerBackupHandlers(): void {
       })
       if (result.canceled || result.filePaths.length === 0) return { cancelled: true }
 
-      const { gallerySettings } = await restoreBackupZip(result.filePaths[0])
+      // The restore closes the DB; the watcher must not process files meanwhile.
+      stopSourceFolderWatcher()
+      const { gallerySettings } = await restoreBackupZip(result.filePaths[0]).finally(
+        startSourceFolderWatcher
+      )
       return { cancelled: false, gallerySettings: gallerySettings ?? undefined }
     })
   )
