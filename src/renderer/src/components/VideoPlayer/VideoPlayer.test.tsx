@@ -332,3 +332,24 @@ describe('VideoPlayer section edge cases', () => {
     expect(screen.getByRole('menuitem', { name: 'Loop section' })).toBeInTheDocument()
   })
 })
+
+describe('VideoPlayer volume hover', () => {
+  it('shows the volume level while the pointer is over the volume control', () => {
+    window.localStorage.setItem(
+      'picollection:video-player',
+      JSON.stringify({ loop: false, volume: 0.65, muted: false })
+    )
+    render(<VideoPlayer src="app://x.mp4" />)
+    expect(screen.queryByText('65%')).not.toBeInTheDocument()
+
+    fireEvent.pointerEnter(
+      screen.getByRole('slider', { name: 'Volume' }).closest('.video-volume-group')!
+    )
+    expect(screen.getByText('65%')).toBeInTheDocument()
+
+    fireEvent.pointerLeave(
+      screen.getByRole('slider', { name: 'Volume' }).closest('.video-volume-group')!
+    )
+    expect(screen.queryByText('65%')).not.toBeInTheDocument()
+  })
+})

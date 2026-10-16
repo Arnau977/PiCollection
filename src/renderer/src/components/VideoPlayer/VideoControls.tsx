@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Brackets,
@@ -53,6 +54,7 @@ export function VideoControls({
   portalContainer
 }: VideoControlsProps): JSX.Element {
   const { t } = useTranslation()
+  const [volumeHover, setVolumeHover] = useState(false)
 
   // Name for screen readers; tooltip and aria-keyshortcuts carry the key.
   function shortcutProps(label: string, action: PlayerAction): Record<string, string> {
@@ -229,37 +231,50 @@ export function VideoControls({
             </MenuTrigger>
           </>
         )}
-        <button
-          type="button"
-          className="video-ctrl"
-          onClick={player.toggleMute}
-          {...shortcutProps(t(player.muted ? 'videoPlayer.unmute' : 'videoPlayer.mute'), 'mute')}
+        {/* Hovering the volume control shows its level, like the timeline shows
+            the time under the pointer. */}
+        <span
+          className="video-volume-group"
+          onPointerEnter={() => setVolumeHover(true)}
+          onPointerLeave={() => setVolumeHover(false)}
         >
-          {player.muted || player.volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
-        </button>
-        {!compact && (
-          <Slider
-            aria-label={t('videoPlayer.volume')}
-            className="video-volume"
-            minValue={0}
-            maxValue={1}
-            step={0.05}
-            value={player.muted ? 0 : player.volume}
-            onChange={(value) => player.setVolume(value as number)}
+          {volumeHover && (
+            <span className="video-volume-level" aria-hidden="true">
+              {Math.round((player.muted ? 0 : player.volume) * 100)}%
+            </span>
+          )}
+          <button
+            type="button"
+            className="video-ctrl"
+            onClick={player.toggleMute}
+            {...shortcutProps(t(player.muted ? 'videoPlayer.unmute' : 'videoPlayer.mute'), 'mute')}
           >
-            <SliderTrack className="video-volume-track">
-              {({ state }) => (
-                <>
-                  <div
-                    className="video-timeline-fill"
-                    style={{ width: `${state.getThumbPercent(0) * 100}%` }}
-                  />
-                  <SliderThumb className="video-timeline-thumb" />
-                </>
-              )}
-            </SliderTrack>
-          </Slider>
-        )}
+            {player.muted || player.volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+          {!compact && (
+            <Slider
+              aria-label={t('videoPlayer.volume')}
+              className="video-volume"
+              minValue={0}
+              maxValue={1}
+              step={0.05}
+              value={player.muted ? 0 : player.volume}
+              onChange={(value) => player.setVolume(value as number)}
+            >
+              <SliderTrack className="video-volume-track">
+                {({ state }) => (
+                  <>
+                    <div
+                      className="video-timeline-fill"
+                      style={{ width: `${state.getThumbPercent(0) * 100}%` }}
+                    />
+                    <SliderThumb className="video-timeline-thumb" />
+                  </>
+                )}
+              </SliderTrack>
+            </Slider>
+          )}
+        </span>
         <button
           type="button"
           className="video-ctrl"

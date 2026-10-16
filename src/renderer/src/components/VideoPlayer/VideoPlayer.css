@@ -254,3 +254,25 @@
   font-weight: 600;
   pointer-events: none;
 }
+
+/* Volume level shown above the mute button + slider while hovered. */
+.video-volume-group {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.video-volume-level {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: var(--space-1);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(30, 31, 38, 0.92);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  pointer-events: none;
+  white-space: nowrap;
+}
