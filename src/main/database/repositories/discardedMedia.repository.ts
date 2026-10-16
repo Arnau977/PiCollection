@@ -13,10 +13,28 @@ export async function upsertDiscarded(db: Kysely<DB>, row: DiscardedMediaTable):
         name: row.name,
         type: row.type,
         reason: row.reason,
-        discarded_at: row.discarded_at
+        discarded_at: row.discarded_at,
+        hash: row.hash ?? null
       })
     )
     .execute()
+}
+
+/** Whether a file was discarded: same route, or the same content when its hash is known. */
+export async function isDiscarded(
+  db: Kysely<DB>,
+  { route, hash }: { route: string; hash: string | null }
+): Promise<boolean> {
+  const row = await db
+    .selectFrom('discarded_media')
+    .select('id')
+    .where((eb) =>
+      hash === null
+        ? eb('route', '=', route)
+        : eb.or([eb('route', '=', route), eb('hash', '=', hash)])
+    )
+    .executeTakeFirst()
+  return row !== undefined
 }
 
 export function listDiscarded(db: Kysely<DB>): Promise<DiscardedMediaTable[]> {

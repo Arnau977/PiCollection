@@ -12,6 +12,7 @@ import type {
   MediaModel
 } from '@shared/models'
 import { readSourceFolder, relativizeRoute, resolveRoute } from './sourceFolder'
+import { computeFileHash } from './mediaHash'
 
 function toModel(row: DiscardedMediaTable): DiscardedMediaModel {
   return {
@@ -31,15 +32,16 @@ function toModel(row: DiscardedMediaTable): DiscardedMediaModel {
  */
 export async function recordDiscarded(
   db: Kysely<DB>,
-  entry: { route: string; name: string; type: string },
+  entry: { route: string; name: string; type: string; hash?: string | null },
   reason: DiscardReason
 ): Promise<void> {
   await discardedRepo.upsertDiscarded(db, {
     id: randomUUID(),
-    // Only these three: a whole media row may be passed in.
+    // Only these fields: a whole media row may be passed in.
     route: entry.route,
     name: entry.name,
     type: entry.type,
+    hash: entry.hash ?? null,
     reason,
     discarded_at: Date.now()
   })
@@ -53,7 +55,8 @@ export const discardedMediaService = {
   /** A batch-import file dropped before it was ever saved (its route is absolute). */
   async discardFile(input: DiscardFileInput): Promise<void> {
     const route = relativizeRoute(input.route, readSourceFolder())
-    await recordDiscarded(getDb(), { route, name: input.name, type: input.type }, 'deleted')
+    const hash = await computeFileHash(input.route)
+    await recordDiscarded(getDb(), { route, name: input.name, type: input.type, hash }, 'deleted')
   },
 
   /**

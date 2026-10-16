@@ -17,6 +17,9 @@ const { writeSourceFolder, resetSourceFolderCache } = await import('./sourceFold
 const { discardedMediaService } = await import('./discardedMedia.service')
 const { mediaService } = await import('./media.service')
 const { sourceFolderBrowserService } = await import('./sourceFolderBrowser.service')
+const { getDb } = await import('../database/connection')
+const { isDiscarded } = await import('../database/repositories/discardedMedia.repository')
+const { computeFileHash } = await import('./mediaHash')
 
 let cleanup: () => Promise<void>
 let sourceDir = ''
@@ -70,6 +73,34 @@ describe('discarded media', () => {
 
     await mediaService.addMedia(input)
     expect(await discardedMediaService.list()).toEqual([])
+  })
+
+  it('keeps the hash of a deleted media, so a moved copy is still known as discarded', async () => {
+    const route = join(sourceDir, 'a.png')
+    await fs.writeFile(route, 'picture bytes')
+    const hash = await computeFileHash(route)
+    const media = await mediaService.addMedia({
+      name: 'a',
+      type: 'image',
+      route,
+      sfw: true,
+      isAiGenerated: false
+    })
+
+    await mediaService.deleteMedia(media.id)
+
+    expect(await isDiscarded(getDb(), { route: 'elsewhere/x.png', hash })).toBe(true)
+    expect(await isDiscarded(getDb(), { route: 'elsewhere/x.png', hash: 'zzz' })).toBe(false)
+  })
+
+  it('hashes a never-saved batch-import file when it is discarded', async () => {
+    const route = join(sourceDir, 'b.png')
+    await fs.writeFile(route, 'other bytes')
+
+    await discardedMediaService.discardFile({ route, name: 'b', type: 'image' })
+
+    const row = await getDb().selectFrom('discarded_media').selectAll().executeTakeFirstOrThrow()
+    expect(row.hash).toBe(await computeFileHash(route))
   })
 
   it('moves existing files to the Recycle Bin, forgets missing ones, and keeps a failed one listed until kept', async () => {
