@@ -830,3 +830,18 @@ export async function findEntityThumbnailsByClosure(
   `.execute(db)
   return result.rows
 }
+
+/** Pending media (`pending_tagging = 1`): how many, and when the oldest was added. */
+export async function pendingSummary(
+  db: Kysely<DB>
+): Promise<{ count: number; oldest: number | null }> {
+  const row = await db
+    .selectFrom('media')
+    .where('pending_tagging', '=', 1)
+    .select((eb) => [eb.fn.countAll<number>().as('count'), eb.fn.min('created_at').as('oldest')])
+    .executeTakeFirst()
+  return {
+    count: Number(row?.count ?? 0),
+    oldest: row?.oldest == null ? null : Number(row.oldest)
+  }
+}

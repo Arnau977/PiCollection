@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { AUTO_BACKUP_KEEP_COUNT_OPTIONS } from '../models/Backup'
+import { APP_NOTIFICATION_KINDS } from '../models/Notification'
 
 export type IpcResult<T> =
   | { success: true; data: T }
@@ -163,6 +164,8 @@ export const MediaGetEntityThumbnailsSchema = z.object({
 })
 
 export const BackupExportSchema = z.object({ gallerySettings: z.unknown() })
+export const NotificationSnoozeSchema = z.object({ kind: z.enum(APP_NOTIFICATION_KINDS) })
+
 export const AutoBackupConfigPatchSchema = z
   .object({
     enabled: z.boolean(),
@@ -285,6 +288,12 @@ export const IPC = {
     runNow: 'auto-backup:run-now',
     /** main -> renderer push (webContents.send), not an invoke channel. */
     changed: 'auto-backup:changed'
+  },
+  notifications: {
+    getAll: 'notifications:get-all',
+    snooze: 'notifications:snooze',
+    /** main -> renderer push (webContents.send), not an invoke channel. */
+    changed: 'notifications:changed'
   },
   maintenance: {
     checkMissingFiles: 'maintenance:check-missing-files',
