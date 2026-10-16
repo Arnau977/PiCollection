@@ -25,6 +25,11 @@ import { setTrayWindow, syncAppTray } from './window/tray'
 import { isHiddenLaunch } from './window/autoStart'
 import { setAutoBackupEventsWindow } from './events/autoBackupEvents'
 import { startAutoBackupScheduler, stopAutoBackupScheduler } from './services/autoBackup.service'
+import {
+  startNotifications,
+  stopNotifications
+} from './services/notifications/notifications.service'
+import { setNotificationEventsWindow } from './events/notificationEvents'
 
 // Two instances writing to the same SQLite file (and racing each other's
 // windowState/settings writes) would corrupt state with no user-visible
@@ -121,6 +126,7 @@ function createWindow(): BrowserWindow {
   setEntityEventsWindow(mainWindow)
   setWd14RuntimeWindow(mainWindow)
   setAutoBackupEventsWindow(mainWindow)
+  setNotificationEventsWindow(mainWindow)
 
   mainWindow.on('close', (event) => {
     if (!isQuitting && readExtensionBridgeSettings().backgroundModeEnabled) {
@@ -231,6 +237,7 @@ app.whenReady().then(async () => {
     flushLogBuffer()
     if (dailyUpdateCheckTimer) clearInterval(dailyUpdateCheckTimer)
     stopAutoBackupScheduler()
+    stopNotifications()
   })
 
   try {
@@ -278,6 +285,7 @@ app.whenReady().then(async () => {
 
   // Checks are cheap no-ops unless automatic backups are on and one is due.
   startAutoBackupScheduler()
+  startNotifications()
 
   initAutoUpdater(mainWindow)
   // A quiet startup check - the renderer surfaces the result and lets the

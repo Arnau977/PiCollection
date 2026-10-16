@@ -135,7 +135,10 @@ Key invariants:
   main to the renderer unprompted (`webContents.send` / `ipcRenderer.on`,
   not `invoke`): `updater:event` (see `docs/auto-update.md`),
   `entities:changed` (`src/main/events/entityEvents.ts` — refetch hints for
-  entity lists), `auto-backup:changed` and `wd14-runtime:event`.
+  entity lists), `auto-backup:changed`, `wd14-runtime:event` and
+  `notifications:changed` (`src/main/services/notifications/` — the sidebar
+  bell's list, recomputed when the updater, backups or media announce a
+  change on `src/main/events/appStateEvents.ts`).
 - Tests don't need an Electron runtime: `initTestDbSingleton()`
   (`src/main/database/testHelpers.ts`) spins up a real temporary SQLite file
   per test, migrated the same way the app migrates on startup.

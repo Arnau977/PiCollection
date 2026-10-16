@@ -10,6 +10,7 @@ import { useEntityCacheSync } from '../../hooks/useEntityLists'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { SHORTCUTS, useShortcut } from '../../hooks/useShortcut'
 import { Toast } from '../Toast/Toast'
+import { NotificationBell } from '../NotificationTray/NotificationBell'
 import './AppHeader.css'
 
 function navLinkClassName({ isActive }: { isActive: boolean }): string {
@@ -33,7 +34,6 @@ export function AppHeader(): JSX.Element {
   const { status } = useAppUpdater()
   const location = useLocation()
   const navigate = useNavigate()
-  const updateReady = status.state === 'available' || status.state === 'downloaded'
   useEntityCacheSync()
 
   // Ctrl+B works on every page (Home, detail, Pending also blur NSFW); the
@@ -96,11 +96,12 @@ export function AppHeader(): JSX.Element {
         <NavLink to={PATH.SETTINGS} className={navLinkClassName} title={t('nav.settings')}>
           <span className="app-sidebar-icon-wrap">
             <Settings size={19} aria-hidden="true" />
-            {updateReady && <span className="app-sidebar-badge" aria-hidden="true" />}
           </span>
           <span className="app-sidebar-label">{t('nav.settings')}</span>
         </NavLink>
       </nav>
+
+      <NotificationBell />
 
       {status.state === 'available' &&
         showUpdateToast &&

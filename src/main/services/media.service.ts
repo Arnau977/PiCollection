@@ -20,6 +20,7 @@ import {
 } from './mediaHash'
 import { readSourceFolder, relativizeRoute, resolveRoute } from './sourceFolder'
 import { notifyEntitiesChanged } from '../events/entityEvents'
+import { notifyAppStateChanged } from '../events/appStateEvents'
 import type {
   ArtistModel,
   CharacterModel,
@@ -408,6 +409,7 @@ export const mediaService = {
     if (input.seriesIds?.length) attachedKinds.push('series')
     if (input.artistId) attachedKinds.push('artist')
     if (attachedKinds.length) notifyEntitiesChanged(attachedKinds)
+    notifyAppStateChanged('media')
 
     return created
   },
@@ -526,6 +528,7 @@ export const mediaService = {
     const replaced = await getMediaModelById(db, target.id)
     if (!replaced) throw new Error('Failed to load replaced media')
     notifyEntitiesChanged(['tag', 'character', 'series', 'artist'])
+    notifyAppStateChanged('media')
     return replaced
   },
 
@@ -565,6 +568,7 @@ export const mediaService = {
     // The deleted media could have held any kind of association; not worth
     // fetching them first just to compute an exact subset.
     notifyEntitiesChanged(['tag', 'character', 'series', 'artist'])
+    notifyAppStateChanged('media')
   },
 
   /**
@@ -590,6 +594,7 @@ export const mediaService = {
 
     const updated = await getMediaModelById(db, id)
     if (!updated) throw new Error('Failed to load updated media')
+    notifyAppStateChanged('media')
     return updated
   },
 

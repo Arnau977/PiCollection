@@ -1,0 +1,99 @@
+/* The bell is a nav-link look-alike (see .app-sidebar-link) but a <button>,
+   pushed to the bottom of the sidebar. */
+.notification-bell {
+  margin-top: auto;
+  width: 100%;
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -9px;
+  min-width: 1.05rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.05rem;
+  text-align: center;
+}
+
+.notification-popover {
+  width: min(380px, calc(100vw - 2 * var(--space-4)));
+  max-height: calc(100vh - 2 * var(--space-4));
+  display: flex;
+  background: var(--color-surface);
+  border: 1px solid var(--border-color-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.notification-dialog {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  padding: var(--space-3);
+  outline: none;
+}
+
+.notification-heading {
+  margin: 0 0 var(--space-2);
+  font-size: 0.95rem;
+}
+
+.notification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.notification-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-background-mute);
+}
+
+.notification-icon {
+  margin-top: 2px;
+  color: var(--color-text-muted);
+}
+
+.notification-row.is-attention .notification-icon {
+  color: var(--color-danger);
+}
+
+.notification-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.notification-detail {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.notification-actions {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}

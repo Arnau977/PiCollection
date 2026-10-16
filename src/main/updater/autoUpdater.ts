@@ -5,6 +5,7 @@ import type { UpdateChannel, UpdaterEvent } from '@shared/models'
 import { compareVersions, extractHighlights, normalizeReleaseNotes } from '@shared/utils'
 import { readUpdateChannel, writeUpdateChannel } from './updaterSettings'
 import { logInfo } from '../logging/logger'
+import { notifyAppStateChanged } from '../events/appStateEvents'
 
 let updaterWindow: BrowserWindow | null = null
 let initialized = false
@@ -19,6 +20,7 @@ function send(event: UpdaterEvent): void {
   if (updaterWindow && !updaterWindow.isDestroyed()) {
     updaterWindow.webContents.send(IPC.updater.event, event)
   }
+  notifyAppStateChanged('updater')
 }
 
 export function getStatus(): UpdaterEvent | null {

@@ -1,6 +1,8 @@
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type {
+  AppNotification,
+  AppNotificationKind,
   ArtistInput,
   ArtistModel,
   AutoBackupConfig,
@@ -183,6 +185,19 @@ export const api = {
         listener(payload)
       ipcRenderer.on(IPC.autoBackup.changed, handler)
       return () => ipcRenderer.removeListener(IPC.autoBackup.changed, handler)
+    }
+  },
+  notifications: {
+    getAll: (): Promise<IpcResult<AppNotification[]>> =>
+      ipcRenderer.invoke(IPC.notifications.getAll),
+    snooze: (kind: AppNotificationKind): Promise<IpcResult<AppNotification[]>> =>
+      ipcRenderer.invoke(IPC.notifications.snooze, { kind }),
+    /** Subscribes to tray pushes; returns an unsubscribe function. */
+    onChanged: (listener: (items: AppNotification[]) => void): (() => void) => {
+      const handler = (_event: IpcRendererEvent, payload: AppNotification[]): void =>
+        listener(payload)
+      ipcRenderer.on(IPC.notifications.changed, handler)
+      return () => ipcRenderer.removeListener(IPC.notifications.changed, handler)
     }
   },
   maintenance: {
