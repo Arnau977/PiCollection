@@ -70,3 +70,25 @@ export function sourceFolderNewProvider(count: number | null): ProviderResult {
     item: count > 0 ? { kind: 'source-folder-new', severity: 'info', snoozable: true, count } : null
   }
 }
+
+export const BACKUP_STALE_MS = 30 * DAY_MS
+
+/**
+ * Only while automatic backups are off (when on, a failure is its own item)
+ * and there's something to lose. The newest backup is a manual export or an
+ * automatic one from before they were turned off.
+ */
+export function backupStaleProvider(
+  settings: { enabled: boolean; lastSuccessAt: number | null; lastManualBackupAt: number | null },
+  mediaCount: number | null,
+  now: number
+): ProviderResult {
+  if (mediaCount === null) return null
+  const last = Math.max(settings.lastSuccessAt ?? 0, settings.lastManualBackupAt ?? 0) || null
+  const stale =
+    !settings.enabled && mediaCount > 0 && (last === null || now - last >= BACKUP_STALE_MS)
+  return {
+    kind: 'backup-stale',
+    item: stale ? { kind: 'backup-stale', severity: 'info', snoozable: true, since: last } : null
+  }
+}

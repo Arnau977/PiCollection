@@ -11,6 +11,8 @@ const FREQUENCIES: readonly AutoBackupFrequency[] = ['daily', 'weekly', 'monthly
 export interface AutoBackupSettings extends AutoBackupConfig {
   lastSuccessAt: number | null
   lastError: string | null
+  /** When a manual "Export backup" last succeeded - for the overdue-backup reminder. */
+  lastManualBackupAt: number | null
 }
 
 export const DEFAULT_AUTO_BACKUP_SETTINGS: AutoBackupSettings = {
@@ -19,7 +21,8 @@ export const DEFAULT_AUTO_BACKUP_SETTINGS: AutoBackupSettings = {
   keepCount: 10,
   folder: null,
   lastSuccessAt: null,
-  lastError: null
+  lastError: null,
+  lastManualBackupAt: null
 }
 
 function parse(raw: unknown): AutoBackupSettings {
@@ -37,7 +40,9 @@ function parse(raw: unknown): AutoBackupSettings {
       : defaults.keepCount,
     folder: typeof saved.folder === 'string' && saved.folder ? saved.folder : null,
     lastSuccessAt: typeof saved.lastSuccessAt === 'number' ? saved.lastSuccessAt : null,
-    lastError: typeof saved.lastError === 'string' ? saved.lastError : null
+    lastError: typeof saved.lastError === 'string' ? saved.lastError : null,
+    lastManualBackupAt:
+      typeof saved.lastManualBackupAt === 'number' ? saved.lastManualBackupAt : null
   }
 }
 

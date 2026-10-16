@@ -1,6 +1,8 @@
 import { dialog, ipcMain } from 'electron'
 import { z } from 'zod'
 import { ipcHandler } from './helpers'
+import { notifyAppStateChanged } from '../events/appStateEvents'
+import { updateAutoBackupSettings } from '../services/autoBackupSettings'
 import { createBackupZip, getBackupBuildKind, restoreBackupZip } from '../services/backupService'
 import { BackupExportSchema, IPC } from '@shared/ipc/contracts'
 import type { BackupExportResult, BackupImportResult } from '@shared/models'
@@ -20,6 +22,8 @@ export function registerBackupHandlers(): void {
         if (result.canceled || !result.filePath) return { cancelled: true }
 
         await createBackupZip(result.filePath, gallerySettings)
+        updateAutoBackupSettings({ lastManualBackupAt: Date.now() })
+        notifyAppStateChanged('backup')
         return { cancelled: false, filePath: result.filePath }
       }
     )
