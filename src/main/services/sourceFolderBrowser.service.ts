@@ -25,7 +25,7 @@ const MEDIA_EXTENSIONS: Record<string, MediaType> = {
   '.mov': 'video'
 }
 
-function typeForExtension(fileName: string): MediaType | null {
+export function typeForExtension(fileName: string): MediaType | null {
   return MEDIA_EXTENSIONS[extname(fileName).toLowerCase()] ?? null
 }
 

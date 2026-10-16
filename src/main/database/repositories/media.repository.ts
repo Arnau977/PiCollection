@@ -308,6 +308,11 @@ export function findMediaRowByHash(db: Kysely<DB>, hash: string): Promise<MediaT
   return db.selectFrom('media').selectAll().where('hash', '=', hash).executeTakeFirst()
 }
 
+/** Every media with this content - a moved file may share it with a copy still in place. */
+export function findMediaRowsByHash(db: Kysely<DB>, hash: string): Promise<MediaTable[]> {
+  return db.selectFrom('media').selectAll().where('hash', '=', hash).execute()
+}
+
 /** Only what the near-duplicate scan compares - it doesn't need the rest of each row. */
 export function listAllMediaHashes(
   db: Kysely<DB>
