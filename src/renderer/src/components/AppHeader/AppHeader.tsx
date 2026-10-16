@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Home, Images, Inbox, Database, Settings } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import { useAppUpdater } from '../../hooks/useAppUpdater'
+import { useBackupToast } from '../../hooks/useBackupToast'
 import { useEntityCacheSync } from '../../hooks/useEntityLists'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { SHORTCUTS, useShortcut } from '../../hooks/useShortcut'
@@ -51,6 +52,7 @@ export function AppHeader(): JSX.Element {
   // re-confirms the same update is still available.
   const [updateToastDismissed, setUpdateToastDismissed] = useState(false)
   const showUpdateToast = status.state === 'available' && !updateToastDismissed
+  const backupToast = useBackupToast()
 
   const isMediaDetail = MEDIA_DETAIL_PATTERN.test(location.pathname)
   const fromPendingQueue = Boolean(
@@ -111,10 +113,38 @@ export function AppHeader(): JSX.Element {
             actionLabel={t('settings.updateToastView')}
             onAction={() => {
               setUpdateToastDismissed(true)
-              navigate(PATH.SETTINGS)
+              navigate(PATH.SETTINGS, { state: { settingsTab: 'advanced' } })
             }}
             onDismiss={() => setUpdateToastDismissed(true)}
           />,
+          document.body
+        )}
+      {/* Waits for the update toast instead of stacking on top of it. */}
+      {backupToast.toast &&
+        !showUpdateToast &&
+        createPortal(
+          backupToast.toast === 'success' ? (
+            <Toast
+              message={t('settings.autoBackupToastDone')}
+              actionLabel={t('settings.autoBackupToastOpenFolder')}
+              onAction={() => {
+                backupToast.dismiss()
+                window.api.autoBackup.openFolder()
+              }}
+              onDismiss={backupToast.dismiss}
+            />
+          ) : (
+            <Toast
+              variant="error"
+              message={t('settings.autoBackupToastFailed')}
+              actionLabel={t('settings.updateToastView')}
+              onAction={() => {
+                backupToast.dismiss()
+                navigate(PATH.SETTINGS, { state: { settingsTab: 'data' } })
+              }}
+              onDismiss={backupToast.dismiss}
+            />
+          ),
           document.body
         )}
       {blurToast &&

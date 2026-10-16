@@ -57,4 +57,9 @@ export interface AutoBackupStatus extends AutoBackupConfig {
   /** When the next scheduled backup is due; null when automatic backups are off. */
   nextDueAt: number | null
   running: boolean
+  /**
+   * Whether the latest successful run actually wrote a file - an unforced run
+   * that finds the database unchanged succeeds without one. In-memory only.
+   */
+  lastRunWroteBackup: boolean
 }

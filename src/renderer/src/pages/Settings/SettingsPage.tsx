@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router-dom'
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components'
 import {
   Languages,
@@ -92,6 +93,10 @@ function useLoggingSettings(): {
 
 export default function SettingsPage(): JSX.Element {
   const { t, i18n } = useTranslation()
+  // A toast's "View" opens the tab it's about (see AppHeader); keyed on the
+  // navigation so a second "View" while already here re-selects it.
+  const location = useLocation()
+  const initialTab = (location.state as { settingsTab?: string } | null)?.settingsTab
   const { defaults, setDefaults } = useGalleryDefaults()
   const updater = useAppUpdater()
   const confirm = useConfirm()
@@ -122,7 +127,7 @@ export default function SettingsPage(): JSX.Element {
     <div className="page settings-page">
       <h1 className="page-title">{t('settings.title')}</h1>
 
-      <Tabs className="settings-tabs">
+      <Tabs key={location.key} className="settings-tabs" defaultSelectedKey={initialTab}>
         <TabList aria-label={t('settings.title')} className="settings-tablist">
           <Tab id="general" className="settings-tab">
             {t('settings.tabGeneral')}
