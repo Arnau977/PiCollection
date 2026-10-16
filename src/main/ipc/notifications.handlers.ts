@@ -7,7 +7,7 @@ import {
   refreshSourceFolderScanIfStale,
   snoozeNotification
 } from '../services/notifications/notifications.service'
-import { readDisabledAlerts, setAlertEnabled } from '../services/notifications/notificationSettings'
+import { readAlertSettings, setAlertEnabled } from '../services/notifications/notificationSettings'
 
 export function registerNotificationHandlers(): void {
   ipcMain.handle(
@@ -26,8 +26,8 @@ export function registerNotificationHandlers(): void {
   )
 
   ipcMain.handle(
-    IPC.notifications.getDisabled,
-    ipcHandler(IPC.notifications.getDisabled, z.void(), async () => readDisabledAlerts())
+    IPC.notifications.getAlerts,
+    ipcHandler(IPC.notifications.getAlerts, z.void(), async () => readAlertSettings())
   )
 
   // Refreshing right away updates the bell without waiting for the next trigger.
@@ -37,9 +37,9 @@ export function registerNotificationHandlers(): void {
       IPC.notifications.setEnabled,
       NotificationSetEnabledSchema,
       async ({ kind, enabled }) => {
-        const disabled = setAlertEnabled(kind, enabled)
+        const alerts = setAlertEnabled(kind, enabled)
         await refreshNotifications()
-        return disabled
+        return alerts
       }
     )
   )

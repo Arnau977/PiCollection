@@ -297,7 +297,7 @@ export const IPC = {
   notifications: {
     getAll: 'notifications:get-all',
     snooze: 'notifications:snooze',
-    getDisabled: 'notifications:get-disabled',
+    getAlerts: 'notifications:get-alerts',
     setEnabled: 'notifications:set-enabled',
     /** main -> renderer push (webContents.send), not an invoke channel. */
     changed: 'notifications:changed'

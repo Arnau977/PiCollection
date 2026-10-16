@@ -5,19 +5,20 @@ import { APP_ALERT_KINDS, type AppAlertKind } from '@shared/models'
 import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
 
 /**
- * One switch per alert (every bell item plus the auto-import toast). A
+ * One switch per alert (every bell item but updates, which always show, plus
+ * the auto-import toast), starting from ALERT_DEFAULTS. A
  * switched-off alert is still computed in main, so turning it back on shows
  * it right away if it still applies.
  */
 export function NotificationsSection(): JSX.Element {
   const { t } = useTranslation()
-  const [disabled, setDisabled] = useState<AppAlertKind[] | null>(null)
+  const [alerts, setAlerts] = useState<Record<AppAlertKind, boolean> | null>(null)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    window.api.notifications.getDisabled().then((result) => {
-      if (result.success) setDisabled(result.data)
+    window.api.notifications.getAlerts().then((result) => {
+      if (result.success) setAlerts(result.data)
       else setError(result.error.message)
     })
   }, [])
@@ -26,7 +27,7 @@ export function NotificationsSection(): JSX.Element {
     setPending(true)
     const result = await window.api.notifications.setEnabled(kind, enabled)
     if (result.success) {
-      setDisabled(result.data)
+      setAlerts(result.data)
       setError(null)
     } else {
       setError(result.error.message)
@@ -48,8 +49,8 @@ export function NotificationsSection(): JSX.Element {
             <input
               type="checkbox"
               aria-label={label}
-              checked={disabled !== null && !disabled.includes(kind)}
-              disabled={disabled === null || pending}
+              checked={alerts?.[kind] ?? false}
+              disabled={alerts === null || pending}
               onChange={(e) => void toggle(kind, e.target.checked)}
             />
           </SettingsRow>

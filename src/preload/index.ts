@@ -193,9 +193,12 @@ export const api = {
       ipcRenderer.invoke(IPC.notifications.getAll),
     snooze: (kind: AppNotificationKind): Promise<IpcResult<AppNotification[]>> =>
       ipcRenderer.invoke(IPC.notifications.snooze, { kind }),
-    getDisabled: (): Promise<IpcResult<AppAlertKind[]>> =>
-      ipcRenderer.invoke(IPC.notifications.getDisabled),
-    setEnabled: (kind: AppAlertKind, enabled: boolean): Promise<IpcResult<AppAlertKind[]>> =>
+    getAlerts: (): Promise<IpcResult<Record<AppAlertKind, boolean>>> =>
+      ipcRenderer.invoke(IPC.notifications.getAlerts),
+    setEnabled: (
+      kind: AppAlertKind,
+      enabled: boolean
+    ): Promise<IpcResult<Record<AppAlertKind, boolean>>> =>
       ipcRenderer.invoke(IPC.notifications.setEnabled, { kind, enabled }),
     /** Subscribes to tray pushes; returns an unsubscribe function. */
     onChanged: (listener: (items: AppNotification[]) => void): (() => void) => {

@@ -38,7 +38,7 @@ beforeEach(() => {
           .mockResolvedValue({ success: true, data: { supported: true, enabled: false } })
       },
       notifications: {
-        getDisabled: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        getAlerts: vi.fn().mockResolvedValue({ success: true, data: {} }),
         setEnabled: vi.fn()
       },
       autoBackup: {

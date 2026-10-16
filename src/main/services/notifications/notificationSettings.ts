@@ -1,4 +1,5 @@
 import {
+  ALERT_DEFAULTS,
   APP_ALERT_KINDS,
   APP_NOTIFICATION_KINDS,
   type AppAlertKind,
@@ -16,12 +17,15 @@ export type NotificationSnoozes = Partial<Record<AppNotificationKind, Notificati
 
 interface NotificationSettings {
   snoozed: NotificationSnoozes
-  /** Alerts switched off in Settings > General > Notifications. */
-  disabled: AppAlertKind[]
+  /** Switches the user flipped in Settings > General > Notifications; the rest follow ALERT_DEFAULTS. */
+  alerts: Partial<Record<AppAlertKind, boolean>>
 }
 
 function parse(raw: unknown): NotificationSettings {
-  const saved = (raw ?? {}) as { snoozed?: Record<string, unknown>; disabled?: unknown }
+  const saved = (raw ?? {}) as {
+    snoozed?: Record<string, unknown>
+    alerts?: Record<string, unknown>
+  }
   const savedSnoozes = (saved.snoozed ?? {}) as Record<
     string,
     Partial<NotificationSnooze> | undefined
@@ -36,16 +40,18 @@ function parse(raw: unknown): NotificationSettings {
       }
     }
   }
-  const disabled = Array.isArray(saved.disabled)
-    ? APP_ALERT_KINDS.filter((kind) => (saved.disabled as unknown[]).includes(kind))
-    : []
-  return { snoozed, disabled }
+  const alerts: Partial<Record<AppAlertKind, boolean>> = {}
+  for (const kind of APP_ALERT_KINDS) {
+    const value = saved.alerts?.[kind]
+    if (typeof value === 'boolean') alerts[kind] = value
+  }
+  return { snoozed, alerts }
 }
 
 const settingsFile = createJsonSettingsFile<NotificationSettings>(
   'notifications-settings.json',
   parse,
-  { snoozed: {}, disabled: [] }
+  { snoozed: {}, alerts: {} }
 )
 
 export function readSnoozes(): NotificationSnoozes {
@@ -56,20 +62,22 @@ export function writeSnoozes(snoozed: NotificationSnoozes): void {
   settingsFile.write({ ...settingsFile.read(), snoozed })
 }
 
-export function readDisabledAlerts(): AppAlertKind[] {
-  return settingsFile.read().disabled
+export function readAlertSettings(): Record<AppAlertKind, boolean> {
+  return { ...ALERT_DEFAULTS, ...settingsFile.read().alerts }
 }
 
-export function isAlertEnabled(kind: AppAlertKind): boolean {
-  return !settingsFile.read().disabled.includes(kind)
+/** Updates have no switch: they're always shown. */
+export function isAlertEnabled(kind: AppNotificationKind | AppAlertKind): boolean {
+  return kind === 'update-available' ? true : readAlertSettings()[kind]
 }
 
-export function setAlertEnabled(kind: AppAlertKind, enabled: boolean): AppAlertKind[] {
+export function setAlertEnabled(
+  kind: AppAlertKind,
+  enabled: boolean
+): Record<AppAlertKind, boolean> {
   const current = settingsFile.read()
-  const others = current.disabled.filter((disabledKind) => disabledKind !== kind)
-  const disabled = enabled ? others : [...others, kind]
-  settingsFile.write({ ...current, disabled })
-  return disabled
+  settingsFile.write({ ...current, alerts: { ...current.alerts, [kind]: enabled } })
+  return readAlertSettings()
 }
 
 /** Test-only. */

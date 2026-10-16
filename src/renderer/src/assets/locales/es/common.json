@@ -13,7 +13,6 @@
   "notifications": {
     "settingsTitle": "Notificaciones",
     "settingsHint": "Elige qué avisos aparecen en la campana y como notificaciones.",
-    "alert_update-available": "Actualizaciones",
     "alert_backup-failed": "Copia automática fallida",
     "alert_backup-stale": "Sin copia reciente",
     "alert_pending-stale": "Elementos esperando en Pendientes",
