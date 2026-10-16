@@ -609,13 +609,11 @@
   },
   "videoGif": {
     "open": "Crear GIF",
-    "title": "Crear un GIF",
-    "clipLegend": "Fragmento (hasta {{max}} s)",
-    "start": "Inicio (s)",
-    "end": "Fin (s)",
-    "useCurrent": "Usar el tiempo actual",
+    "title": "Crear un GIF",
+    "clipSummary": "{{seconds}} s",
+    "longClipNote": "Los GIF largos pueden pesar mucho y tardar en crearse.",
+    "errorTooLarge": "Este GIF es demasiado grande para guardarlo (más de {{max}}). Prueba con un fragmento más corto o un tamaño menor.",
     "errorOrder": "El fin tiene que ir después del inicio.",
-    "errorTooLong": "El fragmento puede durar como máximo {{max}} segundos.",
     "presetLegend": "Tamaño",
     "presetCustom": "Personalizado",
     "width": "Ancho",

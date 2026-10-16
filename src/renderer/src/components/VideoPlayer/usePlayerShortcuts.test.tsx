@@ -146,3 +146,24 @@ describe('usePlayerShortcuts arrows', () => {
     expect(forward).not.toHaveBeenCalled()
   })
 })
+
+describe('usePlayerShortcuts held keys', () => {
+  it('claims held-down repeats of ← / → and Space without acting on them again', () => {
+    const forward = vi.fn()
+    const togglePlay = vi.fn()
+    const { getByText } = render(<Player actions={{ forward, togglePlay }} />)
+    const pillButton = getByText('pill button')
+    focusWith(pillButton, 'keyboard')
+
+    press(pillButton, 'ArrowRight')
+    const repeat = press(pillButton, 'ArrowRight', { repeat: true })
+    expect(forward).toHaveBeenCalledTimes(1)
+    expect(repeat.defaultPrevented).toBe(true)
+
+    pillButton.blur()
+    press(document.body, ' ')
+    const spaceRepeat = press(document.body, ' ', { repeat: true })
+    expect(togglePlay).toHaveBeenCalledTimes(1)
+    expect(spaceRepeat.defaultPrevented).toBe(true)
+  })
+})

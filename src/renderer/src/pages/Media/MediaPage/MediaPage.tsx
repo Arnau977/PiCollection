@@ -13,6 +13,7 @@ import { SHORTCUTS, ariaShortcut, formatShortcut, useShortcut } from '../../../h
 import { MediaForm } from '../MediaForm/MediaForm'
 import { Toast } from '../../../components/Toast/Toast'
 import { VideoToGifDialog } from '../VideoToGif/VideoToGifDialog'
+import type { Section } from '../../../components/VideoPlayer/VideoPlayer'
 import { formatMegabytes } from '../VideoToGif/gifPresets'
 import './MediaPage.css'
 
@@ -39,6 +40,8 @@ const MediaPage: React.FC = () => {
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [gifDialogOpen, setGifDialogOpen] = useState(false)
+  // The section marked in the video's player: Make GIF opens with it as the clip.
+  const [videoSection, setVideoSection] = useState<Section | null>(null)
   const [gifToast, setGifToast] = useState<string | null>(null)
   const scrollRegionRef = useRef<HTMLDivElement>(null)
   const savedScrollTop = useRef(0)
@@ -270,12 +273,19 @@ const MediaPage: React.FC = () => {
             onReplaced={(target) => (pendingQueue ? advanceQueue() : goToMedia(target.id))}
           />
         ) : (
-          <Media {...media} previousId={previousId} nextId={nextId} onNavigate={goToMedia} />
+          <Media
+            {...media}
+            previousId={previousId}
+            nextId={nextId}
+            onNavigate={goToMedia}
+            onVideoSectionChange={setVideoSection}
+          />
         )}
       </div>
       {gifDialogOpen && media.type === 'video' && (
         <VideoToGifDialog
           video={media}
+          initialClip={videoSection}
           onClose={() => setGifDialogOpen(false)}
           onCreated={(gif, sizeBytes, settings) => {
             setGifDialogOpen(false)

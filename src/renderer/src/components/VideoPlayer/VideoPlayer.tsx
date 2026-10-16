@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useVideoPlayer } from './useVideoPlayer'
-import { usePlayerShortcuts } from './usePlayerShortcuts'
+import { isFrontPlayer, usePlayerShortcuts } from './usePlayerShortcuts'
 import { getInputModality } from './inputModality'
 import { useFrameRate } from './useFrameRate'
-import { useSection } from './useSection'
+import { normalizeSection, useSection, type UseSection } from './useSection'
 import { VideoControls } from './VideoControls'
 import { SKIP_SECONDS, VOLUME_STEP } from './playerConstants'
 import './VideoPlayer.css'
@@ -24,7 +24,10 @@ interface VideoPlayerProps {
   compact?: boolean
   className?: string
   onSectionChange?: (section: Section | null) => void
+  /** Make GIF: the A-B range is the host's clip, always shown and edited through onChange. */
   rangeMode?: { value: Section; onChange: (section: Section) => void }
+  /** The video's duration once known (null while loading). */
+  onDurationChange?: (duration: number | null) => void
 }
 
 const HIDE_AFTER_MS = 2000
@@ -42,7 +45,9 @@ export function VideoPlayer({
   muted,
   compact = false,
   className,
-  onSectionChange
+  onSectionChange,
+  rangeMode,
+  onDurationChange
 }: VideoPlayerProps): JSX.Element {
   const { t } = useTranslation()
   const rootRef = useRef<HTMLDivElement | null>(null)
@@ -60,7 +65,29 @@ export function VideoPlayer({
   }, [player])
 
   const fps = useFrameRate(videoRef, src)
-  const sectionState = useSection(player.duration)
+  const ownSection = useSection(player.duration)
+  // Range mode (Make GIF): the host owns the range - the clip - so the same
+  // looping, markers and [ ] keys edit it through onChange instead. Edits
+  // that would leave it too short are dropped, as for the own section.
+  const sectionState: UseSection = rangeMode
+    ? {
+        section: rangeMode.value,
+        pendingStart: null,
+        setA: (time): void => {
+          const next = normalizeSection(time, rangeMode.value.end, player.duration)
+          if (next) rangeMode.onChange(next)
+        },
+        setB: (time): void => {
+          const next = normalizeSection(rangeMode.value.start, time, player.duration)
+          if (next) rangeMode.onChange(next)
+        },
+        setSection: (range): void => {
+          const next = normalizeSection(range.start, range.end, player.duration)
+          if (next) rangeMode.onChange(next)
+        },
+        clear: (): void => undefined
+      }
+    : ownSection
   const { section } = sectionState
   const [flash, setFlash] = useState<string | null>(null)
   const flashTimer = useRef<ReturnType<typeof setTimeout>>()
@@ -101,7 +128,7 @@ export function VideoPlayer({
 
   // The section is per video: a new src (the detail page reuses this player
   // from one video to the next) starts without one.
-  const { clear: clearSection } = sectionState
+  const { clear: clearSection } = ownSection
   useEffect(() => clearSection(), [src, clearSection])
 
   // The section loops on its own, whatever the Loop toggle says: reaching B
@@ -134,9 +161,15 @@ export function VideoPlayer({
     }
   }, [section, seek])
 
+  const ownRange = ownSection.section
   useEffect(() => {
-    onSectionChange?.(section)
-  }, [section, onSectionChange])
+    if (!rangeMode) onSectionChange?.(ownRange)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ownRange, onSectionChange])
+
+  useEffect(() => {
+    onDurationChange?.(player.duration)
+  }, [player.duration, onDurationChange])
 
   function nudge(): void {
     setRecentlyMoved(true)
@@ -151,6 +184,25 @@ export function VideoPlayer({
     },
     []
   )
+
+  // A dialog opening on top (Make GIF, a confirmation, the compare view)
+  // pauses this player: it's no longer the one in front, and its sound would
+  // play under the dialog. Only watched while playing.
+  useEffect(() => {
+    const root = rootRef.current
+    const video = videoRef.current
+    if (!player.playing || !root || !video) return
+    const observer = new MutationObserver(() => {
+      if (!isFrontPlayer(root) && !video.paused) video.pause()
+    })
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['aria-modal']
+    })
+    return (): void => observer.disconnect()
+  }, [player.playing])
 
   // Playback starting (autoplay, a shortcut) counts as activity: the pill
   // shows, then hides 2 s later even if the pointer never moves.
@@ -196,6 +248,7 @@ export function VideoPlayer({
       <VideoControls
         player={player}
         section={sectionState}
+        sectionControl={!rangeMode}
         compact={compact}
         onToggleFullscreen={toggleFullscreen}
         onPointerEnter={() => setOverControls(true)}

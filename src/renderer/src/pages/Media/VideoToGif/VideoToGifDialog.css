@@ -6,11 +6,18 @@
   overflow-y: auto;
 }
 
-.video-gif-preview {
+/* The clip is picked on the player: its markers are the start and end. */
+.video-gif-player {
   width: 100%;
-  max-height: 36vh;
   border-radius: var(--radius-md);
+  overflow: hidden;
   background: var(--color-background);
+}
+
+.video-gif-player .video-player-media {
+  width: 100%;
+  max-height: 40vh;
+  object-fit: contain;
 }
 
 .video-gif-dialog fieldset {
@@ -32,28 +39,35 @@
 }
 
 .video-gif-clip {
-  flex-direction: row !important;
-  flex-wrap: wrap;
-  gap: var(--space-3) !important;
-}
-
-.video-gif-edge {
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
   gap: var(--space-2);
 }
 
-.video-gif-edge label,
+/* Locked while the GIF is being made, like the fieldsets around it. */
+.video-gif-clip.is-busy {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.video-gif-clip-summary {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.video-gif-long-note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
 .video-gif-custom label {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
   font-size: 0.8rem;
   color: var(--color-text-muted);
-}
-
-.video-gif-edge input {
-  width: 6rem;
 }
 
 /* Same segmented look as the gallery's grid-size group. */

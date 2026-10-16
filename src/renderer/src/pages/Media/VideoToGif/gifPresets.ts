@@ -31,8 +31,14 @@ export const GIF_PRESETS: Record<Exclude<GifPresetId, 'custom'>, GifSettings> = 
 /** Starting values of the custom size, before the user picks their own. */
 export const DEFAULT_CUSTOM_SETTINGS: GifSettings = { width: 720, fps: 20 }
 
-/** Longest clip that can be converted: GIFs grow fast and are meant to be short. */
-export const MAX_CLIP_SECONDS = 10
+/**
+ * From this length on the dialog notes that the GIF may get very large and
+ * slow to make. Not a limit: a loop can need 15 s and a few frames more.
+ */
+export const LONG_CLIP_SECONDS = 30
+
+/** The clip offered when the player had no section marked. */
+export const DEFAULT_CLIP_SECONDS = 5
 
 /**
  * GIF frame delays are in hundredths of a second and browsers slow anything

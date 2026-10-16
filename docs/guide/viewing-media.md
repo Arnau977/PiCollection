@@ -13,8 +13,9 @@ see the time under the cursor), **Loop**, **Speed** (0.25× to 2×), volume and
 full screen. The bar fades out while the video plays and you don't move the
 mouse, and stays up while it's paused or you're using the keyboard in it.
 Loop, volume and mute carry over to the next video; speed goes back to
-normal. Keys: `Space` play/pause, `L` loop, `M` mute, `F` full screen, and
-`←` / `→` go back or forward 5 seconds and `↑` / `↓` change the volume once
+normal. A video pauses itself when a dialog (such as Make GIF) opens over it. Keys: `Space` play/pause, `L` loop, `M` mute, `F` full screen, and
+`←` / `→` go back or forward 5 seconds and `↑` / `↓` change the volume (1% per
+press; hold the key to keep going) once
 you've tabbed into its controls (elsewhere they still move to the previous or
 next item, or scroll); in full screen the arrows always go to the player.
 Keys go to the player only when no other control on the page has focus.
@@ -58,11 +59,18 @@ while adding a file, before it's saved - and in the viewer):
 
 ## Video to GIF
 
-**Make GIF** on a video's page turns a clip of up to 10 seconds into a GIF,
-entirely on your computer:
+**Make GIF** on a video's page turns a clip of it into a GIF, entirely on
+your computer:
 
-1. Set the clip's **Start** and **End** (up to 10 seconds); **Use current time**
-   takes the video's current position.
+1. Pick the clip on the dialog's player: its two markers on the timeline are
+   the start and end - drag them, or press `[` / `]` at the current time, and
+   play to preview the clip in a loop. If you had [looped a
+   section](#playing-videos) on the video's page, the clip starts as that
+   section; otherwise as the first 5 seconds. There's no length limit (a loop
+   can need 15 seconds and a few frames more); from 30 seconds on, a note
+   reminds you that long GIFs get large and slow to make. The app saves GIFs
+   up to 1 GB; past that it tells you so - use a shorter clip or a smaller
+   size.
 2. Choose a size: **Discord (≤ 10 MB)** or **X / Twitter (≤ 15 MB)** re-encode
    smaller until the file fits; **Gallery (best quality)** keeps the video's
    own size and every frame (up to 50 fps, the fastest a GIF plays) and

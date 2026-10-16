@@ -264,7 +264,10 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   the viewport so its actions row never scrolls away; while it works, the
   inputs are locked (`<fieldset disabled>`), Escape/backdrop don't close
   it, a `<progress>` + `role="status"` line shows progress, and Cancel
-  becomes Stop. Where: `pages/Media/VideoToGif/VideoToGifDialog.tsx`.
+  becomes Stop. Where: `pages/Media/VideoToGif/VideoToGifDialog.tsx`. Its
+  clip is picked on the app's video player in range mode (the A↔B markers
+  are the clip's ends, the section marked on the detail page carries over),
+  with no length cap - only a note from 30 s.
 
 ## Shared components to reach for first
 

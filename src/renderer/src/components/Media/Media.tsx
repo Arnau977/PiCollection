@@ -18,7 +18,7 @@ import { useTagFinder } from '../../hooks/useTagFinder'
 import { buildAncestorAwareEntityTree } from '../../utils/buildEntityTree'
 import { formatDate, formatDateTime } from '../../utils/formatDate'
 import { Lightbox } from '../Lightbox/Lightbox'
-import { VideoPlayer } from '../VideoPlayer/VideoPlayer'
+import { VideoPlayer, type Section } from '../VideoPlayer/VideoPlayer'
 import { TagFinder } from '../TagFinder/TagFinder'
 import { SimilarMediaPanel } from './SimilarMediaPanel'
 import './Media.css'
@@ -29,6 +29,8 @@ interface MediaProps extends MediaModel {
   previousId?: string | null
   nextId?: string | null
   onNavigate?: (id: string) => void
+  /** The section marked in a video's player, so Make GIF can start from it. */
+  onVideoSectionChange?: (section: Section | null) => void
 }
 
 export default function Media({
@@ -47,7 +49,8 @@ export default function Media({
   pendingTagging,
   previousId = null,
   nextId = null,
-  onNavigate
+  onNavigate,
+  onVideoSectionChange
 }: MediaProps): JSX.Element {
   const { t } = useTranslation()
   const mediaUrl = toMediaUrl(route)
@@ -70,7 +73,11 @@ export default function Media({
           // Never opens the Lightbox: the player handles play/fullscreen itself,
           // and opening the Lightbox on top of an already-playing video used to
           // start a second, independent playback (double audio).
-          <VideoPlayer src={mediaUrl} className="media-detail-player" />
+          <VideoPlayer
+            src={mediaUrl}
+            className="media-detail-player"
+            onSectionChange={onVideoSectionChange}
+          />
         )}
         {showNavZones && previousId && (
           <button

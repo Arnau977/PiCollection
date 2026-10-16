@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { VideoPlayer } from './VideoPlayer'
 import { loadVideoPlayerPrefs } from './videoPlayerPrefs'
@@ -202,7 +202,7 @@ describe('VideoPlayer section, frames and volume keys', () => {
     expect(video().currentTime).toBe(before)
   })
 
-  it('↑ raises the volume 5% with keyboard focus inside, and shows it', () => {
+  it('↑ raises the volume 1% with keyboard focus inside, and shows it', () => {
     window.localStorage.setItem(
       'picollection:video-player',
       JSON.stringify({ loop: false, volume: 0.5, muted: false })
@@ -213,8 +213,8 @@ describe('VideoPlayer section, frames and volume keys', () => {
 
     key('ArrowUp')
 
-    expect(video().volume).toBeCloseTo(0.55)
-    expect(screen.getByText('Volume 55%')).toBeInTheDocument()
+    expect(video().volume).toBeCloseTo(0.51)
+    expect(screen.getByText('Volume 51%')).toBeInTheDocument()
   })
 
   it('arrows go to the player in full screen even with nothing focused', () => {
@@ -318,7 +318,7 @@ describe('VideoPlayer section edge cases', () => {
     key('ArrowDown')
 
     expect(video().muted).toBe(true)
-    expect(video().volume).toBeCloseTo(0.45)
+    expect(video().volume).toBeCloseTo(0.49)
   })
 
   it('folds speed and the section into a More menu in compact mode', async () => {
@@ -351,5 +351,100 @@ describe('VideoPlayer volume hover', () => {
       screen.getByRole('slider', { name: 'Volume' }).closest('.video-volume-group')!
     )
     expect(screen.queryByText('65%')).not.toBeInTheDocument()
+  })
+})
+
+describe('VideoPlayer range mode (Make GIF)', () => {
+  it('moves the clip ends with [ and ] through onChange, without a section button', () => {
+    const onChange = vi.fn()
+    render(<VideoPlayer src="app://x.mp4" rangeMode={{ value: { start: 2, end: 8 }, onChange }} />)
+    Object.defineProperty(video(), 'duration', { configurable: true, value: 20 })
+    act(() => {
+      video().dispatchEvent(new Event('loadedmetadata'))
+    })
+    expect(screen.queryByRole('button', { name: /section/i })).not.toBeInTheDocument()
+
+    act(() => {
+      video().currentTime = 5
+      video().dispatchEvent(new Event('timeupdate'))
+    })
+    act(() => {
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', { key: ']', bubbles: true, cancelable: true })
+      )
+    })
+    expect(onChange).toHaveBeenLastCalledWith({ start: 2, end: 5 })
+
+    act(() => {
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', { key: '[', bubbles: true, cancelable: true })
+      )
+    })
+    expect(onChange).toHaveBeenLastCalledWith({ start: 5, end: 8 })
+  })
+})
+
+describe('VideoPlayer volume steps', () => {
+  it('keeps changing the volume while ↑ is held down, 1% per step', () => {
+    window.localStorage.setItem(
+      'picollection:video-player',
+      JSON.stringify({ loop: false, volume: 0.5, muted: false })
+    )
+    render(<VideoPlayer src="app://x.mp4" />)
+    fireEvent.keyDown(document.body, { key: 'Tab' })
+    act(() => screen.getByRole('button', { name: /^Play/ }).focus())
+
+    for (const repeat of [false, true, true, true]) {
+      act(() => {
+        document.body.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'ArrowUp', repeat, bubbles: true, cancelable: true })
+        )
+      })
+    }
+
+    expect(video().volume).toBeCloseTo(0.54)
+  })
+
+  it('moves the volume slider in 1% steps', () => {
+    render(<VideoPlayer src="app://x.mp4" />)
+    expect(screen.getByRole('slider', { name: 'Volume' })).toHaveAttribute('step', '0.01')
+  })
+})
+
+describe('VideoPlayer behind a dialog', () => {
+  it('pauses when a dialog opens on top of it', async () => {
+    render(<VideoPlayer src="app://x.mp4" />)
+    act(() => {
+      void video().play()
+    })
+    expect(video().paused).toBe(false)
+
+    const dialog = document.createElement('div')
+    dialog.setAttribute('aria-modal', 'true')
+    act(() => {
+      document.body.appendChild(dialog)
+    })
+
+    await waitFor(() => expect(video().paused).toBe(true))
+    dialog.remove()
+  })
+
+  it('keeps playing when the dialog is the one it lives in', async () => {
+    render(
+      <div aria-modal="true">
+        <VideoPlayer src="app://x.mp4" />
+      </div>
+    )
+    act(() => {
+      void video().play()
+    })
+    const other = document.createElement('span')
+    act(() => {
+      document.body.appendChild(other)
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(video().paused).toBe(false)
+    other.remove()
   })
 })

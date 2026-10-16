@@ -29,11 +29,13 @@ import type { UseSection } from './useSection'
 import { VideoTimeline } from './VideoTimeline'
 import { formatTime } from './formatTime'
 import { PLAYER_SHORTCUT_LABELS, type PlayerAction } from './usePlayerShortcuts'
-import { PLAYBACK_RATES, SKIP_SECONDS } from './playerConstants'
+import { PLAYBACK_RATES, SKIP_SECONDS, VOLUME_STEP } from './playerConstants'
 
 interface VideoControlsProps {
   player: VideoPlayerState
   section: UseSection
+  /** The "Loop section" control; off in range mode, where the range is the clip. */
+  sectionControl?: boolean
   compact: boolean
   onToggleFullscreen: () => void
   onPointerEnter: () => void
@@ -47,6 +49,7 @@ interface VideoControlsProps {
 export function VideoControls({
   player,
   section,
+  sectionControl = true,
   compact,
   onToggleFullscreen,
   onPointerEnter,
@@ -180,11 +183,13 @@ export function VideoControls({
                     </MenuItem>
                   ))}
                 </MenuSection>
-                <MenuSection aria-label={t('videoPlayer.loopSection')}>
-                  <MenuItem id="section" className="video-menu-item" textValue={sectionLabel}>
-                    {sectionLabel}
-                  </MenuItem>
-                </MenuSection>
+                {sectionControl && (
+                  <MenuSection aria-label={t('videoPlayer.loopSection')}>
+                    <MenuItem id="section" className="video-menu-item" textValue={sectionLabel}>
+                      {sectionLabel}
+                    </MenuItem>
+                  </MenuSection>
+                )}
               </Menu>
             </Popover>
           </MenuTrigger>
@@ -192,14 +197,16 @@ export function VideoControls({
           <>
             {/* An action button named for what it does next (no pressed
                 state: its label already changes A -> B -> clear). */}
-            <button
-              type="button"
-              className="video-ctrl"
-              onClick={sectionAction}
-              {...shortcutProps(sectionLabel, sectionShortcut)}
-            >
-              <Brackets size={16} />
-            </button>
+            {sectionControl && (
+              <button
+                type="button"
+                className="video-ctrl"
+                onClick={sectionAction}
+                {...shortcutProps(sectionLabel, sectionShortcut)}
+              >
+                <Brackets size={16} />
+              </button>
+            )}
             <MenuTrigger>
               <Button className="video-ctrl video-ctrl-text" aria-label={t('videoPlayer.speed')}>
                 {player.rate === 1 ? '1×' : `${player.rate}×`}
@@ -257,7 +264,7 @@ export function VideoControls({
               className="video-volume"
               minValue={0}
               maxValue={1}
-              step={0.05}
+              step={VOLUME_STEP}
               value={player.muted ? 0 : player.volume}
               onChange={(value) => player.setVolume(value as number)}
             >

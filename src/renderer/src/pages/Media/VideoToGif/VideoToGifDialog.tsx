@@ -1,21 +1,25 @@
-import { useEffect, useId, useRef } from 'react'
+import { useCallback, useEffect, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
+import { MAX_GIF_BYTES } from '@shared/ipc/contracts'
 import {
   GIF_PRESETS,
-  MAX_CLIP_SECONDS,
+  LONG_CLIP_SECONDS,
   MAX_GIF_FPS,
   formatMegabytes,
   type GifPresetId,
   type GifSettings
 } from './gifPresets'
 import { useVideoToGif } from './useVideoToGif'
+import { VideoPlayer, type Section } from '../../../components/VideoPlayer/VideoPlayer'
 import '../../../components/ConfirmDialog/ConfirmDialog.css'
 import './VideoToGifDialog.css'
 
 interface VideoToGifDialogProps {
   video: MediaModel
+  /** The section marked in the detail page's player: the clip starts as it. */
+  initialClip?: Section | null
   onClose: () => void
   onCreated: (gif: MediaModel, sizeBytes: number, settings: GifSettings) => void
 }
@@ -27,23 +31,29 @@ const FPS_OPTIONS = [10, 12, 15, 20, 24]
 const round1 = (seconds: number): number => Math.round(seconds * 10) / 10
 
 /**
- * Picks a clip (up to 10 s) of a video and a size preset, then encodes it to
+ * Picks a clip of a video (no length limit) on its player's timeline and a
+ * size preset, then encodes it to
  * a GIF saved next to the video with the same metadata. Every input is
  * locked while it runs; Cancel stops the encoding.
  */
 export function VideoToGifDialog({
   video,
+  initialClip,
   onClose,
   onCreated
 }: VideoToGifDialogProps): JSX.Element {
   const { t } = useTranslation()
   const titleId = useId()
-  const previewRef = useRef<HTMLVideoElement>(null)
   const gif = useVideoToGif({
     video,
+    initialClip,
     onCreated,
     describeError: (code) =>
-      code === 'video-unreadable' ? t('videoGif.errorUnreadable') : t('videoGif.errorEncoding')
+      code === 'video-unreadable'
+        ? t('videoGif.errorUnreadable')
+        : code === 'too-large'
+          ? t('videoGif.errorTooLarge', { max: formatMegabytes(MAX_GIF_BYTES) })
+          : t('videoGif.errorEncoding')
   })
   const { clip, settings, state, busy } = gif
 
@@ -55,7 +65,14 @@ export function VideoToGifDialog({
     return (): void => document.removeEventListener('keydown', handleKeyDown)
   }, [busy, onClose])
 
-  const currentTime = (): number => round1(previewRef.current?.currentTime ?? 0)
+  const clipSeconds = Math.max(0, clip.end - clip.start)
+  const { setDuration } = gif
+  const onDurationChange = useCallback(
+    (seconds: number | null) => {
+      if (seconds !== null) setDuration(seconds)
+    },
+    [setDuration]
+  )
   const summary =
     settings.width === 'source' || settings.fps === 'source'
       ? t('videoGif.summarySource', { maxFps: MAX_GIF_FPS })
@@ -90,47 +107,33 @@ export function VideoToGifDialog({
           {t('videoGif.title')}
         </h3>
 
-        <video
-          ref={previewRef}
-          className="video-gif-preview"
-          src={toMediaUrl(video.route)}
-          controls
-          muted
-          onLoadedMetadata={(e) => gif.setDuration(round1(e.currentTarget.duration))}
-        />
-
-        <fieldset className="video-gif-clip" disabled={busy}>
-          <legend>{t('videoGif.clipLegend', { max: MAX_CLIP_SECONDS })}</legend>
-          {(['start', 'end'] as const).map((edge) => (
-            <div className="video-gif-edge" key={edge}>
-              <label>
-                <span>{t(`videoGif.${edge}`)}</span>
-                <input
-                  type="number"
-                  min={0}
-                  max={gif.duration ?? undefined}
-                  step={0.1}
-                  value={clip[edge]}
-                  onChange={(e) => gif.setClip({ ...clip, [edge]: Number(e.target.value) })}
-                />
-              </label>
-              <button
-                type="button"
-                className="btn"
-                onClick={() => gif.setClip({ ...clip, [edge]: currentTime() })}
-              >
-                {t('videoGif.useCurrent')}
-              </button>
-            </div>
-          ))}
-          {gif.clipError && (
-            <p className="video-gif-error" role="alert">
-              {t(gif.clipError === 'order' ? 'videoGif.errorOrder' : 'videoGif.errorTooLong', {
-                max: MAX_CLIP_SECONDS
-              })}
+        {/* The clip is picked on the player's own timeline: its two markers
+            are the start and end (drag them, or [ and ] at the current time),
+            and playing previews the clip in a loop. */}
+        <div className={busy ? 'video-gif-clip is-busy' : 'video-gif-clip'}>
+          <VideoPlayer
+            src={toMediaUrl(video.route)}
+            muted
+            className="video-gif-player"
+            // Locked while converting: the clip being encoded can't change under it.
+            rangeMode={{ value: clip, onChange: (next) => !busy && gif.setClip(next) }}
+            onDurationChange={onDurationChange}
+          />
+          <p className="video-gif-clip-summary">
+            {/* Just the length: the frame count is in the size summary below. */}
+            {t('videoGif.clipSummary', { seconds: round1(clipSeconds) })}
+          </p>
+          {clipSeconds >= LONG_CLIP_SECONDS && (
+            <p className="video-gif-long-note" role="status">
+              {t('videoGif.longClipNote')}
             </p>
           )}
-        </fieldset>
+          {gif.clipError && (
+            <p className="video-gif-error" role="alert">
+              {t('videoGif.errorOrder')}
+            </p>
+          )}
+        </div>
 
         <fieldset className="video-gif-presets" disabled={busy}>
           <legend>{t('videoGif.presetLegend')}</legend>
