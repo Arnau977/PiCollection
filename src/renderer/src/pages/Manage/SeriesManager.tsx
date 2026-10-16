@@ -10,6 +10,7 @@ import { Autocomplete } from '../../components/Autocomplete/Autocomplete'
 import { filterByQuery } from '../../utils/filterByQuery'
 import { fromAliasLines, toAliasLines } from '../../utils/aliasLines'
 import { AliasesField } from './AliasesField'
+import { useRevealAfterSave } from './useRevealAfterSave'
 import {
   loadManageSort,
   loadManageViewMode,
@@ -45,6 +46,7 @@ function getSeriesLabel(series: SeriesModel): string {
 export function SeriesManager(): JSX.Element {
   const { t } = useTranslation()
   const { data: seriesList, loading, refetch } = useSeries()
+  const { listRef, reveal } = useRevealAfterSave(seriesList)
   const confirm = useConfirm()
   const [form, setForm] = useState<SeriesFormValues>(EMPTY_FORM)
   const [editing, setEditing] = useState<SeriesModel | null>(null)
@@ -128,6 +130,7 @@ export function SeriesManager(): JSX.Element {
     if (result.success) {
       resetForm()
       setError(null)
+      reveal(result.data.id)
       refetch()
     } else {
       setError(result.error.message)
@@ -155,6 +158,7 @@ export function SeriesManager(): JSX.Element {
     return (
       <li
         key={series.id}
+        data-entity-id={series.id}
         className={`manage-list-item depth-${depth}${editing?.id === series.id ? ' manage-list-item-editing' : ''}`}
         style={depth > 0 ? { marginLeft: depth * 20 } : undefined}
       >
@@ -262,8 +266,8 @@ export function SeriesManager(): JSX.Element {
           />
         </div>
 
-        <div className="manage-list-scroll">
-          {loading ? (
+        <div className="manage-list-scroll" ref={listRef}>
+          {loading && seriesList.length === 0 ? (
             <p className="loading-state">{t('gallery.loading')}</p>
           ) : seriesList.length === 0 ? (
             <EmptyState icon={<BookOpen />} title={t('manage.empty')} />
