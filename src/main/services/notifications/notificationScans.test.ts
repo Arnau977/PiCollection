@@ -52,6 +52,19 @@ describe('notification scans', () => {
     expect(getScanResults().newFilesCount).toBeNull()
   })
 
+  it('counts only files created after the new-files baseline', async () => {
+    const folder = join(userDataDir, 'source')
+    await fs.mkdir(folder)
+    await fs.writeFile(join(folder, 'backlog.png'), '')
+    writeSourceFolder(folder)
+
+    await runScans({ sourceFolder: true }, Date.now() + 60_000)
+    expect(getScanResults().newFilesCount).toBe(0)
+
+    await runScans({ sourceFolder: true }, 0)
+    expect(getScanResults().newFilesCount).toBe(1)
+  })
+
   it('reports no missing files for an empty library', async () => {
     await runScans({ missing: true })
     expect(getScanResults().missingCount).toBe(0)

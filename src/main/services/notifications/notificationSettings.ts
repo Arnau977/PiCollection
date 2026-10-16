@@ -19,12 +19,19 @@ interface NotificationSettings {
   snoozed: NotificationSnoozes
   /** Switches the user flipped in Settings > General > Notifications; the rest follow ALERT_DEFAULTS. */
   alerts: Partial<Record<AppAlertKind, boolean>>
+  /**
+   * The "new files in the source folder" alert only counts files created
+   * after this - set when that alert is switched on or marked as seen - so a
+   * big never-imported backlog doesn't keep it lit forever.
+   */
+  newFilesSince: number | null
 }
 
 function parse(raw: unknown): NotificationSettings {
   const saved = (raw ?? {}) as {
     snoozed?: Record<string, unknown>
     alerts?: Record<string, unknown>
+    newFilesSince?: unknown
   }
   const savedSnoozes = (saved.snoozed ?? {}) as Record<
     string,
@@ -45,13 +52,14 @@ function parse(raw: unknown): NotificationSettings {
     const value = saved.alerts?.[kind]
     if (typeof value === 'boolean') alerts[kind] = value
   }
-  return { snoozed, alerts }
+  const newFilesSince = typeof saved.newFilesSince === 'number' ? saved.newFilesSince : null
+  return { snoozed, alerts, newFilesSince }
 }
 
 const settingsFile = createJsonSettingsFile<NotificationSettings>(
   'notifications-settings.json',
   parse,
-  { snoozed: {}, alerts: {} }
+  { snoozed: {}, alerts: {}, newFilesSince: null }
 )
 
 export function readSnoozes(): NotificationSnoozes {
@@ -76,8 +84,18 @@ export function setAlertEnabled(
   enabled: boolean
 ): Record<AppAlertKind, boolean> {
   const current = settingsFile.read()
-  settingsFile.write({ ...current, alerts: { ...current.alerts, [kind]: enabled } })
+  const newFilesSince =
+    kind === 'source-folder-new' && enabled ? Date.now() : current.newFilesSince
+  settingsFile.write({ ...current, alerts: { ...current.alerts, [kind]: enabled }, newFilesSince })
   return readAlertSettings()
+}
+
+export function readNewFilesSince(): number | null {
+  return settingsFile.read().newFilesSince
+}
+
+export function setNewFilesSince(since: number): void {
+  settingsFile.write({ ...settingsFile.read(), newFilesSince: since })
 }
 
 /** Test-only. */

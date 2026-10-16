@@ -3,6 +3,7 @@ import { mediaMaintenanceService } from '../mediaMaintenance.service'
 import { countImportableInSourceFolder } from '../sourceFolderBrowser.service'
 import { ensureSourceFolderWatcher } from '../sourceFolderWatcher/sourceFolderWatcher'
 import { logError } from '../../logging/logger'
+import { readNewFilesSince } from './notificationSettings'
 
 export interface ScanResults {
   /** null = not scanned yet (or the DB was closed): unknown, not zero. */
@@ -20,7 +21,10 @@ let running: Promise<void> | null = null
  * The disk walks behind two tray items, cached - they're too slow to run on
  * every ask. A call while one runs gets that run instead of starting another.
  */
-export function runScans(which: { missing?: boolean; sourceFolder?: boolean } = {}): Promise<void> {
+export function runScans(
+  which: { missing?: boolean; sourceFolder?: boolean } = {},
+  newFilesSince: number | null = readNewFilesSince()
+): Promise<void> {
   if (running) return running
   const all = which.missing === undefined && which.sourceFolder === undefined
   running = (async (): Promise<void> => {
@@ -31,7 +35,7 @@ export function runScans(which: { missing?: boolean; sourceFolder?: boolean } = 
       }
       if (all || which.sourceFolder) {
         ensureSourceFolderWatcher()
-        results.newFilesCount = await countImportableInSourceFolder()
+        results.newFilesCount = await countImportableInSourceFolder(newFilesSince)
         results.sourceFolderScannedAt = Date.now()
       }
     } catch (err) {
@@ -41,6 +45,11 @@ export function runScans(which: { missing?: boolean; sourceFolder?: boolean } = 
     running = null
   })
   return running
+}
+
+/** The user just saw (or dismissed) the new-files count: nothing is new as of now. */
+export function markNewFilesSeen(): void {
+  if (results.newFilesCount !== null) results.newFilesCount = 0
 }
 
 export function getScanResults(): ScanResults {

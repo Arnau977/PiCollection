@@ -19,6 +19,9 @@ const scanResults = {
 const runScans = vi.fn().mockResolvedValue(undefined)
 vi.mock('./notificationScans', () => ({
   getScanResults: () => ({ ...scanResults }),
+  markNewFilesSeen: () => {
+    scanResults.newFilesCount = 0
+  },
   runScans: (...args: unknown[]) => runScans(...args)
 }))
 
@@ -31,9 +34,8 @@ const {
   SNOOZE_MS,
   __resetNotificationsForTests
 } = await import('./notifications.service')
-const { resetNotificationSettingsCache, readSnoozes, setAlertEnabled } = await import(
-  './notificationSettings'
-)
+const { resetNotificationSettingsCache, readSnoozes, setAlertEnabled, readNewFilesSince } =
+  await import('./notificationSettings')
 const { resetAutoBackupSettingsCache, updateAutoBackupSettings } = await import(
   '../autoBackupSettings'
 )
@@ -235,6 +237,24 @@ describe('notifications', () => {
     const kinds = (await refreshNotifications(NOW)).map((item) => item.kind)
 
     expect(kinds).toEqual(['update-available', 'backup-failed'])
+  })
+
+  it('treats snoozing new files as "seen": a new baseline instead of a snooze', async () => {
+    scanResults.newFilesCount = 14_000
+    expect(await refreshNotifications(NOW)).toHaveLength(1)
+
+    expect(await snoozeNotification('source-folder-new', NOW)).toEqual([])
+    expect(readNewFilesSince()).toBe(NOW)
+    expect(readSnoozes()['source-folder-new']).toBeUndefined()
+
+    scanResults.newFilesCount = 1 // one picture saved afterwards
+    expect(await refreshNotifications(NOW + 1000)).toHaveLength(1)
+  })
+
+  it('sets the new-files baseline when that alert is switched on', () => {
+    const before = Date.now()
+    setAlertEnabled('source-folder-new', true)
+    expect(readNewFilesSince()).toBeGreaterThanOrEqual(before)
   })
 
   it('serializes overlapping refreshes so pushes stay in order', async () => {
