@@ -7,7 +7,24 @@ import { usePlayerShortcuts, type PlayerAction } from './usePlayerShortcuts'
 function Player({ actions }: { actions: Partial<Record<PlayerAction, () => void>> }): JSX.Element {
   const ref = useRef<HTMLDivElement>(null)
   usePlayerShortcuts(ref, actions)
-  return <div ref={ref} />
+  return (
+    <div ref={ref} data-testid="player">
+      <button type="button">pill button</button>
+    </div>
+  )
+}
+
+function press(target: Element, key: string, init: KeyboardEventInit = {}): KeyboardEvent {
+  const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
+  target.dispatchEvent(event)
+  return event
+}
+
+/** Focus as a keyboard user would (Tab), or as a mouse click does. */
+function focusWith(element: HTMLElement, how: 'keyboard' | 'pointer'): void {
+  if (how === 'keyboard') press(document.body, 'Tab')
+  else fireEvent.pointerDown(element)
+  element.focus()
 }
 
 describe('usePlayerShortcuts', () => {
@@ -23,12 +40,12 @@ describe('usePlayerShortcuts', () => {
       </>
     )
 
-    fireEvent.keyDown(document.body, { key: 'l' })
+    press(document.body, 'l')
     expect(modalLoop).toHaveBeenCalledTimes(1)
     expect(pageLoop).not.toHaveBeenCalled()
 
     rerender(<Player actions={{ loop: pageLoop }} />)
-    fireEvent.keyDown(document.body, { key: 'l' })
+    press(document.body, 'l')
     expect(pageLoop).toHaveBeenCalledTimes(1)
   })
 
@@ -43,32 +60,47 @@ describe('usePlayerShortcuts', () => {
     const input = container.querySelector('input')!
     input.focus()
 
-    fireEvent.keyDown(input, { key: 'l' })
+    press(input, 'l')
     expect(loop).not.toHaveBeenCalled()
   })
 
-  it('arrows on a slider are left to it', () => {
-    const forward = vi.fn()
-    const { container } = render(
-      <>
-        <Player actions={{ forward }} />
-        <div role="slider" tabIndex={0} aria-valuenow={0} />
-      </>
-    )
-    const slider = container.querySelector<HTMLElement>('[role="slider"]')!
-    slider.focus()
-
-    fireEvent.keyDown(slider, { key: 'ArrowRight' })
-    expect(forward).not.toHaveBeenCalled()
-  })
-
-  it('Space toggles play without scrolling the page', () => {
+  it('Space toggles play without scrolling the page when nothing is focused', () => {
     const togglePlay = vi.fn()
     render(<Player actions={{ togglePlay }} />)
 
-    const notCancelled = fireEvent.keyDown(document.body, { key: ' ' })
+    const event = press(document.body, ' ')
     expect(togglePlay).toHaveBeenCalledTimes(1)
-    expect(notCancelled).toBe(false)
+    expect(event.defaultPrevented).toBe(true)
+  })
+
+  it('leaves Space and letters to a focused control outside the player', () => {
+    const togglePlay = vi.fn()
+    const loop = vi.fn()
+    const { getByText } = render(
+      <>
+        <Player actions={{ togglePlay, loop }} />
+        <button type="button">Edit</button>
+      </>
+    )
+    const outside = getByText('Edit')
+    focusWith(outside, 'keyboard')
+
+    const space = press(outside, ' ')
+    press(outside, 'l')
+    expect(togglePlay).not.toHaveBeenCalled()
+    expect(loop).not.toHaveBeenCalled()
+    expect(space.defaultPrevented).toBe(false)
+  })
+
+  it('lets Space press a focused pill button itself', () => {
+    const togglePlay = vi.fn()
+    const { getByText } = render(<Player actions={{ togglePlay }} />)
+    const pillButton = getByText('pill button')
+    focusWith(pillButton, 'keyboard')
+
+    const space = press(pillButton, ' ')
+    expect(togglePlay).not.toHaveBeenCalled()
+    expect(space.defaultPrevented).toBe(false)
   })
 
   it('tells Shift+L (clear section) apart from L (loop)', () => {
@@ -76,36 +108,41 @@ describe('usePlayerShortcuts', () => {
     const clearSection = vi.fn()
     render(<Player actions={{ loop, clearSection }} />)
 
-    fireEvent.keyDown(document.body, { key: 'L', shiftKey: true })
+    press(document.body, 'L', { shiftKey: true })
     expect(clearSection).toHaveBeenCalledTimes(1)
     expect(loop).not.toHaveBeenCalled()
   })
 })
 
 describe('usePlayerShortcuts arrows', () => {
-  it('seeks only while the pointer is over or focus is inside the player, and then claims the key', () => {
+  it('are left to the page, even with the pointer resting over the player', () => {
     const forward = vi.fn()
-    const { container } = render(<Player actions={{ forward }} />)
-    const player = container.firstElementChild as HTMLElement
+    const { getByTestId } = render(<Player actions={{ forward }} />)
+    fireEvent.pointerEnter(getByTestId('player'))
 
-    // Not engaged: left to the page (the media page uses arrows for previous/next).
-    const pageKey = new KeyboardEvent('keydown', {
-      key: 'ArrowRight',
-      bubbles: true,
-      cancelable: true
-    })
-    document.body.dispatchEvent(pageKey)
+    const event = press(document.body, 'ArrowRight')
     expect(forward).not.toHaveBeenCalled()
-    expect(pageKey.defaultPrevented).toBe(false)
+    expect(event.defaultPrevented).toBe(false)
+  })
 
-    fireEvent.pointerEnter(player)
-    const playerKey = new KeyboardEvent('keydown', {
-      key: 'ArrowRight',
-      bubbles: true,
-      cancelable: true
-    })
-    document.body.dispatchEvent(playerKey)
+  it('seek once keyboard focus is inside the player, and claim the key', () => {
+    const forward = vi.fn()
+    const { getByText } = render(<Player actions={{ forward }} />)
+    const pillButton = getByText('pill button')
+    focusWith(pillButton, 'keyboard')
+
+    const event = press(pillButton, 'ArrowRight')
     expect(forward).toHaveBeenCalledTimes(1)
-    expect(playerKey.defaultPrevented).toBe(true)
+    expect(event.defaultPrevented).toBe(true)
+  })
+
+  it('stay with the page after a mouse click left focus on a pill button', () => {
+    const forward = vi.fn()
+    const { getByText } = render(<Player actions={{ forward }} />)
+    const pillButton = getByText('pill button')
+    focusWith(pillButton, 'pointer')
+
+    press(pillButton, 'ArrowRight')
+    expect(forward).not.toHaveBeenCalled()
   })
 })

@@ -14,9 +14,9 @@ full screen. The bar fades out while the video plays and you don't move the
 mouse, and stays up while it's paused or you're using the keyboard in it.
 Loop, volume and mute carry over to the next video; speed goes back to
 normal. Keys: `Space` play/pause, `L` loop, `M` mute, `F` full screen, and
-`←` / `→` go back or forward 5 seconds while the mouse is over the video (or
-you're in its controls) - elsewhere on the page they still move to the
-previous or next item.
+`←` / `→` go back or forward 5 seconds once you've tabbed into its controls
+(elsewhere they still move to the previous or next item). Keys go to the
+player only when no other control on the page has focus.
 
 ## Finding a tag
 

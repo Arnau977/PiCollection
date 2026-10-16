@@ -18,7 +18,7 @@ the field.
 | Full-size viewer, comparison | `+` / `-` / `0` | Zoom in / out / fit |
 | Full-size viewer, comparison | `Esc` | Close |
 | Video player | `Space` / `K` | Play / pause |
-| Video player (mouse over it, or in its controls) | `←` / `→` | Back / forward 5 seconds |
+| Video player (keyboard focus in its controls) | `←` / `→` | Back / forward 5 seconds |
 | Video player | `L` | Loop on / off |
 | Video player | `M` | Mute |
 | Video player | `F` | Full screen |

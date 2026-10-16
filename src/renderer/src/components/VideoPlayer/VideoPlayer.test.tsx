@@ -79,6 +79,23 @@ describe('VideoPlayer', () => {
     expect(video().playbackRate).toBe(1.5)
   })
 
+  it('hides 2 s after a mouse click on a pill button, even though the button keeps focus', () => {
+    vi.useFakeTimers()
+    const { container } = render(<VideoPlayer src="app://x.mp4" />)
+    const root = container.firstElementChild as HTMLElement
+    const play = screen.getByRole('button', { name: /^Play/ })
+
+    fireEvent.pointerDown(play)
+    act(() => play.focus())
+    fireEvent.click(play)
+    fireEvent.pointerMove(root)
+    act(() => {
+      vi.advanceTimersByTime(3000)
+    })
+
+    expect(root).toHaveAttribute('data-controls-visible', 'false')
+  })
+
   it('stays visible while focus is inside, and hides after 2 s of playing otherwise', () => {
     vi.useFakeTimers()
     const { container } = render(<VideoPlayer src="app://x.mp4" />)
@@ -87,6 +104,8 @@ describe('VideoPlayer', () => {
       void video().play()
     })
 
+    // Keyboard focus (Tab), not a mouse click: only that keeps the pill up.
+    fireEvent.keyDown(document.body, { key: 'Tab' })
     act(() => screen.getByRole('button', { name: /^Pause/ }).focus())
     fireEvent.pointerMove(root)
     act(() => {

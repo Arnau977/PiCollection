@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useVideoPlayer } from './useVideoPlayer'
 import { usePlayerShortcuts } from './usePlayerShortcuts'
+import { getInputModality } from './inputModality'
 import { VideoControls } from './VideoControls'
 import { SKIP_SECONDS } from './playerConstants'
 import './VideoPlayer.css'
@@ -86,7 +87,9 @@ export function VideoPlayer({
       className={`video-player${compact ? ' is-compact' : ''}${className ? ` ${className}` : ''}`}
       data-controls-visible={visible}
       onPointerMove={nudge}
-      onFocus={() => setFocusInside(true)}
+      // Only keyboard focus keeps the pill up; a mouse click leaves its button
+      // focused, and that must not pin the pill over a playing video.
+      onFocus={() => setFocusInside(getInputModality() === 'keyboard')}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocusInside(false)
       }}

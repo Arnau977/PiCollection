@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { isTypingTarget } from '../../hooks/useShortcut'
+import { getInputModality, trackInputModality } from './inputModality'
 
 export type PlayerAction =
   | 'togglePlay'
@@ -86,39 +87,59 @@ export function usePlayerShortcuts(
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
-    let hovered = false
-    const enter = (): void => {
-      hovered = true
+    trackInputModality()
+    // Whether focus came into the player from the keyboard (Tab), not from a
+    // mouse click that merely left a pill button focused.
+    let keyboardFocus = false
+    const onFocusIn = (): void => {
+      keyboardFocus = getInputModality() === 'keyboard'
     }
-    const leave = (): void => {
-      hovered = false
+    const onFocusOut = (e: FocusEvent): void => {
+      if (!container.contains(e.relatedTarget as Node | null)) keyboardFocus = false
     }
 
     function handleKeyDown(e: KeyboardEvent): void {
-      if (!container || e.repeat || isTypingTarget(e.target)) return
+      if (!container || e.repeat) return
       const action = actionFor(e)
       const run = action ? actionsRef.current[action] : undefined
       if (!action || !run || !isFrontPlayer(container)) return
+
+      const active = document.activeElement as HTMLElement | null
+      const nothingFocused =
+        !active || active === document.body || active === document.documentElement
+      const inPlayer = !nothingFocused && container.contains(active)
+      // A control elsewhere on the page has focus (a button, a list, a field):
+      // its keys are its own - Space must press it, letters may be typeahead.
+      if (!nothingFocused && !inPlayer) return
+      const onRange = active instanceof HTMLInputElement && active.type === 'range'
+      if (inPlayer && isTypingTarget(active) && !onRange) return
+
       if (action === 'back' || action === 'forward') {
-        // Arrows are the media page's previous/next: the player only takes
-        // them while it's engaged (pointer over it, or focus inside), and
-        // never from a focused slider, which moves its own value with them.
-        const engaged = hovered || container.contains(document.activeElement)
-        const onSlider =
-          (document.activeElement as HTMLElement | null)?.getAttribute('role') === 'slider'
-        if (!engaged || onSlider) return
+        // Plain arrows are the media page's previous/next: the player only
+        // takes them with keyboard focus inside it, and a focused slider
+        // (timeline, volume) moves its own value with them.
+        if (!inPlayer || !keyboardFocus || onRange) return
+      }
+      // Space on a focused pill button presses that button natively.
+      if (
+        action === 'togglePlay' &&
+        inPlayer &&
+        !onRange &&
+        active?.matches('button, a, [role="button"]')
+      ) {
+        return
       }
       // preventDefault tells the page's own listeners (e.g. MediaPage) the key
       // is taken; the capture phase makes sure this runs before them.
       e.preventDefault()
       run()
     }
-    container.addEventListener('pointerenter', enter)
-    container.addEventListener('pointerleave', leave)
+    container.addEventListener('focusin', onFocusIn)
+    container.addEventListener('focusout', onFocusOut)
     document.addEventListener('keydown', handleKeyDown, true)
     return (): void => {
-      container.removeEventListener('pointerenter', enter)
-      container.removeEventListener('pointerleave', leave)
+      container.removeEventListener('focusin', onFocusIn)
+      container.removeEventListener('focusout', onFocusOut)
       document.removeEventListener('keydown', handleKeyDown, true)
     }
   }, [containerRef])
