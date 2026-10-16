@@ -34,7 +34,8 @@ Needs a [source folder](getting-started.md#pick-a-source-folder-recommended).
    files**), whichever folders you picked them in.
 2. The files open one by one in the edit form, **File N of M** at the top.
    They come folder by folder, oldest first, so pictures you saved together
-   stay together.
+   stay together. The *Single file* / *From folder* tabs are hidden until
+   you close the queue, so a stray click can't drop the files left to tag.
 3. For each file:
    - **Save** stores it and stays on it (you can keep editing);
    - **Next** / **Previous** move through the queue (`Alt+→` / `Alt+←`);

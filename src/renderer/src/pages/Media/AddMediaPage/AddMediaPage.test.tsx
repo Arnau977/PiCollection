@@ -1008,7 +1008,7 @@ describe('AddMediaPage folder tab', () => {
     expect(document.querySelector('input[type="file"]')).toBeInTheDocument()
   })
 
-  it('shows the folder browser again (not a stale queue) after switching to Single file and back mid-import', async () => {
+  it('hides the Single file/From folder tabs while a batch import runs', async () => {
     const browse = vi.fn().mockResolvedValue({
       success: true,
       data: {
@@ -1039,14 +1039,7 @@ describe('AddMediaPage folder tab', () => {
     await vi.waitFor(() => expect(expandSelection).toHaveBeenCalled())
     expect(screen.queryByRole('button', { name: /^Import \d+ files?$/ })).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('tab', { name: 'Single file' }))
-    expect(document.querySelector('input[type="file"]')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('tab', { name: 'From folder' }))
-
-    // Back on the folder tab: the browser is shown again, not a resumed/stale queue.
-    expect(await screen.findByText('a.png')).toBeInTheDocument()
-    expect(await screen.findByRole('button', { name: /^Import \d+ files?$/ })).toBeInTheDocument()
-    expect(browse).toHaveBeenCalledTimes(2)
+    // Switching to Single file would drop the untagged queue: no tabs to do it with.
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
   })
 })
