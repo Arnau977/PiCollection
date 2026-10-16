@@ -11,6 +11,10 @@
     "notifications": "Notificaciones"
   },
   "videoPlayer": {
+    "loopSection": "Repetir tramo",
+    "setSectionEnd": "Marcar fin del tramo",
+    "clearSection": "Quitar tramo",
+    "volumeLevel": "Volumen {{percent}}%",
     "play": "Reproducir",
     "pause": "Pausa",
     "back": "Retroceder 5 segundos",

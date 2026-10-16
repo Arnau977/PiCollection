@@ -15,7 +15,8 @@ export interface VideoPlayerState {
   seek: (time: number) => void
   skip: (delta: number) => void
   setLoop: (loop: boolean) => void
-  setVolume: (volume: number) => void
+  /** Dragging the volume slider unmutes; keyboard steps pass keepMuted. */
+  setVolume: (volume: number, opts?: { keepMuted?: boolean }) => void
   toggleMute: () => void
   setRate: (rate: number) => void
   toggleFullscreen: (container: HTMLElement) => void
@@ -134,11 +135,11 @@ export function useVideoPlayer(
       setLoopState(next)
       persist({ loop: next })
     },
-    setVolume: (next): void => {
+    setVolume: (next, volumeOpts): void => {
       const video = videoRef.current
       if (!video) return
       video.volume = next
-      if (next > 0 && video.muted) video.muted = false
+      if (next > 0 && video.muted && !volumeOpts?.keepMuted && !forcedMute) video.muted = false
       setVolumeState(next)
       persist({ volume: next, ...(forcedMute ? {} : { muted: video.muted }) })
     },

@@ -14,6 +14,8 @@ export type PlayerAction =
   | 'setA'
   | 'setB'
   | 'clearSection'
+  | 'volumeUp'
+  | 'volumeDown'
 
 /** Shown in tooltips and aria-keyshortcuts, next to each control's name. */
 export const PLAYER_SHORTCUT_LABELS: Record<PlayerAction, string> = {
@@ -27,8 +29,12 @@ export const PLAYER_SHORTCUT_LABELS: Record<PlayerAction, string> = {
   fullscreen: 'F',
   setA: '[',
   setB: ']',
-  clearSection: 'Shift+L'
+  clearSection: 'Shift+L',
+  volumeUp: 'ArrowUp',
+  volumeDown: 'ArrowDown'
 }
+
+const ARROW_ACTIONS = new Set<PlayerAction>(['back', 'forward', 'volumeUp', 'volumeDown'])
 
 function actionFor(e: KeyboardEvent): PlayerAction | null {
   if (e.ctrlKey || e.metaKey || e.altKey) return null // Alt+arrows: previous/next media
@@ -43,6 +49,10 @@ function actionFor(e: KeyboardEvent): PlayerAction | null {
       return 'back'
     case 'ArrowRight':
       return 'forward'
+    case 'ArrowUp':
+      return 'volumeUp'
+    case 'ArrowDown':
+      return 'volumeDown'
     case ',':
       return 'frameBack'
     case '.':
@@ -114,11 +124,15 @@ export function usePlayerShortcuts(
       const onRange = active instanceof HTMLInputElement && active.type === 'range'
       if (inPlayer && isTypingTarget(active) && !onRange) return
 
-      if (action === 'back' || action === 'forward') {
-        // Plain arrows are the media page's previous/next: the player only
-        // takes them with keyboard focus inside it, and a focused slider
+      if (ARROW_ACTIONS.has(action) && !onRange) {
+        // Plain arrows are the page's (previous/next item, scrolling): the
+        // player only takes them with keyboard focus inside it - or in full
+        // screen, where there's no page to give them to. A focused slider
         // (timeline, volume) moves its own value with them.
-        if (!inPlayer || !keyboardFocus || onRange) return
+        const fullscreen = document.fullscreenElement?.contains(container) ?? false
+        if (!fullscreen && (!inPlayer || !keyboardFocus)) return
+      } else if (ARROW_ACTIONS.has(action)) {
+        return
       }
       // Space on a focused pill button presses that button natively.
       if (

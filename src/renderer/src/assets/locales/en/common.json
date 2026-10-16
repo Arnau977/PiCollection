@@ -11,6 +11,10 @@
     "notifications": "Notifications"
   },
   "videoPlayer": {
+    "loopSection": "Loop section",
+    "setSectionEnd": "Set section end",
+    "clearSection": "Clear section",
+    "volumeLevel": "Volume {{percent}}%",
     "play": "Play",
     "pause": "Pause",
     "back": "Back 5 seconds",
