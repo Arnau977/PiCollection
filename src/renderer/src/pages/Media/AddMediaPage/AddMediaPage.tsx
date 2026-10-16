@@ -35,30 +35,32 @@ export default function AddMediaPage(): JSX.Element {
     <div className="page add-media-page">
       <h1>{t('addMedia.title')}</h1>
 
-      <div className="add-media-tabs" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'single'}
-          className={`add-media-tab${tab === 'single' ? ' is-active' : ''}`}
-          onClick={() => {
-            setTab('single')
-            setImportSelection(null)
-          }}
-        >
-          {t('addMedia.tabSingle')}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'folder'}
-          className={`add-media-tab${tab === 'folder' ? ' is-active' : ''}`}
-          onClick={() => setTab('folder')}
-          disabled={!sourceFolder}
-        >
-          {t('addMedia.tabFolder')}
-        </button>
-      </div>
+      {/* Hidden while a batch import runs: switching to Single would drop
+          the queue's untagged files, and the queue needs the height. The
+          queue's own Close (with its exit dialog) is the way out. */}
+      {importSelection === null && (
+        <div className="add-media-tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'single'}
+            className={`add-media-tab${tab === 'single' ? ' is-active' : ''}`}
+            onClick={() => setTab('single')}
+          >
+            {t('addMedia.tabSingle')}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'folder'}
+            className={`add-media-tab${tab === 'folder' ? ' is-active' : ''}`}
+            onClick={() => setTab('folder')}
+            disabled={!sourceFolder}
+          >
+            {t('addMedia.tabFolder')}
+          </button>
+        </div>
+      )}
 
       {tab === 'single' && (
         // replace: true - without it, this push leaves the Add Media entry in
