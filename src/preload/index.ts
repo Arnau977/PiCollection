@@ -1,6 +1,7 @@
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type {
+  AppAlertKind,
   AppNotification,
   AppNotificationKind,
   ArtistInput,
@@ -192,6 +193,10 @@ export const api = {
       ipcRenderer.invoke(IPC.notifications.getAll),
     snooze: (kind: AppNotificationKind): Promise<IpcResult<AppNotification[]>> =>
       ipcRenderer.invoke(IPC.notifications.snooze, { kind }),
+    getDisabled: (): Promise<IpcResult<AppAlertKind[]>> =>
+      ipcRenderer.invoke(IPC.notifications.getDisabled),
+    setEnabled: (kind: AppAlertKind, enabled: boolean): Promise<IpcResult<AppAlertKind[]>> =>
+      ipcRenderer.invoke(IPC.notifications.setEnabled, { kind, enabled }),
     /** Subscribes to tray pushes; returns an unsubscribe function. */
     onChanged: (listener: (items: AppNotification[]) => void): (() => void) => {
       const handler = (_event: IpcRendererEvent, payload: AppNotification[]): void =>

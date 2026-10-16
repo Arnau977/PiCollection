@@ -31,7 +31,9 @@ const {
   SNOOZE_MS,
   __resetNotificationsForTests
 } = await import('./notifications.service')
-const { resetNotificationSettingsCache, readSnoozes } = await import('./notificationSettings')
+const { resetNotificationSettingsCache, readSnoozes, setAlertEnabled } = await import(
+  './notificationSettings'
+)
 const { resetAutoBackupSettingsCache, updateAutoBackupSettings } = await import(
   '../autoBackupSettings'
 )
@@ -198,6 +200,25 @@ describe('notifications', () => {
 
     updateAutoBackupSettings({ enabled: true })
     expect(await refreshNotifications(NOW)).toEqual([])
+  })
+
+  it('hides a disabled kind without touching its snooze, and shows it again once re-enabled', async () => {
+    await addPending('a', NOW - 8 * DAY_MS)
+    await snoozeNotification('pending-stale', NOW)
+    setAlertEnabled('pending-stale', false)
+    expect(await refreshNotifications(NOW + SNOOZE_MS)).toEqual([])
+    expect(readSnoozes()['pending-stale']).toBeUndefined() // expired at NOW + SNOOZE_MS, as before
+
+    setAlertEnabled('pending-stale', true)
+    expect(await refreshNotifications(NOW + SNOOZE_MS)).toHaveLength(1)
+  })
+
+  it('keeps the snooze of a disabled kind', async () => {
+    await addPending('a', NOW - 8 * DAY_MS)
+    await snoozeNotification('pending-stale', NOW)
+    setAlertEnabled('pending-stale', false)
+    await refreshNotifications(NOW + DAY_MS)
+    expect(readSnoozes()['pending-stale']).toBeDefined()
   })
 
   it('serializes overlapping refreshes so pushes stay in order', async () => {

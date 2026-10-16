@@ -25,3 +25,8 @@ export interface AppNotification {
   /** update-available only. */
   version?: string
 }
+
+/** What can be switched off in Settings: every bell kind plus the auto-import toast. */
+export const APP_ALERT_KINDS = [...APP_NOTIFICATION_KINDS, 'auto-import'] as const
+
+export type AppAlertKind = (typeof APP_ALERT_KINDS)[number]
