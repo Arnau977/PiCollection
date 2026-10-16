@@ -29,6 +29,7 @@ export const SauceNaoResponseSchema = z.object({
             ext_urls: z.array(z.string()).optional(),
             title: z.string().optional(),
             eng_name: z.string().optional(),
+            jp_name: z.string().optional(),
             characters: z.string().optional(),
             material: z.string().optional(),
             // Some indexes return an array here instead of a comma-joined string.
@@ -72,10 +73,40 @@ function deriveArtistSocial(data: {
   return undefined
 }
 
+/**
+ * "Index #38: H-Misc (E-Hentai) - 1234567-abc.jpg" -> "H-Misc (E-Hentai)":
+ * SauceNAO appends the matched thumbnail's file name, which means nothing to
+ * the user.
+ */
 function cleanIndexName(raw: string | undefined): string {
   if (!raw) return 'Unknown source'
-  const cleaned = raw.replace(/^Index #\d+:\s*/i, '').trim()
+  const cleaned = raw
+    .replace(/^Index #\d+:\s*/i, '')
+    .replace(/\s+-\s+\S+\.(?:jpe?g|png|gif|webp|bmp)$/i, '')
+    .trim()
   return cleaned || 'Unknown source'
+}
+
+const HTTP_URL = /^https?:\/\/\S+$/i
+
+/**
+ * Gallery indexes whose results carry no `ext_urls`, by SauceNAO index id:
+ * the best that can be offered is a search on the site for the gallery title.
+ */
+const GALLERY_SEARCH: Record<number, { site: string; url: (query: string) => string }> = {
+  18: { site: 'nhentai', url: (q) => `https://nhentai.net/search/?q=${encodeURIComponent(q)}` },
+  38: { site: 'E-Hentai', url: (q) => `https://e-hentai.org/?f_search=${encodeURIComponent(q)}` }
+}
+
+function gallerySearch(
+  indexId: number | undefined,
+  data: { eng_name?: string; jp_name?: string; source?: string }
+): SauceNaoMatch['search'] {
+  const target = indexId === undefined ? undefined : GALLERY_SEARCH[indexId]
+  const title = [data.eng_name, data.jp_name, data.source].find(
+    (value) => value?.trim() && !HTTP_URL.test(value.trim())
+  )
+  return target && title ? { site: target.site, url: target.url(title.trim()) } : undefined
 }
 
 /**
@@ -98,6 +129,7 @@ export function pickBestMatch(
     .map((result) => ({
       similarity: Number.parseFloat(String(result.header?.similarity ?? '')) || 0,
       indexName: cleanIndexName(result.header?.index_name),
+      indexId: result.header?.index_id,
       data: result.data ?? {}
     }))
     .filter((candidate) => candidate.similarity >= minSimilarity)
@@ -126,11 +158,17 @@ export function pickBestMatch(
       : null) ??
     (chosen.data.author_name ? { name: cleanEntityName(chosen.data.author_name), ...social } : null)
 
+  // Some indexes leave `ext_urls` out but put the original post's URL in `source`.
+  const rawSource = chosen.data.source?.trim()
+  const sourceUrl =
+    chosen.data.ext_urls?.[0] ?? (rawSource && HTTP_URL.test(rawSource) ? rawSource : undefined)
+
   const match: SauceNaoMatch = {
     similarity: chosen.similarity,
     indexName: chosen.indexName,
-    sourceUrl: chosen.data.ext_urls?.[0],
+    sourceUrl,
     title: chosen.data.title ?? chosen.data.eng_name,
+    search: sourceUrl ? undefined : gallerySearch(chosen.indexId, chosen.data),
     artist,
     characters,
     series,

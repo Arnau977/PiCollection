@@ -109,6 +109,14 @@ export function SauceNaoSuggestionsPanel({
                 {t('sauceNao.viewSource')}
               </a>
             )}
+            {/* No post URL from this index: a site search is the closest thing,
+                labelled as a search so it isn't mistaken for the post itself. */}
+            {sauce.match.search && (
+              <a href={sauce.match.search.url} target="_blank" rel="noreferrer">
+                <ExternalLink size={12} />
+                {t('sauceNao.searchOn', { site: sauce.match.search.site })}
+              </a>
+            )}
             {sauce.remaining && (
               <span className="sauce-quota">
                 {t('sauceNao.quota', { count: sauce.remaining.long })}
