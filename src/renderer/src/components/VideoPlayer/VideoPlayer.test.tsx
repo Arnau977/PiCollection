@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { VideoPlayer } from './VideoPlayer'
 import { loadVideoPlayerPrefs } from './videoPlayerPrefs'
@@ -408,5 +408,43 @@ describe('VideoPlayer volume steps', () => {
   it('moves the volume slider in 1% steps', () => {
     render(<VideoPlayer src="app://x.mp4" />)
     expect(screen.getByRole('slider', { name: 'Volume' })).toHaveAttribute('step', '0.01')
+  })
+})
+
+describe('VideoPlayer behind a dialog', () => {
+  it('pauses when a dialog opens on top of it', async () => {
+    render(<VideoPlayer src="app://x.mp4" />)
+    act(() => {
+      void video().play()
+    })
+    expect(video().paused).toBe(false)
+
+    const dialog = document.createElement('div')
+    dialog.setAttribute('aria-modal', 'true')
+    act(() => {
+      document.body.appendChild(dialog)
+    })
+
+    await waitFor(() => expect(video().paused).toBe(true))
+    dialog.remove()
+  })
+
+  it('keeps playing when the dialog is the one it lives in', async () => {
+    render(
+      <div aria-modal="true">
+        <VideoPlayer src="app://x.mp4" />
+      </div>
+    )
+    act(() => {
+      void video().play()
+    })
+    const other = document.createElement('span')
+    act(() => {
+      document.body.appendChild(other)
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(video().paused).toBe(false)
+    other.remove()
   })
 })

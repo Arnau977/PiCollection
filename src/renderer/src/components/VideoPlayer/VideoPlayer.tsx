@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useVideoPlayer } from './useVideoPlayer'
-import { usePlayerShortcuts } from './usePlayerShortcuts'
+import { isFrontPlayer, usePlayerShortcuts } from './usePlayerShortcuts'
 import { getInputModality } from './inputModality'
 import { useFrameRate } from './useFrameRate'
 import { normalizeSection, useSection, type UseSection } from './useSection'
@@ -184,6 +184,25 @@ export function VideoPlayer({
     },
     []
   )
+
+  // A dialog opening on top (Make GIF, a confirmation, the compare view)
+  // pauses this player: it's no longer the one in front, and its sound would
+  // play under the dialog. Only watched while playing.
+  useEffect(() => {
+    const root = rootRef.current
+    const video = videoRef.current
+    if (!player.playing || !root || !video) return
+    const observer = new MutationObserver(() => {
+      if (!isFrontPlayer(root) && !video.paused) video.pause()
+    })
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['aria-modal']
+    })
+    return (): void => observer.disconnect()
+  }, [player.playing])
 
   // Playback starting (autoplay, a shortcut) counts as activity: the pill
   // shows, then hides 2 s later even if the pointer never moves.

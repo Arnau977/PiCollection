@@ -13,7 +13,7 @@ see the time under the cursor), **Loop**, **Speed** (0.25× to 2×), volume and
 full screen. The bar fades out while the video plays and you don't move the
 mouse, and stays up while it's paused or you're using the keyboard in it.
 Loop, volume and mute carry over to the next video; speed goes back to
-normal. Keys: `Space` play/pause, `L` loop, `M` mute, `F` full screen, and
+normal. A video pauses itself when a dialog (such as Make GIF) opens over it. Keys: `Space` play/pause, `L` loop, `M` mute, `F` full screen, and
 `←` / `→` go back or forward 5 seconds and `↑` / `↓` change the volume (1% per
 press; hold the key to keep going) once
 you've tabbed into its controls (elsewhere they still move to the previous or
