@@ -73,19 +73,19 @@ export function VideoPlayer({
     ? {
         section: rangeMode.value,
         pendingStart: null,
-        setA: (time) => {
+        setA: (time): void => {
           const next = normalizeSection(time, rangeMode.value.end, player.duration)
           if (next) rangeMode.onChange(next)
         },
-        setB: (time) => {
+        setB: (time): void => {
           const next = normalizeSection(rangeMode.value.start, time, player.duration)
           if (next) rangeMode.onChange(next)
         },
-        setSection: (range) => {
+        setSection: (range): void => {
           const next = normalizeSection(range.start, range.end, player.duration)
           if (next) rangeMode.onChange(next)
         },
-        clear: () => undefined
+        clear: (): void => undefined
       }
     : ownSection
   const { section } = sectionState
