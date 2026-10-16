@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import {
+  Brackets,
   Maximize,
   Minimize,
   Pause,
@@ -21,6 +22,7 @@ import {
   SliderTrack
 } from 'react-aria-components'
 import type { VideoPlayerState } from './useVideoPlayer'
+import type { UseSection } from './useSection'
 import { VideoTimeline } from './VideoTimeline'
 import { formatTime } from './formatTime'
 import { PLAYER_SHORTCUT_LABELS, type PlayerAction } from './usePlayerShortcuts'
@@ -28,6 +30,7 @@ import { PLAYBACK_RATES, SKIP_SECONDS } from './playerConstants'
 
 interface VideoControlsProps {
   player: VideoPlayerState
+  section: UseSection
   compact: boolean
   onToggleFullscreen: () => void
   onPointerEnter: () => void
@@ -40,6 +43,7 @@ interface VideoControlsProps {
 /** The floating pill: transport, timeline, loop, speed, volume, fullscreen. */
 export function VideoControls({
   player,
+  section,
   compact,
   onToggleFullscreen,
   onPointerEnter,
@@ -66,6 +70,9 @@ export function VideoControls({
         currentTime={player.currentTime}
         duration={player.duration}
         onSeek={player.seek}
+        section={section.section}
+        pendingStart={section.pendingStart}
+        onSectionChange={section.setSection}
       />
       <div className="video-controls-row">
         <button
@@ -110,6 +117,33 @@ export function VideoControls({
         >
           <Repeat size={16} />
         </button>
+        {/* Compact (the edit-form preview) leaves it out to keep the pill narrow;
+            [ and ] still set a section there. */}
+        {!compact && (
+          <button
+            type="button"
+            className="video-ctrl"
+            aria-pressed={section.section !== null || section.pendingStart !== null}
+            onClick={() => {
+              const time = player.currentTime
+              if (section.section) section.clear()
+              else if (section.pendingStart !== null) section.setB(time)
+              else section.setA(time)
+            }}
+            {...shortcutProps(
+              t(
+                section.section
+                  ? 'videoPlayer.clearSection'
+                  : section.pendingStart !== null
+                    ? 'videoPlayer.setSectionEnd'
+                    : 'videoPlayer.loopSection'
+              ),
+              section.section ? 'clearSection' : section.pendingStart !== null ? 'setB' : 'setA'
+            )}
+          >
+            <Brackets size={16} />
+          </button>
+        )}
         <MenuTrigger>
           <Button className="video-ctrl video-ctrl-text" aria-label={t('videoPlayer.speed')}>
             {player.rate === 1 ? '1×' : `${player.rate}×`}

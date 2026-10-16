@@ -43,7 +43,7 @@ describe('VideoPlayer', () => {
       'Mute',
       'Full screen'
     ]) {
-      expect(screen.getByRole('button', { name: new RegExp(`^${name}`) })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name })).toBeInTheDocument()
     }
     expect(screen.getByRole('slider', { name: 'Seek' })).toBeInTheDocument()
     expect(video()).not.toHaveAttribute('controls')
@@ -63,9 +63,9 @@ describe('VideoPlayer', () => {
   it('toggles loop and remembers it', async () => {
     render(<VideoPlayer src="app://x.mp4" />)
 
-    await userEvent.click(screen.getByRole('button', { name: /^Loop/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Loop' }))
 
-    expect(screen.getByRole('button', { name: /^Loop/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Loop' })).toHaveAttribute('aria-pressed', 'true')
     expect(video().loop).toBe(true)
     expect(loadVideoPlayerPrefs().loop).toBe(true)
   })
@@ -130,5 +130,102 @@ describe('VideoPlayer', () => {
       vi.advanceTimersByTime(3000)
     })
     expect(root).toHaveAttribute('data-controls-visible', 'false')
+  })
+})
+
+describe('VideoPlayer section, frames and volume keys', () => {
+  function at(time: number): void {
+    act(() => {
+      video().currentTime = time
+      video().dispatchEvent(new Event('timeupdate'))
+    })
+  }
+
+  function key(k: string, init: KeyboardEventInit = {}): void {
+    act(() => {
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...init })
+      )
+    })
+  }
+
+  function withDuration(seconds: number): void {
+    Object.defineProperty(video(), 'duration', { configurable: true, value: seconds })
+    act(() => {
+      video().dispatchEvent(new Event('loadedmetadata'))
+    })
+  }
+
+  it('sets the section with [ and ] and clears it with Shift+L', () => {
+    render(<VideoPlayer src="app://x.mp4" />)
+    withDuration(10)
+    expect(screen.getByRole('button', { name: /^Loop section/ })).toBeInTheDocument()
+
+    at(2)
+    key('[')
+    at(4)
+    key(']')
+    expect(screen.getByRole('button', { name: /^Clear section/ })).toBeInTheDocument()
+
+    key('L', { shiftKey: true })
+    expect(screen.getByRole('button', { name: /^Loop section/ })).toBeInTheDocument()
+  })
+
+  it('loops between A and B', () => {
+    render(<VideoPlayer src="app://x.mp4" />)
+    withDuration(10)
+    at(2)
+    key('[')
+    at(4)
+    key(']')
+
+    at(4.01)
+    expect(video().currentTime).toBe(2)
+  })
+
+  it('steps one frame while paused only', () => {
+    render(<VideoPlayer src="app://x.mp4" />)
+    withDuration(10)
+    at(1)
+
+    key('.')
+    expect(video().currentTime).toBeCloseTo(1 + 1 / 30, 3)
+
+    act(() => {
+      void video().play()
+    })
+    const before = video().currentTime
+    key('.')
+    expect(video().currentTime).toBe(before)
+  })
+
+  it('↑ raises the volume 5% with keyboard focus inside, and shows it', () => {
+    window.localStorage.setItem(
+      'picollection:video-player',
+      JSON.stringify({ loop: false, volume: 0.5, muted: false })
+    )
+    render(<VideoPlayer src="app://x.mp4" />)
+    fireEvent.keyDown(document.body, { key: 'Tab' })
+    act(() => screen.getByRole('button', { name: /^Play/ }).focus())
+
+    key('ArrowUp')
+
+    expect(video().volume).toBeCloseTo(0.55)
+    expect(screen.getByText('Volume 55%')).toBeInTheDocument()
+  })
+
+  it('arrows go to the player in full screen even with nothing focused', () => {
+    const { container } = render(<VideoPlayer src="app://x.mp4" />)
+    withDuration(20)
+    at(3)
+    Object.defineProperty(document, 'fullscreenElement', {
+      configurable: true,
+      get: () => container.firstElementChild
+    })
+
+    key('ArrowRight')
+
+    expect(video().currentTime).toBe(8)
+    Object.defineProperty(document, 'fullscreenElement', { configurable: true, get: () => null })
   })
 })

@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useVideoPlayer } from './useVideoPlayer'
 import { usePlayerShortcuts } from './usePlayerShortcuts'
 import { getInputModality } from './inputModality'
+import { useFrameRate } from './useFrameRate'
+import { useSection } from './useSection'
 import { VideoControls } from './VideoControls'
-import { SKIP_SECONDS } from './playerConstants'
+import { SKIP_SECONDS, VOLUME_STEP } from './playerConstants'
 import './VideoPlayer.css'
 
 /** A start/end range in seconds: the looped section, or Make GIF's clip. */
@@ -25,6 +28,8 @@ interface VideoPlayerProps {
 }
 
 const HIDE_AFTER_MS = 2000
+/** How long the "Volume 65%" overlay stays after a keyboard change. */
+const FLASH_MS = 1000
 
 /**
  * App-styled video player over a native <video> (no `controls`): a floating
@@ -36,8 +41,10 @@ export function VideoPlayer({
   autoPlay,
   muted,
   compact = false,
-  className
+  className,
+  onSectionChange
 }: VideoPlayerProps): JSX.Element {
+  const { t } = useTranslation()
   const rootRef = useRef<HTMLDivElement | null>(null)
   // Also kept in state: popovers need the element itself, from the first render.
   const [root, setRoot] = useState<HTMLDivElement | null>(null)
@@ -52,14 +59,66 @@ export function VideoPlayer({
     if (rootRef.current) player.toggleFullscreen(rootRef.current)
   }, [player])
 
+  const fps = useFrameRate(videoRef)
+  const sectionState = useSection(player.duration)
+  const { section } = sectionState
+  const [flash, setFlash] = useState<string | null>(null)
+  const flashTimer = useRef<ReturnType<typeof setTimeout>>()
+
+  /** Seconds as the element has them now (state can lag a frame behind). */
+  const now = (): number => videoRef.current?.currentTime ?? player.currentTime
+
+  function changeVolume(delta: number): void {
+    const next = Math.round(Math.min(Math.max(player.volume + delta, 0), 1) * 100) / 100
+    player.setVolume(next)
+    setFlash(t('videoPlayer.volumeLevel', { percent: Math.round(next * 100) }))
+    if (flashTimer.current) clearTimeout(flashTimer.current)
+    flashTimer.current = setTimeout(() => setFlash(null), FLASH_MS)
+  }
+
+  /** One frame back or forward - only while paused, where it can be seen. */
+  function stepFrame(direction: 1 | -1): void {
+    if (player.playing) return
+    player.seek(now() + direction / fps)
+  }
+
   usePlayerShortcuts(rootRef, {
     togglePlay: player.togglePlay,
     back: () => player.skip(-SKIP_SECONDS),
     forward: () => player.skip(SKIP_SECONDS),
+    volumeUp: () => changeVolume(VOLUME_STEP),
+    volumeDown: () => changeVolume(-VOLUME_STEP),
+    frameBack: () => stepFrame(-1),
+    frameForward: () => stepFrame(1),
     loop: () => player.setLoop(!player.loop),
     mute: player.toggleMute,
-    fullscreen: toggleFullscreen
+    fullscreen: toggleFullscreen,
+    setA: () => sectionState.setA(now()),
+    setB: () => sectionState.setB(now()),
+    clearSection: sectionState.clear
   })
+
+  // The section loops on its own, whatever the Loop toggle says: reaching B
+  // goes back to A, and playing from outside it starts at A.
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !section) return
+    const keepInside = (): void => {
+      if (video.currentTime >= section.end || video.currentTime < section.start) {
+        player.seek(section.start)
+      }
+    }
+    video.addEventListener('timeupdate', keepInside)
+    video.addEventListener('play', keepInside)
+    return (): void => {
+      video.removeEventListener('timeupdate', keepInside)
+      video.removeEventListener('play', keepInside)
+    }
+  }, [section, player])
+
+  useEffect(() => {
+    onSectionChange?.(section)
+  }, [section, onSectionChange])
 
   function nudge(): void {
     setRecentlyMoved(true)
@@ -70,6 +129,7 @@ export function VideoPlayer({
   useEffect(
     () => (): void => {
       if (hideTimer.current) clearTimeout(hideTimer.current)
+      if (flashTimer.current) clearTimeout(flashTimer.current)
     },
     []
   )
@@ -110,8 +170,14 @@ export function VideoPlayer({
       >
         Your browser does not support the video tag.
       </video>
+      {flash && (
+        <div className="video-flash" role="status">
+          {flash}
+        </div>
+      )}
       <VideoControls
         player={player}
+        section={sectionState}
         compact={compact}
         onToggleFullscreen={toggleFullscreen}
         onPointerEnter={() => setOverControls(true)}

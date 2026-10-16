@@ -18,7 +18,11 @@ the field.
 | Full-size viewer, comparison | `+` / `-` / `0` | Zoom in / out / fit |
 | Full-size viewer, comparison | `Esc` | Close |
 | Video player | `Space` / `K` | Play / pause |
-| Video player (keyboard focus in its controls) | `←` / `→` | Back / forward 5 seconds |
+| Video player (keyboard focus in its controls, or full screen) | `←` / `→` | Back / forward 5 seconds |
+| Video player (keyboard focus in its controls, or full screen) | `↑` / `↓` | Volume up / down |
+| Video player, paused | `,` / `.` | Previous / next frame |
+| Video player | `[` / `]` | Set the looped section's start / end |
+| Video player | `Shift+L` | Clear the looped section |
 | Video player | `L` | Loop on / off |
 | Video player | `M` | Mute |
 | Video player | `F` | Full screen |

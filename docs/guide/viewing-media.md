@@ -14,9 +14,15 @@ full screen. The bar fades out while the video plays and you don't move the
 mouse, and stays up while it's paused or you're using the keyboard in it.
 Loop, volume and mute carry over to the next video; speed goes back to
 normal. Keys: `Space` play/pause, `L` loop, `M` mute, `F` full screen, and
-`←` / `→` go back or forward 5 seconds once you've tabbed into its controls
-(elsewhere they still move to the previous or next item). Keys go to the
-player only when no other control on the page has focus.
+`←` / `→` go back or forward 5 seconds and `↑` / `↓` change the volume once
+you've tabbed into its controls (elsewhere they still move to the previous or
+next item, or scroll); in full screen the arrows always go to the player.
+Keys go to the player only when no other control on the page has focus.
+
+While paused, `,` / `.` step one frame back or forward. To loop just part
+of a video, press **Loop section** at the start and again at the end (or
+`[` and `]`): only that part plays and repeats, and its two markers on the
+timeline can be dragged. Press it once more (or `Shift+L`) to clear it.
 
 ## Finding a tag
 
