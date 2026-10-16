@@ -73,7 +73,9 @@ series and tags. It works for images, GIFs and videos.
 - It needs a free SauceNAO API key: **Settings > Advanced > SauceNAO API key**.
   Without one, the button doesn't appear.
 - The matched post's link fills an empty **Source URL**, or is offered as a
-  replacement if you already typed another.
+  replacement if you already typed another. E-Hentai and nhentai matches
+  have no post link: **Search on E-Hentai** / **Search on nhentai** looks
+  the gallery up by title instead, and doesn't touch Source URL.
 - Creating the artist from a suggestion also links their Pixiv or X profile
   when SauceNAO knows it.
 - Booru character tags are read the booru way: in

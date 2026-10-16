@@ -28,6 +28,12 @@ export interface SauceNaoMatch {
   indexName: string
   /** First known source URL for the match, if any. */
   sourceUrl?: string
+  /**
+   * Indexes that give no post URL (E-Hentai, nhentai): a site search for the
+   * matched gallery's title. Only a link to look the post up - unlike
+   * `sourceUrl`, never offered as the media's source URL.
+   */
+  search?: { url: string; site: string }
   /** Shown for context only - never written into the media's own name field. */
   title?: string
   artist: SauceNaoArtist | null

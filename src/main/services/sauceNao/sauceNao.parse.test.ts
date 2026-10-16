@@ -183,4 +183,44 @@ describe('pickBestMatch', () => {
     const { match } = pickBestMatch({ results: [resultWith({ memberName: 'plain_artist' })] })
     expect(match?.artist).toEqual({ name: 'plain artist' })
   })
+
+  it('drops the thumbnail file name SauceNAO appends to the index name', () => {
+    const { match } = pickBestMatch({
+      results: [resultWith({ indexName: 'Index #38: H-Misc (E-Hentai) - 6dbe884fdfba.jpg' })]
+    })
+    expect(match?.indexName).toBe('H-Misc (E-Hentai)')
+  })
+
+  it('offers a gallery-title search, not a source URL, for E-Hentai results without a post URL', () => {
+    const { match } = pickBestMatch({
+      results: [
+        {
+          header: { similarity: 91, index_id: 38, index_name: 'Index #38: H-Misc (E-Hentai)' },
+          data: {
+            creator: ['orphen'],
+            eng_name: '(C99) [Circle (Orphen)] Some Title',
+            source: 'Some Title'
+          }
+        }
+      ]
+    })
+    expect(match?.sourceUrl).toBeUndefined()
+    expect(match?.search).toEqual({
+      site: 'E-Hentai',
+      url: 'https://e-hentai.org/?f_search=(C99)%20%5BCircle%20(Orphen)%5D%20Some%20Title'
+    })
+  })
+
+  it("falls back to a URL in `source` when there's no ext_urls, without a search link", () => {
+    const { match } = pickBestMatch({
+      results: [
+        {
+          header: { similarity: 91, index_id: 38 },
+          data: { creator: 'orphen', source: 'https://example.com/post/1' }
+        }
+      ]
+    })
+    expect(match?.sourceUrl).toBe('https://example.com/post/1')
+    expect(match?.search).toBeUndefined()
+  })
 })
