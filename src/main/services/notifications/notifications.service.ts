@@ -124,7 +124,10 @@ export function startNotifications(): void {
     refresh()
     if (change === 'media') {
       if (mediaScanTimer) clearTimeout(mediaScanTimer)
-      mediaScanTimer = setTimeout(() => scanThenRefresh({ sourceFolder: true }), MEDIA_SCAN_DEBOUNCE_MS)
+      mediaScanTimer = setTimeout(
+        () => scanThenRefresh({ sourceFolder: true }),
+        MEDIA_SCAN_DEBOUNCE_MS
+      )
       mediaScanTimer.unref()
     }
   })

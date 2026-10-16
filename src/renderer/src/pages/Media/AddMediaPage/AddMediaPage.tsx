@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { PATH } from '@renderer/app.routes.const'
 import { MediaForm } from '../MediaForm/MediaForm'
@@ -12,7 +12,11 @@ type Tab = 'single' | 'folder'
 export default function AddMediaPage(): JSX.Element {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [tab, setTab] = useState<Tab>('single')
+  // The notification bell's "Import" opens straight on From folder.
+  const location = useLocation()
+  const [tab, setTab] = useState<Tab>(
+    (location.state as { addMediaTab?: Tab } | null)?.addMediaTab === 'folder' ? 'folder' : 'single'
+  )
   const [sourceFolder, setSourceFolder] = useState<string | null>(null)
   const [importSelection, setImportSelection] = useState<{
     files: string[]

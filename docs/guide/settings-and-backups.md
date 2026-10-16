@@ -46,7 +46,9 @@ If you moved or renamed folders outside the app, **Check for missing files**
 finds media whose file is no longer at its saved place. To fix a moved
 folder, choose the **Old folder** and the new one, and **Relink** updates
 every file under it in one step, without copying anything. Single files can
-be relinked one by one.
+be relinked one by one. The app also checks in the background every few
+hours, and the [notification bell](getting-started.md#notifications) tells
+you when files go missing.
 
 ### Source folder
 

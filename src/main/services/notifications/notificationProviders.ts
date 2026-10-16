@@ -67,7 +67,6 @@ export function sourceFolderNewProvider(count: number | null): ProviderResult {
   if (count === null) return null
   return {
     kind: 'source-folder-new',
-    item:
-      count > 0 ? { kind: 'source-folder-new', severity: 'info', snoozable: true, count } : null
+    item: count > 0 ? { kind: 'source-folder-new', severity: 'info', snoozable: true, count } : null
   }
 }

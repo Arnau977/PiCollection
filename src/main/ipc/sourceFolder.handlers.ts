@@ -31,8 +31,7 @@ export function registerSourceFolderHandlers(): void {
       const result = await sourceFolderMigrationService.apply(path)
       notifyAppStateChanged('source-folder')
       return result
-    }
-    )
+    })
   )
 
   ipcMain.handle(

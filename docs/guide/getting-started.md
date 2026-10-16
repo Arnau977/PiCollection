@@ -51,7 +51,10 @@ The app remembers its window size and position between launches.
 
 The bell at the bottom of the sidebar lists what's waiting for you: an
 available update, a failed automatic backup, media sitting in Pending for
-over a week. Each one has a button that takes you where to deal with it,
+over a week, files missing from disk and new files in your source folder
+(the last two are checked in the background a couple of minutes after
+launch and every few hours). Each one has a button that takes you where
+to deal with it,
 and disappears once it's done. **Snooze** hides one for 7 days (it comes
 back sooner if it grows). A failed backup can't be snoozed.
 
