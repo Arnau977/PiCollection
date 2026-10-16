@@ -91,6 +91,12 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   toast** when the change isn't otherwise visible (Ctrl+B on a page without
   the gallery toolbar). Gallery view settings are a shared store
   (`useGalleryDefaults`), so every consumer updates at once.
+- **Background work that finishes on its own reports with a global toast**
+  from `AppHeader` (portaled to `<body>`): `variant="error"` (warning icon in
+  `--color-danger`, `role="alert"`) for failures, whose "View" opens the
+  Settings tab in question via `navigate(PATH.SETTINGS, { state: { settingsTab } })`.
+  Toasts share one corner, so a later one waits for the earlier one instead
+  of stacking on it. Where: `useBackupToast.ts`, `AppHeader.tsx`.
 
 - **A per-chip on/off option is a small round toggle inside the chip**
   (`ChipToggle` in `MultiSelectAutocomplete`), shown only where it

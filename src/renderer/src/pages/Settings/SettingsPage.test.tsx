@@ -2,9 +2,19 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import i18n from 'i18next'
 import SettingsPage from './SettingsPage'
 import { loadGalleryDefaults } from '../../utils/gallerySettings'
+
+// SettingsPage reads location.state for the tab a toast asked to open.
+function renderPage(): void {
+  render(
+    <MemoryRouter>
+      <SettingsPage />
+    </MemoryRouter>
+  )
+}
 
 const confirmMock = vi.fn().mockResolvedValue(true)
 
@@ -110,14 +120,14 @@ afterEach(async () => {
 
 describe('SettingsPage', () => {
   it('reflects the current language selection', () => {
-    render(<SettingsPage />)
+    renderPage()
     expect(screen.getByLabelText('English')).toBeChecked()
     expect(screen.getByLabelText('Spanish')).not.toBeChecked()
   })
 
   it('changes the app language when a different language is picked', async () => {
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
 
     await user.click(screen.getByLabelText('Spanish'))
 
@@ -126,7 +136,7 @@ describe('SettingsPage', () => {
 
   it('persists a change to the default SFW filter', async () => {
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Filters')
 
     await user.selectOptions(screen.getByLabelText('SFW'), 'sfw')
@@ -136,7 +146,7 @@ describe('SettingsPage', () => {
 
   it('persists a change to the default sort direction', async () => {
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Filters')
 
     expect(screen.getByRole('button', { name: 'Descending' })).toBeInTheDocument()
@@ -148,7 +158,7 @@ describe('SettingsPage', () => {
 
   it('defaults NSFW blur to enabled and persists a change', async () => {
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
 
     const blurCheckbox = screen.getByRole('checkbox', { name: /blur nsfw thumbnails/i })
     expect(blurCheckbox).toBeChecked()
@@ -160,7 +170,7 @@ describe('SettingsPage', () => {
 
   it('defaults hide names to disabled and persists a change', async () => {
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
 
     const hideNamesCheckbox = screen.getByRole('checkbox', { name: /^hide names$/i })
     expect(hideNamesCheckbox).not.toBeChecked()
@@ -172,7 +182,7 @@ describe('SettingsPage', () => {
 
   it('shows the current app version and lets the user check for updates', async () => {
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
 
     await waitFor(() => expect(screen.getByText('Current version: 1.0.0')).toBeInTheDocument())
@@ -185,7 +195,7 @@ describe('SettingsPage', () => {
 
   it('switches the update channel and persists it via IPC', async () => {
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
 
     await user.click(screen.getByLabelText(/^Beta/))
@@ -206,7 +216,7 @@ describe('SettingsPage', () => {
       configurable: true
     })
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
 
     await waitFor(() => expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('saved-key'))
@@ -214,7 +224,7 @@ describe('SettingsPage', () => {
 
   it('saves the SauceNAO API key when Save is clicked', async () => {
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
 
     const sauceNaoSection = screen.getByLabelText('SauceNAO API key').closest('section') as HTMLElement
@@ -238,7 +248,7 @@ describe('SettingsPage', () => {
       configurable: true
     })
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
 
     await waitFor(() => expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('saved-key'))
@@ -251,7 +261,7 @@ describe('SettingsPage', () => {
 
   it('renders the backup, missing-files and source-folder sections', async () => {
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Data')
 
     expect(screen.getByRole('heading', { name: 'Backup & Restore' })).toBeInTheDocument()
@@ -261,7 +271,7 @@ describe('SettingsPage', () => {
 
   it('defaults debug logging to disabled and enables it via the checkbox', async () => {
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
 
     const loggingCheckbox = await screen.findByRole('checkbox', { name: 'Enable debug logging' })
@@ -274,7 +284,7 @@ describe('SettingsPage', () => {
 
   it('opens the logs folder when the button is clicked', async () => {
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
 
     await user.click(screen.getByRole('button', { name: 'Open logs folder' }))
@@ -300,7 +310,7 @@ describe('SettingsPage', () => {
     })
 
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
 
     act(() =>
@@ -333,7 +343,7 @@ describe('SettingsPage', () => {
     })
 
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
 
     act(() => emit({ type: 'available', version: '2.0.0', highlights: null }))
@@ -359,7 +369,7 @@ describe('SettingsPage', () => {
     })
 
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
 
     act(() =>
@@ -389,7 +399,7 @@ describe('SettingsPage', () => {
     })
 
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
 
     act(() =>
@@ -420,7 +430,7 @@ describe('SettingsPage', () => {
     })
 
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
     act(() =>
       emit({ type: 'available', version: '1.0.0', highlights: null, isDowngrade: true })
@@ -452,7 +462,7 @@ describe('SettingsPage', () => {
     })
 
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
     act(() =>
       emit({ type: 'available', version: '1.0.0', highlights: null, isDowngrade: true })
@@ -483,7 +493,7 @@ describe('SettingsPage', () => {
     })
 
     const user = userEvent.setup()
-    render(<SettingsPage />)
+    renderPage()
     await openTab(user, 'Advanced')
     act(() =>
       emit({ type: 'available', version: '2.0.0', highlights: null, isDowngrade: false })

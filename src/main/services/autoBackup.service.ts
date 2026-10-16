@@ -27,6 +27,7 @@ const CHECK_INTERVAL_MS = 60 * 60 * 1000
 const PARTIAL_SUFFIX = '.partial'
 
 let running = false
+let lastRunWroteBackup = false
 let startupTimer: NodeJS.Timeout | undefined
 let intervalTimer: NodeJS.Timeout | undefined
 
@@ -62,7 +63,8 @@ export function getAutoBackupStatus(): AutoBackupStatus {
     nextDueAt: settings.enabled
       ? (settings.lastSuccessAt ?? 0) + FREQUENCY_MS[settings.frequency]
       : null,
-    running
+    running,
+    lastRunWroteBackup
   }
 }
 
@@ -112,6 +114,7 @@ export async function runAutoBackup(options: { force?: boolean } = {}): Promise<
   if (!options.force && !isAutoBackupDue(settings, Date.now())) return getAutoBackupStatus()
 
   running = true
+  lastRunWroteBackup = false
   notifyAutoBackupChanged(getAutoBackupStatus())
   const folder = resolveFolder(settings)
   let partialPath: string | null = null
@@ -128,6 +131,7 @@ export async function runAutoBackup(options: { force?: boolean } = {}): Promise<
       await fs.rename(partialPath, finalPath)
       partialPath = null
       await pruneAutoBackups(folder, settings.keepCount)
+      lastRunWroteBackup = true
       logInfo('backup', 'Automatic backup written', { path: finalPath })
     }
     updateAutoBackupSettings({ lastSuccessAt: Date.now(), lastError: null })

@@ -4,8 +4,10 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { loadGalleryDefaults } from '../../utils/gallerySettings'
 import { AppHeader } from './AppHeader'
+import type { AutoBackupStatus } from '@shared/models'
 
 let emit: (event: unknown) => void = () => {}
+let emitBackup: (status: Partial<AutoBackupStatus>) => void = () => {}
 
 beforeEach(() => {
   emit = () => {}
@@ -28,7 +30,14 @@ beforeEach(() => {
       character: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
       series: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
       artist: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
-      entities: { onChanged: vi.fn().mockReturnValue(() => {}) }
+      entities: { onChanged: vi.fn().mockReturnValue(() => {}) },
+      autoBackup: {
+        openFolder: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+        onChanged: vi.fn((listener: (status: Partial<AutoBackupStatus>) => void) => {
+          emitBackup = listener
+          return () => {}
+        })
+      }
     },
     writable: true,
     configurable: true
@@ -160,5 +169,31 @@ describe('AppHeader', () => {
 
     expect(screen.getByRole('link', { name: 'Gallery' })).not.toHaveClass('active')
     expect(screen.getByRole('link', { name: 'Pending' })).not.toHaveClass('active')
+  })
+})
+
+describe('AppHeader backup toast', () => {
+  function finishRun(status: Partial<AutoBackupStatus>): void {
+    act(() => emitBackup({ running: true }))
+    act(() => emitBackup({ running: false, lastError: null, lastRunWroteBackup: false, ...status }))
+  }
+
+  it('announces a written backup and a failed one, but not a run that wrote nothing', () => {
+    render(
+      <MemoryRouter>
+        <AppHeader />
+      </MemoryRouter>
+    )
+
+    finishRun({})
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+
+    finishRun({ lastRunWroteBackup: true })
+    expect(screen.getByText('Backup saved')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Open folder' }))
+    expect(window.api.autoBackup.openFolder).toHaveBeenCalled()
+
+    finishRun({ lastError: 'disk full' })
+    expect(screen.getByRole('alert')).toHaveTextContent('The automatic backup failed')
   })
 })

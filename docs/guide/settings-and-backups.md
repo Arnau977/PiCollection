@@ -34,7 +34,9 @@ Optionally saves a copy of the database and settings **Daily**, **Weekly** or
 **Monthly**, to a folder you choose (a synced or external drive is a good
 idea), keeping the last 5 to 30 copies. It runs while the app is open or in
 the tray, catches up after time off, and skips a copy when nothing changed.
-**Back up now** makes one immediately. If a run fails, the Data tab says so.
+**Back up now** makes one immediately. Each copy written shows a "Backup
+saved" notification with **Open folder**; a failed run shows one with
+**View**, which opens the Data tab, where the error is shown.
 Restore one with the same **Import...**; gallery preferences are only
 included in manual exports.
 
