@@ -353,3 +353,33 @@ describe('VideoPlayer volume hover', () => {
     expect(screen.queryByText('65%')).not.toBeInTheDocument()
   })
 })
+
+describe('VideoPlayer range mode (Make GIF)', () => {
+  it('moves the clip ends with [ and ] through onChange, without a section button', () => {
+    const onChange = vi.fn()
+    render(<VideoPlayer src="app://x.mp4" rangeMode={{ value: { start: 2, end: 8 }, onChange }} />)
+    Object.defineProperty(video(), 'duration', { configurable: true, value: 20 })
+    act(() => {
+      video().dispatchEvent(new Event('loadedmetadata'))
+    })
+    expect(screen.queryByRole('button', { name: /section/i })).not.toBeInTheDocument()
+
+    act(() => {
+      video().currentTime = 5
+      video().dispatchEvent(new Event('timeupdate'))
+    })
+    act(() => {
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', { key: ']', bubbles: true, cancelable: true })
+      )
+    })
+    expect(onChange).toHaveBeenLastCalledWith({ start: 2, end: 5 })
+
+    act(() => {
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', { key: '[', bubbles: true, cancelable: true })
+      )
+    })
+    expect(onChange).toHaveBeenLastCalledWith({ start: 5, end: 8 })
+  })
+})

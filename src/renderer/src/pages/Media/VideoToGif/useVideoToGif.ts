@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import {
   DEFAULT_CUSTOM_SETTINGS,
   GIF_PRESETS,
-  MAX_CLIP_SECONDS,
+  DEFAULT_CLIP_SECONDS,
   type GifPresetId,
   type GifSettings
 } from './gifPresets'
@@ -27,7 +27,7 @@ export interface VideoToGif {
   setCustom: (settings: GifSettings) => void
   settings: GifSettings
   /** Why the clip can't be converted as set, or null when it can. */
-  clipError: 'order' | 'tooLong' | null
+  clipError: 'order' | null
   state: ConvertState
   busy: boolean
   start: () => Promise<void>
@@ -36,14 +36,21 @@ export interface VideoToGif {
 
 interface UseVideoToGifArgs {
   video: MediaModel
+  /** The section marked in the player, if any: the clip starts as that. */
+  initialClip?: Clip | null
   /** `sizeBytes` may still exceed the preset's limit if the GIF couldn't shrink enough. */
   onCreated: (gif: MediaModel, sizeBytes: number, settings: GifSettings) => void
   /** Maps an internal error code to a message for the user. */
   describeError: (code: string) => string
 }
 
-export function useVideoToGif({ video, onCreated, describeError }: UseVideoToGifArgs): VideoToGif {
-  const [clip, setClip] = useState<Clip>({ start: 0, end: MAX_CLIP_SECONDS })
+export function useVideoToGif({
+  video,
+  initialClip,
+  onCreated,
+  describeError
+}: UseVideoToGifArgs): VideoToGif {
+  const [clip, setClip] = useState<Clip>(initialClip ?? { start: 0, end: DEFAULT_CLIP_SECONDS })
   const [duration, setDurationState] = useState<number | null>(null)
   const [preset, setPreset] = useState<GifPresetId>('discord')
   const [custom, setCustom] = useState<GifSettings>(DEFAULT_CUSTOM_SETTINGS)
@@ -53,14 +60,19 @@ export function useVideoToGif({ video, onCreated, describeError }: UseVideoToGif
   // A conversion still running when the dialog goes away is just dropped.
   useEffect(() => (): void => abortRef.current?.abort(), [])
 
-  function setDuration(seconds: number): void {
+  // Stable: the player reports the duration through an effect that depends on it.
+  const setDuration = useCallback((seconds: number): void => {
     setDurationState(seconds)
-    setClip((prev) => ({ start: prev.start, end: Math.min(prev.end, seconds) }))
-  }
+    // Kept inside the video (a short video can be shorter than the default).
+    setClip((prev) => ({
+      start: Math.min(prev.start, seconds),
+      end: Math.min(prev.end, seconds)
+    }))
+  }, [])
 
   const settings = preset === 'custom' ? custom : GIF_PRESETS[preset]
-  const clipError =
-    clip.end <= clip.start ? 'order' : clip.end - clip.start > MAX_CLIP_SECONDS ? 'tooLong' : null
+  // No length cap: long clips only get a note in the dialog.
+  const clipError = clip.end <= clip.start ? 'order' : null
   const busy = state.kind === 'encoding' || state.kind === 'saving'
 
   async function start(): Promise<void> {

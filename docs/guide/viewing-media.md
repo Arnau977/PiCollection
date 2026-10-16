@@ -58,11 +58,16 @@ while adding a file, before it's saved - and in the viewer):
 
 ## Video to GIF
 
-**Make GIF** on a video's page turns a clip of up to 10 seconds into a GIF,
-entirely on your computer:
+**Make GIF** on a video's page turns a clip of it into a GIF, entirely on
+your computer:
 
-1. Set the clip's **Start** and **End** (up to 10 seconds); **Use current time**
-   takes the video's current position.
+1. Pick the clip on the dialog's player: its two markers on the timeline are
+   the start and end - drag them, or press `[` / `]` at the current time, and
+   play to preview the clip in a loop. If you had [looped a
+   section](#playing-videos) on the video's page, the clip starts as that
+   section; otherwise as the first 5 seconds. There's no length limit (a loop
+   can need 15 seconds and a few frames more); from 30 seconds on, a note
+   reminds you that long GIFs get large and slow to make.
 2. Choose a size: **Discord (≤ 10 MB)** or **X / Twitter (≤ 15 MB)** re-encode
    smaller until the file fits; **Gallery (best quality)** keeps the video's
    own size and every frame (up to 50 fps, the fastest a GIF plays) and
