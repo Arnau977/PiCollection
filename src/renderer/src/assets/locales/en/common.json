@@ -11,6 +11,14 @@
     "notifications": "Notifications"
   },
   "notifications": {
+    "settingsTitle": "Notifications",
+    "settingsHint": "Choose which alerts appear in the bell and as notifications.",
+    "alert_backup-failed": "Failed automatic backup",
+    "alert_backup-stale": "No recent backup",
+    "alert_pending-stale": "Media waiting in Pending",
+    "alert_missing-files": "Missing files",
+    "alert_source-folder-new": "New files in the source folder",
+    "alert_auto-import": "Pictures added automatically",
     "bellLabel": "Notifications",
     "bellLabelCount_one": "Notifications, {{count}} pending",
     "bellLabelCount_other": "Notifications, {{count}} pending",

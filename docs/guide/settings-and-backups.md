@@ -10,6 +10,12 @@
 - **Blur NSFW thumbnails**: the default for the gallery's NSFW blur (see
   [Gallery and search](gallery-and-search.md#nsfw)).
 - **Hide names**: hides each media's name under its thumbnail.
+- **Notifications**: one switch per alert (each kind of
+  [bell notification](getting-started.md#notifications), plus the notice for
+  pictures added automatically). Only a failed automatic backup and pictures
+  added automatically start on; available updates always show and have no
+  switch. A switched-off alert stops showing; turn it back on and it shows
+  right away if it still applies.
 
 ## Filters
 

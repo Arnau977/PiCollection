@@ -11,6 +11,14 @@
     "notifications": "Notificaciones"
   },
   "notifications": {
+    "settingsTitle": "Notificaciones",
+    "settingsHint": "Elige qué avisos aparecen en la campana y como notificaciones.",
+    "alert_backup-failed": "Copia automática fallida",
+    "alert_backup-stale": "Sin copia reciente",
+    "alert_pending-stale": "Elementos esperando en Pendientes",
+    "alert_missing-files": "Archivos que faltan",
+    "alert_source-folder-new": "Archivos nuevos en la carpeta de origen",
+    "alert_auto-import": "Imágenes añadidas automáticamente",
     "bellLabel": "Notificaciones",
     "bellLabelCount_one": "Notificaciones, {{count}} pendiente",
     "bellLabelCount_other": "Notificaciones, {{count}} pendientes",

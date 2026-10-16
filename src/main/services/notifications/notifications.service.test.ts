@@ -31,11 +31,14 @@ const {
   SNOOZE_MS,
   __resetNotificationsForTests
 } = await import('./notifications.service')
-const { resetNotificationSettingsCache, readSnoozes } = await import('./notificationSettings')
+const { resetNotificationSettingsCache, readSnoozes, setAlertEnabled } = await import(
+  './notificationSettings'
+)
 const { resetAutoBackupSettingsCache, updateAutoBackupSettings } = await import(
   '../autoBackupSettings'
 )
 
+const { APP_ALERT_KINDS } = await import('@shared/models')
 const DAY_MS = 24 * 60 * 60 * 1000
 const NOW = 1_800_000_000_000
 let cleanupDb: () => Promise<void>
@@ -74,6 +77,8 @@ beforeEach(async () => {
   ;({ cleanup: cleanupDb } = await initTestDbSingleton())
   // A recent backup, so only the overdue-backup test sees that item.
   updateAutoBackupSettings({ lastManualBackupAt: NOW })
+  // Most alerts start off; these tests exercise every kind, so switch them on.
+  for (const kind of APP_ALERT_KINDS) setAlertEnabled(kind, true)
 })
 
 afterEach(async () => {
@@ -198,6 +203,38 @@ describe('notifications', () => {
 
     updateAutoBackupSettings({ enabled: true })
     expect(await refreshNotifications(NOW)).toEqual([])
+  })
+
+  it('hides a disabled kind without touching its snooze, and shows it again once re-enabled', async () => {
+    await addPending('a', NOW - 8 * DAY_MS)
+    await snoozeNotification('pending-stale', NOW)
+    setAlertEnabled('pending-stale', false)
+    expect(await refreshNotifications(NOW + SNOOZE_MS)).toEqual([])
+    expect(readSnoozes()['pending-stale']).toBeUndefined() // expired at NOW + SNOOZE_MS, as before
+
+    setAlertEnabled('pending-stale', true)
+    expect(await refreshNotifications(NOW + SNOOZE_MS)).toHaveLength(1)
+  })
+
+  it('keeps the snooze of a disabled kind', async () => {
+    await addPending('a', NOW - 8 * DAY_MS)
+    await snoozeNotification('pending-stale', NOW)
+    setAlertEnabled('pending-stale', false)
+    await refreshNotifications(NOW + DAY_MS)
+    expect(readSnoozes()['pending-stale']).toBeDefined()
+  })
+
+  it('starts with only updates and failed automatic backups switched on', async () => {
+    await fs.rm(join(userDataDir, 'notifications-settings.json'), { force: true })
+    resetNotificationSettingsCache()
+    updaterStatus = { type: 'available', version: '2.0.0', highlights: null, isDowngrade: false }
+    updateAutoBackupSettings({ enabled: true, lastError: 'disk full' })
+    await addPending('a', NOW - 8 * DAY_MS)
+    scanResults.missingCount = 3
+
+    const kinds = (await refreshNotifications(NOW)).map((item) => item.kind)
+
+    expect(kinds).toEqual(['update-available', 'backup-failed'])
   })
 
   it('serializes overlapping refreshes so pushes stay in order', async () => {

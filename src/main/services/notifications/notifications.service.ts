@@ -16,7 +16,12 @@ import {
   updateProvider,
   type ProviderResult
 } from './notificationProviders'
-import { readSnoozes, writeSnoozes, type NotificationSnoozes } from './notificationSettings'
+import {
+  isAlertEnabled,
+  readSnoozes,
+  writeSnoozes,
+  type NotificationSnoozes
+} from './notificationSettings'
 import { getScanResults, runScans } from './notificationScans'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -76,7 +81,9 @@ function applySnoozes(results: ProviderResult[], now: number): AppNotification[]
 }
 
 async function recompute(now: number): Promise<AppNotification[]> {
-  const items = applySnoozes(await collect(now), now)
+  // A disabled alert is still computed (so it shows at once when re-enabled)
+  // and keeps its snooze - it just isn't listed.
+  const items = applySnoozes(await collect(now), now).filter((item) => isAlertEnabled(item.kind))
   const serialized = JSON.stringify(items)
   if (serialized !== lastPushed) {
     lastPushed = serialized

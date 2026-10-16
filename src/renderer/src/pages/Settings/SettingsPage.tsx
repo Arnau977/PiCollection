@@ -20,6 +20,7 @@ import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
 import { LANGUAGES } from '../../i18n'
 import { AutoStartRow } from './AutoStartRow'
+import { NotificationsSection } from './NotificationsSection'
 import { BackupSection } from './BackupSection'
 import { MissingFilesSection } from './MissingFilesSection'
 import { SourceFolderSection } from './SourceFolderSection'
@@ -202,6 +203,8 @@ export default function SettingsPage(): JSX.Element {
 
             <AutoStartRow />
           </section>
+
+          <NotificationsSection />
         </TabPanel>
 
         <TabPanel id="filters" className="settings-sections">

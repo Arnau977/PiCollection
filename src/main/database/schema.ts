@@ -108,6 +108,8 @@ export interface DiscardedMediaTable {
   type: string
   reason: string
   discarded_at: number
+  /** SHA-256 of the file when it could be read; null for rows from before 0019. */
+  hash?: string | null
 }
 
 export interface DB {

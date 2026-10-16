@@ -25,3 +25,29 @@ export interface AppNotification {
   /** update-available only. */
   version?: string
 }
+
+/**
+ * What can be switched in Settings > General > Notifications: every bell kind
+ * but updates (always shown), plus the auto-import toast.
+ */
+export const APP_ALERT_KINDS = [
+  'backup-failed',
+  'backup-stale',
+  'pending-stale',
+  'missing-files',
+  'source-folder-new',
+  'auto-import'
+] as const
+
+export type AppAlertKind = (typeof APP_ALERT_KINDS)[number]
+
+/** Until the user flips a switch: only what needs fixing or was asked for is on. */
+export const ALERT_DEFAULTS: Record<AppAlertKind, boolean> = {
+  'backup-failed': true,
+  'backup-stale': false,
+  'pending-stale': false,
+  'missing-files': false,
+  'source-folder-new': false,
+  // Only fires once the user turns auto-import on, when they'd expect it.
+  'auto-import': true
+}

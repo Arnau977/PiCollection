@@ -58,6 +58,10 @@ hours). Each one has a button that takes you where to deal with it, and
 disappears once it's done. **Snooze** hides one for 7 days (it comes
 back sooner if it grows). A failed backup can't be snoozed.
 
+Out of the box only updates and failed automatic backups show; switch the
+others on (or a failed backup off) in **Settings > General > Notifications**.
+Updates always show.
+
 ## What stays on your machine
 
 Your media files never move and are never uploaded. Browsing, tagging,
