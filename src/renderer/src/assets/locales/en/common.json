@@ -610,8 +610,9 @@
   "videoGif": {
     "open": "Make GIF",
     "title": "Make a GIF",
-    "clipSummary": "{{seconds}} s · {{frames}} frames",
+    "clipSummary": "{{seconds}} s",
     "longClipNote": "Long GIFs can get very large and slow to make.",
+    "errorTooLarge": "This GIF is too large to save (over {{max}}). Try a shorter clip or a smaller size.",
     "errorOrder": "The end must come after the start.",
     "presetLegend": "Size",
     "presetCustom": "Custom",

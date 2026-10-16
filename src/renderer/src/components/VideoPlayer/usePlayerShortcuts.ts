@@ -111,8 +111,10 @@ export function usePlayerShortcuts(
     function handleKeyDown(e: KeyboardEvent): void {
       if (!container) return
       const action = actionFor(e)
-      // Holding ↑ / ↓ keeps changing the volume; every other key acts once.
-      if (e.repeat && action !== 'volumeUp' && action !== 'volumeDown') return
+      // Holding ↑ / ↓ keeps changing the volume; every other key acts once,
+      // but its repeats are still claimed below so they don't reach the page
+      // (a held → would otherwise move on to the next media).
+      const repeatOnly = e.repeat && action !== 'volumeUp' && action !== 'volumeDown'
       const run = action ? actionsRef.current[action] : undefined
       if (!action || !run || !isFrontPlayer(container)) return
 
@@ -148,6 +150,7 @@ export function usePlayerShortcuts(
       // preventDefault tells the page's own listeners (e.g. MediaPage) the key
       // is taken; the capture phase makes sure this runs before them.
       e.preventDefault()
+      if (repeatOnly) return
       run()
     }
     container.addEventListener('focusin', onFocusIn)

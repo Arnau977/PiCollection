@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
+import { MAX_GIF_BYTES } from '@shared/ipc/contracts'
 import {
   GIF_PRESETS,
   LONG_CLIP_SECONDS,
@@ -48,7 +49,11 @@ export function VideoToGifDialog({
     initialClip,
     onCreated,
     describeError: (code) =>
-      code === 'video-unreadable' ? t('videoGif.errorUnreadable') : t('videoGif.errorEncoding')
+      code === 'video-unreadable'
+        ? t('videoGif.errorUnreadable')
+        : code === 'too-large'
+          ? t('videoGif.errorTooLarge', { max: formatMegabytes(MAX_GIF_BYTES) })
+          : t('videoGif.errorEncoding')
   })
   const { clip, settings, state, busy } = gif
 
@@ -115,13 +120,8 @@ export function VideoToGifDialog({
             onDurationChange={onDurationChange}
           />
           <p className="video-gif-clip-summary">
-            {t('videoGif.clipSummary', {
-              seconds: round1(clipSeconds),
-              frames:
-                settings.fps === 'source'
-                  ? '…'
-                  : Math.max(0, Math.round(clipSeconds * settings.fps))
-            })}
+            {/* Just the length: the frame count is in the size summary below. */}
+            {t('videoGif.clipSummary', { seconds: round1(clipSeconds) })}
           </p>
           {clipSeconds >= LONG_CLIP_SECONDS && (
             <p className="video-gif-long-note" role="status">

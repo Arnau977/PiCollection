@@ -610,8 +610,9 @@
   "videoGif": {
     "open": "Crear GIF",
     "title": "Crear un GIF",
-    "clipSummary": "{{seconds}} s · {{frames}} fotogramas",
+    "clipSummary": "{{seconds}} s",
     "longClipNote": "Los GIF largos pueden pesar mucho y tardar en crearse.",
+    "errorTooLarge": "Este GIF es demasiado grande para guardarlo (más de {{max}}). Prueba con un fragmento más corto o un tamaño menor.",
     "errorOrder": "El fin tiene que ir después del inicio.",
     "presetLegend": "Tamaño",
     "presetCustom": "Personalizado",

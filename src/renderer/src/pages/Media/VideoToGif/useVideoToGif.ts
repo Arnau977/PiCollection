@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
+import { MAX_GIF_BYTES } from '@shared/ipc/contracts'
 import {
   DEFAULT_CUSTOM_SETTINGS,
   GIF_PRESETS,
@@ -91,6 +92,12 @@ export function useVideoToGif({
         (progress) => setState({ kind: 'encoding', progress }),
         controller.signal
       )
+      // Past what the app saves: say so instead of a validation error after
+      // minutes of encoding.
+      if (gif.bytes.length > MAX_GIF_BYTES) {
+        setState({ kind: 'error', message: describeError('too-large') })
+        return
+      }
       setState({ kind: 'saving' })
       const result = await window.api.media.createGifFromVideo(video.id, gif.bytes)
       if (!result.success) {

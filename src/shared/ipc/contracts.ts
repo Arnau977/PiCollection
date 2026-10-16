@@ -93,10 +93,17 @@ export const FindSimilarSchema = z.object({
 
 export const RouteSchema = z.object({ route: z.string().min(1) })
 
-/** A GIF the renderer encoded from a video; capped well above any sensible short clip. */
+/**
+ * Largest GIF the app saves. Clips have no length limit, so a long one on the
+ * full-quality preset can grow big; past this the renderer explains it
+ * instead of sending it (`useVideoToGif`), and this schema is the backstop.
+ */
+export const MAX_GIF_BYTES = 1024 * 1024 * 1024
+
+/** A GIF the renderer encoded from a video. */
 export const CreateGifFromVideoSchema = z.object({
   sourceMediaId: z.string().min(1),
-  bytes: z.instanceof(Uint8Array).refine((bytes) => bytes.length <= 200 * 1024 * 1024)
+  bytes: z.instanceof(Uint8Array).refine((bytes) => bytes.length <= MAX_GIF_BYTES)
 })
 
 export const DanbooruCredentialsInputSchema = z.object({
