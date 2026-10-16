@@ -66,7 +66,15 @@ export function useVideoPlayer(
     const onRate = (): void => setRateState(video.playbackRate)
     const onFullscreen = (): void => setFullscreen(document.fullscreenElement !== null)
 
-    const mediaEvents = ['play', 'pause', 'ended', 'timeupdate', 'seeked', 'loadedmetadata', 'durationchange']
+    const mediaEvents = [
+      'play',
+      'pause',
+      'ended',
+      'timeupdate',
+      'seeked',
+      'loadedmetadata',
+      'durationchange'
+    ]
     for (const event of mediaEvents) video.addEventListener(event, sync)
     video.addEventListener('volumechange', onVolume)
     video.addEventListener('ratechange', onRate)
@@ -111,20 +119,20 @@ export function useVideoPlayer(
     muted,
     rate,
     fullscreen,
-    togglePlay: () => {
+    togglePlay: (): void => {
       const video = videoRef.current
       if (!video) return
       if (video.paused || video.ended) void video.play().catch(() => undefined)
       else video.pause()
     },
     seek,
-    skip: (delta) => seek((videoRef.current?.currentTime ?? 0) + delta),
-    setLoop: (next) => {
+    skip: (delta): void => seek((videoRef.current?.currentTime ?? 0) + delta),
+    setLoop: (next): void => {
       if (videoRef.current) videoRef.current.loop = next
       setLoopState(next)
       persist({ loop: next })
     },
-    setVolume: (next) => {
+    setVolume: (next): void => {
       const video = videoRef.current
       if (!video) return
       video.volume = next
@@ -132,18 +140,18 @@ export function useVideoPlayer(
       setVolumeState(next)
       persist({ volume: next, ...(forcedMute ? {} : { muted: video.muted }) })
     },
-    toggleMute: () => {
+    toggleMute: (): void => {
       const video = videoRef.current
       if (!video) return
       video.muted = !video.muted
       setMutedState(video.muted)
       if (!forcedMute) persist({ muted: video.muted })
     },
-    setRate: (next) => {
+    setRate: (next): void => {
       if (videoRef.current) videoRef.current.playbackRate = next
       setRateState(next)
     },
-    toggleFullscreen: (container) => {
+    toggleFullscreen: (container): void => {
       if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined)
       else void container.requestFullscreen?.().catch(() => undefined)
     }
