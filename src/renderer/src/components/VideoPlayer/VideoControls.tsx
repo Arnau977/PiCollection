@@ -32,6 +32,9 @@ interface VideoControlsProps {
   onToggleFullscreen: () => void
   onPointerEnter: () => void
   onPointerLeave: () => void
+  /** Where popovers (the speed menu) render: the player root, so they still
+   *  show in full screen, where only the fullscreen element is painted. */
+  portalContainer?: HTMLElement
 }
 
 /** The floating pill: transport, timeline, loop, speed, volume, fullscreen. */
@@ -40,7 +43,8 @@ export function VideoControls({
   compact,
   onToggleFullscreen,
   onPointerEnter,
-  onPointerLeave
+  onPointerLeave,
+  portalContainer
 }: VideoControlsProps): JSX.Element {
   const { t } = useTranslation()
 
@@ -110,7 +114,11 @@ export function VideoControls({
           <Button className="video-ctrl video-ctrl-text" aria-label={t('videoPlayer.speed')}>
             {player.rate === 1 ? '1×' : `${player.rate}×`}
           </Button>
-          <Popover placement="top" className="video-menu-popover">
+          <Popover
+            placement="top"
+            className="video-menu-popover"
+            UNSTABLE_portalContainer={portalContainer}
+          >
             <Menu
               className="video-menu"
               aria-label={t('videoPlayer.speed')}

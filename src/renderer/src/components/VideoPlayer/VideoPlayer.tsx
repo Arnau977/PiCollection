@@ -38,7 +38,9 @@ export function VideoPlayer({
   compact = false,
   className
 }: VideoPlayerProps): JSX.Element {
-  const rootRef = useRef<HTMLDivElement>(null)
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  // Also kept in state: popovers need the element itself, from the first render.
+  const [root, setRoot] = useState<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const player = useVideoPlayer(videoRef, { muted })
   const [recentlyMoved, setRecentlyMoved] = useState(true)
@@ -83,7 +85,10 @@ export function VideoPlayer({
 
   return (
     <div
-      ref={rootRef}
+      ref={(el) => {
+        rootRef.current = el
+        setRoot(el)
+      }}
       className={`video-player${compact ? ' is-compact' : ''}${className ? ` ${className}` : ''}`}
       data-controls-visible={visible}
       onPointerMove={nudge}
@@ -111,6 +116,7 @@ export function VideoPlayer({
         onToggleFullscreen={toggleFullscreen}
         onPointerEnter={() => setOverControls(true)}
         onPointerLeave={() => setOverControls(false)}
+        portalContainer={root ?? undefined}
       />
     </div>
   )

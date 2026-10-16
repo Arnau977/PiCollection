@@ -96,6 +96,17 @@ describe('VideoPlayer', () => {
     expect(root).toHaveAttribute('data-controls-visible', 'false')
   })
 
+  it('opens the speed menu inside the player, so it still shows in full screen', async () => {
+    const { container } = render(<VideoPlayer src="app://x.mp4" />)
+    const root = container.firstElementChild as HTMLElement
+
+    await userEvent.click(screen.getByRole('button', { name: /^Speed/ }))
+
+    // In full screen only the fullscreen element's subtree is painted: a menu
+    // portaled to <body> exists but can't be seen.
+    expect(root).toContainElement(screen.getByRole('menu'))
+  })
+
   it('stays visible while focus is inside, and hides after 2 s of playing otherwise', () => {
     vi.useFakeTimers()
     const { container } = render(<VideoPlayer src="app://x.mp4" />)
