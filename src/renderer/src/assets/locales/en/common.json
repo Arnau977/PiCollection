@@ -29,7 +29,10 @@
     "exitFullscreen": "Exit full screen",
     "more": "More",
     "seek": "Seek",
-    "withShortcut": "{{label}} ({{key}})"
+    "withShortcut": "{{label}} ({{key}})",
+    "copyFrame": "Copy frame",
+    "frameCopied": "Frame copied",
+    "actions": "Actions"
   },
   "notifications": {
     "markSeen": "Mark as seen",
@@ -355,6 +358,8 @@
     "copyMedia": "Copy image",
     "copyingMedia": "Copying…",
     "mediaCopied": "Copied!",
+    "copyFirstFrame": "Copy first frame",
+    "firstFrameCopied": "First frame copied",
     "openInFolder": "Open in file explorer",
     "closeLightbox": "Close",
     "zoomIn": "Zoom in (+)",
@@ -567,7 +572,8 @@
     }
   },
   "suggestions": {
-    "formOf": "· form of {{parent}}"
+    "formOf": "· form of {{parent}}",
+    "videoFrameHint": "For a video, it uses the frame the preview shows: pause on the one you want. Until you play or move the preview, it uses the cover."
   },
   "sauceNao": {
     "loadingTags": "Loading the matched post's tags…",
@@ -615,7 +621,7 @@
   },
   "videoGif": {
     "open": "Make GIF",
-    "title": "Make a GIF",
+    "title": "Make a GIF",
     "clipSummary": "{{seconds}} s",
     "longClipNote": "Long GIFs can get very large and slow to make.",
     "errorTooLarge": "This GIF is too large to save (over {{max}}). Try a shorter clip or a smaller size.",

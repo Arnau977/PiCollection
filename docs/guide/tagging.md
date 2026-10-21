@@ -68,7 +68,10 @@ Pixiv profile.
 
 **Suggest tags** sends a small thumbnail to [SauceNAO](https://saucenao.com)
 to find where the picture comes from, and pre-fills its artist, characters,
-series and tags. It works for images, GIFs and videos.
+series and tags. It works for images, GIFs and videos. For a video it uses
+the frame the edit form's preview shows, so pause on the one you want (until
+you play or move the preview, it uses the video's cover frame); local AI
+tagging below does the same.
 
 - It needs a free SauceNAO API key: **Settings > Advanced > SauceNAO API key**.
   Without one, the button doesn't appear.

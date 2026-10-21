@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react'
-import { withVideoFrameFallback } from '../utils/withVideoFrameFallback'
+import { useCallback, useState, type RefObject } from 'react'
+import { shownFrameBytes, withVideoFrameFallback } from '../utils/withVideoFrameFallback'
+import type { VideoFrameSource } from '../components/VideoPlayer/videoFrame'
 import { fetchDanbooruCharacters } from '../utils/fetchDanbooruCharacters'
 import type {
   CharacterModel,
@@ -36,6 +37,8 @@ interface UseWd14SuggestionsArgs {
   series: SeriesModel[]
   /** Called exactly once per successful lookup, with the IDs of entities that already exist. */
   onApplyExisting: (payload: ApplyPayload) => void
+  /** The edit form's video preview: a video is tagged from the frame it shows. */
+  videoFrame?: RefObject<VideoFrameSource | null>
 }
 
 interface UseWd14SuggestionsResult {
@@ -94,7 +97,8 @@ export function useWd14Suggestions({
   tags,
   characters,
   series,
-  onApplyExisting
+  onApplyExisting,
+  videoFrame
 }: UseWd14SuggestionsArgs): UseWd14SuggestionsResult {
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -110,9 +114,10 @@ export function useWd14Suggestions({
       setStatus('loading')
       setError(null)
 
-      const result = await withVideoFrameFallback(route, type, () =>
-        window.api.wd14Tagger.suggestTags(route)
-      )
+      const frame = await shownFrameBytes(type, videoFrame)
+      const result = frame
+        ? await window.api.wd14Tagger.suggestTagsForImage(frame)
+        : await withVideoFrameFallback(route, type, () => window.api.wd14Tagger.suggestTags(route))
       if (!result.success) {
         setStatus('error')
         setError(result.error.message)
@@ -166,7 +171,7 @@ export function useWd14Suggestions({
       )
       setStatus('ready')
     },
-    [status, tags, characters, series, onApplyExisting]
+    [status, tags, characters, series, onApplyExisting, videoFrame]
   )
 
   const dismiss = useCallback((category: SuggestionCategory, name: string) => {

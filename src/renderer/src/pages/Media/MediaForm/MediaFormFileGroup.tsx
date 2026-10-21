@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Inbox } from 'lucide-react'
 import type { MediaDuplicateCheck, MediaInput, MediaModel } from '@shared/models'
 import { VideoPlayer } from '../../../components/VideoPlayer/VideoPlayer'
+import type { VideoFrameSource } from '../../../components/VideoPlayer/videoFrame'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { Lightbox } from '../../../components/Lightbox/Lightbox'
 import { MediaFileActions } from '../../../components/MediaFileActions/MediaFileActions'
@@ -47,6 +48,8 @@ interface MediaFormFileGroupProps {
   duplicateCheck: MediaDuplicateCheck | null
   /** The names picked in the form so far, for the compare view. */
   taxonomy: ComparedTaxonomy
+  /** The video preview's shown frame, for the AI suggestions. */
+  previewFrameRef?: Ref<VideoFrameSource>
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   /** See SimilarMediaWarning; unset where replacing isn't offered. */
   onReplace?: (media: MediaModel) => void
@@ -61,6 +64,7 @@ export function MediaFormFileGroup({
   input,
   duplicateCheck,
   taxonomy,
+  previewFrameRef,
   onFileChange,
   onReplace,
   busy
@@ -116,7 +120,13 @@ export function MediaFormFileGroup({
       {previewMedia && (
         <div className="media-preview">
           {previewMedia.type === 'video' ? (
-            <VideoPlayer src={previewMedia.src} muted compact className="media-preview-player" />
+            <VideoPlayer
+              src={previewMedia.src}
+              muted
+              compact
+              className="media-preview-player"
+              frameRef={previewFrameRef}
+            />
           ) : (
             <img
               src={previewMedia.src}

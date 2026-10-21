@@ -170,6 +170,9 @@
 }
 
 .video-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
@@ -186,9 +189,66 @@
   font-weight: 700;
 }
 
-@media (max-width: 900px) {
+/* The compact menu: speed under a heading, then the one-off actions. */
+.video-menu-header {
+  padding: var(--space-1) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.video-menu-separator {
+  height: 1px;
+  margin: var(--space-1) 0;
+  background: var(--border-color-strong);
+}
+
+/* Where the pill is narrow, the volume slider pops up above the mute button
+   on hover or keyboard focus, touching it so the pointer can move onto it
+   without it closing; the level shows above it. */
+.video-player.is-compact .video-volume {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6rem;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: rgba(30, 31, 38, 0.92);
+  visibility: hidden;
+}
+
+.video-player.is-compact
+  .video-volume-group:is(:hover, :focus-within):not([data-dismissed])
   .video-volume {
-    display: none;
+  visibility: visible;
+}
+
+.video-player.is-compact .video-volume-level {
+  bottom: calc(100% + 1.25rem + 3 * var(--space-1));
+}
+
+@media (max-width: 900px) {
+  .video-player .video-volume {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6rem;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    background: rgba(30, 31, 38, 0.92);
+    visibility: hidden;
+  }
+
+  .video-player .video-volume-group:is(:hover, :focus-within):not([data-dismissed]) .video-volume {
+    visibility: visible;
+  }
+
+  .video-player .video-volume-level {
+    bottom: calc(100% + 1.25rem + 3 * var(--space-1));
   }
 }
 

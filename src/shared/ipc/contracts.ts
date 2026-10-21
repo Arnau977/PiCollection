@@ -111,6 +111,9 @@ export const DanbooruCredentialsInputSchema = z.object({
   apiKey: z.string().min(1)
 })
 
+/** A PNG captured in the renderer (a paused video frame), sent for a lookup. */
+export const ImagePngSchema = z.custom<Uint8Array>((value) => value instanceof Uint8Array)
+
 export const CacheThumbnailSchema = z.object({
   route: z.string().min(1),
   // Structured-clone-transferred from the renderer, so it survives the IPC
@@ -345,6 +348,7 @@ export const IPC = {
   },
   sauceNao: {
     lookup: 'sauce-nao:lookup',
+    lookupImage: 'sauce-nao:lookup-image',
     getQuota: 'sauce-nao:get-quota',
     getApiKey: 'sauce-nao:get-api-key',
     setApiKey: 'sauce-nao:set-api-key'
@@ -366,7 +370,8 @@ export const IPC = {
     event: 'wd14-runtime:event'
   },
   wd14Tagger: {
-    suggestTags: 'wd14-tagger:suggest-tags'
+    suggestTags: 'wd14-tagger:suggest-tags',
+    suggestTagsForImage: 'wd14-tagger:suggest-tags-for-image'
   },
   logging: {
     getEnabled: 'logging:get-enabled',

@@ -79,7 +79,12 @@ export function SauceNaoSuggestionsPanel({
         )}
       </span>
       <p className="sauce-hint">{t('sauceNao.privacyHint')}</p>
-      {inputType === 'video' && <p className="sauce-hint">{t('sauceNao.videoHint')}</p>}
+      {inputType === 'video' && (
+        <>
+          <p className="sauce-hint">{t('sauceNao.videoHint')}</p>
+          <p className="sauce-hint">{t('suggestions.videoFrameHint')}</p>
+        </>
+      )}
 
       {sauce.status === 'error' && (
         <p role="alert" className="sauce-error">

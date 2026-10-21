@@ -29,7 +29,10 @@
     "exitFullscreen": "Salir de pantalla completa",
     "more": "Más",
     "seek": "Posición",
-    "withShortcut": "{{label}} ({{key}})"
+    "withShortcut": "{{label}} ({{key}})",
+    "copyFrame": "Copiar fotograma",
+    "frameCopied": "Fotograma copiado",
+    "actions": "Acciones"
   },
   "notifications": {
     "markSeen": "Marcar como visto",
@@ -355,6 +358,8 @@
     "copyMedia": "Copiar imagen",
     "copyingMedia": "Copiando…",
     "mediaCopied": "¡Copiado!",
+    "copyFirstFrame": "Copiar primer fotograma",
+    "firstFrameCopied": "Primer fotograma copiado",
     "openInFolder": "Abrir en el explorador de archivos",
     "closeLightbox": "Cerrar",
     "zoomIn": "Acercar (+)",
@@ -567,7 +572,8 @@
     }
   },
   "suggestions": {
-    "formOf": "· variante de {{parent}}"
+    "formOf": "· variante de {{parent}}",
+    "videoFrameHint": "En un vídeo usa el fotograma que muestra la vista previa: pausa en el que quieras. Hasta que la reproduzcas o la muevas, usa la portada."
   },
   "sauceNao": {
     "loadingTags": "Cargando las etiquetas del post encontrado…",
@@ -615,7 +621,7 @@
   },
   "videoGif": {
     "open": "Crear GIF",
-    "title": "Crear un GIF",
+    "title": "Crear un GIF",
     "clipSummary": "{{seconds}} s",
     "longClipNote": "Los GIF largos pueden pesar mucho y tardar en crearse.",
     "errorTooLarge": "Este GIF es demasiado grande para guardarlo (más de {{max}}). Prueba con un fragmento más corto o un tamaño menor.",

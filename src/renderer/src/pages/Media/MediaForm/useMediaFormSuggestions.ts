@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react'
+import type { Dispatch, RefObject, SetStateAction } from 'react'
 import type {
   ArtistModel,
   CharacterModel,
@@ -18,6 +18,7 @@ import { useWd14Suggestions } from '../../../hooks/useWd14Suggestions'
 import { normalizeEntityName, titleCaseTagName } from '../../../utils/matchEntityNames'
 import { withImpliedSeries } from '../../../utils/withImpliedSeries'
 import type { MediaFormDrafts } from './useMediaFormDrafts'
+import type { VideoFrameSource } from '../../../components/VideoPlayer/videoFrame'
 
 interface EntityList<T> {
   data: T[]
@@ -37,6 +38,8 @@ interface UseMediaFormSuggestionsArgs {
   drafts: MediaFormDrafts
   /** Set on media captured by the browser extension - what its source site had. */
   sourceMetadata?: MediaSourceMetadata
+  /** The video preview, whose shown frame SauceNAO/WD14 use. */
+  videoFrame?: RefObject<VideoFrameSource | null>
 }
 
 export interface MediaFormSuggestions {
@@ -87,7 +90,8 @@ export function useMediaFormSuggestions({
   characters,
   series,
   drafts,
-  sourceMetadata
+  sourceMetadata,
+  videoFrame
 }: UseMediaFormSuggestionsArgs): MediaFormSuggestions {
   const hasSauceNaoApiKey = useSauceNaoApiKey()
 
@@ -97,6 +101,7 @@ export function useMediaFormSuggestions({
   // so without this a second suggestion source re-detecting the same name
   // would offer it again as "new" instead of recognizing the draft.
   const sauce = useSauceNaoSuggestions({
+    videoFrame,
     artists: [...artists.data, ...drafts.pendingArtists],
     tags: [...tags.data, ...drafts.pendingTags],
     characters: [...characters.data, ...drafts.pendingCharacters],
@@ -125,6 +130,7 @@ export function useMediaFormSuggestions({
 
   const wd14Runtime = useWd14Runtime()
   const wd14 = useWd14Suggestions({
+    videoFrame,
     tags: [...tags.data, ...drafts.pendingTags],
     characters: [...characters.data, ...drafts.pendingCharacters],
     series: [...series.data, ...drafts.pendingSeries],

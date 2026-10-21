@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { VideoPlayer } from './VideoPlayer'
 import { loadVideoPlayerPrefs } from './videoPlayerPrefs'
@@ -321,7 +321,7 @@ describe('VideoPlayer section edge cases', () => {
     expect(video().volume).toBeCloseTo(0.49)
   })
 
-  it('folds speed and the section into a More menu in compact mode', async () => {
+  it('folds speed and the actions into a More menu in compact mode, in separate sections', async () => {
     render(<VideoPlayer src="app://x.mp4" compact />)
 
     expect(screen.queryByRole('button', { name: /^Speed/ })).not.toBeInTheDocument()
@@ -329,7 +329,11 @@ describe('VideoPlayer section edge cases', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'More' }))
     expect(screen.getByRole('menuitemradio', { name: '1.5×' })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: 'Loop section' })).toBeInTheDocument()
+    const [speed, actions] = screen.getAllByRole('group')
+    expect(within(speed).getByText('Speed')).toBeInTheDocument()
+    expect(within(speed).queryByRole('menuitem', { name: 'Loop section' })).not.toBeInTheDocument()
+    expect(within(actions).getByRole('menuitem', { name: 'Loop section' })).toBeInTheDocument()
+    expect(within(actions).getByRole('menuitem', { name: 'Copy frame' })).toBeInTheDocument()
   })
 })
 

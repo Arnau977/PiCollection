@@ -9,8 +9,10 @@ the gallery's current order, and **Edit** (`E`) opens the edit form.
 
 Videos play in PiCollection's own player: a bar over the bottom of the
 video with play/pause, back and forward 5 seconds, the timeline (hover it to
-see the time under the cursor), **Loop**, **Speed** (0.25× to 2×), volume and
-full screen. The bar fades out while the video plays and you don't move the
+see the time under the cursor), **Copy frame**, **Loop**, **Speed** (0.25× to
+2×), volume and full screen. **Copy frame** puts the frame on screen on the
+clipboard at full size - handy for a reverse image search (Google Lens) when
+the tag suggestions find nothing. The bar fades out while the video plays and you don't move the
 mouse, and stays up while it's paused or you're using the keyboard in it.
 Loop, volume and mute carry over to the next video; speed goes back to
 normal. A video pauses itself when a dialog (such as Make GIF) opens over it. Keys: `Space` play/pause, `L` loop, `M` mute, `F` full screen, and
@@ -24,7 +26,9 @@ While paused, `,` / `.` step one frame back or forward. To loop just part
 of a video, press **Loop section** at the start and again at the end (or
 `[` and `]`): only that part plays and repeats, and its two markers on the
 timeline can be dragged. Press it once more (or `Shift+L`) to clear it. In the edit form's
-smaller preview, speed and the section are under the **More** (⋯) button.
+smaller preview, speed, **Loop section** and **Copy frame** are under the
+**More** (⋯) button, and the volume slider pops up when you point at (or tab
+to) the volume button - as it does in the full player below 900 px wide.
 
 ## Finding a tag
 
@@ -54,6 +58,8 @@ while adding a file, before it's saved - and in the viewer):
   animated WebPs are copied as a file on Windows, so they paste *animated*
   into apps like Discord or Telegram; image editors like Paint get the first
   frame.
+- **Copy first frame** (GIFs) copies just the first frame as a still
+  picture, for a reverse image search.
 - **Copy location** copies the file's full path.
 - **Open in file explorer** shows the file in its folder.
 

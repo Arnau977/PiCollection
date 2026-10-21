@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from 'child_process'
 import { randomUUID } from 'crypto'
+import { promises as fs } from 'fs'
 import { createInterface } from 'readline'
 import { app } from 'electron'
 import { extname, join } from 'path'
@@ -113,6 +114,21 @@ export async function suggestTags(imagePath: string): Promise<Wd14Tag[]> {
   // files. Pillow reads still images directly, so hand it the original.
   if (PIL_READABLE_EXTENSIONS.has(extname(imagePath).toLowerCase())) return runPrediction(imagePath)
   throw new AppError('NO_THUMBNAIL', 'Could not read that file to tag.')
+}
+
+/**
+ * Tags a still the renderer captured (a video frame paused in the edit
+ * form's preview). The Python side reads files, so it goes through a temp
+ * PNG, removed once the model is done with it.
+ */
+export async function suggestTagsForImage(png: Uint8Array): Promise<Wd14Tag[]> {
+  const framePath = join(app.getPath('temp'), `picollection-frame-${randomUUID()}.png`)
+  await fs.writeFile(framePath, png)
+  try {
+    return await runPrediction(framePath)
+  } finally {
+    await fs.rm(framePath, { force: true })
+  }
 }
 
 /** Test-only: kills the cached subprocess reference so tests don't leak state between files. */

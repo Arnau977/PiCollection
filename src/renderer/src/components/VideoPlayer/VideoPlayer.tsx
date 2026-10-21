@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useVideoPlayer } from './useVideoPlayer'
 import { isFrontPlayer, usePlayerShortcuts } from './usePlayerShortcuts'
@@ -7,6 +7,7 @@ import { useFrameRate } from './useFrameRate'
 import { normalizeSection, useSection, type UseSection } from './useSection'
 import { VideoControls } from './VideoControls'
 import { SKIP_SECONDS, VOLUME_STEP } from './playerConstants'
+import { copyVideoFrame, drawVideoFrame, type VideoFrameSource } from './videoFrame'
 import './VideoPlayer.css'
 
 /** A start/end range in seconds: the looped section, or Make GIF's clip. */
@@ -28,6 +29,8 @@ interface VideoPlayerProps {
   rangeMode?: { value: Section; onChange: (section: Section) => void }
   /** The video's duration once known (null while loading). */
   onDurationChange?: (duration: number | null) => void
+  /** Lets the host read the frame on screen (the edit form's AI suggestions). */
+  frameRef?: Ref<VideoFrameSource>
 }
 
 const HIDE_AFTER_MS = 2000
@@ -47,7 +50,8 @@ export function VideoPlayer({
   className,
   onSectionChange,
   rangeMode,
-  onDurationChange
+  onDurationChange,
+  frameRef
 }: VideoPlayerProps): JSX.Element {
   const { t } = useTranslation()
   const rootRef = useRef<HTMLDivElement | null>(null)
@@ -63,6 +67,23 @@ export function VideoPlayer({
   const toggleFullscreen = useCallback(() => {
     if (rootRef.current) player.toggleFullscreen(rootRef.current)
   }, [player])
+
+  useImperativeHandle(
+    frameRef,
+    () => ({
+      captureShownFrame: async (maxSize): Promise<Blob | null> => {
+        const video = videoRef.current
+        if (!video || video.currentTime === 0) return null
+        return drawVideoFrame(video, maxSize)
+      }
+    }),
+    []
+  )
+
+  const copyFrame = useCallback(async (): Promise<boolean> => {
+    const video = videoRef.current
+    return video ? copyVideoFrame(video) : false
+  }, [])
 
   const fps = useFrameRate(videoRef, src)
   const ownSection = useSection(player.duration)
@@ -233,6 +254,8 @@ export function VideoPlayer({
         ref={videoRef}
         className="video-player-media"
         src={src}
+        // Lets Copy frame read the canvas back (the app: scheme is CORS-enabled).
+        crossOrigin="anonymous"
         autoPlay={autoPlay}
         muted={muted}
         playsInline
@@ -251,6 +274,7 @@ export function VideoPlayer({
         sectionControl={!rangeMode}
         compact={compact}
         onToggleFullscreen={toggleFullscreen}
+        onCopyFrame={copyFrame}
         onPointerEnter={() => setOverControls(true)}
         onPointerLeave={() => setOverControls(false)}
         portalContainer={root ?? undefined}

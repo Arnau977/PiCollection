@@ -98,6 +98,20 @@ here.
 - Source: Photography Life, Lightroom before and after - https://photographylife.com/lightroom-before-and-after ; Digital Photography School - https://digital-photography-school.com/lightroom-controlling-the-before-and-after/
 - Checked: 2026-10-21
 
+### Grouped menu: header, then a divider between groups
+- Kind: pattern
+- Use when / avoid when: a menu mixing different kinds of items (a single-choice setting and one-off actions). Each group gets a short bold header (SAP: worth it once a menu passes ~3 items) and a divider above the next group, not under its header (Fluent 2); a purely visual divider is hidden from screen readers.
+- Takeaway for PiCollection: the compact player's More menu heads its speed radio group and separates the actions (Loop section, Copy frame) below.
+- Source: Fluent 2 Divider - https://fluent2.microsoft.design/components/web/react/core/divider/usage ; SAP menu grouping guidelines - https://www.sap.com/design-system/dna-design/ui-elements/menu/menu-grouping-guidelines
+- Checked: 2026-10-21
+
+### Volume slider that pops up from the mute button
+- Kind: pattern
+- Use when / avoid when: a player too narrow for an inline volume slider. The slider appears on hover **and** keyboard focus of the volume control (focus-within), stays a real labelled slider, and the mute button keeps Enter/Space for mute. As content shown on hover/focus it must also be hoverable and dismissible (WCAG 1.4.13, above).
+- Takeaway for PiCollection: in the compact pill and below 900px, the volume slider pops up above the mute button, touching it, and Esc hides it.
+- Source: Video.js volume slider - https://videojs.org/docs/framework/html/reference/volume-slider ; Video.js v10 popover focus issue - https://github.com/videojs/v10/issues/60 ; Fluid Floe video player interactions - https://fluidproject.atlassian.net/wiki/x/13_x
+- Checked: 2026-10-21
+
 ## Anti-patterns
 
 ### A badge that is almost always lit
