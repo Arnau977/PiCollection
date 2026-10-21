@@ -18,6 +18,7 @@ import { useWd14Suggestions } from '../../../hooks/useWd14Suggestions'
 import { normalizeEntityName, titleCaseTagName } from '../../../utils/matchEntityNames'
 import { withImpliedSeries } from '../../../utils/withImpliedSeries'
 import type { MediaFormDrafts } from './useMediaFormDrafts'
+import type { HeldCharacter } from '../../../hooks/tagSuggestionMatching'
 import type { VideoFrameSource } from '../../../components/VideoPlayer/videoFrame'
 
 interface EntityList<T> {
@@ -54,6 +55,8 @@ export interface MediaFormSuggestions {
   addAllSourceExisting: () => void
   applySourceAiGenerated: () => void
   addMissingSuggestion: (category: SuggestionCategory, name: string) => Promise<void>
+  /** Adds the character picked for a held one (see HeldCharacterChoices), with the original's series if she's the pick. */
+  pickHeldCharacter: (source: 'sauce' | 'wd14', entry: HeldCharacter, characterId: string) => void
   addWd14Suggestion: (
     category: Extract<SuggestionCategory, 'tags' | 'characters' | 'series'>,
     name: string
@@ -301,8 +304,27 @@ export function useMediaFormSuggestions({
     characters.refetch()
   }
 
+  function pickHeldCharacter(
+    source: 'sauce' | 'wd14',
+    entry: HeldCharacter,
+    characterId: string
+  ): void {
+    setInput((prev) => {
+      const characterIds = Array.from(new Set([...(prev.characterIds ?? []), characterId]))
+      const ownSeries = characterId === entry.original.id ? entry.seriesIds : []
+      const seriesIds = Array.from(new Set([...(prev.seriesIds ?? []), ...ownSeries]))
+      return {
+        ...prev,
+        characterIds,
+        seriesIds: withImpliedSeries(characters.data, [characterId], seriesIds)
+      }
+    })
+    ;(source === 'sauce' ? sauce : wd14).resolveHeld(entry.original.id)
+  }
+
   return {
     hasSauceNaoApiKey,
+    pickHeldCharacter,
     sauce,
     wd14Runtime,
     wd14,

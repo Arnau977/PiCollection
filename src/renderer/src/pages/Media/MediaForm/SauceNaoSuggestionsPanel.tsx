@@ -7,6 +7,8 @@ import { PATH } from '../../../app.routes.const'
 import { CharacterFormOfHint } from './CharacterFormOfHint'
 import { SAUCE_MISSING_CATEGORIES } from './missingSuggestionCounts'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
+import type { HeldCharacter } from '../../../hooks/tagSuggestionMatching'
+import { HeldCharacterChoices } from './HeldCharacterChoices'
 import '../../../components/InfoTooltip/InfoTooltip.css'
 
 interface SauceNaoSuggestionsPanelProps {
@@ -18,6 +20,9 @@ interface SauceNaoSuggestionsPanelProps {
   saving: boolean
   onAddMissing: MediaFormSuggestions['addMissingSuggestion']
   onUseSourceUrl: (url: string) => void
+  /** For the held-character choice (HeldCharacterChoices). */
+  selectedCharacterIds: string[]
+  onPickHeld: (entry: HeldCharacter, characterId: string) => void
 }
 
 export function SauceNaoSuggestionsPanel({
@@ -28,7 +33,9 @@ export function SauceNaoSuggestionsPanel({
   inputSourceUrl,
   saving,
   onAddMissing,
-  onUseSourceUrl
+  onUseSourceUrl,
+  selectedCharacterIds,
+  onPickHeld
 }: SauceNaoSuggestionsPanelProps): JSX.Element {
   const { t, i18n } = useTranslation()
   const limitTooltipId = useId()
@@ -160,6 +167,12 @@ export function SauceNaoSuggestionsPanel({
               </button>
             </div>
           )}
+
+          <HeldCharacterChoices
+            held={sauce.held}
+            selectedCharacterIds={selectedCharacterIds}
+            onPick={onPickHeld}
+          />
 
           {SAUCE_MISSING_CATEGORIES.map(
             ({ category, labelKey }) =>

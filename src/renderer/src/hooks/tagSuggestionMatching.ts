@@ -34,8 +34,21 @@ export interface TagSuggestionCandidate {
   series: SauceNaoName[]
 }
 
+/**
+ * A recognized character that other characters are inspired by (Yae Sakura,
+ * with Evanescia modelled on her): the picture may well show one of those
+ * instead, so neither she nor her own series is applied - the user picks.
+ */
+export interface HeldCharacter {
+  original: { id: string; name: string }
+  expys: { id: string; name: string }[]
+  /** The original's series held back with her (Honkai Impact 3rd), applied only if she's picked. */
+  seriesIds: string[]
+}
+
 export interface MatchedSuggestions {
   applied: ApplyPayload
+  held: HeldCharacter[]
   missing: Record<SuggestionCategory, string[]>
   /** Missing character name -> the base character it's a form of ("Pyra (Pro Swimmer)" -> "Pyra"). */
   characterParents: Record<string, string>
@@ -85,6 +98,47 @@ function pruneAncestors<T extends { id: string; parentId?: string | null }>(
   return matched.filter(
     (entity) =>
       !matched.some((other) => other.id !== entity.id && isDescendantOf(other.id, entity.id))
+  )
+}
+
+/**
+ * Holds back each matched character that others in the library are inspired
+ * by, with those of her series no other matched character or expy shares:
+ * a model trained on the original names her for the expy too, and the
+ * series would follow her in. Kept apart for the user to choose.
+ */
+function holdInspirations(matched: CharacterModel[], all: CharacterModel[]): HeldCharacter[] {
+  const held = matched.flatMap((original) => {
+    const expys = all.filter((character) => character.inspiredByIds?.includes(original.id))
+    return expys.length ? [{ original, expys }] : []
+  })
+  const heldIds = new Set(held.map((entry) => entry.original.id))
+  const keptSeriesIds = new Set(
+    matched
+      .filter((character) => !heldIds.has(character.id))
+      .flatMap((character) => character.series.map((series) => series.id))
+  )
+  return held.map(({ original, expys }) => {
+    const expySeriesIds = new Set(expys.flatMap((expy) => expy.series.map((series) => series.id)))
+    return {
+      original: { id: original.id, name: original.name },
+      expys: expys.map((expy) => ({ id: expy.id, name: expy.name })),
+      seriesIds: original.series
+        .map((series) => series.id)
+        .filter((id) => !keptSeriesIds.has(id) && !expySeriesIds.has(id))
+    }
+  })
+}
+
+/** Held characters still to decide: none of the choices is in the form yet. */
+export function openHeldCharacters(
+  held: HeldCharacter[],
+  selectedCharacterIds: string[]
+): HeldCharacter[] {
+  return held.filter(
+    (entry) =>
+      !selectedCharacterIds.includes(entry.original.id) &&
+      !entry.expys.some((expy) => selectedCharacterIds.includes(expy.id))
   )
 }
 
@@ -162,8 +216,17 @@ export function matchSuggestionCandidate(
   // by name, it's surfaced as a chip to confirm rather than applied silently.
   const seriesMatch = matchEntityNames(confirmedSeries, entities.series)
   const seriesHintsMatch = matchEntityNames(resolvedCharacters.seriesHints, entities.series)
-  const leafCharacters = pruneAncestors(uniqueById(charactersMatch.existing), entities.characters)
-  const leafSeries = pruneAncestors(seriesMatch.existing, entities.series)
+  const matchedCharacters = pruneAncestors(
+    uniqueById(charactersMatch.existing),
+    entities.characters
+  )
+  const held = holdInspirations(matchedCharacters, entities.characters)
+  const heldIds = new Set(held.map((entry) => entry.original.id))
+  const heldSeriesIds = new Set(held.flatMap((entry) => entry.seriesIds))
+  const leafCharacters = matchedCharacters.filter((character) => !heldIds.has(character.id))
+  const leafSeries = pruneAncestors(seriesMatch.existing, entities.series).filter(
+    (series) => !heldSeriesIds.has(series.id)
+  )
   // A matched character with exactly one associated series gets that series
   // silently linked elsewhere (see withImpliedSeries) - if a hint happens to
   // name that same series, surfacing it again as a "confirm this" chip would
@@ -175,7 +238,7 @@ export function matchSuggestionCandidate(
   )
   const seriesHintNames = [
     ...seriesHintsMatch.existing
-      .filter((entity) => !impliedSeriesIds.has(entity.id))
+      .filter((entity) => !impliedSeriesIds.has(entity.id) && !heldSeriesIds.has(entity.id))
       .map((entity) => entity.name),
     ...seriesHintsMatch.missing
   ]
@@ -187,6 +250,7 @@ export function matchSuggestionCandidate(
       characterIds: leafCharacters.map((entity) => entity.id),
       seriesIds: leafSeries.map((entity) => entity.id)
     },
+    held,
     missing: {
       artist: artistMatch.missing,
       // Booru-sourced names arrive lowercase; characters and series read

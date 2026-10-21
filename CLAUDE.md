@@ -160,7 +160,10 @@ matters for series and characters, since only the structured
 `seriesGroups`/`characterGroups` paths expand through the parent/child
 hierarchy (a filter on a parent also matches media tagged only with a
 descendant, via `buildClosureMap` in
-`src/main/database/repositories/entityHierarchy.ts`). Ids listed in
+`src/main/database/repositories/entityHierarchy.ts`). A character's "inspired by" links
+(`character_inspired_by`, an expy and her original) are not a hierarchy and
+never expand; they only make tag suggestions hold the original back
+(`HeldCharacter` in `hooks/tagSuggestionMatching.ts`). Ids listed in
 `exactCharacterIds`/`exactSeriesIds` skip that expansion and match only
 direct links. A group entry prefixed with `-` is an exclusion ("must not
 have it"), parsed by `src/shared/query/groupEntry.ts` - always go through

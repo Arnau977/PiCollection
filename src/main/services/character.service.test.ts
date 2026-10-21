@@ -140,7 +140,10 @@ describe('characterService', () => {
     const character = await characterService.createCharacter({ name: 'self' })
 
     await expect(
-      characterService.updateCharacter(character.id, { name: character.name, parentId: character.id })
+      characterService.updateCharacter(character.id, {
+        name: character.name,
+        parentId: character.id
+      })
     ).rejects.toThrow(/cycle|own parent/i)
   })
 
@@ -158,5 +161,29 @@ describe('characterService', () => {
         parentId: child.id
       })
     ).rejects.toThrow(/cycle|descendant/i)
+  })
+})
+
+describe('characterService inspiredBy', () => {
+  it('stores who a character is inspired by, keeps it on updates that omit it, and rejects itself', async () => {
+    const yae = await characterService.createCharacter({ name: 'Yae Sakura' })
+    const evanescia = await characterService.createCharacter({
+      name: 'Evanescia',
+      inspiredByIds: [yae.id]
+    })
+    expect(evanescia.inspiredByIds).toEqual([yae.id])
+
+    const renamed = await characterService.updateCharacter(evanescia.id, { name: 'Evanescia' })
+    expect(renamed.inspiredByIds).toEqual([yae.id])
+
+    await expect(
+      characterService.updateCharacter(evanescia.id, {
+        name: 'Evanescia',
+        inspiredByIds: [evanescia.id]
+      })
+    ).rejects.toThrow('inspired by itself')
+
+    await characterService.deleteCharacter(yae.id)
+    expect((await characterService.getCharacterById(evanescia.id))?.inspiredByIds).toEqual([])
   })
 })

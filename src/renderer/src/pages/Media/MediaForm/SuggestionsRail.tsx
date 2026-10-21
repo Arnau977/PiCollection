@@ -10,6 +10,7 @@ import {
 import { SauceNaoSuggestionsPanel } from './SauceNaoSuggestionsPanel'
 import { SourceSuggestionsPanel } from './SourceSuggestionsPanel'
 import { Wd14SuggestionsPanel } from './Wd14SuggestionsPanel'
+import { openHeldCharacters } from '../../../hooks/tagSuggestionMatching'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
 import { useSuggestionsTab, type SuggestionsTab } from './useSuggestionsTab'
 import { SHORTCUTS, useShortcut } from '../../../hooks/useShortcut'
@@ -69,6 +70,7 @@ export function SuggestionsRail({
     if (button && !button.disabled) button.click()
   }, [wd14Requested])
 
+  const selectedCharacterIds = input.characterIds ?? []
   const tabs: { id: SuggestionsTab; label: string; count: number }[] = [
     ...(suggestions.source.available
       ? [
@@ -82,12 +84,16 @@ export function SuggestionsRail({
     {
       id: 'sauce',
       label: t('addMedia.suggestionsTabSauceNao'),
-      count: countSauceMissing(suggestions.sauce.missing)
+      count:
+        countSauceMissing(suggestions.sauce.missing) +
+        openHeldCharacters(suggestions.sauce.held, selectedCharacterIds).length
     },
     {
       id: 'wd14',
       label: t('addMedia.suggestionsTabWd14'),
-      count: countWd14Missing(suggestions.wd14.missing)
+      count:
+        countWd14Missing(suggestions.wd14.missing) +
+        openHeldCharacters(suggestions.wd14.held, selectedCharacterIds).length
     }
   ]
   const totalMissing = tabs.reduce((sum, { count }) => sum + count, 0)
@@ -191,6 +197,8 @@ export function SuggestionsRail({
                 saving={saving}
                 onAddMissing={suggestions.addMissingSuggestion}
                 onUseSourceUrl={onApplySourceUrl}
+                selectedCharacterIds={selectedCharacterIds}
+                onPickHeld={(entry, id) => suggestions.pickHeldCharacter('sauce', entry, id)}
               />
             </div>
 
@@ -204,6 +212,8 @@ export function SuggestionsRail({
                 saving={saving}
                 onAddMissing={suggestions.addWd14Suggestion}
                 onApplyRating={onApplyRating}
+                selectedCharacterIds={selectedCharacterIds}
+                onPickHeld={(entry, id) => suggestions.pickHeldCharacter('wd14', entry, id)}
                 runButtonRef={wd14ButtonRef}
               />
             </div>

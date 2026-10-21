@@ -14,6 +14,7 @@ import {
   EMPTY_MISSING,
   matchSuggestionCandidate,
   type ApplyPayload,
+  type HeldCharacter,
   type SuggestionCategory
 } from './tagSuggestionMatching'
 
@@ -46,6 +47,10 @@ interface UseSauceNaoSuggestionsResult {
   missing: Record<SuggestionCategory, string[]>
   /** Missing character -> the base character it's a form of (see matchSuggestionCandidate). */
   characterParents: Record<string, string>
+  /** Recognized characters others are inspired by, left for the user to pick (see matchSuggestionCandidate). */
+  held: HeldCharacter[]
+  /** Drops a held character once the user has picked. */
+  resolveHeld: (originalId: string) => void
   /** `type` lets a video fall back to a frame captured here when the OS can't thumbnail it. */
   run: (route: string, type?: MediaModel['type']) => Promise<void>
   dismiss: (category: SuggestionCategory, name: string) => void
@@ -67,6 +72,7 @@ export function useSauceNaoSuggestions({
   const [exhaustedUntil, setExhaustedUntil] = useState<number | null>(null)
   const [appliedCount, setAppliedCount] = useState(0)
   const [characterParents, setCharacterParents] = useState<Record<string, string>>({})
+  const [held, setHeld] = useState<HeldCharacter[]>([])
   const [missing, setMissing] = useState<Record<SuggestionCategory, string[]>>(EMPTY_MISSING)
 
   // The pause lives in the main process, so it survives closing this form.
@@ -120,6 +126,7 @@ export function useSauceNaoSuggestions({
       if (!result.data.match) {
         setMatch(null)
         setMissing(EMPTY_MISSING)
+        setHeld([])
         setAppliedCount(0)
         setStatus('ready')
         return
@@ -137,6 +144,7 @@ export function useSauceNaoSuggestions({
       onApplyExisting({ ...matched.applied, sourceUrl: found.sourceUrl })
       setMissing(matched.missing)
       setCharacterParents(matched.characterParents)
+      setHeld(matched.held)
       setAppliedCount(matched.appliedCount)
       setStatus('ready')
     },
@@ -150,6 +158,10 @@ export function useSauceNaoSuggestions({
     }))
   }, [])
 
+  const resolveHeld = useCallback((originalId: string) => {
+    setHeld((prev) => prev.filter((entry) => entry.original.id !== originalId))
+  }, [])
+
   const reset = useCallback(() => {
     setStatus('idle')
     setError(null)
@@ -158,10 +170,13 @@ export function useSauceNaoSuggestions({
     setAppliedCount(0)
     setMissing(EMPTY_MISSING)
     setCharacterParents({})
+    setHeld([])
   }, [])
 
   return {
     characterParents,
+    held,
+    resolveHeld,
     status,
     error,
     match,

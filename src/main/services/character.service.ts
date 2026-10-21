@@ -15,7 +15,10 @@ async function hydrateCharacters(
 ): Promise<CharacterModel[]> {
   if (!rows.length) return []
   const ids = rows.map((row) => row.id)
-  const seriesByCharacter = await characterRepo.findSeriesForCharacterIds(db, ids)
+  const [seriesByCharacter, inspiredBy] = await Promise.all([
+    characterRepo.findSeriesForCharacterIds(db, ids),
+    characterRepo.findInspiredByForCharacterIds(db, ids)
+  ])
 
   return rows.map((row) => {
     const series: SeriesModel[] = (seriesByCharacter.get(row.id) ?? []).map((s) => ({
@@ -30,7 +33,8 @@ async function hydrateCharacters(
       series,
       aliases: JSON.parse(row.aliases_json),
       createdAt: row.created_at,
-      parentId: row.parent_id
+      parentId: row.parent_id,
+      inspiredByIds: inspiredBy.get(row.id) ?? []
     }
   })
 }
@@ -46,6 +50,22 @@ async function assertSeriesExist(db: Kysely<DB>, seriesIds: string[]): Promise<v
   if (!seriesIds.length) return
   const rows = await seriesRepo.findSeriesByIds(db, seriesIds)
   if (rows.length !== seriesIds.length) throw new Error('One or more series do not exist')
+}
+
+/** Every id must exist and none may be the character itself. */
+async function assertInspiredByValid(
+  db: Kysely<DB>,
+  id: string | null,
+  inspiredByIds: string[] | undefined
+): Promise<void> {
+  if (!inspiredByIds?.length) return
+  if (id && inspiredByIds.includes(id)) {
+    throw new AppError('INVALID_INSPIRED_BY', 'A character cannot be inspired by itself.')
+  }
+  const rows = await characterRepo.findCharactersByIds(db, inspiredByIds)
+  if (rows.length !== new Set(inspiredByIds).size) {
+    throw new Error('One or more characters do not exist')
+  }
 }
 
 export const characterService = {
@@ -70,6 +90,7 @@ export const characterService = {
   async createCharacter(input: CharacterInput): Promise<CharacterModel> {
     const db = getDb()
     await assertSeriesExist(db, input.seriesIds ?? [])
+    await assertInspiredByValid(db, null, input.inspiredByIds)
 
     const id = randomUUID()
     await db.transaction().execute(async (trx) => {
@@ -83,6 +104,9 @@ export const characterService = {
       if (input.seriesIds?.length) {
         await characterRepo.setCharacterSeries(trx, id, input.seriesIds)
       }
+      if (input.inspiredByIds?.length) {
+        await characterRepo.setCharacterInspiredBy(trx, id, input.inspiredByIds)
+      }
     })
 
     const created = await getCharacterModelById(db, id)
@@ -94,6 +118,7 @@ export const characterService = {
   async updateCharacter(id: string, input: CharacterInput): Promise<CharacterModel> {
     const db = getDb()
     await assertSeriesExist(db, input.seriesIds ?? [])
+    await assertInspiredByValid(db, id, input.inspiredByIds)
     if (input.parentId) {
       const hierarchy = await characterRepo.findCharacterHierarchy(db)
       if (wouldCreateCycle(hierarchy, id, input.parentId)) {
@@ -108,6 +133,10 @@ export const characterService = {
         parent_id: input.parentId ?? null
       })
       await characterRepo.setCharacterSeries(trx, id, input.seriesIds ?? [])
+      // Callers that don't know about it (sole-series linking) leave it alone.
+      if (input.inspiredByIds !== undefined) {
+        await characterRepo.setCharacterInspiredBy(trx, id, input.inspiredByIds)
+      }
     })
 
     const updated = await getCharacterModelById(db, id)

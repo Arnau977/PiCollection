@@ -14,6 +14,7 @@ import { normalizeEntityName } from '../utils/matchEntityNames'
 import {
   matchSuggestionCandidate,
   type ApplyPayload,
+  type HeldCharacter,
   type SuggestionCategory
 } from './tagSuggestionMatching'
 
@@ -48,6 +49,10 @@ interface UseWd14SuggestionsResult {
   missing: Record<SuggestionCategory, Wd14MissingSuggestion[]>
   /** Missing character -> the base character it's a form of (see matchSuggestionCandidate). */
   characterParents: Record<string, string>
+  /** Recognized characters others are inspired by, left for the user to pick (see matchSuggestionCandidate). */
+  held: HeldCharacter[]
+  /** Drops a held character once the user has picked. */
+  resolveHeld: (originalId: string) => void
   /** The model's single highest-scoring rating prediction, or null before a run/on error. */
   rating: Wd14TagSuggestion | null
   /** `type` lets a video fall back to a frame captured here when the OS can't thumbnail it. */
@@ -104,6 +109,7 @@ export function useWd14Suggestions({
   const [error, setError] = useState<string | null>(null)
   const [appliedCount, setAppliedCount] = useState(0)
   const [characterParents, setCharacterParents] = useState<Record<string, string>>({})
+  const [held, setHeld] = useState<HeldCharacter[]>([])
   const [missing, setMissing] =
     useState<Record<SuggestionCategory, Wd14MissingSuggestion[]>>(EMPTY_WD14_MISSING)
   const [rating, setRating] = useState<Wd14TagSuggestion | null>(null)
@@ -160,6 +166,7 @@ export function useWd14Suggestions({
       })
       setAppliedCount(matched.appliedCount)
       setCharacterParents(matched.characterParents)
+      setHeld(matched.held)
       // Only category the python script ever guarantees at most one of - no
       // need to pick a "best" one, but guard against future changes anyway.
       const ratingTags = byCategory(result.data, 'rating')
@@ -181,14 +188,31 @@ export function useWd14Suggestions({
     }))
   }, [])
 
+  const resolveHeld = useCallback((originalId: string) => {
+    setHeld((prev) => prev.filter((entry) => entry.original.id !== originalId))
+  }, [])
+
   const reset = useCallback(() => {
     setStatus('idle')
     setError(null)
     setAppliedCount(0)
     setMissing(EMPTY_WD14_MISSING)
     setCharacterParents({})
+    setHeld([])
     setRating(null)
   }, [])
 
-  return { status, error, appliedCount, missing, characterParents, rating, run, dismiss, reset }
+  return {
+    status,
+    error,
+    appliedCount,
+    missing,
+    characterParents,
+    held,
+    resolveHeld,
+    rating,
+    run,
+    dismiss,
+    reset
+  }
 }

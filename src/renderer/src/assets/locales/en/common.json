@@ -517,6 +517,9 @@
     "tagWikiSpoiler": "Spoiler - hover or focus to reveal",
     "parentSeries": "Parent series",
     "parentCharacter": "Parent character",
+    "inspiredBy": "Inspired by",
+    "inspiredByFieldHint": "Characters this one is modelled on (an expy). Searches stay apart; when tag suggestions recognize one of them, they ask which character it is instead of adding it.",
+    "inspiredByList": "Inspired by {{names}}",
     "noParentSeries": "No parent (top-level)",
     "add": "Add",
     "save": "Save",
@@ -573,6 +576,8 @@
   },
   "suggestions": {
     "formOf": "· form of {{parent}}",
+    "heldLabel": "Recognized as {{name}} - which one is it?",
+    "inspiredByHint": "· inspired by {{name}}",
     "videoFrameHint": "For a video, it uses the frame the preview shows: pause on the one you want. Until you play or move the preview, it uses the cover."
   },
   "sauceNao": {
