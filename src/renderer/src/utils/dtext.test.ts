@@ -14,6 +14,14 @@ describe('stripDtext', () => {
     expect(stripDtext('wearing [[underwear]] or [[panties]]')).toBe('wearing underwear or panties')
   })
 
+  it('strips [i], [u], [s] and [tn] tags without removing their content', () => {
+    expect(stripDtext('[i]Oshi no Ko[/i] [u]a[/u] [s]b[/s] [tn]c[/tn]')).toBe('Oshi no Ko a b c')
+  })
+
+  it('shows a [[name (qualifier)|]] pipe-trick link as the name without its qualifier', () => {
+    expect(stripDtext("[[Mtu (orewamuzituda)|]]'s style")).toBe("Mtu's style")
+  })
+
   it('replaces [[link|display text]] with just the display text', () => {
     expect(stripDtext('see [[no_pants|no pants]] instead')).toBe('see no pants instead')
   })
@@ -100,6 +108,14 @@ describe('splitDtextLinks', () => {
       { text: 'See ' },
       { text: 'the source', href: 'https://example.com/page' },
       { text: ' for more.' }
+    ])
+  })
+
+  it('links a "text":/path named link to the Danbooru page, leaving trailing punctuation', () => {
+    expect(splitDtextLinks('his "Destroyer Upskirts":/pools/10630. collection')).toEqual([
+      { text: 'his ' },
+      { text: 'Destroyer Upskirts', href: 'https://danbooru.donmai.us/pools/10630' },
+      { text: '. collection' }
     ])
   })
 

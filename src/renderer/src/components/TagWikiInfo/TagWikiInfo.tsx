@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Info } from 'lucide-react'
+import { Info, LoaderCircle } from 'lucide-react'
 import { splitDtextLinks, stripDtext } from '../../utils/dtext'
 import { useDanbooruCredentialsConfigured } from '../../hooks/useDanbooruCredentialsConfigured'
 import './TagWikiInfo.css'
@@ -113,7 +113,12 @@ export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element | null {
             ref={popoverRef}
             style={{ top: position.top, left: position.left }}
           >
-            {state === 'loading' && <p>{t('manage.tagWikiLoading')}</p>}
+            {state === 'loading' && (
+              <p className="tag-wiki-info-loading">
+                <LoaderCircle size={16} className="tag-wiki-info-spinner" aria-hidden="true" />
+                {t('manage.tagWikiLoading')}
+              </p>
+            )}
             {state === 'error' && <p role="alert">{error}</p>}
             {state === 'not-found' && <p>{t('manage.tagWikiNotFound')}</p>}
             {state === 'loaded' && (

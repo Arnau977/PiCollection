@@ -9,12 +9,20 @@
  */
 export function stripDtext(raw: string): string {
   return raw
-    .replace(/\[\/?b\]/gi, '')
+    .replace(/\[\/?(?:b|i|u|s|tn)\]/gi, '')
+    .replace(PIPE_TRICK_LINK, (_, name: string) => withoutQualifier(name))
     .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
     .replace(/\[\[([^\]]+)\]\]/g, '$1')
     .replace(/^h[1-6]\.\s*/gm, '')
     .replace(/^\*\s+/gm, '- ')
     .replace(/!post\b/gi, 'post')
+}
+
+/** The "pipe trick": [[name (qualifier)|]] displays the name alone. */
+const PIPE_TRICK_LINK = /\[\[([^\]|]+)\|\]\]/g
+
+function withoutQualifier(name: string): string {
+  return name.replace(/\s*\([^)]*\)\s*$/, '')
 }
 
 export interface DtextSegment {
@@ -31,10 +39,11 @@ export interface DtextSegment {
 }
 
 const LINK_PATTERN =
-  /\[spoiler\]([\s\S]*?)\[\/spoiler\]|pool #(\d+)|post #(\d+)|\{\{pool:([^}]+)\}\}|"([^"]+)":\s*\[?(https?:\/\/[^\s\]]+)\]?/gi
+  /\[spoiler\]([\s\S]*?)\[\/spoiler\]|pool #(\d+)|post #(\d+)|\{\{pool:([^}]+)\}\}|"([^"]+)":\s*\[?(https?:\/\/[^\s\]]+|\/[^\s\]]*[^\s\].,;:!?)])\]?/gi
 
-/** Splits `stripDtext`'s output around post/pool references, named external
- * links (`"text":url` / `"text":[url]`), and [spoiler] blocks so the caller
+/** Splits `stripDtext`'s output around post/pool references, named links
+ * (`"text":url` / `"text":[url]`, or a site-relative `"text":/pools/1`), and
+ * [spoiler] blocks so the caller
  * can render each one appropriately (a link, or hidden-until-revealed
  * text). */
 export function splitDtextLinks(text: string): DtextSegment[] {
@@ -60,7 +69,8 @@ export function splitDtextLinks(text: string): DtextSegment[] {
         href: `https://danbooru.donmai.us/posts?tags=${encodeURIComponent(`pool:${poolName}`)}`
       })
     } else if (linkText && linkUrl) {
-      segments.push({ text: linkText, href: linkUrl })
+      const href = linkUrl.startsWith('/') ? `https://danbooru.donmai.us${linkUrl}` : linkUrl
+      segments.push({ text: linkText, href })
     }
     lastIndex = index + full.length
   }

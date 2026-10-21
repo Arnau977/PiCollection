@@ -71,3 +71,26 @@
   color: var(--color-text-faint);
   font-size: 0.78rem;
 }
+
+.tag-wiki-info-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tag-wiki-info-spinner {
+  flex-shrink: 0;
+  animation: tag-wiki-info-spin 0.9s linear infinite;
+}
+
+@keyframes tag-wiki-info-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tag-wiki-info-spinner {
+    animation: none;
+  }
+}
