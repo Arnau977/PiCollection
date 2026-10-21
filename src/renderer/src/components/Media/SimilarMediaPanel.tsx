@@ -9,17 +9,26 @@ import { useSimilarMedia } from '../../hooks/useSimilarMedia'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { MediaThumb } from '../MediaThumb/MediaThumb'
 import { MediaCompare, type ComparedMedia } from '../MediaCompare/MediaCompare'
+import { taxonomyOf } from '../MediaCompare/taxonomyDiff'
 import './SimilarMediaPanel.css'
 
-type ShownMedia = Pick<MediaModel, 'id' | 'route' | 'name' | 'type' | 'pendingTagging'>
+type ShownMedia = Pick<
+  MediaModel,
+  'id' | 'route' | 'name' | 'type' | 'pendingTagging' | 'characters' | 'series' | 'tags'
+>
 
 interface SimilarMediaPanelProps {
   /** The media whose detail page this is - also the left side of a comparison. */
   media: ShownMedia
 }
 
-const statusOf = (media: ShownMedia): ComparedMedia['status'] =>
-  media.pendingTagging ? 'pending' : 'library'
+const toCompared = (media: ShownMedia): ComparedMedia => ({
+  src: toMediaUrl(media.route),
+  route: media.route,
+  name: media.name,
+  status: media.pendingTagging ? 'pending' : 'library',
+  taxonomy: taxonomyOf(media)
+})
 
 export function SimilarMediaPanel({ media: current }: SimilarMediaPanelProps): JSX.Element | null {
   const { t } = useTranslation()
@@ -66,13 +75,7 @@ export function SimilarMediaPanel({ media: current }: SimilarMediaPanelProps): J
                   className="similar-media-compare"
                   aria-label={t('mediaCompare.openLabel', { name: media.name })}
                   title={t('mediaCompare.openLabel', { name: media.name })}
-                  onClick={() =>
-                    setCompared({
-                      src: toMediaUrl(media.route),
-                      name: media.name,
-                      status: statusOf(media)
-                    })
-                  }
+                  onClick={() => setCompared(toCompared(media))}
                 >
                   <Columns2 size={14} />
                 </button>
@@ -83,7 +86,7 @@ export function SimilarMediaPanel({ media: current }: SimilarMediaPanelProps): J
       </ul>
       {compared && (
         <MediaCompare
-          left={{ src: toMediaUrl(current.route), name: current.name, status: statusOf(current) }}
+          left={toCompared(current)}
           right={compared}
           onClose={() => setCompared(null)}
         />

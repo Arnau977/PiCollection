@@ -4,6 +4,7 @@ import { Replace } from 'lucide-react'
 import type { MediaDuplicateMatch, MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { MediaCompare, type ComparedMedia } from '../../../components/MediaCompare/MediaCompare'
+import { taxonomyOf, type ComparedTaxonomy } from '../../../components/MediaCompare/taxonomyDiff'
 import { MediaHoverPreview } from '../../../components/MediaHoverPreview/MediaHoverPreview'
 import { useSimilarMedia } from '../../../hooks/useSimilarMedia'
 import { splitRoute } from '../../../utils/splitRoute'
@@ -15,6 +16,8 @@ export interface CurrentFile {
   type: MediaModel['type']
   /** Unset while the file is being added (not saved yet). */
   pendingTagging?: boolean
+  /** What the form has picked so far, saved or not. */
+  taxonomy: ComparedTaxonomy
 }
 
 interface SimilarMediaWarningProps {
@@ -71,8 +74,10 @@ export function SimilarMediaWarning({
                   ? (): void =>
                       setCompared({
                         src: toMediaUrl(media.route),
+                        route: media.route,
                         name: splitRoute(media.route).fileName,
-                        status: media.pendingTagging ? 'pending' : 'library'
+                        status: media.pendingTagging ? 'pending' : 'library',
+                        taxonomy: taxonomyOf(media)
                       })
                   : undefined
               }
@@ -106,7 +111,9 @@ export function SimilarMediaWarning({
         <MediaCompare
           left={{
             src: toMediaUrl(current.route),
+            route: current.route,
             name: splitRoute(current.route).fileName,
+            taxonomy: current.taxonomy,
             status:
               current.pendingTagging === undefined
                 ? 'new'
@@ -129,10 +136,13 @@ export function SimilarMediaWarning({
  */
 export function EditedMediaSimilarWarning({
   media,
+  taxonomy,
   onReplace,
   busy
 }: {
   media: MediaModel
+  /** The form's current picks, which may not be saved yet. */
+  taxonomy: ComparedTaxonomy
   onReplace?: (media: MediaModel) => void
   busy?: boolean
 }): JSX.Element | null {
@@ -148,7 +158,8 @@ export function EditedMediaSimilarWarning({
         route: media.route,
         name: media.name,
         type: media.type,
-        pendingTagging: media.pendingTagging
+        pendingTagging: media.pendingTagging,
+        taxonomy
       }}
     />
   )

@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronsLeftRight, X } from 'lucide-react'
+import { ChevronsLeftRight, Columns2, X } from 'lucide-react'
 import { useZoomPan } from '../Lightbox/useZoomPan'
 import { ZoomControls } from '../Lightbox/ZoomControls'
 import '../Lightbox/Lightbox.css'
 import { dividerBounds, isOverImage, type Dimensions } from './dividerBounds'
-import { fetchFileSize, fileFormat, formatFileSize } from './fileSize'
+import { fetchFileSize } from './fileSize'
+import { useSourceFolder } from '../../hooks/useSourceFolder'
+import { CompareLabel } from './CompareLabel'
+import { CompareTaxonomy } from './CompareTaxonomy'
+import type { ComparedTaxonomy } from './taxonomyDiff'
 import './MediaCompare.css'
 
 /** Where the file stands: already in the library, waiting in Pending, or not saved yet. */
@@ -13,8 +17,13 @@ export type ComparedStatus = 'library' | 'pending' | 'new'
 
 export interface ComparedMedia {
   src: string
+  /** Where the file lives, shown relative to the source folder. */
+  route: string
+  /** Alt text for the picture. */
   name: string
   status?: ComparedStatus
+  /** What the file is tagged with, listed side by side. */
+  taxonomy: ComparedTaxonomy
 }
 
 interface MediaCompareProps {
@@ -47,11 +56,18 @@ function clamp(value: number, min: number, max: number): number {
  * their resolution, and any difference shows up while dragging. Zoom (wheel,
  * double-click, +/-/0) applies to both at once so the same detail is
  * compared; once zoomed, dragging pans and the divider moves by its handle.
+ * "Side by side" (S) shows the two pictures next to each other instead, with
+ * the same shared zoom, and lists what each one is tagged with.
  */
 export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.Element {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
+  const sourceFolder = useSourceFolder()
+  const [sideBySide, setSideBySide] = useState(false)
+  // The zoom box: the whole stage when split, the left pane side by side
+  // (the right pane mirrors it - see the wheel forwarding below).
   const stageRef = useRef<HTMLDivElement>(null)
-  const zoom = useZoomPan(stageRef)
+  const rightPaneRef = useRef<HTMLDivElement>(null)
+  const zoom = useZoomPan(stageRef, sideBySide)
   const [split, setSplit] = useState(50)
   const [sizes, setSizes] = useState<{ left?: Dimensions; right?: Dimensions }>({})
   const [stage, setStage] = useState<Dimensions | null>(null)
@@ -75,12 +91,23 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
     }
   }, [left.src, right.src])
 
+  // The two layouts fit the pictures to different boxes, so a zoom from one
+  // means nothing in the other.
+  function toggleSideBySide(): void {
+    zoom.reset()
+    setSideBySide((prev) => !prev)
+  }
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent): void {
       if (e.key === 'Escape') onClose()
       if (e.key === '+' || e.key === '=') zoom.zoomIn()
       if (e.key === '-') zoom.zoomOut()
       if (e.key === '0') zoom.reset()
+      if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        zoom.reset()
+        setSideBySide((prev) => !prev)
+      }
     }
     document.addEventListener('keydown', handleKeyDown)
     return (): void => document.removeEventListener('keydown', handleKeyDown)
@@ -94,7 +121,30 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
     )
     observer.observe(el)
     return (): void => observer.disconnect()
-  }, [])
+  }, [sideBySide])
+
+  // Side by side, the zoom box is the left pane; the wheel over the right
+  // pane zooms the same spot by replaying the event over the left one.
+  useEffect(() => {
+    const right = rightPaneRef.current
+    if (!sideBySide || !right) return
+    function handleWheel(e: WheelEvent): void {
+      const left = stageRef.current
+      if (!left || !right) return
+      e.preventDefault()
+      const shift = right.getBoundingClientRect().left - left.getBoundingClientRect().left
+      left.dispatchEvent(
+        new WheelEvent('wheel', {
+          deltaY: e.deltaY,
+          clientX: e.clientX - shift,
+          clientY: e.clientY,
+          cancelable: true
+        })
+      )
+    }
+    right.addEventListener('wheel', handleWheel, { passive: false })
+    return (): void => right.removeEventListener('wheel', handleWheel)
+  }, [sideBySide])
 
   const { min: minSplit, max: maxSplit } = dividerBounds([sizes.left, sizes.right], stage, {
     scale: zoom.scale,
@@ -181,14 +231,16 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
     if (clickedOutside) onClose()
   }
 
-  // The backdrop, the body and the labels row's gaps - not the labels,
+  // The backdrop, the body and the gaps in the labels row and between the
+  // side-by-side panes - not the labels,
   // buttons or the stage, which handles its own clicks outside the images.
   function isEmptyArea(e: React.SyntheticEvent): boolean {
     const target = e.target as HTMLElement
     return (
       target === e.currentTarget ||
       target.classList.contains('media-compare-body') ||
-      target.classList.contains('media-compare-labels')
+      target.classList.contains('media-compare-labels') ||
+      target.classList.contains('media-compare-panes')
     )
   }
 
@@ -204,30 +256,14 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
     setSizes((prev) => ({ ...prev, [side]: size }))
   }
 
-  function label(side: 'left' | 'right', media: ComparedMedia): JSX.Element {
-    const size = sizes[side]
-    const bytes = fileSizes[side]
-    const details = [
-      fileFormat(media.src),
-      size && t('mediaCompare.dimensions', size),
-      bytes !== undefined && formatFileSize(bytes, i18n.language)
-    ].filter(Boolean)
-    return (
-      <span className="media-compare-label">
-        <span className="media-compare-label-name" title={media.name}>
-          {media.name}
-        </span>
-        <span className="media-compare-label-meta">
-          {media.status && (
-            <span className="media-compare-status">{t(`mediaCompare.status.${media.status}`)}</span>
-          )}
-          {details.length > 0 && (
-            <span className="media-compare-label-size">{details.join(' · ')}</span>
-          )}
-        </span>
-      </span>
-    )
-  }
+  const labelFor = (side: 'left' | 'right'): JSX.Element => (
+    <CompareLabel
+      media={side === 'left' ? left : right}
+      size={sizes[side]}
+      bytes={fileSizes[side]}
+      sourceFolder={sourceFolder}
+    />
+  )
 
   return (
     <div
@@ -240,8 +276,19 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
     >
       <div className="media-compare-body">
         <div className="media-compare-labels">
-          {label('left', left)}
+          {labelFor('left')}
           <div className="lightbox-actions">
+            <button
+              type="button"
+              className="icon-btn media-compare-mode"
+              aria-pressed={sideBySide}
+              aria-label={t('mediaCompare.sideBySide')}
+              title={t('mediaCompare.sideBySideTitle')}
+              aria-keyshortcuts="S"
+              onClick={toggleSideBySide}
+            >
+              <Columns2 size={18} />
+            </button>
             <ZoomControls zoom={zoom} />
             <button
               type="button"
@@ -252,58 +299,90 @@ export function MediaCompare({ left, right, onClose }: MediaCompareProps): JSX.E
               <X size={20} />
             </button>
           </div>
-          {label('right', right)}
+          {labelFor('right')}
         </div>
-        <div
-          ref={stageRef}
-          className={`media-compare-stage${zoom.isZoomed ? ' is-zoomed' : ''}`}
-          style={{ '--split': `${shownSplit}%` } as React.CSSProperties}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          onDoubleClick={zoom.handlers.onDoubleClick}
-        >
-          <div className="media-compare-layer">
-            <img
-              src={left.src}
-              alt={left.name}
-              draggable={false}
-              style={zoom.style}
-              onLoad={(e) => recordSize('left', e.currentTarget)}
+        {sideBySide ? (
+          <>
+            {/* Both panes share one zoom, so the same detail shows on each. */}
+            <div className={`media-compare-panes${zoom.isZoomed ? ' is-zoomed' : ''}`}>
+              {(['left', 'right'] as const).map((side) => {
+                const media = side === 'left' ? left : right
+                return (
+                  <div
+                    key={side}
+                    ref={side === 'left' ? stageRef : rightPaneRef}
+                    className="media-compare-pane"
+                    onPointerDown={zoom.handlers.onPointerDown}
+                    onPointerMove={zoom.handlers.onPointerMove}
+                    onPointerUp={zoom.handlers.onPointerUp}
+                    onPointerCancel={zoom.handlers.onPointerUp}
+                    onDoubleClick={zoom.handlers.onDoubleClick}
+                  >
+                    <img
+                      src={media.src}
+                      alt={media.name}
+                      draggable={false}
+                      style={zoom.style}
+                      onLoad={(e) => recordSize(side, e.currentTarget)}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+            <CompareTaxonomy left={left.taxonomy} right={right.taxonomy} />
+          </>
+        ) : (
+          <div
+            ref={stageRef}
+            className={`media-compare-stage${zoom.isZoomed ? ' is-zoomed' : ''}`}
+            style={{ '--split': `${shownSplit}%` } as React.CSSProperties}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            onDoubleClick={zoom.handlers.onDoubleClick}
+          >
+            <div className="media-compare-layer">
+              <img
+                src={left.src}
+                alt={left.name}
+                draggable={false}
+                style={zoom.style}
+                onLoad={(e) => recordSize('left', e.currentTarget)}
+              />
+            </div>
+            <div className="media-compare-layer media-compare-right">
+              <img
+                src={right.src}
+                alt={right.name}
+                draggable={false}
+                style={zoom.style}
+                onLoad={(e) => recordSize('right', e.currentTarget)}
+              />
+            </div>
+            {/* Keyboard access to the divider (arrows/Home/End) with its
+                value announced; the pointer is handled by the stage above. */}
+            <input
+              type="range"
+              className="media-compare-range"
+              min={0}
+              max={100}
+              value={Math.round(shownSplit)}
+              onChange={(e) => setSplit(clamp(Number(e.target.value), minSplit, maxSplit))}
+              aria-label={t('mediaCompare.slider')}
+              aria-valuetext={t('mediaCompare.sliderValue', {
+                left: Math.round(shownSplit),
+                right: 100 - Math.round(shownSplit)
+              })}
+              autoFocus
             />
+            <div className="media-compare-divider" aria-hidden="true">
+              <span className="media-compare-handle">
+                <ChevronsLeftRight size={16} />
+              </span>
+            </div>
           </div>
-          <div className="media-compare-layer media-compare-right">
-            <img
-              src={right.src}
-              alt={right.name}
-              draggable={false}
-              style={zoom.style}
-              onLoad={(e) => recordSize('right', e.currentTarget)}
-            />
-          </div>
-          {/* Keyboard access to the divider (arrows/Home/End) with its
-              value announced; the pointer is handled by the stage above. */}
-          <input
-            type="range"
-            className="media-compare-range"
-            min={0}
-            max={100}
-            value={Math.round(shownSplit)}
-            onChange={(e) => setSplit(clamp(Number(e.target.value), minSplit, maxSplit))}
-            aria-label={t('mediaCompare.slider')}
-            aria-valuetext={t('mediaCompare.sliderValue', {
-              left: Math.round(shownSplit),
-              right: 100 - Math.round(shownSplit)
-            })}
-            autoFocus
-          />
-          <div className="media-compare-divider" aria-hidden="true">
-            <span className="media-compare-handle">
-              <ChevronsLeftRight size={16} />
-            </span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

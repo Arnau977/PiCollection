@@ -50,7 +50,11 @@ function clamp(value: number, min: number, max: number): number {
  * fitted box. Zooming keeps the point under the cursor still; panning is
  * limited so the image always covers its box (no dragging it off-screen).
  */
-export function useZoomPan(target: React.RefObject<HTMLElement>): ZoomPan {
+export function useZoomPan(
+  target: React.RefObject<HTMLElement>,
+  /** Changes whenever `target` points at a different element (e.g. a new layout). */
+  targetKey?: unknown
+): ZoomPan {
   const [view, setView] = useState<View>(FIT)
   const drag = useRef<{
     startX: number
@@ -118,7 +122,7 @@ export function useZoomPan(target: React.RefObject<HTMLElement>): ZoomPan {
     }
     el.addEventListener('wheel', handleWheel, { passive: false })
     return (): void => el.removeEventListener('wheel', handleWheel)
-  }, [constrain, target])
+  }, [constrain, target, targetKey])
 
   const pointFromEvent = (e: React.MouseEvent<HTMLElement>): { x: number; y: number } => {
     const origin = boxOrigin(e.currentTarget)

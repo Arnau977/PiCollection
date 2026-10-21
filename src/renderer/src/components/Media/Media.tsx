@@ -236,7 +236,9 @@ export default function Media({
           </div>
         )}
 
-        <SimilarMediaPanel media={{ id, route, name, type, pendingTagging }} />
+        <SimilarMediaPanel
+          media={{ id, route, name, type, pendingTagging, characters, series, tags }}
+        />
       </div>
     </div>
   )

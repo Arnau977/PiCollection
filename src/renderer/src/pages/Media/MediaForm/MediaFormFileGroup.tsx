@@ -7,6 +7,7 @@ import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { Lightbox } from '../../../components/Lightbox/Lightbox'
 import { MediaFileActions } from '../../../components/MediaFileActions/MediaFileActions'
 import { splitRoute } from '../../../utils/splitRoute'
+import type { ComparedTaxonomy } from '../../../components/MediaCompare/taxonomyDiff'
 import type { InitialFile, QueueInfo } from './MediaForm.types'
 import { EditedMediaSimilarWarning, SimilarMediaWarning } from './SimilarMediaWarning'
 
@@ -44,6 +45,8 @@ interface MediaFormFileGroupProps {
   media?: MediaModel
   input: MediaInput
   duplicateCheck: MediaDuplicateCheck | null
+  /** The names picked in the form so far, for the compare view. */
+  taxonomy: ComparedTaxonomy
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   /** See SimilarMediaWarning; unset where replacing isn't offered. */
   onReplace?: (media: MediaModel) => void
@@ -57,6 +60,7 @@ export function MediaFormFileGroup({
   media,
   input,
   duplicateCheck,
+  taxonomy,
   onFileChange,
   onReplace,
   busy
@@ -152,7 +156,12 @@ export function MediaFormFileGroup({
           }
           current={
             input.route
-              ? { route: input.route, name: t('mediaCompare.thisFile'), type: input.type }
+              ? {
+                  route: input.route,
+                  name: t('mediaCompare.thisFile'),
+                  type: input.type,
+                  taxonomy
+                }
               : undefined
           }
           onReplace={onReplace}
@@ -160,7 +169,12 @@ export function MediaFormFileGroup({
         />
       )}
       {isEditing && media && (
-        <EditedMediaSimilarWarning media={media} onReplace={onReplace} busy={busy} />
+        <EditedMediaSimilarWarning
+          media={media}
+          taxonomy={taxonomy}
+          onReplace={onReplace}
+          busy={busy}
+        />
       )}
     </div>
   )

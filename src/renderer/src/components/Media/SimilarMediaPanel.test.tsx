@@ -10,7 +10,10 @@ let findSimilarResult: { success: true; data: MediaDuplicateMatch[] }
 
 function setApi(): void {
   Object.defineProperty(window, 'api', {
-    value: { media: { findSimilar: vi.fn(() => Promise.resolve(findSimilarResult)) } },
+    value: {
+      media: { findSimilar: vi.fn(() => Promise.resolve(findSimilarResult)) },
+      sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: '/pics' }) }
+    },
     writable: true,
     configurable: true
   })

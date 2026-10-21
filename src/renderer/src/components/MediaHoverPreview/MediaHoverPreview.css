@@ -16,7 +16,7 @@
   border: 1px solid var(--border-color-strong);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  pointer-events: none;
+  cursor: default;
 }
 
 .media-hover-preview-trigger-button {
@@ -59,7 +59,9 @@
   overflow-wrap: anywhere;
 }
 
+/* Characters, series and tags in one list; the pointer can move onto the
+   card to scroll it. */
 .media-hover-preview-tags {
-  max-height: 90px;
+  max-height: 110px;
   overflow-y: auto;
 }

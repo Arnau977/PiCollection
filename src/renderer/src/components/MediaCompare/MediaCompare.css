@@ -153,3 +153,83 @@
     animation: none;
   }
 }
+
+/* Where the file lives, relative to the source folder - two copies often
+   differ only there. Full path on hover. */
+.media-compare-label-folder {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Split (off) / side by side (on), same pressed look as the video player's toggles. */
+.media-compare-mode[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* Side by side: two equal panes, each fitting its picture; one shared zoom. */
+.media-compare-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+  animation: lightbox-content-in 200ms ease;
+}
+
+.media-compare-pane {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.media-compare-panes.is-zoomed .media-compare-pane {
+  cursor: grab;
+}
+
+.media-compare-pane img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+/* What only each file has (under its picture), then what both share. Its
+   own scroll region, so the pictures keep most of the height. */
+.media-compare-taxonomy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3) var(--space-4);
+  flex-shrink: 0;
+  max-height: 30vh;
+  overflow-y: auto;
+}
+
+.media-compare-taxonomy-both {
+  grid-column: 1 / -1;
+}
+
+.media-compare-taxonomy-group h3 {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.media-compare-taxonomy-empty {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-compare-panes {
+    animation: none;
+  }
+}

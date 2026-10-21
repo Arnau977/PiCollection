@@ -34,15 +34,21 @@ and its video always list each other there too.
 
 ## Comparing side by side
 
-Hover a similar item to see the whole picture. Click it (or the compare
-button on a similar thumbnail on the media page) to open a full-size
-comparison:
+Hover a similar item to see the whole picture with its characters, series
+and tags; you can move the pointer onto that card to scroll a long list, and
+`Esc` closes it. Click the item (or the compare button on a similar
+thumbnail on the media page) to open a full-size comparison:
 
 - both pictures are lined up in the same frame, with a divider you drag
   across them to reveal one or the other;
-- each side is labelled (in library, pending, being added) with its
-  format (PNG, JPG...), resolution and file size, so a heavier,
-  better-quality copy stands out;
+- each side is labelled with its file name, its folder (relative to the
+  source folder; hover for the full path), where it stands (in library,
+  pending, being added), its format (PNG, JPG...), resolution and file
+  size, so a heavier, better-quality copy stands out;
+- **Side by side** (the two-column button, or `S`) shows the two pictures
+  next to each other instead, and lists under each what only that file is
+  tagged with, then what both share. For the file you're editing, that's
+  what the form has right now, saved or not;
 - zoom works on both at once: mouse wheel, double-click, `+` / `-` / `0`;
   zoomed in, dragging pans and the divider moves by its handle.
 - click anywhere outside the pictures (or press `Esc`) to close it; a
