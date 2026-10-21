@@ -5,6 +5,8 @@ import { TagFinder } from '../../../components/TagFinder/TagFinder'
 import { useTagFinder } from '../../../hooks/useTagFinder'
 import { formatCharacterOptionLabel } from '../../../utils/matchEntityNames'
 import type { MediaFormField } from './mediaFormError'
+import { TagChip } from '../../../components/Media/TagChip'
+import { autoTagProperties, useAutoTags } from '../../../hooks/useAutoTags'
 
 interface MediaFormTaxonomyFieldsProps {
   /** The field a failed save pointed at (see MediaFormSaveError). */
@@ -14,6 +16,8 @@ interface MediaFormTaxonomyFieldsProps {
   selectedTagIds: string[]
   onTagsChange: (tagIds: string[]) => void
   onCreateTag: (name: string) => void
+  /** Tags the media has through automatic rules - shown, not editable here. */
+  autoTags?: TagModel[]
 
   characterOptions: CharacterModel[]
   pendingCharacters: CharacterModel[]
@@ -35,6 +39,7 @@ export function MediaFormTaxonomyFields({
   selectedTagIds,
   onTagsChange,
   onCreateTag,
+  autoTags = [],
   characterOptions,
   pendingCharacters,
   selectedCharacterIds,
@@ -49,6 +54,9 @@ export function MediaFormTaxonomyFields({
   const { t } = useTranslation()
   const tagFinder = useTagFinder()
   const selectedTags = tagOptions.filter((tag) => selectedTagIds.includes(tag.id))
+  // One picked by hand as well is just a normal tag now.
+  const shownAutoTags = autoTags.filter((tag) => !selectedTagIds.includes(tag.id))
+  const { status: autoTagStatus } = useAutoTags({ enabled: shownAutoTags.length > 0 })
 
   return (
     <div className="media-form-group">
@@ -78,6 +86,21 @@ export function MediaFormTaxonomyFields({
             />
           }
         />
+        {shownAutoTags.length > 0 && (
+          <div className="media-form-auto-tags">
+            <span className="media-form-auto-tags-label">{t('autoTags.formLabel')}</span>
+            <ul className="chip-list chip-list-tags">
+              {shownAutoTags.map((tag) => (
+                <TagChip
+                  key={tag.id}
+                  name={tag.name}
+                  autoProperties={autoTagProperties(autoTagStatus, tag.id)}
+                />
+              ))}
+            </ul>
+            <span className="media-form-auto-tags-hint">{t('autoTags.formHint')}</span>
+          </div>
+        )}
       </div>
       <div className="field-accent field-accent-characters" data-form-field="characters">
         <MultiSelectAutocomplete

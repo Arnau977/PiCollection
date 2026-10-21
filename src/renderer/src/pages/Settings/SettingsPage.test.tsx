@@ -37,6 +37,11 @@ beforeEach(() => {
           .fn()
           .mockResolvedValue({ success: true, data: { supported: true, enabled: false } })
       },
+      autoTags: {
+        getStatus: vi.fn().mockResolvedValue({ success: true, data: { rules: [], unanalyzed: 0 } }),
+        setRule: vi.fn()
+      },
+      tag: { getAll: vi.fn().mockResolvedValue({ success: true, data: [] }) },
       notifications: {
         getAlerts: vi.fn().mockResolvedValue({ success: true, data: {} }),
         setEnabled: vi.fn()
@@ -106,7 +111,13 @@ beforeEach(() => {
       extensionBridge: {
         getStatus: vi.fn().mockResolvedValue({
           success: true,
-          data: { enabled: false, running: false, token: null, port: 8934, backgroundModeEnabled: false }
+          data: {
+            enabled: false,
+            running: false,
+            token: null,
+            port: 8934,
+            backgroundModeEnabled: false
+          }
         }),
         setEnabled: vi.fn(),
         setBackgroundMode: vi.fn(),
@@ -231,7 +242,9 @@ describe('SettingsPage', () => {
     renderPage()
     await openTab(user, 'Advanced')
 
-    const sauceNaoSection = screen.getByLabelText('SauceNAO API key').closest('section') as HTMLElement
+    const sauceNaoSection = screen
+      .getByLabelText('SauceNAO API key')
+      .closest('section') as HTMLElement
     await user.type(screen.getByLabelText('SauceNAO API key'), 'my-new-key')
     await user.click(within(sauceNaoSection).getByRole('button', { name: 'Save' }))
 
@@ -256,7 +269,9 @@ describe('SettingsPage', () => {
     await openTab(user, 'Advanced')
 
     await waitFor(() => expect(screen.getByLabelText('SauceNAO API key')).toHaveValue('saved-key'))
-    const sauceNaoSection = screen.getByLabelText('SauceNAO API key').closest('section') as HTMLElement
+    const sauceNaoSection = screen
+      .getByLabelText('SauceNAO API key')
+      .closest('section') as HTMLElement
     await user.click(within(sauceNaoSection).getByRole('button', { name: 'Clear' }))
 
     expect(window.api.sauceNao.setApiKey).toHaveBeenCalledWith(undefined)
@@ -376,9 +391,7 @@ describe('SettingsPage', () => {
     renderPage()
     await openTab(user, 'Advanced')
 
-    act(() =>
-      emit({ type: 'available', version: '1.0.0', highlights: null, isDowngrade: true })
-    )
+    act(() => emit({ type: 'available', version: '1.0.0', highlights: null, isDowngrade: true }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       /older version than the one you're currently running/
@@ -406,9 +419,7 @@ describe('SettingsPage', () => {
     renderPage()
     await openTab(user, 'Advanced')
 
-    act(() =>
-      emit({ type: 'available', version: '2.0.0', highlights: null, isDowngrade: false })
-    )
+    act(() => emit({ type: 'available', version: '2.0.0', highlights: null, isDowngrade: false }))
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
@@ -436,9 +447,7 @@ describe('SettingsPage', () => {
     const user = userEvent.setup()
     renderPage()
     await openTab(user, 'Advanced')
-    act(() =>
-      emit({ type: 'available', version: '1.0.0', highlights: null, isDowngrade: true })
-    )
+    act(() => emit({ type: 'available', version: '1.0.0', highlights: null, isDowngrade: true }))
 
     await user.click(await screen.findByRole('button', { name: 'Download update' }))
 
@@ -468,9 +477,7 @@ describe('SettingsPage', () => {
     const user = userEvent.setup()
     renderPage()
     await openTab(user, 'Advanced')
-    act(() =>
-      emit({ type: 'available', version: '1.0.0', highlights: null, isDowngrade: true })
-    )
+    act(() => emit({ type: 'available', version: '1.0.0', highlights: null, isDowngrade: true }))
 
     await user.click(await screen.findByRole('button', { name: 'Download update' }))
 
@@ -499,9 +506,7 @@ describe('SettingsPage', () => {
     const user = userEvent.setup()
     renderPage()
     await openTab(user, 'Advanced')
-    act(() =>
-      emit({ type: 'available', version: '2.0.0', highlights: null, isDowngrade: false })
-    )
+    act(() => emit({ type: 'available', version: '2.0.0', highlights: null, isDowngrade: false }))
 
     await user.click(await screen.findByRole('button', { name: 'Download update' }))
 

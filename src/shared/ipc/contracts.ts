@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { AUTO_BACKUP_KEEP_COUNT_OPTIONS } from '../models/Backup'
 import { APP_ALERT_KINDS, APP_NOTIFICATION_KINDS } from '../models/Notification'
+import { AUTO_TAG_PROPERTIES } from '../models/AutoTag'
 
 export type IpcResult<T> =
   | { success: true; data: T }
@@ -109,6 +110,11 @@ export const CreateGifFromVideoSchema = z.object({
 export const DanbooruCredentialsInputSchema = z.object({
   username: z.string().min(1),
   apiKey: z.string().min(1)
+})
+
+export const AutoTagRuleSchema = z.object({
+  property: z.enum(AUTO_TAG_PROPERTIES),
+  tagId: z.string().min(1).nullable()
 })
 
 /** A PNG captured in the renderer (a paused video frame), sent for a lookup. */
@@ -358,6 +364,10 @@ export const IPC = {
     resolveCharacters: 'danbooru:resolve-characters',
     getCredentials: 'danbooru:get-credentials',
     setCredentials: 'danbooru:set-credentials'
+  },
+  autoTags: {
+    getStatus: 'auto-tags:get-status',
+    setRule: 'auto-tags:set-rule'
   },
   tagWiki: {
     lookup: 'tag-wiki:lookup'

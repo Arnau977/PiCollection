@@ -216,6 +216,18 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   over it) and lists, under them, what only each file has and, once and full
   width, what both share (`CompareTaxonomy.tsx`, its own `30vh` scroll
   region). The current file's side uses the form's live picks.
+- **A tag the media has only through a rule is an outlined chip**
+  (`.chip-auto`: dashed outline in the category color, no fill), with a
+  tooltip naming the rule and a screen-reader ", automatic". The edit form
+  lists such tags read-only under the field, pointing to where they're set,
+  never as removable chips. Where: `components/Media/TagChip.tsx`,
+  `MediaFormTaxonomyFields.tsx`.
+
+- **A setting that maps something to one entity is a SettingsRow with an
+  Autocomplete** (label hidden, named "Tag for X") plus an × to turn it
+  off, rather than a checkbox and a separate picker. Where:
+  `pages/Settings/AutoTagsSection.tsx`.
+
 - **Chips that mix categories use `.chip-category-characters/-series/-tags`**
   (`main.css`) for their category color. Where: `CompareTaxonomy.tsx`,
   `MediaHoverPreview.tsx`.

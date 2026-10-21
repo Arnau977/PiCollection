@@ -52,7 +52,9 @@ import type {
   UpdaterEvent,
   Wd14RuntimeEvent,
   Wd14RuntimeStatus,
-  Wd14TagSuggestion
+  Wd14TagSuggestion,
+  AutoTagRuleInput,
+  AutoTagStatus
 } from '@shared/models'
 import { IPC, type IpcResult } from '@shared/ipc/contracts'
 
@@ -287,6 +289,11 @@ export const api = {
       ipcRenderer.invoke(IPC.danbooru.getCredentials),
     setCredentials: (credentials: DanbooruCredentials | undefined): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.danbooru.setCredentials, credentials)
+  },
+  autoTags: {
+    getStatus: (): Promise<IpcResult<AutoTagStatus>> => ipcRenderer.invoke(IPC.autoTags.getStatus),
+    setRule: (input: AutoTagRuleInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.autoTags.setRule, input)
   },
   tagWiki: {
     lookup: (tagName: string): Promise<IpcResult<TagWikiEntry | null>> =>

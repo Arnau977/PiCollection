@@ -9,6 +9,7 @@ import { registerUpdaterHandlers } from './updater.handlers'
 import { registerSauceNaoHandlers } from './sauceNao.handlers'
 import { registerDanbooruAutocompleteHandlers } from './danbooruAutocomplete.handlers'
 import { registerTagWikiHandlers } from './tagWiki.handlers'
+import { registerAutoTagsHandlers } from './autoTags.handlers'
 import { registerWd14RuntimeHandlers } from './wd14Runtime.handlers'
 import { registerWd14TaggerHandlers } from './wd14Tagger.handlers'
 import { registerBackupHandlers } from './backup.handlers'
@@ -32,6 +33,7 @@ export function registerIpcHandlers(): void {
   registerSauceNaoHandlers()
   registerDanbooruAutocompleteHandlers()
   registerTagWikiHandlers()
+  registerAutoTagsHandlers()
   registerWd14RuntimeHandlers()
   registerWd14TaggerHandlers()
   registerBackupHandlers()

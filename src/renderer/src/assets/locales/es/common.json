@@ -666,5 +666,29 @@
       "deleted": "Eliminado el {{date}}",
       "replaced": "Reemplazado el {{date}}"
     }
+  },
+  "autoTags": {
+    "settingsTitle": "Etiquetas automáticas",
+    "settingsHint": "Etiqueta las imágenes según lo que muestra el propio archivo. Una regla abarca toda la biblioteca a la vez y no deja rastro al quitarla: las etiquetas propias del archivo no cambian. Los vídeos no se analizan.",
+    "property_transparent": "Transparencia",
+    "condition_transparent": "Algunos píxeles son transparentes",
+    "property_high_res": "Alta resolución",
+    "condition_high_res": "Lado más largo de {{high}} px o más",
+    "property_low_res": "Baja resolución",
+    "condition_low_res": "Lado más largo de menos de {{low}} px",
+    "property_portrait": "Vertical",
+    "condition_portrait": "Más alta que ancha",
+    "property_landscape": "Horizontal",
+    "condition_landscape": "Más ancha que alta",
+    "property_square": "Cuadrada",
+    "condition_square": "Lados con menos de un {{percent}}% de diferencia",
+    "tagFor": "Etiqueta para {{property}}",
+    "turnOff": "Desactivar {{property}}",
+    "analyzing_one": "Leyendo tamaño y transparencia: queda {{count}} imagen",
+    "analyzing_other": "Leyendo tamaño y transparencia: quedan {{count}} imágenes",
+    "chipTitle": "Automática: {{reasons}}",
+    "chipAuto": "automática",
+    "formLabel": "Automáticas",
+    "formHint": "Se configuran en Ajustes > Datos > Etiquetas automáticas"
   }
 }

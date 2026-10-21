@@ -174,6 +174,16 @@ missing-file checks and backups include it. Resolving it
 (`clearPendingTagging`) resets its added date and links its characters to
 its sole series.
 
+A media's tags are its own (`media_tag`) plus the automatic ones: rules in
+`auto_tag_rule` (Settings > Automatic tags) matched at query time against
+the size/transparency stored on `media` (`width`/`height`/`has_alpha`, read
+in the background by `autoTags.service.ts`). Anything that *reads* tags -
+filters, search, counts, rankings, thumbnails - goes through
+`effectiveMediaTags` / `MEDIA_MATCHES_RULE`
+(`src/main/database/repositories/autoTag.repository.ts`); writes still go
+to `media_tag` only, and `MediaModel.autoTagIds` keeps automatic ones out of
+the edit form's saved tags.
+
 Deleting media never deletes its file: `mediaService.deleteMedia` records
 the route in `discarded_media` (so do discarding an unsaved batch-import
 file and `mediaService.replaceMedia` for the file a similar media gave up),
