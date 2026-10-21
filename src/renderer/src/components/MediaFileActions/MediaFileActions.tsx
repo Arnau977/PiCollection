@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, Copy, FolderOpen, ImageDown, LoaderCircle } from 'lucide-react'
+import { Camera, Check, Copy, FolderOpen, ImageDown, LoaderCircle } from 'lucide-react'
 import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { copyImageViaCanvas } from './copyImageViaCanvas'
@@ -18,6 +18,7 @@ export function MediaFileActions({ route, type }: MediaFileActionsProps): JSX.El
   const [mediaCopied, setMediaCopied] = useState(false)
   // A GIF/animated WebP is copied as a file through PowerShell (~1 s).
   const [copyingMedia, setCopyingMedia] = useState(false)
+  const [frameCopied, setFrameCopied] = useState(false)
 
   async function handleCopyLocation(): Promise<void> {
     // Goes through the main process so a route stored relative to the source
@@ -38,6 +39,15 @@ export function MediaFileActions({ route, type }: MediaFileActionsProps): JSX.El
     setTimeout(() => setMediaCopied(false), 2000)
   }
 
+  // Copy image puts a GIF on the clipboard as a file, for apps that paste
+  // the animation; a reverse image search (Google Lens) wants a still.
+  // Chromium decodes a detached GIF to its first frame.
+  async function handleCopyFirstFrame(): Promise<void> {
+    if (!(await copyImageViaCanvas(toMediaUrl(route)))) return
+    setFrameCopied(true)
+    setTimeout(() => setFrameCopied(false), 2000)
+  }
+
   function handleOpenInFolder(): void {
     window.api.system.showInFolder(route)
   }
@@ -48,6 +58,8 @@ export function MediaFileActions({ route, type }: MediaFileActionsProps): JSX.El
     : mediaCopied
       ? t('media.mediaCopied')
       : t('media.copyMedia')
+
+  const copyFrameLabel = t(frameCopied ? 'media.firstFrameCopied' : 'media.copyFirstFrame')
 
   return (
     <div className="media-file-actions">
@@ -69,6 +81,17 @@ export function MediaFileActions({ route, type }: MediaFileActionsProps): JSX.El
           ) : (
             <ImageDown size={16} />
           )}
+        </button>
+      )}
+      {type === 'gif' && (
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label={copyFrameLabel}
+          title={copyFrameLabel}
+          onClick={handleCopyFirstFrame}
+        >
+          {frameCopied ? <Check size={16} /> : <Camera size={16} />}
         </button>
       )}
       <button

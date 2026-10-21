@@ -84,6 +84,7 @@ export function Wd14SuggestionsPanel({
         {wd14.status === 'loading' ? t('wd14.searching') : t('wd14.button')}
       </button>
       <p className="sauce-hint">{t('wd14.privacyHint')}</p>
+      {inputType === 'video' && <p className="sauce-hint">{t('suggestions.videoFrameHint')}</p>}
 
       {wd14.status === 'error' && (
         <p role="alert" className="sauce-error">

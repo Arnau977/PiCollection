@@ -1,8 +1,12 @@
 import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { ipcHandler } from './helpers'
-import { IPC } from '@shared/ipc/contracts'
-import { getSauceNaoQuota, lookupSauceNao } from '../services/sauceNao/sauceNao.service'
+import { IPC, ImagePngSchema } from '@shared/ipc/contracts'
+import {
+  getSauceNaoQuota,
+  lookupSauceNao,
+  lookupSauceNaoImage
+} from '../services/sauceNao/sauceNao.service'
 import { readSauceNaoApiKey, writeSauceNaoApiKey } from '../services/sauceNao/sauceNaoSettings'
 import { readSourceFolder, resolveRoute } from '../services/sourceFolder'
 
@@ -12,6 +16,10 @@ export function registerSauceNaoHandlers(): void {
     ipcHandler(IPC.sauceNao.lookup, z.string().min(1), (route) =>
       lookupSauceNao(resolveRoute(route, readSourceFolder()))
     )
+  )
+  ipcMain.handle(
+    IPC.sauceNao.lookupImage,
+    ipcHandler(IPC.sauceNao.lookupImage, ImagePngSchema, (png) => lookupSauceNaoImage(png))
   )
 
   ipcMain.handle(

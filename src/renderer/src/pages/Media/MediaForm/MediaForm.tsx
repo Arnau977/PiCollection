@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { MediaDuplicateCheck, MediaInput, MediaModel } from '@shared/models'
 import { deriveMediaName, detectMediaType } from '@shared/utils'
@@ -19,6 +19,7 @@ import { SuggestionsRail } from './SuggestionsRail'
 import { useMediaFormDrafts } from './useMediaFormDrafts'
 import { useMediaFormSuggestions } from './useMediaFormSuggestions'
 import { useAiMetadataDetection } from './useAiMetadataDetection'
+import type { VideoFrameSource } from '../../../components/VideoPlayer/videoFrame'
 import './MediaForm.css'
 
 export type { InitialFile, QueueInfo }
@@ -112,6 +113,7 @@ export function MediaForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per detection; turning it off afterwards sticks
   }, [aiDetection])
   const drafts = useMediaFormDrafts({ input, setInput, artists, tags, characters, series })
+  const previewFrame = useRef<VideoFrameSource>(null)
   const suggestions = useMediaFormSuggestions({
     input,
     setInput,
@@ -120,7 +122,8 @@ export function MediaForm({
     characters,
     series,
     drafts,
-    sourceMetadata: media?.sourceMetadata
+    sourceMetadata: media?.sourceMetadata,
+    videoFrame: previewFrame
   })
 
   useEffect((): (() => void) | void => {
@@ -329,6 +332,7 @@ export function MediaForm({
               input={input}
               duplicateCheck={duplicateCheck}
               taxonomy={formTaxonomy}
+              previewFrameRef={previewFrame}
               onFileChange={handleFileChange}
               onReplace={onReplaced ? (target): void => void handleReplace(target) : undefined}
               busy={saving || deleting}

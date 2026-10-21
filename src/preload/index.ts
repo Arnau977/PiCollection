@@ -270,6 +270,8 @@ export const api = {
   sauceNao: {
     lookup: (route: string): Promise<IpcResult<SauceNaoLookup>> =>
       ipcRenderer.invoke(IPC.sauceNao.lookup, route),
+    lookupImage: (png: Uint8Array): Promise<IpcResult<SauceNaoLookup>> =>
+      ipcRenderer.invoke(IPC.sauceNao.lookupImage, png),
     getQuota: (): Promise<IpcResult<SauceNaoQuota>> => ipcRenderer.invoke(IPC.sauceNao.getQuota),
     getApiKey: (): Promise<IpcResult<string | undefined>> =>
       ipcRenderer.invoke(IPC.sauceNao.getApiKey),
@@ -304,7 +306,9 @@ export const api = {
   },
   wd14Tagger: {
     suggestTags: (route: string): Promise<IpcResult<Wd14TagSuggestion[]>> =>
-      ipcRenderer.invoke(IPC.wd14Tagger.suggestTags, route)
+      ipcRenderer.invoke(IPC.wd14Tagger.suggestTags, route),
+    suggestTagsForImage: (png: Uint8Array): Promise<IpcResult<Wd14TagSuggestion[]>> =>
+      ipcRenderer.invoke(IPC.wd14Tagger.suggestTagsForImage, png)
   },
   logging: {
     getEnabled: (): Promise<IpcResult<boolean>> => ipcRenderer.invoke(IPC.logging.getEnabled),

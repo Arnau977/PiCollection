@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Brackets,
+  Camera,
+  Check,
   Maximize,
   Minimize,
   MoreHorizontal,
@@ -15,11 +17,13 @@ import {
 } from 'lucide-react'
 import {
   Button,
+  Header,
   Menu,
   MenuItem,
   MenuSection,
   MenuTrigger,
   Popover,
+  Separator,
   Slider,
   SliderThumb,
   SliderTrack
@@ -38,6 +42,8 @@ interface VideoControlsProps {
   sectionControl?: boolean
   compact: boolean
   onToggleFullscreen: () => void
+  /** Copies the frame on screen; resolves false if it couldn't. */
+  onCopyFrame: () => Promise<boolean>
   onPointerEnter: () => void
   onPointerLeave: () => void
   /** Where popovers (the speed menu) render: the player root, so they still
@@ -52,12 +58,35 @@ export function VideoControls({
   sectionControl = true,
   compact,
   onToggleFullscreen,
+  onCopyFrame,
   onPointerEnter,
   onPointerLeave,
   portalContainer
 }: VideoControlsProps): JSX.Element {
   const { t } = useTranslation()
   const [volumeHover, setVolumeHover] = useState(false)
+  const [frameCopied, setFrameCopied] = useState(false)
+  // Esc hides the popped-up volume slider (WCAG 1.4.13) until the pointer
+  // or focus leaves the volume control.
+  const [volumeDismissed, setVolumeDismissed] = useState(false)
+  useEffect(() => {
+    if (!volumeHover) return
+    const onKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') setVolumeDismissed(true)
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return (): void => window.removeEventListener('keydown', onKeyDown, true)
+  }, [volumeHover])
+  const copiedTimer = useRef<ReturnType<typeof setTimeout>>()
+  useEffect(() => (): void => clearTimeout(copiedTimer.current), [])
+
+  async function copyFrame(): Promise<void> {
+    if (!(await onCopyFrame())) return
+    setFrameCopied(true)
+    clearTimeout(copiedTimer.current)
+    copiedTimer.current = setTimeout(() => setFrameCopied(false), 2000)
+  }
+  const copyFrameLabel = t(frameCopied ? 'videoPlayer.frameCopied' : 'videoPlayer.copyFrame')
 
   // Name for screen readers; tooltip and aria-keyshortcuts carry the key.
   function shortcutProps(label: string, action: PlayerAction): Record<string, string> {
@@ -135,6 +164,18 @@ export function VideoControls({
 
         <span className="video-controls-spacer" />
 
+        {!compact && (
+          <button
+            type="button"
+            className="video-ctrl"
+            aria-label={copyFrameLabel}
+            title={copyFrameLabel}
+            onClick={() => void copyFrame()}
+          >
+            {frameCopied ? <Check size={16} /> : <Camera size={16} />}
+          </button>
+        )}
+
         <button
           type="button"
           className="video-ctrl"
@@ -145,8 +186,9 @@ export function VideoControls({
           <Repeat size={16} />
         </button>
         {compact ? (
-          // The narrow edit-form preview folds speed and the section into one
-          // menu, as the spec asks, instead of two more pill buttons.
+          // The narrow edit-form preview folds speed and the one-off actions
+          // into one menu instead of more pill buttons: speed under its own
+          // heading, the actions after a separator.
           <MenuTrigger>
             <Button className="video-ctrl" aria-label={t('videoPlayer.more')}>
               <MoreHorizontal size={16} />
@@ -161,6 +203,7 @@ export function VideoControls({
                 aria-label={t('videoPlayer.more')}
                 onAction={(key) => {
                   if (key === 'section') sectionAction()
+                  else if (key === 'copyFrame') void copyFrame()
                 }}
               >
                 <MenuSection
@@ -172,6 +215,7 @@ export function VideoControls({
                     if (key) player.setRate(Number(key))
                   }}
                 >
+                  <Header className="video-menu-header">{t('videoPlayer.speed')}</Header>
                   {PLAYBACK_RATES.map((rate) => (
                     <MenuItem
                       key={rate}
@@ -183,13 +227,19 @@ export function VideoControls({
                     </MenuItem>
                   ))}
                 </MenuSection>
-                {sectionControl && (
-                  <MenuSection aria-label={t('videoPlayer.loopSection')}>
+                <Separator className="video-menu-separator" />
+                <MenuSection aria-label={t('videoPlayer.actions')}>
+                  {sectionControl && (
                     <MenuItem id="section" className="video-menu-item" textValue={sectionLabel}>
+                      <Brackets size={14} aria-hidden="true" />
                       {sectionLabel}
                     </MenuItem>
-                  </MenuSection>
-                )}
+                  )}
+                  <MenuItem id="copyFrame" className="video-menu-item" textValue={copyFrameLabel}>
+                    <Camera size={14} aria-hidden="true" />
+                    {copyFrameLabel}
+                  </MenuItem>
+                </MenuSection>
               </Menu>
             </Popover>
           </MenuTrigger>
@@ -239,13 +289,25 @@ export function VideoControls({
           </>
         )}
         {/* Hovering the volume control shows its level, like the timeline shows
-            the time under the pointer. */}
+            the time under the pointer. Where the pill is narrow (compact, or
+            below 900px) the slider pops up above the button on hover or
+            keyboard focus instead of sitting in the row (CSS). */}
         <span
           className="video-volume-group"
+          data-dismissed={volumeDismissed || undefined}
           onPointerEnter={() => setVolumeHover(true)}
-          onPointerLeave={() => setVolumeHover(false)}
+          onPointerLeave={() => {
+            setVolumeHover(false)
+            setVolumeDismissed(false)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setVolumeDismissed(true)
+          }}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setVolumeDismissed(false)
+          }}
         >
-          {volumeHover && (
+          {volumeHover && !volumeDismissed && (
             <span className="video-volume-level" aria-hidden="true">
               {Math.round((player.muted ? 0 : player.volume) * 100)}%
             </span>
@@ -258,29 +320,27 @@ export function VideoControls({
           >
             {player.muted || player.volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </button>
-          {!compact && (
-            <Slider
-              aria-label={t('videoPlayer.volume')}
-              className="video-volume"
-              minValue={0}
-              maxValue={1}
-              step={VOLUME_STEP}
-              value={player.muted ? 0 : player.volume}
-              onChange={(value) => player.setVolume(value as number)}
-            >
-              <SliderTrack className="video-volume-track">
-                {({ state }) => (
-                  <>
-                    <div
-                      className="video-timeline-fill"
-                      style={{ width: `${state.getThumbPercent(0) * 100}%` }}
-                    />
-                    <SliderThumb className="video-timeline-thumb" />
-                  </>
-                )}
-              </SliderTrack>
-            </Slider>
-          )}
+          <Slider
+            aria-label={t('videoPlayer.volume')}
+            className="video-volume"
+            minValue={0}
+            maxValue={1}
+            step={VOLUME_STEP}
+            value={player.muted ? 0 : player.volume}
+            onChange={(value) => player.setVolume(value as number)}
+          >
+            <SliderTrack className="video-volume-track">
+              {({ state }) => (
+                <>
+                  <div
+                    className="video-timeline-fill"
+                    style={{ width: `${state.getThumbPercent(0) * 100}%` }}
+                  />
+                  <SliderThumb className="video-timeline-thumb" />
+                </>
+              )}
+            </SliderTrack>
+          </Slider>
         </span>
         <button
           type="button"

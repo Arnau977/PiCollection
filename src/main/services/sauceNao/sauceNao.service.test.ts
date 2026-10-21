@@ -29,7 +29,9 @@ vi.mock('../rateLimiter', () => ({
   createRateLimiter: (minIntervalMs: number) => createRateLimiter(minIntervalMs)
 }))
 
-const { lookupSauceNao, clearSauceNaoCache, getSauceNaoQuota } = await import('./sauceNao.service')
+const { lookupSauceNao, lookupSauceNaoImage, clearSauceNaoCache, getSauceNaoQuota } = await import(
+  './sauceNao.service'
+)
 
 function jsonResponse(body: unknown, status = 200): Response {
   return {
@@ -352,5 +354,23 @@ describe('lookupSauceNao', () => {
     await lookupSauceNao('/b.png')
 
     expect(fetch).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('lookupSauceNaoImage', () => {
+  it('uploads a captured frame as is, and searches the same frame only once', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({ header: { short_remaining: 5, long_remaining: 99 }, results: [] })
+    )
+    const png = new Uint8Array([1, 2, 3])
+
+    await lookupSauceNaoImage(png)
+    await lookupSauceNaoImage(new Uint8Array([1, 2, 3]))
+
+    expect(resolveThumbnail).not.toHaveBeenCalled()
+    expect(fetch).toHaveBeenCalledTimes(1)
+    const body = vi.mocked(fetch).mock.calls[0][1]?.body as FormData
+    const file = body.get('file') as Blob
+    expect(new Uint8Array(await file.arrayBuffer())).toEqual(png)
   })
 })

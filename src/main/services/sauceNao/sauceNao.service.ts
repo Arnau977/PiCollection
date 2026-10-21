@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { promises as fs } from 'fs'
 import type { SauceNaoLookup, SauceNaoQuota } from '@shared/models'
 import { resolveThumbnail } from '../../thumbnails/thumbnails'
@@ -130,8 +131,24 @@ export async function lookupSauceNao(route: string): Promise<SauceNaoLookup> {
   if (!thumbPath) {
     throw new AppError('NO_THUMBNAIL', 'Could not read that file to search with.')
   }
+  return searchImage(() => fs.readFile(thumbPath), thumbPath)
+}
 
-  const cached = resultCache.get(thumbPath)
+/**
+ * Searches with a still the renderer captured - a video frame paused in the
+ * edit form's preview, already scaled down to thumbnail size there. Cached
+ * by content, so the same frame isn't searched twice.
+ */
+export function lookupSauceNaoImage(png: Uint8Array): Promise<SauceNaoLookup> {
+  const key = `frame:${createHash('sha1').update(png).digest('hex')}`
+  return searchImage(async () => Buffer.from(png), key)
+}
+
+async function searchImage(
+  readBytes: () => Promise<Buffer>,
+  cacheKey: string
+): Promise<SauceNaoLookup> {
+  const cached = resultCache.get(cacheKey)
   if (cached) return cached
 
   if (getSauceNaoQuota().exhaustedUntil !== null) {
@@ -144,7 +161,7 @@ export async function lookupSauceNao(route: string): Promise<SauceNaoLookup> {
   inFlight = true
 
   try {
-    const bytes = await fs.readFile(thumbPath)
+    const bytes = await readBytes()
     const form = new FormData()
     // `Buffer`'s ArrayBufferLike type isn't assignable to `BlobPart` (it could
     // in theory be backed by a SharedArrayBuffer) - copy into a plain Uint8Array first.
@@ -257,7 +274,7 @@ export async function lookupSauceNao(route: string): Promise<SauceNaoLookup> {
     // Only successful lookups are cached - a thrown error above never
     // reaches here, so a failed attempt (rate limit, missing key, etc.)
     // is always retried rather than getting stuck on a cached failure.
-    resultCache.set(thumbPath, lookup)
+    resultCache.set(cacheKey, lookup)
     return lookup
   } finally {
     inFlight = false

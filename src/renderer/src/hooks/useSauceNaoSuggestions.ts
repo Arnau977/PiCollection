@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
-import { withVideoFrameFallback } from '../utils/withVideoFrameFallback'
+import { useCallback, useEffect, useState, type RefObject } from 'react'
+import { shownFrameBytes, withVideoFrameFallback } from '../utils/withVideoFrameFallback'
+import type { VideoFrameSource } from '../components/VideoPlayer/videoFrame'
 import { fetchDanbooruCharacters } from '../utils/fetchDanbooruCharacters'
 import type {
   ArtistModel,
@@ -25,6 +26,8 @@ interface UseSauceNaoSuggestionsArgs {
   series: SeriesModel[]
   /** Called exactly once per successful lookup, with the IDs of entities that already exist. */
   onApplyExisting: (payload: ApplyPayload) => void
+  /** The edit form's video preview: a video is searched by the frame it shows. */
+  videoFrame?: RefObject<VideoFrameSource | null>
 }
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
@@ -54,7 +57,8 @@ export function useSauceNaoSuggestions({
   tags,
   characters,
   series,
-  onApplyExisting
+  onApplyExisting,
+  videoFrame
 }: UseSauceNaoSuggestionsArgs): UseSauceNaoSuggestionsResult {
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -95,9 +99,10 @@ export function useSauceNaoSuggestions({
       setStatus('loading')
       setError(null)
 
-      const result = await withVideoFrameFallback(route, type, () =>
-        window.api.sauceNao.lookup(route)
-      )
+      const frame = await shownFrameBytes(type, videoFrame)
+      const result = frame
+        ? await window.api.sauceNao.lookupImage(frame)
+        : await withVideoFrameFallback(route, type, () => window.api.sauceNao.lookup(route))
       void refreshQuota()
       if (!result.success) {
         // The disabled button's tooltip explains this one - no inline error.
@@ -135,7 +140,7 @@ export function useSauceNaoSuggestions({
       setAppliedCount(matched.appliedCount)
       setStatus('ready')
     },
-    [status, artists, tags, characters, series, onApplyExisting, refreshQuota]
+    [status, artists, tags, characters, series, onApplyExisting, refreshQuota, videoFrame]
   )
 
   const dismiss = useCallback((category: SuggestionCategory, name: string) => {

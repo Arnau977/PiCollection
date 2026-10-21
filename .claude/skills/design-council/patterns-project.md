@@ -275,6 +275,23 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   player in front (`usePlayerShortcuts`: the topmost modal's, else the
   page's), since `useShortcut` stands down while any modal is open.
 
+- **Copying a still for a reverse image search uses the Camera icon**:
+  **Copy frame** in the player (the frame on screen, full size) and **Copy
+  first frame** next to Copy image for GIFs (Copy image puts a GIF on the
+  clipboard as a file). Same Check-for-2-s feedback as the other copy
+  buttons. Where: `VideoPlayer/videoFrame.ts`, `MediaFileActions.tsx`.
+
+- **The compact player's More menu is grouped**: a "Speed" header over the
+  rate radio group, a separator, then the actions with their icons. Below
+  900px or compact, the volume slider pops up above the mute button on
+  hover/focus (touching it, Esc hides it) instead of disappearing.
+  Where: `VideoControls.tsx`, `VideoPlayer.css`.
+
+- **AI suggestions on a video read the frame the edit-form preview shows**
+  (thumbnail-sized, captured in the renderer), or the cover while the
+  preview is still at 0:00 - stated in a hint under the button, no extra
+  control. Where: `utils/withVideoFrameFallback.ts` (`shownFrameBytes`).
+
 - **A task dialog (e.g. Make GIF) reuses the ConfirmDialog shell**
   (`.confirm-dialog-backdrop` / `.confirm-dialog`), wider and capped to
   the viewport so its actions row never scrolls away; while it works, the
@@ -333,3 +350,10 @@ of them.
   once zoom controls joined it, the pill covered the right-hand label.
   Put the controls in the same row (grid/flex) instead of floating them
   over content. Where: `MediaCompare.css`.
+- **Unheaded menu sections mixing a choice and an action.** The compact
+  player's More menu put Loop section right under the speeds with no
+  header or divider, so it read as another speed. Head the choice group
+  and separate the actions. Where: `VideoControls.tsx`.
+- **Hiding a control at narrow widths with no other way in.** The compact
+  player dropped its volume slider, leaving mouse users only mute. Collapse
+  it into a pop-up instead. Where: `VideoPlayer.css`.

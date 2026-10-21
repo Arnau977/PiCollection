@@ -6,7 +6,7 @@ vi.mock('../components/MediaThumb/captureVideoFrame', () => ({
 }))
 
 const { captureVideoFrame } = await import('../components/MediaThumb/captureVideoFrame')
-const { withVideoFrameFallback } = await import('./withVideoFrameFallback')
+const { shownFrameBytes, withVideoFrameFallback } = await import('./withVideoFrameFallback')
 
 const noThumbnail = {
   success: false as const,
@@ -49,5 +49,17 @@ describe('withVideoFrameFallback', () => {
 
     expect(captureVideoFrame).not.toHaveBeenCalled()
     expect(call).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('shownFrameBytes', () => {
+  it("returns a video preview's shown frame, at thumbnail size, and nothing for other types", async () => {
+    const captureShownFrame = vi.fn().mockResolvedValue(new Blob(['png']))
+    const frame = { current: { captureShownFrame } }
+
+    expect(await shownFrameBytes('video', frame)).toEqual(new Uint8Array([112, 110, 103]))
+    expect(captureShownFrame).toHaveBeenCalledWith(480)
+    expect(await shownFrameBytes('image', frame)).toBeNull()
+    expect(captureShownFrame).toHaveBeenCalledTimes(1)
   })
 })
