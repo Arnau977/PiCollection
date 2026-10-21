@@ -92,6 +92,9 @@ series and tags. It works for images, GIFs and videos.
   cached for 30 days).
 - When SauceNAO's daily limit is reached, the button turns off for an hour
   and its tooltip says when to try again.
+- SauceNAO's bot protection sometimes blocks searches from apps (even with an
+  API key). The error then says so: try again later, or search on
+  saucenao.com in your browser.
 
 This is the only feature that sends any of your media off your computer, and
 only when you press the button.

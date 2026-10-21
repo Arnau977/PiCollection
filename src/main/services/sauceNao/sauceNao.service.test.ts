@@ -171,6 +171,16 @@ describe('lookupSauceNao', () => {
     )
   })
 
+  it("explains Cloudflare's bot check on HTTP 403 instead of blaming the API key", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ...jsonResponse({}, 403),
+      headers: new Headers({ 'cf-mitigated': 'challenge', 'content-type': 'text/html' }),
+      text: () => Promise.resolve('<!DOCTYPE html><title>Just a moment...</title>')
+    } as Response)
+    readSauceNaoApiKey.mockReturnValue('my-key')
+    await expect(lookupSauceNao('/pic.png')).rejects.toThrow("SauceNAO's bot protection")
+  })
+
   it('surfaces a generic message for other error statuses', async () => {
     vi.mocked(fetch).mockResolvedValue(jsonResponse({}, 500))
     await expect(lookupSauceNao('/pic.png')).rejects.toThrow('500')
