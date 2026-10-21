@@ -199,6 +199,14 @@ export async function lookupSauceNao(route: string): Promise<SauceNaoLookup> {
     }
     if (res.status === 403) {
       const detail = await describeSauceNaoErrorResponse(res)
+      // Cloudflare's bot check in front of SauceNAO, not SauceNAO itself: an
+      // HTML "Just a moment..." page that no app can pass, API key or not
+      // (observed on every upload since 2026-10, while URL searches got through).
+      if (res.headers.get('cf-mitigated') === 'challenge') {
+        throw new Error(
+          "SauceNAO's bot protection is blocking searches from apps right now. Try again later, or search on saucenao.com in your browser."
+        )
+      }
       throw new Error(
         detail
           ? `${detail} Add a free SauceNAO API key in Settings to fix this.`
