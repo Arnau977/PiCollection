@@ -554,6 +554,12 @@
     "dimensions": "{{width}} × {{height}}",
     "slider": "Divider between the two images",
     "sliderValue": "{{left}}% this file, {{right}}% the other one",
+    "sideBySide": "Side by side",
+    "sideBySideTitle": "Side by side, with their tags (S)",
+    "sourceRoot": "Source folder",
+    "onlyHere": "Only on this one ({{count}})",
+    "nothingExtra": "Nothing the other one lacks",
+    "onBoth": "On both ({{count}})",
     "status": {
       "library": "In library",
       "pending": "Pending",
@@ -609,7 +615,7 @@
   },
   "videoGif": {
     "open": "Make GIF",
-    "title": "Make a GIF",
+    "title": "Make a GIF",
     "clipSummary": "{{seconds}} s",
     "longClipNote": "Long GIFs can get very large and slow to make.",
     "errorTooLarge": "This GIF is too large to save (over {{max}}). Try a shorter clip or a smaller size.",

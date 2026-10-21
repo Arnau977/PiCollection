@@ -84,6 +84,20 @@ here.
 - Source: W3C WAI-IG thread on custom HTML5 video controls - https://lists.w3.org/Archives/Public/w3c-wai-ig/2015JulSep/0045.html ; Gumlet player accessibility - https://docs.gumlet.com/video/player-customization/player-accessibility ; SitePoint, video player UX - https://www.sitepoint.com/how-to-design-your-video-player-with-ux-in-mind/
 - Checked: 2026-10-17
 
+### Content shown on hover or focus (WCAG 1.4.13)
+- Kind: pattern
+- Use when / avoid when: any custom tooltip, hover card or popover opened by hover/focus. It must be **dismissible** (Esc, without moving pointer or focus), **hoverable** (the pointer can move onto it without it closing) and **persistent** (stays until hover/focus leaves or it's dismissed). Native `title` tooltips are exempt.
+- Takeaway for PiCollection: hover cards hide on a short delay, stay open while the pointer is over them, and close on Esc without closing the dialog/form under them.
+- Source: W3C, Understanding SC 1.4.13 - https://www.w3.org/WAI/WCAG22/Understanding/content-on-hover-or-focus ; Deque, 1.4.13 - https://dequeuniversity.com/resources/wcag2.1/1.4.13-content-on-hover-or-focus
+- Checked: 2026-10-21
+
+### Split vs side-by-side image comparison
+- Kind: pattern
+- Use when / avoid when: comparing two versions of one picture. A split (one picture, divider) shows pixel differences in place; side by side shows both whole, at the cost of each being smaller - Lightroom offers both (Left/Right, Top/Bottom, and split variants) behind a one-key toggle, and notes side by side suits portrait pictures.
+- Takeaway for PiCollection: keep the split as the default for spotting differences, with a one-key toggle (S) to side by side, where there's also room to list each file's tags.
+- Source: Photography Life, Lightroom before and after - https://photographylife.com/lightroom-before-and-after ; Digital Photography School - https://digital-photography-school.com/lightroom-controlling-the-before-and-after/
+- Checked: 2026-10-21
+
 ## Anti-patterns
 
 ### A badge that is almost always lit

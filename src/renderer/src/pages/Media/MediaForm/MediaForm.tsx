@@ -9,6 +9,7 @@ import { splitRoute } from '../../../utils/splitRoute'
 import { useConfirm } from '../../../components/ConfirmDialog/ConfirmDialogContext'
 import { MediaFormDetailsFields } from './MediaFormDetailsFields'
 import { MediaFormFileGroup } from './MediaFormFileGroup'
+import { namesByIds, type ComparedTaxonomy } from '../../../components/MediaCompare/taxonomyDiff'
 import { MediaFormTaxonomyFields } from './MediaFormTaxonomyFields'
 import { MediaFormTopActions } from './MediaFormTopActions'
 import type { InitialFile, QueueInfo } from './MediaForm.types'
@@ -287,6 +288,15 @@ export function MediaForm({
     [...characters.data, ...drafts.pendingCharacters],
     input.seriesIds ?? []
   )
+  const seriesOptions = [...series.data, ...drafts.pendingSeries]
+  const tagOptions = [...tags.data, ...drafts.pendingTags]
+
+  // What the compare view lists for this file: the form's picks, saved or not.
+  const formTaxonomy: ComparedTaxonomy = {
+    characters: namesByIds(input.characterIds, sortedCharacterOptions),
+    series: namesByIds(input.seriesIds, seriesOptions),
+    tags: namesByIds(input.tagIds, tagOptions)
+  }
 
   return (
     <div className="media-form">
@@ -318,6 +328,7 @@ export function MediaForm({
               media={media}
               input={input}
               duplicateCheck={duplicateCheck}
+              taxonomy={formTaxonomy}
               onFileChange={handleFileChange}
               onReplace={onReplaced ? (target): void => void handleReplace(target) : undefined}
               busy={saving || deleting}
@@ -339,7 +350,7 @@ export function MediaForm({
 
             <MediaFormTaxonomyFields
               invalidField={error?.field}
-              tagOptions={[...tags.data, ...drafts.pendingTags]}
+              tagOptions={tagOptions}
               pendingTags={drafts.pendingTags}
               selectedTagIds={input.tagIds ?? []}
               onTagsChange={(tagIds) => setInput((prev) => ({ ...prev, tagIds }))}
@@ -349,7 +360,7 @@ export function MediaForm({
               selectedCharacterIds={input.characterIds ?? []}
               onCharactersChange={suggestions.handleCharactersChange}
               onCreateCharacter={(name) => drafts.createCharacter(name)}
-              seriesOptions={[...series.data, ...drafts.pendingSeries]}
+              seriesOptions={seriesOptions}
               pendingSeries={drafts.pendingSeries}
               selectedSeriesIds={input.seriesIds ?? []}
               onSeriesChange={(seriesIds) => setInput((prev) => ({ ...prev, seriesIds }))}

@@ -208,8 +208,24 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   Where: `src/renderer/src/components/MediaCompare/`, opened from
   `SimilarMediaWarning.tsx` and the detail page's `SimilarMediaPanel.tsx`
   (a compare button revealed on hover/focus).
+  Each label also shows the file's folder relative to the source folder
+  (`utils/relativeFolder.ts`; full path on hover) - two copies often differ
+  only there. **Side by side** (toggle in the actions pill, `S`,
+  `aria-pressed`) puts the two pictures in equal panes with the same shared
+  zoom (the left pane is the zoom box; the right pane replays wheel events
+  over it) and lists, under them, what only each file has and, once and full
+  width, what both share (`CompareTaxonomy.tsx`, its own `30vh` scroll
+  region). The current file's side uses the form's live picks.
+- **Chips that mix categories use `.chip-category-characters/-series/-tags`**
+  (`main.css`) for their category color. Where: `CompareTaxonomy.tsx`,
+  `MediaHoverPreview.tsx`.
 - **Previews meant for telling images apart are letterboxed, never
   cropped** (`object-fit: contain`). Where: `MediaHoverPreview.css`.
+- **A hover card is hoverable and dismissible** (WCAG 1.4.13): it hides
+  after a short delay so the pointer can cross onto it (and scroll its
+  chips), sits flush against its trigger (held by `bottom` when above),
+  keeps focus on the trigger when pressed, and Esc closes only the card.
+  Where: `MediaHoverPreview.tsx`.
 
 ## Media
 
@@ -308,6 +324,10 @@ of them.
   hiding some media" with every field empty. Drop ids that no longer
   resolve (`pruneMissingEntities.ts`), and give a filtered empty result its
   own message. Where: `GalleryPage.tsx`, `Gallery.tsx`.
+- **A hover card with `pointer-events: none`.** The similar-match card
+  listed tags in a scrollable box the pointer could never reach - it closed
+  as soon as the pointer left the name. Make hover content hoverable (see
+  above). Where: `MediaHoverPreview.tsx`.
 - **Reserving room for a floating overlay with a fixed padding.** The
   compare view's labels kept `padding-right: 3.5rem` for the close pill;
   once zoom controls joined it, the pill covered the right-hand label.

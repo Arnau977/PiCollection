@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { MediaModel } from '@shared/models'
@@ -18,7 +18,20 @@ function media(name: string, type: MediaModel['type'] = 'image'): MediaModel {
   }
 }
 
-const current = { route: 'C:/pics/1791-new.png', name: 'new.png', type: 'image' as const }
+const current = {
+  route: 'C:/pics/1791-new.png',
+  name: 'new.png',
+  type: 'image' as const,
+  taxonomy: { characters: ['Hayasaka'], series: [], tags: ['smile', 'bunny'] }
+}
+
+beforeEach(() => {
+  Object.defineProperty(window, 'api', {
+    value: { sourceFolder: { get: vi.fn().mockResolvedValue({ success: true, data: 'C:/pics' }) } },
+    writable: true,
+    configurable: true
+  })
+})
 
 describe('SimilarMediaWarning', () => {
   // Named by file name, like the form's Location - not by media name.
@@ -43,6 +56,31 @@ describe('SimilarMediaWarning', () => {
 
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('shows both files side by side with what only each one is tagged with', async () => {
+    const user = userEvent.setup()
+    const other = { ...media('Other'), tags: [{ id: 't1', name: 'smile', createdAt: 0 }] }
+    render(
+      <SimilarMediaWarning
+        title="Looks similar"
+        current={current}
+        matches={[{ media: other, distance: 0 }]}
+      />
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Compare with "1790-Other.png"' }))
+    await user.click(screen.getByRole('button', { name: 'Side by side' }))
+
+    expect(screen.queryByRole('slider')).not.toBeInTheDocument()
+    const [leftOnly, rightOnly] = screen.getAllByRole('heading', { name: /^Only on this one/ })
+    expect(leftOnly).toHaveTextContent('(2)')
+    expect(leftOnly.parentElement).toHaveTextContent('Hayasaka')
+    expect(leftOnly.parentElement).toHaveTextContent('bunny')
+    expect(rightOnly.parentElement).toHaveTextContent('Nothing the other one lacks')
+    expect(screen.getByRole('heading', { name: 'On both (1)' }).parentElement).toHaveTextContent(
+      'smile'
+    )
   })
 
   it('keeps a video match as a hover preview only', () => {

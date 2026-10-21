@@ -289,6 +289,19 @@ input[type='checkbox'] {
   font-size: 0.85rem;
 }
 
+/* A chip colored by its category, for lists that mix characters, series and tags. */
+.chip-category-characters {
+  color: var(--color-character);
+}
+
+.chip-category-series {
+  color: var(--color-series);
+}
+
+.chip-category-tags {
+  color: var(--color-tag);
+}
+
 .loading-state {
   color: var(--color-text-muted);
   padding: var(--space-6) 0;
