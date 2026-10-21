@@ -369,3 +369,7 @@ of them.
 - **Hiding a control at narrow widths with no other way in.** The compact
   player dropped its volume slider, leaving mouse users only mute. Collapse
   it into a pop-up instead. Where: `VideoPlayer.css`.
+- **A pop-up placed against its trigger inside a multi-row bar.** The volume
+  slider popped up right over the timeline row of the compact pill, so the
+  two bars read as one. Lift it clear of the whole bar and bridge the gap
+  for the pointer. Where: `VideoPlayer.css` (`--volume-lift`).
