@@ -118,13 +118,17 @@ function createWindow(): BrowserWindow {
     minWidth: MIN_WIDTH,
     minHeight: MIN_HEIGHT,
     show: false,
-    autoHideMenuBar: true,
+    title: `PiCollection${is.dev ? ' (Dev)' : ''} - ${APP_VERSION}`,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
   })
+
+  // No menu bar: Electron's default one (File/Edit/View...) only showed up on
+  // Alt and offers nothing the app needs. A no-op on macOS, whose menu is app-wide.
+  mainWindow.removeMenu()
 
   windowState.register(mainWindow)
   setUpdaterWindow(mainWindow)
@@ -169,10 +173,10 @@ function createWindow(): BrowserWindow {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
-  mainWindow.webContents.on('did-finish-load', () => {
-    const devSuffix = is.dev ? ' (Dev)' : ''
-    mainWindow.setTitle(`PiCollection${devSuffix} - ${APP_VERSION}`)
-  })
+  // The window title (with the version) is set once above. Chromium re-applies
+  // the page's <title> on some navigations (e.g. a history back/forward),
+  // which would silently drop the version - keep ours instead.
+  mainWindow.on('page-title-updated', (event) => event.preventDefault())
 
   return mainWindow
 }
