@@ -1,4 +1,11 @@
-import type { AutoTagRuleInput, AutoTagStatus, AutoTagProperty } from '@shared/models'
+import { randomUUID } from 'crypto'
+import {
+  AUTO_TAG_PROPERTIES,
+  DANBOORU_DEFAULT_TAGS,
+  type AutoTagRuleInput,
+  type AutoTagStatus,
+  type AutoTagProperty
+} from '@shared/models'
 import { getDb } from '../database/connection'
 import * as autoTagRepo from '../database/repositories/autoTag.repository'
 import * as tagRepo from '../database/repositories/tag.repository'
@@ -84,5 +91,56 @@ export async function setAutoTagRule({ property, tagId }: AutoTagRuleInput): Pro
     }
     await autoTagRepo.setRule(db, property, tagId)
   }
+  notifyEntitiesChanged(['tag'])
+}
+
+/** Same comparison the renderer's matchEntityNames uses: case, underscores and spacing don't count. */
+function normalizeName(value: string): string {
+  return value
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[_\s]+/g, ' ')
+    .trim()
+}
+
+/** "transparent background" -> "Transparent Background", as tags created from suggestions read. */
+function titleCase(value: string): string {
+  return value.replace(
+    /(^|\s)([a-z])/g,
+    (_match, boundary: string, letter: string) => boundary + letter.toUpperCase()
+  )
+}
+
+/**
+ * Fills every rule still off that has a Danbooru tag (DANBOORU_DEFAULT_TAGS)
+ * with it: the library's tag of that name or alias, else a new one. Rules
+ * already set are left alone. One transaction, one change notice.
+ */
+export async function applyDanbooruDefaults(): Promise<void> {
+  const db = getDb()
+  await db.transaction().execute(async (trx) => {
+    const ruled = new Set((await autoTagRepo.listRules(trx)).map((rule) => rule.property))
+    const tags = await tagRepo.findAllTags(trx)
+    for (const property of AUTO_TAG_PROPERTIES) {
+      const name = DANBOORU_DEFAULT_TAGS[property]
+      if (!name || ruled.has(property)) continue
+      const wanted = normalizeName(name)
+      let tag = tags.find((candidate) =>
+        [candidate.name, ...(JSON.parse(candidate.aliases_json) as string[])].some(
+          (value) => normalizeName(value) === wanted
+        )
+      )
+      if (!tag) {
+        tag = await tagRepo.insertTag(trx, {
+          id: randomUUID(),
+          name: titleCase(name),
+          aliases_json: '[]',
+          created_at: Date.now()
+        })
+        tags.push(tag)
+      }
+      await autoTagRepo.setRule(trx, property, tag.id)
+    }
+  })
   notifyEntitiesChanged(['tag'])
 }

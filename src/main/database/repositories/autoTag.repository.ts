@@ -1,9 +1,17 @@
 import { sql, type Kysely, type SqlBool } from 'kysely'
-import { HIGH_RES_MIN_SIDE, LOW_RES_MAX_SIDE, ORIENTATION_TOLERANCE } from '@shared/models/AutoTag'
+import { DANBOORU_SIZES, ORIENTATION_TOLERANCE } from '@shared/models/AutoTag'
 import type { AutoTagRuleTable, DB, MediaTable } from '../schema'
 
-const HIGH = sql.lit(HIGH_RES_MIN_SIDE)
-const LOW = sql.lit(LOW_RES_MAX_SIDE)
+const { lowresMaxSide, highres, absurdres, incrediblyAbsurdresSide, extremeMinSide, extremeRatio } =
+  DANBOORU_SIZES
+const LOWRES = sql.lit(lowresMaxSide)
+const HIGH_W = sql.lit(highres.width)
+const HIGH_H = sql.lit(highres.height)
+const ABSURD_W = sql.lit(absurdres.width)
+const ABSURD_H = sql.lit(absurdres.height)
+const INCREDIBLE = sql.lit(incrediblyAbsurdresSide)
+const EXTREME_SIDE = sql.lit(extremeMinSide)
+const EXTREME_RATIO = sql.lit(extremeRatio)
 const TOLERANCE = sql.lit(ORIENTATION_TOLERANCE)
 
 /**
@@ -15,8 +23,14 @@ const TOLERANCE = sql.lit(ORIENTATION_TOLERANCE)
  */
 export const MEDIA_MATCHES_RULE = sql<SqlBool>`CASE auto_tag_rule.property
   WHEN 'transparent' THEN media.has_alpha = 1
-  WHEN 'high_res' THEN max(media.width, media.height) >= ${HIGH}
-  WHEN 'low_res' THEN media.width > 0 AND max(media.width, media.height) < ${LOW}
+  WHEN 'lowres' THEN media.width > 0 AND media.width <= ${LOWRES} AND media.height <= ${LOWRES}
+  WHEN 'highres' THEN media.width >= ${HIGH_W} OR media.height >= ${HIGH_H}
+  WHEN 'absurdres' THEN media.width >= ${ABSURD_W} OR media.height >= ${ABSURD_H}
+  WHEN 'incredibly_absurdres' THEN max(media.width, media.height) >= ${INCREDIBLE}
+  WHEN 'tall_image' THEN media.height >= ${EXTREME_SIDE}
+    AND media.height >= media.width * ${EXTREME_RATIO}
+  WHEN 'wide_image' THEN media.width >= ${EXTREME_SIDE}
+    AND media.width >= media.height * ${EXTREME_RATIO}
   WHEN 'portrait' THEN media.width > 0 AND media.height > media.width * ${TOLERANCE}
   WHEN 'landscape' THEN media.height > 0 AND media.width > media.height * ${TOLERANCE}
   WHEN 'square' THEN media.width > 0

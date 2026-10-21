@@ -266,3 +266,19 @@
   flex: 1;
   min-width: 0;
 }
+
+.auto-tags-spinner {
+  animation: auto-tags-spin 0.9s linear infinite;
+}
+
+@keyframes auto-tags-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auto-tags-spinner {
+    animation: none;
+  }
+}
