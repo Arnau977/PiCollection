@@ -10,9 +10,8 @@ vi.mock('../thumbnails/thumbnails', () => ({
   resolveThumbnail: (...args: unknown[]) => resolveThumbnail(...args)
 }))
 
-const { computeFileHash, computePerceptualHash, hammingDistance, sameShape } = await import(
-  './mediaHash'
-)
+const { computeFileHash, computePerceptualHash, hammingDistance, readImageProperties, sameShape } =
+  await import('./mediaHash')
 
 let sourceDir = ''
 
@@ -117,5 +116,30 @@ describe('sameShape', () => {
     expect(sameShape(0.667, 0.827)).toBe(false)
     expect(sameShape(0.7, 0.71)).toBe(true)
     expect(sameShape(0, 1.5)).toBe(true)
+  })
+})
+
+describe('readImageProperties', () => {
+  it('counts transparency only when a pixel is see-through, and gives undecodable files null', async () => {
+    const opaqueWithAlpha = join(sourceDir, 'opaque.png')
+    await figure(STANDING).ensureAlpha().png().toFile(opaqueWithAlpha)
+    const cutout = join(sourceDir, 'cutout.png')
+    await sharp(
+      Buffer.from(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><circle cx="10" cy="10" r="8" fill="#c33"/></svg>'
+      )
+    )
+      .png()
+      .toFile(cutout)
+    const broken = join(sourceDir, 'broken.png')
+    await fs.writeFile(broken, 'not a picture')
+
+    expect(await readImageProperties(opaqueWithAlpha)).toEqual({
+      width: 300,
+      height: 400,
+      hasAlpha: false
+    })
+    expect(await readImageProperties(cutout)).toEqual({ width: 40, height: 20, hasAlpha: true })
+    expect(await readImageProperties(broken)).toBeNull()
   })
 })

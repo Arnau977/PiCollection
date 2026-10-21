@@ -86,7 +86,9 @@ async function hydrateMedia(db: Kysely<DB>, rows: MediaTable[]): Promise<MediaMo
   const artistById = new Map(artistRows.map((artist) => [artist.id, artist]))
 
   return rows.map((row): MediaModel => {
-    const tags: TagModel[] = (tagsByMedia.get(row.id) ?? []).map((tag) => ({
+    const tagRows = tagsByMedia.get(row.id) ?? []
+    const autoTagIds = tagRows.filter((tag) => tag.auto).map((tag) => tag.id)
+    const tags: TagModel[] = tagRows.map((tag) => ({
       id: tag.id,
       name: tag.name,
       createdAt: tag.created_at
@@ -133,6 +135,7 @@ async function hydrateMedia(db: Kysely<DB>, rows: MediaTable[]): Promise<MediaMo
       alias: row.alias ?? undefined,
       sourceUrl: row.source_url ?? undefined,
       sfw: row.sfw === 1,
+      ...(autoTagIds.length ? { autoTagIds } : {}),
       isAiGenerated: row.is_ai_generated === 1,
       createdAt: row.created_at,
       artist,
@@ -518,6 +521,10 @@ export const mediaService = {
         hash,
         phash: fingerprint?.phash ?? null,
         aspect_ratio: hash ? (fingerprint?.aspectRatio ?? 0) : null,
+        // Another file: its size and transparency are read again.
+        width: null,
+        height: null,
+        has_alpha: null,
         artist_id: target.artist_id ?? input.artistId ?? null
       })
       await mediaRepo.addMediaTagsBulk(trx, [target.id], input.tagIds)

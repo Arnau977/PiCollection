@@ -252,3 +252,17 @@
   font-size: 0.8rem;
   color: var(--color-text-muted);
 }
+
+/* Automatic tags: a tag picker plus its turn-off button, in a row's control slot. */
+.auto-tags-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: 16rem;
+  max-width: 100%;
+}
+
+.auto-tags-picker > :first-child {
+  flex: 1;
+  min-width: 0;
+}

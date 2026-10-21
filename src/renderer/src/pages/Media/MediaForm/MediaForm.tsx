@@ -49,7 +49,9 @@ function toInput(media?: MediaModel, initialFile?: InitialFile): MediaInput {
       sfw: media.sfw,
       isAiGenerated: media.isAiGenerated,
       artistId: media.artist?.id,
-      tagIds: media.tags?.map((tag) => tag.id) ?? [],
+      // Automatic tags come from rules, not the media: never saved as its own.
+      tagIds:
+        media.tags?.filter((tag) => !media.autoTagIds?.includes(tag.id)).map((tag) => tag.id) ?? [],
       characterIds: media.characters?.map((character) => character.id) ?? [],
       seriesIds: media.series?.map((series) => series.id) ?? []
     }
@@ -359,6 +361,7 @@ export function MediaForm({
               selectedTagIds={input.tagIds ?? []}
               onTagsChange={(tagIds) => setInput((prev) => ({ ...prev, tagIds }))}
               onCreateTag={drafts.createTag}
+              autoTags={media?.tags?.filter((tag) => media.autoTagIds?.includes(tag.id)) ?? []}
               characterOptions={sortedCharacterOptions}
               pendingCharacters={drafts.pendingCharacters}
               selectedCharacterIds={input.characterIds ?? []}

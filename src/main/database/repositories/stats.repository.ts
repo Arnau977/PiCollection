@@ -1,5 +1,6 @@
 import type { Kysely } from 'kysely'
 import type { DB } from '../schema'
+import { effectiveMediaTags } from './autoTag.repository'
 
 // Home's "most used" lists count library media only - pending isn't part of it yet.
 export interface EntityCountRow {
@@ -30,7 +31,7 @@ export async function topTagsByMediaCount(
   limit: number
 ): Promise<EntityCountRow[]> {
   const rows = await db
-    .selectFrom('media_tag')
+    .selectFrom(effectiveMediaTags(db).as('media_tag'))
     .innerJoin('tag', 'tag.id', 'media_tag.tag_id')
     .innerJoin('media', 'media.id', 'media_tag.media_id')
     .where('media.pending_tagging', '=', 0)

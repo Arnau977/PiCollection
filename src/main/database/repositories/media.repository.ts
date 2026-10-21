@@ -4,6 +4,7 @@ import type { DB, MediaTable } from '../schema'
 import type { MediaFilters, Sorting } from '@shared/models'
 import { extractAiToken, parseSearchQuery, type QueryNode } from '@shared/query/searchQuery'
 import { parseGroupEntry } from '@shared/query/groupEntry'
+import { MEDIA_MATCHES_RULE, autoMediaTags, effectiveMediaTags } from './autoTag.repository'
 
 const SORT_COLUMNS: Record<string, keyof MediaTable> = {
   name: 'name',
@@ -11,6 +12,19 @@ const SORT_COLUMNS: Record<string, keyof MediaTable> = {
 }
 
 const DEFAULT_LIMIT = 200
+
+/**
+ * A junction table as (media_id, entity_id) rows. Tags include the ones
+ * automatic rules add (see autoTag.repository.ts), worked out at query time.
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inferred Kysely SelectQueryBuilder generic is impractical to spell out
+function junctionRows(db: Kysely<DB>, table: 'media_tag' | 'media_character') {
+  return table === 'media_tag'
+    ? db
+        .selectFrom(effectiveMediaTags(db).as('t'))
+        .select(['t.media_id as media_id', 't.tag_id as entity_id'])
+    : db.selectFrom('media_character').select(['media_id', 'character_id as entity_id'])
+}
 
 /**
  * Builds an `id IN (...)` subquery for a single AND-group: media matching every
@@ -21,12 +35,16 @@ const DEFAULT_LIMIT = 200
 function buildAndGroupSubquery(
   db: Kysely<DB>,
   table: 'media_tag' | 'media_character',
-  column: 'tag_id' | 'character_id',
   ids: string[]
 ) {
-  let sub = db.selectFrom(table).select('media_id').where(column, 'in', ids)
+  let sub = db
+    .selectFrom(junctionRows(db, table).as('j'))
+    .select('j.media_id')
+    .where('j.entity_id', 'in', ids)
   if (ids.length > 1) {
-    sub = sub.groupBy('media_id').having((e) => e.fn.count(column).distinct(), '=', ids.length)
+    sub = sub
+      .groupBy('j.media_id')
+      .having((e) => e.fn.count('j.entity_id').distinct(), '=', ids.length)
   }
   return sub
 }
@@ -40,7 +58,6 @@ function applyGroupedFilter<O>(
   qb: SelectQueryBuilder<DB, 'media', O>,
   db: Kysely<DB>,
   table: 'media_tag' | 'media_character',
-  column: 'tag_id' | 'character_id',
   groups: string[][] | undefined
 ): SelectQueryBuilder<DB, 'media', O> {
   const nonEmptyGroups = (groups ?? []).filter((group) => group.length > 0)
@@ -54,14 +71,17 @@ function applyGroupedFilter<O>(
         const excluded = entries.filter((e) => e.excluded).map((e) => e.id)
         return eb.and([
           ...(included.length
-            ? [eb('media.id', 'in', buildAndGroupSubquery(db, table, column, included))]
+            ? [eb('media.id', 'in', buildAndGroupSubquery(db, table, included))]
             : []),
           ...(excluded.length
             ? [
                 eb(
                   'media.id',
                   'not in',
-                  db.selectFrom(table).select('media_id').where(column, 'in', excluded)
+                  db
+                    .selectFrom(junctionRows(db, table).as('j'))
+                    .select('j.media_id')
+                    .where('j.entity_id', 'in', excluded)
                 )
               ]
             : [])
@@ -127,6 +147,15 @@ function compileTerm(eb: ExpressionBuilder<DB, 'media'>, term: string): Expressi
         .selectFrom('media_tag')
         .innerJoin('tag', 'tag.id', 'media_tag.tag_id')
         .select('media_tag.media_id')
+        .where('tag.name', 'like', pattern)
+    ),
+    // A tag an automatic rule gives this row (the rule's condition reads the outer media).
+    eb.exists(
+      eb
+        .selectFrom('auto_tag_rule')
+        .innerJoin('tag', 'tag.id', 'auto_tag_rule.tag_id')
+        .select('auto_tag_rule.tag_id')
+        .where(MEDIA_MATCHES_RULE)
         .where('tag.name', 'like', pattern)
     ),
     eb(
@@ -208,7 +237,7 @@ function applyMediaFilters(
     qb = qb.where('media.type', '=', filters.type)
   }
 
-  qb = applyGroupedFilter(qb, db, 'media_tag', 'tag_id', filters.tagGroups)
+  qb = applyGroupedFilter(qb, db, 'media_tag', filters.tagGroups)
   qb = applyClosureGroupedFilter(
     qb,
     db,
@@ -329,7 +358,10 @@ export function listMediaRowsMissingHash(db: Kysely<DB>, limit: number): Promise
 }
 
 /** Rows hashed (SHA-256) but still without a fingerprint - e.g. after migration 0018. */
-export function listMediaRowsMissingFingerprint(db: Kysely<DB>, limit: number): Promise<MediaTable[]> {
+export function listMediaRowsMissingFingerprint(
+  db: Kysely<DB>,
+  limit: number
+): Promise<MediaTable[]> {
   return db
     .selectFrom('media')
     .selectAll()
@@ -346,7 +378,11 @@ export async function setMediaFingerprint(
   phash: string | null,
   aspectRatio: number
 ): Promise<void> {
-  await db.updateTable('media').set({ phash, aspect_ratio: aspectRatio }).where('id', '=', id).execute()
+  await db
+    .updateTable('media')
+    .set({ phash, aspect_ratio: aspectRatio })
+    .where('id', '=', id)
+    .execute()
 }
 
 export async function setMediaHash(
@@ -604,11 +640,19 @@ export async function updateMediaRoutes(
   })
 }
 
+export interface MediaTagRow {
+  id: string
+  name: string
+  created_at: number
+  /** Only there through an automatic rule, not one of the media's own tags. */
+  auto: boolean
+}
+
 export async function findTagsForMediaIds(
   db: Kysely<DB>,
   mediaIds: string[]
-): Promise<Map<string, { id: string; name: string; created_at: number }[]>> {
-  const map = new Map<string, { id: string; name: string; created_at: number }[]>()
+): Promise<Map<string, MediaTagRow[]>> {
+  const map = new Map<string, MediaTagRow[]>()
   if (!mediaIds.length) return map
 
   const rows = await db
@@ -623,9 +667,27 @@ export async function findTagsForMediaIds(
     .where('media_tag.media_id', 'in', mediaIds)
     .execute()
 
+  const autoRows = await db
+    .selectFrom(autoMediaTags(db).as('auto'))
+    .innerJoin('tag', 'tag.id', 'auto.tag_id')
+    .select([
+      'auto.media_id as mediaId',
+      'tag.id as id',
+      'tag.name as name',
+      'tag.created_at as created_at'
+    ])
+    .where('auto.media_id', 'in', mediaIds)
+    .execute()
+
   for (const row of rows) {
     const list = map.get(row.mediaId) ?? []
-    list.push({ id: row.id, name: row.name, created_at: row.created_at })
+    list.push({ id: row.id, name: row.name, created_at: row.created_at, auto: false })
+    map.set(row.mediaId, list)
+  }
+  for (const row of autoRows) {
+    const list = map.get(row.mediaId) ?? []
+    if (list.some((tag) => tag.id === row.id)) continue
+    list.push({ id: row.id, name: row.name, created_at: row.created_at, auto: true })
     map.set(row.mediaId, list)
   }
   return map
@@ -768,6 +830,8 @@ export async function findEntityThumbnails(
     kind === 'character'
       ? sql`LEFT JOIN (SELECT media_id, COUNT(*) AS cnt FROM media_character GROUP BY media_id) char_count ON char_count.media_id = media.id`
       : sql``
+  // A tag's preview may come from media that only has it through a rule.
+  const source = kind === 'tag' ? sql`(${effectiveMediaTags(db)})` : sql.table(table)
 
   const result = await sql<EntityThumbnailRow>`
     SELECT entity_id as entityId, route, type FROM (
@@ -776,7 +840,7 @@ export async function findEntityThumbnails(
         media.route AS route,
         media.type AS type,
         ROW_NUMBER() OVER (PARTITION BY j.${sql.ref(column)} ORDER BY ${soloTiebreak}RANDOM()) AS rn
-      FROM ${sql.table(table)} j
+      FROM ${source} j
       JOIN media ON media.id = j.media_id
       ${soloJoin}
       WHERE j.${sql.ref(column)} IN (${sql.join(ids)}) AND media.sfw = 1 AND media.pending_tagging = 0

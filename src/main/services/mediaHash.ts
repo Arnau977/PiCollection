@@ -74,6 +74,37 @@ async function fingerprintOf(input: string): Promise<VisualFingerprint | null> {
   }
 }
 
+/** What automatic tags read from a picture (shared/models/AutoTag.ts). */
+export interface ImageProperties {
+  /** After EXIF rotation; a GIF's or animated WebP's first frame. */
+  width: number
+  height: number
+  /** Whether any pixel is see-through - an alpha channel alone isn't enough. */
+  hasAlpha: boolean
+}
+
+/**
+ * Reads a picture's size and transparency from the file itself (never a
+ * thumbnail, whose size says nothing about the file). Null when sharp can't
+ * decode it - a video, or a broken file.
+ */
+export async function readImageProperties(filePath: string): Promise<ImageProperties | null> {
+  try {
+    const metadata = await sharp(filePath).metadata()
+    const height = metadata.pageHeight ?? metadata.height
+    if (!metadata.width || !height) return null
+    const rotated = (metadata.orientation ?? 1) >= 5
+    const hasAlpha = metadata.hasAlpha ? !(await sharp(filePath).stats()).isOpaque : false
+    return {
+      width: rotated ? height : metadata.width,
+      height: rotated ? metadata.width : height,
+      hasAlpha
+    }
+  } catch {
+    return null
+  }
+}
+
 const DCT_SIZE = 32
 const HASH_SIZE = 8
 const COSINES = Array.from({ length: HASH_SIZE }, (_, k) =>

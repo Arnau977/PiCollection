@@ -666,5 +666,29 @@
       "deleted": "Deleted {{date}}",
       "replaced": "Replaced {{date}}"
     }
+  },
+  "autoTags": {
+    "settingsTitle": "Automatic tags",
+    "settingsHint": "Tag pictures by what the file itself shows. A rule covers your whole library at once and leaves nothing behind when you remove it - the media's own tags never change. Videos aren't analyzed.",
+    "property_transparent": "Transparency",
+    "condition_transparent": "Some pixels are see-through",
+    "property_high_res": "High resolution",
+    "condition_high_res": "Longest side {{high}} px or more",
+    "property_low_res": "Low resolution",
+    "condition_low_res": "Longest side under {{low}} px",
+    "property_portrait": "Portrait",
+    "condition_portrait": "Taller than wide",
+    "property_landscape": "Landscape",
+    "condition_landscape": "Wider than tall",
+    "property_square": "Square",
+    "condition_square": "Sides within {{percent}}% of each other",
+    "tagFor": "Tag for {{property}}",
+    "turnOff": "Turn off {{property}}",
+    "analyzing_one": "Reading size and transparency: {{count}} picture left",
+    "analyzing_other": "Reading size and transparency: {{count}} pictures left",
+    "chipTitle": "Automatic: {{reasons}}",
+    "chipAuto": "automatic",
+    "formLabel": "Automatic",
+    "formHint": "Set in Settings > Data > Automatic tags"
   }
 }

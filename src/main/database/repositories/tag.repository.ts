@@ -1,6 +1,7 @@
 import type { Kysely } from 'kysely'
 import { libraryCountExpr, pendingCountExpr, toCountsById, type MediaCounts } from './mediaCounts'
 import type { DB, TagTable } from '../schema'
+import { effectiveMediaTags } from './autoTag.repository'
 
 export function findAllTags(db: Kysely<DB>): Promise<TagTable[]> {
   return db.selectFrom('tag').selectAll().orderBy('name', 'asc').execute()
@@ -32,11 +33,11 @@ export async function deleteTag(db: Kysely<DB>, id: string): Promise<void> {
   await db.deleteFrom('tag').where('id', '=', id).execute()
 }
 
-/** Direct media_tag link count per tag, 0 for tags with none. */
+/** Media per tag, own tags plus automatic ones, 0 for tags with none. */
 export async function countMediaPerTag(db: Kysely<DB>): Promise<Record<string, MediaCounts>> {
   const rows = await db
     .selectFrom('tag')
-    .leftJoin('media_tag', 'media_tag.tag_id', 'tag.id')
+    .leftJoin(effectiveMediaTags(db).as('media_tag'), 'media_tag.tag_id', 'tag.id')
     .leftJoin('media', 'media.id', 'media_tag.media_id')
     .select(['tag.id as id', libraryCountExpr.as('library'), pendingCountExpr.as('pending')])
     .groupBy('tag.id')

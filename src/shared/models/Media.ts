@@ -15,6 +15,8 @@ export interface MediaModel {
   createdAt: number
   artist?: ArtistModel
   tags?: TagModel[]
+  /** Tags in `tags` that only apply through an automatic rule (Settings > Automatic tags), never saved as the media's own. */
+  autoTagIds?: string[]
   characters?: CharacterModel[]
   series?: SeriesModel[]
   pendingTagging: boolean

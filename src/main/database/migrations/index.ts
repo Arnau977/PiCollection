@@ -18,6 +18,7 @@ import * as m0016MediaDerivedFrom from './0016_media_derived_from'
 import * as m0017DiscardedMedia from './0017_discarded_media'
 import * as m0018MediaPhashDct from './0018_media_phash_dct'
 import * as m0019DiscardedMediaHash from './0019_discarded_media_hash'
+import * as m0020AutoTags from './0020_auto_tags'
 
 export const migrations: Record<string, Migration> = {
   '0001_initial_schema': m0001InitialSchema,
@@ -38,5 +39,6 @@ export const migrations: Record<string, Migration> = {
   '0016_media_derived_from': m0016MediaDerivedFrom,
   '0017_discarded_media': m0017DiscardedMedia,
   '0018_media_phash_dct': m0018MediaPhashDct,
-  '0019_discarded_media_hash': m0019DiscardedMediaHash
+  '0019_discarded_media_hash': m0019DiscardedMediaHash,
+  '0020_auto_tags': m0020AutoTags
 }

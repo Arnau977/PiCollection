@@ -21,6 +21,8 @@ import { Lightbox } from '../Lightbox/Lightbox'
 import { VideoPlayer, type Section } from '../VideoPlayer/VideoPlayer'
 import { TagFinder } from '../TagFinder/TagFinder'
 import { SimilarMediaPanel } from './SimilarMediaPanel'
+import { TagChip } from './TagChip'
+import { autoTagProperties, useAutoTags } from '../../hooks/useAutoTags'
 import './Media.css'
 
 interface MediaProps extends MediaModel {
@@ -36,6 +38,7 @@ interface MediaProps extends MediaModel {
 export default function Media({
   id,
   tags = [],
+  autoTagIds = [],
   sfw,
   isAiGenerated,
   name,
@@ -56,6 +59,7 @@ export default function Media({
   const mediaUrl = toMediaUrl(route)
   const tagFinder = useTagFinder()
   const shownTags = tags.filter(tagFinder.matches)
+  const { status: autoTags } = useAutoTags({ enabled: autoTagIds.length > 0 })
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const { data: allSeries } = useSeries()
   const { data: allCharacters } = useCharacters()
@@ -229,7 +233,13 @@ export default function Media({
             {shownTags.length > 0 && (
               <ul className="chip-list chip-list-tags">
                 {shownTags.map((tag) => (
-                  <li key={tag.id}>{tag.name}</li>
+                  <TagChip
+                    key={tag.id}
+                    name={tag.name}
+                    autoProperties={
+                      autoTagIds.includes(tag.id) ? autoTagProperties(autoTags, tag.id) : null
+                    }
+                  />
                 ))}
               </ul>
             )}

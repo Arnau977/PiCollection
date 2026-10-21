@@ -289,6 +289,24 @@ input[type='checkbox'] {
   font-size: 0.85rem;
 }
 
+/* A tag a rule gives (Settings > Automatic tags), not one of the media's own:
+   outlined instead of filled, so it reads as derived without relying on color. */
+.chip-list li.chip-auto {
+  background: transparent;
+  outline: 1px dashed currentColor;
+  outline-offset: -1px;
+}
+
+/* Read by screen readers, not shown. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 /* A chip colored by its category, for lists that mix characters, series and tags. */
 .chip-category-characters {
   color: var(--color-character);

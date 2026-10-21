@@ -223,5 +223,6 @@ add a `Location` entity, taggable on media the same way.
 | Auto-update | `src/main/updater/` (see [`docs/auto-update.md`](auto-update.md)) |
 | Debug logging (settings, rotation, logger) | `src/main/logging/` |
 | SauceNAO tag suggestions | `src/main/services/sauceNao/` — the only module that sends user content (a thumbnail) off the machine, and only on an explicit button press (see `src/renderer/src/pages/Media/MediaForm/SauceNaoSuggestionsPanel.tsx`) |
+| Automatic tags | `src/main/services/autoTags.service.ts` (background size/transparency read) + `src/main/database/repositories/autoTag.repository.ts` (rules matched at query time; read tags through `effectiveMediaTags`) |
 | Local AI tagging (WD14) | `src/main/services/wd14Tagger.service.ts` + `wd14Runtime/` — runs on-device; the runtime/model are downloaded once, on request |
 | Browser extension bridge | `src/main/services/extensionBridge.*.ts` — local HTTP API on 127.0.0.1 for PiCollection Capture |

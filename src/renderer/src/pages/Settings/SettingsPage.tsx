@@ -24,6 +24,7 @@ import { NotificationsSection } from './NotificationsSection'
 import { BackupSection } from './BackupSection'
 import { MissingFilesSection } from './MissingFilesSection'
 import { SourceFolderSection } from './SourceFolderSection'
+import { AutoTagsSection } from './AutoTagsSection'
 import { LocalTaggingSection } from './LocalTaggingSection'
 import { DanbooruSection } from './DanbooruSection'
 import { ExtensionBridgeSection } from './ExtensionBridgeSection'
@@ -106,8 +107,7 @@ export default function SettingsPage(): JSX.Element {
   const autoBackup = useAutoBackup()
   const [licensesError, setLicensesError] = useState<string | null>(null)
   const autoBackupFailed = Boolean(autoBackup.status?.enabled && autoBackup.status.lastError)
-  const updateReady =
-    updater.status.state === 'available' || updater.status.state === 'downloaded'
+  const updateReady = updater.status.state === 'available' || updater.status.state === 'downloaded'
 
   async function handleDownloadUpdate(): Promise<void> {
     if (updater.status.state === 'available' && updater.status.isDowngrade) {
@@ -154,7 +154,10 @@ export default function SettingsPage(): JSX.Element {
 
         <TabPanel id="general" className="settings-sections">
           <section className="card">
-            <SettingsRow icon={<Languages size={16} aria-hidden="true" />} title={t('settings.language')}>
+            <SettingsRow
+              icon={<Languages size={16} aria-hidden="true" />}
+              title={t('settings.language')}
+            >
               <label className="radio-row">
                 <input
                   type="radio"
@@ -277,6 +280,7 @@ export default function SettingsPage(): JSX.Element {
           <BackupSection autoBackup={autoBackup} />
           <MissingFilesSection />
           <SourceFolderSection />
+          <AutoTagsSection />
         </TabPanel>
 
         <TabPanel id="advanced" className="settings-sections">

@@ -30,6 +30,26 @@ so a long title can keep its commas) and delete them. Deleting one never deletes
 media count opens the gallery filtered to it. The ⓘ next to a tag (here and on
 suggested tags) shows what it means, from Danbooru's tag wiki.
 
+## Automatic tags
+
+**Settings > Data > Automatic tags** gives a tag of yours to every picture
+with a property of the file itself:
+
+- **Transparency** - some pixels are see-through (an alpha channel that's
+  never used doesn't count);
+- **High resolution** (longest side 3840 px or more) and **Low resolution**
+  (under 800 px);
+- **Portrait**, **Landscape** and **Square** (sides within 5% of each other).
+
+Pick a tag in a property's row to turn it on; the × turns it off. A rule
+covers the whole library at once: filters, search, counts and Home count it
+as if the media had the tag, and removing the rule (or the tag) leaves
+nothing behind, because it's never written into the media's own tags. On a
+media page an automatic tag has a dashed outline (hover it to see why); the
+edit form lists them read-only under **Tags**. The app reads each picture's
+size and transparency once, in the background (the first time, the whole
+library; Settings shows how many are left). Videos aren't analyzed.
+
 ## Forms, costumes and subseries
 
 Characters and series can have a parent:

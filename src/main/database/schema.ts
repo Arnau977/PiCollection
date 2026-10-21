@@ -68,6 +68,11 @@ export interface MediaTable {
   source_metadata?: string | null
   /** The media this one was made from (a GIF's source video); null when the source is deleted. */
   derived_from_id?: string | null
+  /** Pixel size after EXIF rotation (migration 0020): null = not analyzed yet, 0 = undecodable. Videos stay null. */
+  width?: number | null
+  height?: number | null
+  /** 1 when the picture really uses transparency, not just has an alpha channel. */
+  has_alpha?: number | null
 }
 
 export interface MediaTagTable {
@@ -112,6 +117,12 @@ export interface DiscardedMediaTable {
   hash?: string | null
 }
 
+/** One per property with a rule on - see migration 0020 and shared/models/AutoTag.ts. */
+export interface AutoTagRuleTable {
+  property: string
+  tag_id: string
+}
+
 export interface DB {
   artist: ArtistTable
   artist_social_link: ArtistSocialLinkTable
@@ -126,4 +137,5 @@ export interface DB {
   tag_wiki_cache: TagWikiCacheTable
   danbooru_character_cache: DanbooruCharacterCacheTable
   discarded_media: DiscardedMediaTable
+  auto_tag_rule: AutoTagRuleTable
 }
