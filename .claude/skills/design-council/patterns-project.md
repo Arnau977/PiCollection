@@ -171,6 +171,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   SFW/AI toggles (`.media-form-ai-hint`, muted text 6.44:1 on surface).
   Guesses (SauceNAO, WD14, source sites) still never apply themselves.
   Where: `MediaFormDetailsFields.tsx`, `MediaForm.tsx`.
+- **An ambiguous suggestion asks instead of applying**: a recognized
+  character others are inspired by is held back with her own series, and
+  the panel shows "Recognized as X - which one is it?" with one chip per
+  choice (the expys say "· inspired by X", like "· form of"). It counts in
+  the tab badge and disappears once one of them is in the form. Where:
+  `MediaForm/HeldCharacterChoices.tsx`.
+
 - **A suggested form/costume is a child character**: its chip reads
   "Pyra (Pro Swimmer) · form of Pyra" (muted `.suggestion-form-of`); the
   base character is applied right away if it exists, and accepting the chip

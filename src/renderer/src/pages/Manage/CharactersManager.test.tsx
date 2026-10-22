@@ -100,7 +100,8 @@ describe('CharactersManager', () => {
     expect(create).toHaveBeenCalledWith({
       name: 'Bob',
       seriesIds: ['s1'],
-      aliases: ['Bobby, the Builder', 'Bobby']
+      aliases: ['Bobby, the Builder', 'Bobby'],
+      inspiredByIds: []
     })
     expect(refetchCharacters).toHaveBeenCalled()
   })
@@ -143,7 +144,8 @@ describe('CharactersManager', () => {
     expect(update).toHaveBeenCalledWith('c1', {
       name: 'Alicia',
       seriesIds: ['s1'],
-      aliases: ['Ali']
+      aliases: ['Ali'],
+      inspiredByIds: []
     })
     expect(refetchCharacters).toHaveBeenCalled()
   })
@@ -259,8 +261,22 @@ describe('CharactersManager', () => {
 
   it('shows each character media count, compactly formatted', () => {
     charactersData = [
-      { id: 'c1', name: 'Alice', series: [], aliases: [], createdAt: 1700000000000, mediaCount: 29000 },
-      { id: 'c2', name: 'Peter Pan', series: [], aliases: [], createdAt: 1700000001000, mediaCount: 0 }
+      {
+        id: 'c1',
+        name: 'Alice',
+        series: [],
+        aliases: [],
+        createdAt: 1700000000000,
+        mediaCount: 29000
+      },
+      {
+        id: 'c2',
+        name: 'Peter Pan',
+        series: [],
+        aliases: [],
+        createdAt: 1700000001000,
+        mediaCount: 0
+      }
     ]
     render(<CharactersManager />, { wrapper: MemoryRouter })
 
@@ -268,6 +284,27 @@ describe('CharactersManager', () => {
     const peterItem = screen.getByText('Peter Pan').closest('li')
     expect(aliceItem).toHaveTextContent('29k')
     expect(peterItem).toHaveTextContent('0')
+  })
+
+  it('sends who a character is inspired by, and lists it on the character', async () => {
+    const user = userEvent.setup()
+    const create = vi.fn().mockResolvedValue({ success: true, data: {} })
+    setApi({ create })
+    charactersData = [
+      ...charactersData,
+      { id: 'c9', name: 'Evanescia', series: [], inspiredByIds: ['c1'] }
+    ]
+    render(<CharactersManager />, { wrapper: MemoryRouter })
+
+    expect(screen.getByText('Evanescia').closest('li')).toHaveTextContent('Inspired by Alice')
+
+    await user.type(screen.getByLabelText('Name'), 'Expy')
+    await user.type(screen.getByRole('combobox', { name: /Inspired by/ }), 'Alice')
+    await user.click(await screen.findByRole('option', { name: 'Alice' }))
+    await user.keyboard('{Escape}')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ inspiredByIds: ['c1'] }))
   })
 
   it('sends the chosen parent character on create', async () => {
@@ -286,7 +323,8 @@ describe('CharactersManager', () => {
       name: 'Elizabeth Bathory (Brave)',
       seriesIds: [],
       aliases: [],
-      parentId: 'c1'
+      parentId: 'c1',
+      inspiredByIds: []
     })
   })
 

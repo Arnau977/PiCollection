@@ -11,6 +11,8 @@ import { wd14RatingIsNsfw } from '../../../utils/wd14RatingSettings'
 import { WD14_MISSING_CATEGORIES, countWd14Missing } from './missingSuggestionCounts'
 import { CharacterFormOfHint } from './CharacterFormOfHint'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
+import { openHeldCharacters, type HeldCharacter } from '../../../hooks/tagSuggestionMatching'
+import { HeldCharacterChoices } from './HeldCharacterChoices'
 
 /**
  * WD14 has no category, only a per-tag confidence score - fading
@@ -32,6 +34,9 @@ interface Wd14SuggestionsPanelProps {
   saving: boolean
   onAddMissing: MediaFormSuggestions['addWd14Suggestion']
   onApplyRating: (sfw: boolean) => void
+  /** For the held-character choice (HeldCharacterChoices). */
+  selectedCharacterIds: string[]
+  onPickHeld: (entry: HeldCharacter, characterId: string) => void
   /** Lets the rail's Ctrl+Shift+A press this panel's button. */
   runButtonRef?: React.Ref<HTMLButtonElement>
 }
@@ -45,6 +50,8 @@ export function Wd14SuggestionsPanel({
   saving,
   onAddMissing,
   onApplyRating,
+  selectedCharacterIds,
+  onPickHeld,
   runButtonRef
 }: Wd14SuggestionsPanelProps): JSX.Element {
   const { t } = useTranslation()
@@ -59,7 +66,8 @@ export function Wd14SuggestionsPanel({
     )
   }
 
-  const totalMissing = countWd14Missing(wd14.missing)
+  const totalMissing =
+    countWd14Missing(wd14.missing) + openHeldCharacters(wd14.held, selectedCharacterIds).length
   // Only worth surfacing when it would actually change something - hide it
   // once applying (or the toggle already agreeing on its own) makes the
   // suggested and current value match.
@@ -125,6 +133,11 @@ export function Wd14SuggestionsPanel({
                 {t('wd14.dismiss')}
               </button>
             </div>
+            <HeldCharacterChoices
+              held={wd14.held}
+              selectedCharacterIds={selectedCharacterIds}
+              onPick={onPickHeld}
+            />
             {WD14_MISSING_CATEGORIES.map(
               ({ category, labelKey }) =>
                 wd14.missing[category].length > 0 && (

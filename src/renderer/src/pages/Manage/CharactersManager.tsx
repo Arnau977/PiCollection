@@ -37,9 +37,16 @@ interface CharacterFormValues {
   seriesIds: string[]
   aliases: string
   parentId: string | undefined
+  inspiredByIds: string[]
 }
 
-const EMPTY_FORM: CharacterFormValues = { name: '', seriesIds: [], aliases: '', parentId: undefined }
+const EMPTY_FORM: CharacterFormValues = {
+  name: '',
+  seriesIds: [],
+  aliases: '',
+  parentId: undefined,
+  inspiredByIds: []
+}
 
 function getSeriesLabel(series: SeriesModel): string {
   return series.name
@@ -98,7 +105,10 @@ export function CharactersManager(): JSX.Element {
     const sortedCharacters = sortManageEntities(seriesFilteredCharacters, sort, getCount)
     const isFiltering = debouncedSearch.trim().length > 0 || seriesFilter.length > 0
     if (!isFiltering) return buildEntityTree(sortManageEntities(characters, sort, getCount))
-    return buildAncestorAwareEntityTree(sortedCharacters, sortManageEntities(characters, sort, getCount))
+    return buildAncestorAwareEntityTree(
+      sortedCharacters,
+      sortManageEntities(characters, sort, getCount)
+    )
   }, [characters, debouncedSearch, seriesFilter, sort, viewMode])
   const visibleCharacterIds = useMemo(() => treeNodes.map((node) => node.entity.id), [treeNodes])
   const thumbnails = useEntityThumbnails('character', visibleCharacterIds)
@@ -107,6 +117,10 @@ export function CharactersManager(): JSX.Element {
   // to one of its own descendants), so this is a best-effort narrowing rather than the source of
   // truth.
   const parentOptions = characters.filter((c) => c.id !== editing?.id)
+  const nameById = useMemo(
+    () => new Map(characters.map((character) => [character.id, character.name])),
+    [characters]
+  )
 
   function startEdit(character: CharacterModel): void {
     setEditing(character)
@@ -114,7 +128,8 @@ export function CharactersManager(): JSX.Element {
       name: character.name,
       seriesIds: character.series.map((s) => s.id),
       aliases: toAliasLines(character.aliases ?? []),
-      parentId: character.parentId ?? undefined
+      parentId: character.parentId ?? undefined,
+      inspiredByIds: character.inspiredByIds ?? []
     })
   }
 
@@ -131,7 +146,8 @@ export function CharactersManager(): JSX.Element {
       name: trimmed,
       seriesIds: form.seriesIds,
       aliases: fromAliasLines(form.aliases),
-      parentId: form.parentId
+      parentId: form.parentId,
+      inspiredByIds: form.inspiredByIds
     }
     const result = editing
       ? await window.api.character.update(editing.id, input)
@@ -198,6 +214,19 @@ export function CharactersManager(): JSX.Element {
               selectedKey={form.parentId ?? null}
               onSelect={(c) => setForm((prev) => ({ ...prev, parentId: c?.id }))}
             />
+          </div>
+
+          <div className="field">
+            <MultiSelectAutocomplete
+              name="character-inspired-by"
+              label={t('manage.inspiredBy')}
+              options={parentOptions}
+              getOptionLabel={getCharacterLabel}
+              getOptionValue={(c) => c.id}
+              selectedValues={form.inspiredByIds}
+              onChange={(inspiredByIds) => setForm((prev) => ({ ...prev, inspiredByIds }))}
+            />
+            <p className="field-hint">{t('manage.inspiredByFieldHint')}</p>
           </div>
 
           <AliasesField
@@ -282,6 +311,16 @@ export function CharactersManager(): JSX.Element {
                     {character.series.length > 0 && (
                       <span className="manage-item-meta">
                         {character.series.map((s) => s.name).join(', ')}
+                      </span>
+                    )}
+                    {(character.inspiredByIds?.length ?? 0) > 0 && (
+                      <span className="manage-item-meta">
+                        {t('manage.inspiredByList', {
+                          names: (character.inspiredByIds ?? [])
+                            .map((id) => nameById.get(id))
+                            .filter(Boolean)
+                            .join(', ')
+                        })}
                       </span>
                     )}
                     {character.aliases && character.aliases.length > 0 && (

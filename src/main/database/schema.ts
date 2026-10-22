@@ -123,6 +123,12 @@ export interface AutoTagRuleTable {
   tag_id: string
 }
 
+/** An expy and the character it's inspired by - see migration 0021. */
+export interface CharacterInspiredByTable {
+  character_id: string
+  inspired_by_id: string
+}
+
 export interface DB {
   artist: ArtistTable
   artist_social_link: ArtistSocialLinkTable
@@ -138,4 +144,5 @@ export interface DB {
   danbooru_character_cache: DanbooruCharacterCacheTable
   discarded_media: DiscardedMediaTable
   auto_tag_rule: AutoTagRuleTable
+  character_inspired_by: CharacterInspiredByTable
 }

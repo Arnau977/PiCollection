@@ -11,6 +11,8 @@ export interface CharacterModel {
   /** Pending media still linked to it - only matters when deleting it. */
   pendingMediaCount?: number
   parentId?: string | null
+  /** Characters this one is an expy of (not a hierarchy: never expands searches). */
+  inspiredByIds?: string[]
 }
 
 export interface CharacterInput {
@@ -18,4 +20,6 @@ export interface CharacterInput {
   seriesIds?: string[]
   aliases?: string[]
   parentId?: string | null
+  /** Left untouched when omitted. */
+  inspiredByIds?: string[]
 }

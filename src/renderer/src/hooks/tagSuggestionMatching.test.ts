@@ -171,3 +171,55 @@ describe('matchSuggestionCandidate', () => {
     expect(result.applied.characterIds).toEqual(['c-miku-costume'])
   })
 })
+
+describe('matchSuggestionCandidate with expys', () => {
+  const hi3: SeriesModel = { id: 'hi3', name: 'Honkai Impact 3rd' }
+  const hsr: SeriesModel = { id: 'hsr', name: 'Honkai: Star Rail' }
+  const yae: CharacterModel = { id: 'yae', name: 'Yae Sakura', series: [hi3] }
+  const evanescia: CharacterModel = {
+    id: 'eva',
+    name: 'Evanescia',
+    series: [hsr],
+    inspiredByIds: ['yae']
+  }
+  const library = { artists: [], tags: [], characters: [yae, evanescia], series: [hi3, hsr] }
+
+  it('holds back the original and her own series instead of applying them', () => {
+    const result = matchSuggestionCandidate(
+      {
+        artist: null,
+        tags: [],
+        characters: [{ name: 'Yae Sakura' }],
+        series: [{ name: 'Honkai Impact 3rd' }]
+      },
+      library
+    )
+
+    expect(result.applied.characterIds).toEqual([])
+    expect(result.applied.seriesIds).toEqual([])
+    expect(result.held).toEqual([
+      {
+        original: { id: 'yae', name: 'Yae Sakura' },
+        expys: [{ id: 'eva', name: 'Evanescia' }],
+        seriesIds: ['hi3']
+      }
+    ])
+    expect(result.appliedCount).toBe(0)
+  })
+
+  it('still applies a series another recognized character belongs to', () => {
+    const mei: CharacterModel = { id: 'mei', name: 'Raiden Mei', series: [hi3] }
+    const result = matchSuggestionCandidate(
+      {
+        artist: null,
+        tags: [],
+        characters: [{ name: 'Yae Sakura' }, { name: 'Raiden Mei' }],
+        series: [{ name: 'Honkai Impact 3rd' }]
+      },
+      { ...library, characters: [...library.characters, mei] }
+    )
+
+    expect(result.applied).toMatchObject({ characterIds: ['mei'], seriesIds: ['hi3'] })
+    expect(result.held[0].seriesIds).toEqual([])
+  })
+})

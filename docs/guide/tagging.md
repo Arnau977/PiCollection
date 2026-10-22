@@ -63,6 +63,21 @@ Searching or filtering by the parent also finds media tagged only with a
 child, so "Pyra" finds her swimsuit pictures too. See [Gallery and
 search](gallery-and-search.md#filters) for filtering by *only* the parent.
 
+## Characters inspired by another
+
+Some characters are modelled on one from another game - Evanescia (Honkai:
+Star Rail) on Yae Sakura (Honkai Impact 3rd). Tag a picture with the
+character it really shows, and in **Metadata > Characters** set **Inspired
+by** on the expy; the list then shows "Inspired by Yae Sakura" under her.
+It's not a parent: searching one never finds the other.
+
+It matters for suggestions. An AI tagger trained on the original names her
+for the expy too, so when SauceNAO or local AI recognize a character that
+others are inspired by, they don't add her or her own series: they ask
+**Recognized as Yae Sakura - which one is it?**, with a chip for each.
+Picking the original adds her with her series; picking the expy adds the
+expy (and her series, if she has just one).
+
 ## Suggestions
 
 The **Suggestions** panel beside the edit form has one tab per source, each

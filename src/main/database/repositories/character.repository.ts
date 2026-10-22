@@ -121,3 +121,35 @@ export async function findSeriesForCharacterIds(
   }
   return map
 }
+
+/** Who each character is inspired by. */
+export async function findInspiredByForCharacterIds(
+  db: Kysely<DB>,
+  characterIds: string[]
+): Promise<Map<string, string[]>> {
+  const map = new Map<string, string[]>()
+  if (!characterIds.length) return map
+  const rows = await db
+    .selectFrom('character_inspired_by')
+    .selectAll()
+    .where('character_id', 'in', characterIds)
+    .execute()
+  for (const row of rows) {
+    map.set(row.character_id, [...(map.get(row.character_id) ?? []), row.inspired_by_id])
+  }
+  return map
+}
+
+export async function setCharacterInspiredBy(
+  db: Kysely<DB>,
+  characterId: string,
+  inspiredByIds: string[]
+): Promise<void> {
+  await db.deleteFrom('character_inspired_by').where('character_id', '=', characterId).execute()
+  if (inspiredByIds.length) {
+    await db
+      .insertInto('character_inspired_by')
+      .values(inspiredByIds.map((id) => ({ character_id: characterId, inspired_by_id: id })))
+      .execute()
+  }
+}
