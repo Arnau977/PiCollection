@@ -20,6 +20,7 @@ import * as m0018MediaPhashDct from './0018_media_phash_dct'
 import * as m0019DiscardedMediaHash from './0019_discarded_media_hash'
 import * as m0020AutoTags from './0020_auto_tags'
 import * as m0021CharacterInspiredBy from './0021_character_inspired_by'
+import * as m0022AutoTagsDanbooruSizes from './0022_auto_tags_danbooru_sizes'
 
 export const migrations: Record<string, Migration> = {
   '0001_initial_schema': m0001InitialSchema,
@@ -42,5 +43,6 @@ export const migrations: Record<string, Migration> = {
   '0018_media_phash_dct': m0018MediaPhashDct,
   '0019_discarded_media_hash': m0019DiscardedMediaHash,
   '0020_auto_tags': m0020AutoTags,
-  '0021_character_inspired_by': m0021CharacterInspiredBy
+  '0021_character_inspired_by': m0021CharacterInspiredBy,
+  '0022_auto_tags_danbooru_sizes': m0022AutoTagsDanbooruSizes
 }

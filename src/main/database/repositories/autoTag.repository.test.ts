@@ -102,4 +102,18 @@ describe('automatic tags', () => {
     expect(await idsWithTag('tall')).toEqual(['opaque'])
     expect(await autoTagRepo.countUnanalyzedMedia(db)).toBe(1)
   })
+  it('follows Danbooru size rules, which stack', async () => {
+    await addMedia('strip', { width: 300, height: 1300 })
+    await addMedia('huge', { width: 3300, height: 900 })
+    await autoTagRepo.setRule(db, 'highres', 'tall')
+    await autoTagRepo.setRule(db, 'absurdres', 'clear')
+
+    // 1200 tall reaches highres; 3300 wide is absurdres and highres.
+    expect(await idsWithTag('tall')).toEqual(['huge', 'opaque', 'strip'])
+    expect(await idsWithTag('clear')).toEqual(['huge'])
+
+    await autoTagRepo.deleteRule(db, 'highres')
+    await autoTagRepo.setRule(db, 'tall_image', 'tall')
+    expect(await idsWithTag('tall')).toEqual(['strip'])
+  })
 })

@@ -37,11 +37,18 @@ with a property of the file itself:
 
 - **Transparency** - some pixels are see-through (an alpha channel that's
   never used doesn't count);
-- **High resolution** (longest side 3840 px or more) and **Low resolution**
-  (under 800 px);
+- sizes, with Danbooru's own rules: **Lowres** (both sides 500 px or less),
+  **Highres** (1600 px wide or 1200 px tall), **Absurdres** (3200 wide or
+  2400 tall), **Incredibly absurdres** (10,000 px on a side), **Tall image**
+  and **Wide image** (1024 px or more, and 4 times the other side). Like on
+  Danbooru they stack: an absurdres picture is highres too;
 - **Portrait**, **Landscape** and **Square** (sides within 5% of each other).
 
-Pick a tag in a property's row to turn it on; the × turns it off. A rule
+Pick a tag in a property's row to turn it on; the × turns it off. **Use
+Danbooru tags** turns on every property still off with Danbooru's tag for it
+("transparent background", "highres"...), reusing your tag of that name or
+alias and creating the others - the same names SauceNAO and local AI
+suggest, so their suggestions land on the same tags. A rule
 covers the whole library at once: filters, search, counts and Home count it
 as if the media had the tag, and removing the rule (or the tag) leaves
 nothing behind, because it's never written into the media's own tags. On a

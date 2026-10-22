@@ -9,6 +9,8 @@ interface UseAutoTagsResult {
   error: string | null
   saving: boolean
   setRule: (property: AutoTagProperty, tagId: string | null) => Promise<void>
+  /** Gives every rule still off its Danbooru tag (main: applyDanbooruDefaults). */
+  applyDanbooruDefaults: () => Promise<void>
 }
 
 /**
@@ -54,7 +56,19 @@ export function useAutoTags({ poll = false, enabled = true } = {}): UseAutoTagsR
     [load]
   )
 
-  return { status, error, saving, setRule }
+  const applyDanbooruDefaults = useCallback(async (): Promise<void> => {
+    setSaving(true)
+    const result = await window.api.autoTags.applyDanbooruDefaults()
+    if (result.success) {
+      setError(null)
+      await load()
+    } else {
+      setError(result.error.message)
+    }
+    setSaving(false)
+  }, [load])
+
+  return { status, error, saving, setRule, applyDanbooruDefaults }
 }
 
 /** The properties whose rule gives `tagId`, for an automatic chip's tooltip. */

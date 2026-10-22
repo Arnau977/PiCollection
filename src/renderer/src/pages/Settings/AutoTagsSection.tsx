@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import { Wand2, X } from 'lucide-react'
+import { LoaderCircle, Wand2, X } from 'lucide-react'
 import {
   AUTO_TAG_PROPERTIES,
-  HIGH_RES_MIN_SIDE,
-  LOW_RES_MAX_SIDE,
+  DANBOORU_DEFAULT_TAGS,
+  DANBOORU_SIZES,
   ORIENTATION_TOLERANCE
 } from '@shared/models'
 import { SettingsRow } from '../../components/SettingsRow/SettingsRow'
@@ -13,8 +13,14 @@ import { useAutoTags } from '../../hooks/useAutoTags'
 
 /** Numbers the property descriptions quote, so they can't drift from the rules. */
 const DESCRIPTION_VALUES = {
-  high: HIGH_RES_MIN_SIDE,
-  low: LOW_RES_MAX_SIDE,
+  lowres: DANBOORU_SIZES.lowresMaxSide,
+  highresWidth: DANBOORU_SIZES.highres.width,
+  highresHeight: DANBOORU_SIZES.highres.height,
+  absurdresWidth: DANBOORU_SIZES.absurdres.width,
+  absurdresHeight: DANBOORU_SIZES.absurdres.height,
+  incredible: DANBOORU_SIZES.incrediblyAbsurdresSide.toLocaleString('en-US'),
+  extremeSide: DANBOORU_SIZES.extremeMinSide,
+  extremeRatio: DANBOORU_SIZES.extremeRatio,
   percent: Math.round((ORIENTATION_TOLERANCE - 1) * 100)
 }
 
@@ -26,7 +32,12 @@ const DESCRIPTION_VALUES = {
 export function AutoTagsSection(): JSX.Element {
   const { t } = useTranslation()
   const { data: tags } = useTags()
-  const { status, error, saving, setRule } = useAutoTags({ poll: true })
+  const { status, error, saving, setRule, applyDanbooruDefaults } = useAutoTags({ poll: true })
+  // Offered while a property with a Danbooru tag is still off.
+  const danbooruFillable = AUTO_TAG_PROPERTIES.some(
+    (property) =>
+      DANBOORU_DEFAULT_TAGS[property] && !status?.rules.some((rule) => rule.property === property)
+  )
 
   return (
     <section className="card">
@@ -35,6 +46,23 @@ export function AutoTagsSection(): JSX.Element {
         {t('autoTags.settingsTitle')}
       </h2>
       <p className="settings-version">{t('autoTags.settingsHint')}</p>
+      {status !== null && danbooruFillable && (
+        <SettingsRow
+          title={t('autoTags.danbooruDefaults')}
+          description={t('autoTags.danbooruDefaultsHint')}
+        >
+          <button
+            type="button"
+            className="btn"
+            disabled={saving}
+            aria-busy={saving}
+            onClick={() => void applyDanbooruDefaults()}
+          >
+            {saving && <LoaderCircle size={14} className="auto-tags-spinner" aria-hidden="true" />}
+            {t('autoTags.danbooruDefaultsButton')}
+          </button>
+        </SettingsRow>
+      )}
       {AUTO_TAG_PROPERTIES.map((property) => {
         const label = t(`autoTags.property_${property}`)
         const tagId = status?.rules.find((rule) => rule.property === property)?.tagId ?? null

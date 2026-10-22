@@ -368,7 +368,8 @@ export const IPC = {
   },
   autoTags: {
     getStatus: 'auto-tags:get-status',
-    setRule: 'auto-tags:set-rule'
+    setRule: 'auto-tags:set-rule',
+    applyDanbooruDefaults: 'auto-tags:apply-danbooru-defaults'
   },
   tagWiki: {
     lookup: 'tag-wiki:lookup'

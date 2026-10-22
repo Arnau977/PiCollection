@@ -293,7 +293,9 @@ export const api = {
   autoTags: {
     getStatus: (): Promise<IpcResult<AutoTagStatus>> => ipcRenderer.invoke(IPC.autoTags.getStatus),
     setRule: (input: AutoTagRuleInput): Promise<IpcResult<void>> =>
-      ipcRenderer.invoke(IPC.autoTags.setRule, input)
+      ipcRenderer.invoke(IPC.autoTags.setRule, input),
+    applyDanbooruDefaults: (): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC.autoTags.applyDanbooruDefaults)
   },
   tagWiki: {
     lookup: (tagName: string): Promise<IpcResult<TagWikiEntry | null>> =>

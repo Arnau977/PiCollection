@@ -43,7 +43,7 @@ describe('AutoTagsSection', () => {
 
     const transparency = await screen.findByRole('combobox', { name: 'Tag for Transparency' })
     await waitFor(() => expect(transparency).toHaveValue('Transparent background'))
-    expect(screen.getByText('Longest side 3840 px or more')).toBeInTheDocument()
+    expect(screen.getByText('At least 1600 px wide or 1200 px tall')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('3 pictures left')
 
     await userEvent.type(screen.getByRole('combobox', { name: 'Tag for Portrait' }), 'Vert')
