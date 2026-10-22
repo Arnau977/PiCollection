@@ -205,12 +205,18 @@
   background: var(--border-color-strong);
 }
 
-/* Where the pill is narrow, the volume slider pops up above the mute button
-   on hover or keyboard focus, touching it so the pointer can move onto it
-   without it closing; the level shows above it. */
+/* Where the pill is narrow, the volume slider pops up on hover or keyboard
+   focus - above the whole pill, clear of the timeline row it would otherwise
+   cover (it sat right over the seek bar in the edit-form preview); the level
+   shows above it. */
+.video-volume-group {
+  /* Row top to just above the pill: timeline, row gap, pill padding, a gap. */
+  --volume-lift: calc(1.25rem + 2 * var(--space-1) + var(--space-2));
+}
+
 .video-player.is-compact .video-volume {
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% + var(--volume-lift));
   left: 50%;
   transform: translateX(-50%);
   width: 6rem;
@@ -220,6 +226,16 @@
   visibility: hidden;
 }
 
+/* Bridges the gap down to the button, so moving onto the slider keeps it open. */
+.video-player.is-compact .video-volume::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: var(--volume-lift);
+}
+
 .video-player.is-compact
   .video-volume-group:is(:hover, :focus-within):not([data-dismissed])
   .video-volume {
@@ -227,13 +243,13 @@
 }
 
 .video-player.is-compact .video-volume-level {
-  bottom: calc(100% + 1.25rem + 3 * var(--space-1));
+  bottom: calc(100% + var(--volume-lift) + 1.25rem + 3 * var(--space-1));
 }
 
 @media (max-width: 900px) {
   .video-player .video-volume {
     position: absolute;
-    bottom: 100%;
+    bottom: calc(100% + var(--volume-lift));
     left: 50%;
     transform: translateX(-50%);
     width: 6rem;
@@ -243,12 +259,22 @@
     visibility: hidden;
   }
 
+  /* Bridges the gap down to the button, so moving onto the slider keeps it open. */
+  .video-player .video-volume::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: var(--volume-lift);
+  }
+
   .video-player .video-volume-group:is(:hover, :focus-within):not([data-dismissed]) .video-volume {
     visibility: visible;
   }
 
   .video-player .video-volume-level {
-    bottom: calc(100% + 1.25rem + 3 * var(--space-1));
+    bottom: calc(100% + var(--volume-lift) + 1.25rem + 3 * var(--space-1));
   }
 }
 
