@@ -1,4 +1,5 @@
-import { app, clipboard, ipcMain, shell } from 'electron'
+import { app, clipboard, dialog, ipcMain, shell } from 'electron'
+import { is } from '@electron-toolkit/utils'
 import { join } from 'path'
 import { z } from 'zod'
 import { ipcHandler } from './helpers'
@@ -81,7 +82,17 @@ export function registerSystemHandlers(): void {
   ipcMain.handle(
     IPC.system.restartApp,
     ipcHandler(IPC.system.restartApp, z.void(), async () => {
-      app.relaunch()
+      // Under `npm run dev` the renderer comes from electron-vite's dev
+      // server, which shuts down with this process: a relaunched app would
+      // load a dead URL and stay blank. Ask for a manual restart instead.
+      if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+        dialog.showMessageBoxSync({
+          type: 'info',
+          message: 'Dev mode: the app will close now. Run `npm run dev` again to reopen it.'
+        })
+      } else {
+        app.relaunch()
+      }
       app.exit()
     })
   )
