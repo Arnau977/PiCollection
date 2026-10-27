@@ -117,9 +117,10 @@ export function VideoPlayer({
   const now = (): number => videoRef.current?.currentTime ?? player.currentTime
 
   function changeVolume(delta: number): void {
-    const next = Math.round(Math.min(Math.max(player.volume + delta, 0), 1) * 100) / 100
-    // The level changes but sound stays off while muted: M unmutes.
-    player.setVolume(next, { keepMuted: true })
+    // Muted reads as 0%, so a step up from mute starts there and unmutes.
+    const level = player.muted ? 0 : player.volume
+    const next = Math.round(Math.min(Math.max(level + delta, 0), 1) * 100) / 100
+    player.setVolume(next)
     setFlash(t('videoPlayer.volumeLevel', { percent: Math.round(next * 100) }))
     if (flashTimer.current) clearTimeout(flashTimer.current)
     flashTimer.current = setTimeout(() => setFlash(null), FLASH_MS)

@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState, type RefObject } from 'react'
 import { loadVideoPlayerPrefs, saveVideoPlayerPrefs } from './videoPlayerPrefs'
 
+/** Unmuting never lands quieter than this. */
+const MIN_UNMUTED_VOLUME = 0.1
+
 export interface VideoPlayerState {
   playing: boolean
   currentTime: number
@@ -15,8 +18,11 @@ export interface VideoPlayerState {
   seek: (time: number) => void
   skip: (delta: number) => void
   setLoop: (loop: boolean) => void
-  /** Dragging the volume slider unmutes; keyboard steps pass keepMuted. */
-  setVolume: (volume: number, opts?: { keepMuted?: boolean }) => void
+  /**
+   * Mute is volume 0: setting 0 mutes (keeping the last audible level for
+   * unmute), anything above unmutes.
+   */
+  setVolume: (volume: number) => void
   toggleMute: () => void
   setRate: (rate: number) => void
   toggleFullscreen: (container: HTMLElement) => void
@@ -135,20 +141,25 @@ export function useVideoPlayer(
       setLoopState(next)
       persist({ loop: next })
     },
-    setVolume: (next, volumeOpts): void => {
+    setVolume: (next): void => {
       const video = videoRef.current
       if (!video) return
-      video.volume = next
-      if (next > 0 && video.muted && !volumeOpts?.keepMuted && !forcedMute) video.muted = false
-      setVolumeState(next)
-      persist({ volume: next, ...(forcedMute ? {} : { muted: video.muted }) })
+      if (next > 0) video.volume = next
+      if (!forcedMute) video.muted = next === 0
+      setVolumeState(video.volume)
+      setMutedState(video.muted)
+      persist({ volume: video.volume, ...(forcedMute ? {} : { muted: video.muted }) })
     },
     toggleMute: (): void => {
       const video = videoRef.current
       if (!video) return
       video.muted = !video.muted
+      // Sliding down to 0 keeps the last step (1-2%) as the level: unmuting
+      // back to it would sound like nothing happened.
+      if (!video.muted && video.volume < MIN_UNMUTED_VOLUME) video.volume = MIN_UNMUTED_VOLUME
+      setVolumeState(video.volume)
       setMutedState(video.muted)
-      if (!forcedMute) persist({ muted: video.muted })
+      if (!forcedMute) persist({ volume: video.volume, muted: video.muted })
     },
     setRate: (next): void => {
       if (videoRef.current) videoRef.current.playbackRate = next

@@ -306,7 +306,7 @@ describe('VideoPlayer section edge cases', () => {
     expect(button).not.toHaveAttribute('aria-pressed')
   })
 
-  it('↓ on a muted video lowers the volume without unmuting it', () => {
+  it('treats mute as 0%: ↑ from mute unmutes at 1%, ↓ to 0% mutes again', () => {
     window.localStorage.setItem(
       'picollection:video-player',
       JSON.stringify({ loop: false, volume: 0.5, muted: true })
@@ -315,10 +315,14 @@ describe('VideoPlayer section edge cases', () => {
     fireEvent.keyDown(document.body, { key: 'Tab' })
     act(() => screen.getByRole('button', { name: /^Play/ }).focus())
 
-    key('ArrowDown')
+    key('ArrowUp')
+    expect(video().muted).toBe(false)
+    expect(video().volume).toBeCloseTo(0.01)
 
+    key('ArrowDown')
     expect(video().muted).toBe(true)
-    expect(video().volume).toBeCloseTo(0.49)
+    // Kept for unmuting with M or the button.
+    expect(video().volume).toBeCloseTo(0.01)
   })
 
   it('folds speed and the actions into a More menu in compact mode, in separate sections', async () => {

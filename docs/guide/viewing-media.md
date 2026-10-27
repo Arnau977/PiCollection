@@ -14,7 +14,9 @@ see the time under the cursor), **Copy frame**, **Loop**, **Speed** (0.25× to
 clipboard at full size - handy for a reverse image search (Google Lens) when
 the tag suggestions find nothing. The bar fades out while the video plays and you don't move the
 mouse, and stays up while it's paused or you're using the keyboard in it.
-Loop, volume and mute carry over to the next video; speed goes back to
+Mute is volume 0%: lowering the volume to 0 mutes, raising it unmutes, and
+unmuting brings the volume back (at least to 10%). Loop, volume and mute
+carry over to the next video; speed goes back to
 normal. A video pauses itself when a dialog (such as Make GIF) opens over it. Keys: `Space` play/pause, `L` loop, `M` mute, `F` full screen, and
 `←` / `→` go back or forward 5 seconds and `↑` / `↓` change the volume (1% per
 press; hold the key to keep going) once
