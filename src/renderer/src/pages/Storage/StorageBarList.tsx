@@ -1,12 +1,16 @@
 import { useTranslation } from 'react-i18next'
+import { ChevronRight, File, Folder } from 'lucide-react'
 import { formatFileSize } from '../../utils/fileSize'
 
 export interface StorageBarItem {
   key: string
   label: string
   bytes: number
-  count: number
-  /** Accessible name of the row's action (open in gallery, open folder). */
+  /** Files it holds (folders, entities); a single file shows none. */
+  count?: number
+  /** A folder (opens its contents) or a file (opens its media page) - shown by an icon. */
+  kind?: 'folder' | 'file'
+  /** Accessible name of the row's action (open in gallery, open folder or file). */
   actionLabel?: string
   onOpen?: () => void
 }
@@ -17,6 +21,12 @@ interface StorageBarListProps {
   totalBytes: number
   /** CSS color of the bars - the category's own color. */
   color: string
+}
+
+function KindIcon({ kind }: { kind?: StorageBarItem['kind'] }): JSX.Element | null {
+  if (kind === 'folder') return <Folder size={14} aria-hidden="true" />
+  if (kind === 'file') return <File size={14} aria-hidden="true" />
+  return null
 }
 
 /**
@@ -44,10 +54,17 @@ export function StorageBarList({ items, totalBytes, color }: StorageBarListProps
               aria-label={item.actionLabel}
               onClick={item.onOpen}
             >
-              {item.label}
+              <KindIcon kind={item.kind} />
+              <span className="storage-bar-label">{item.label}</span>
+              {item.kind === 'folder' && (
+                <ChevronRight size={14} className="storage-bar-open" aria-hidden="true" />
+              )}
             </button>
           ) : (
-            <span className="storage-bar-name">{item.label}</span>
+            <span className="storage-bar-name">
+              <KindIcon kind={item.kind} />
+              <span className="storage-bar-label">{item.label}</span>
+            </span>
           )}
           <span className="storage-bar-track" aria-hidden="true">
             <span
@@ -59,7 +76,9 @@ export function StorageBarList({ items, totalBytes, color }: StorageBarListProps
           <span className="storage-bar-share">
             {totalBytes > 0 ? percent.format(item.bytes / totalBytes) : '–'}
           </span>
-          <span className="storage-bar-count">{t('storage.files', { count: item.count })}</span>
+          <span className="storage-bar-count">
+            {item.count !== undefined && t('storage.files', { count: item.count })}
+          </span>
         </li>
       ))}
     </ul>

@@ -739,6 +739,7 @@
     "tabArtists": "Artistas",
     "overlapNote": "Una imagen cuenta en cada uno de los que tiene, así que estos porcentajes no suman 100 %.",
     "openFolder": "Abrir {{name}}",
+    "openFile": "Abrir {{name}}",
     "openInGallery": "Ver {{name}} en la galería, de más a menos pesado",
     "empty": "Aquí no hay nada todavía."
   }

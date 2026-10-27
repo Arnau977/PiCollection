@@ -10,6 +10,16 @@ export interface StorageFolder extends StorageTotal {
   path: string
 }
 
+/** One library file, listed inside its folder next to the subfolders. */
+export interface StorageFile {
+  /** The media's id (opens its page). */
+  id: string
+  /** Its folder, as in StorageFolder.path. */
+  folder: string
+  name: string
+  bytes: number
+}
+
 /** One series/character/artist: its media, through the hierarchy for series and characters. */
 export interface StorageEntity extends StorageTotal {
   id: string
@@ -30,6 +40,8 @@ export interface StorageOverview {
   /** Deleted media whose files are still on disk (Metadata > Discarded). */
   discarded: StorageTotal
   folders: StorageFolder[]
+  /** Every library file with its folder, heaviest first. */
+  files: StorageFile[]
   series: StorageEntity[]
   characters: StorageEntity[]
   artists: StorageEntity[]

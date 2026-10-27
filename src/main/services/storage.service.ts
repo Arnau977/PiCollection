@@ -1,5 +1,11 @@
 import { promises as fs } from 'fs'
-import type { StorageEntity, StorageFolder, StorageOverview, StorageTotal } from '@shared/models'
+import type {
+  StorageEntity,
+  StorageFile,
+  StorageFolder,
+  StorageOverview,
+  StorageTotal
+} from '@shared/models'
 import { getDb } from '../database/connection'
 import * as discardedRepo from '../database/repositories/discardedMedia.repository'
 import * as storageRepo from '../database/repositories/storage.repository'
@@ -40,6 +46,13 @@ function foldersOf(route: string): string[] {
   parts.pop()
   if (ABSOLUTE.test(route)) return [parts.join('\\')]
   return parts.map((_, i) => parts.slice(0, i + 1).join('\\')).concat('')
+}
+
+/** A route's own folder (as in foldersOf) and file name. */
+function splitFile(route: string): { folder: string; name: string } {
+  const parts = route.split(/[\\/]+/)
+  const name = parts.pop() ?? route
+  return { folder: parts.join('\\'), name }
 }
 
 function add(totals: Map<string, StorageTotal>, key: string, bytes: number): void {
@@ -97,6 +110,7 @@ export function aggregateStorage(input: StorageInput): Omit<StorageOverview, 'di
   const folders = new Map<string, StorageTotal>()
   const artists = new Map<string, StorageTotal>()
   const pending: StorageTotal = { bytes: 0, count: 0 }
+  const files: StorageFile[] = []
   let libraryBytes = 0
   let unmeasured = 0
 
@@ -111,6 +125,7 @@ export function aggregateStorage(input: StorageInput): Omit<StorageOverview, 'di
     libraryBytes += bytes
     if (media.file_size == null) unmeasured += 1
     for (const folder of foldersOf(media.route)) add(folders, folder, bytes)
+    files.push({ id: media.id, ...splitFile(media.route), bytes })
     if (media.artist_id) add(artists, media.artist_id, bytes)
   }
 
@@ -122,6 +137,7 @@ export function aggregateStorage(input: StorageInput): Omit<StorageOverview, 'di
     library: { bytes: libraryBytes, count: library.size, unmeasured },
     pending,
     folders: folderList,
+    files: files.sort((a, b) => b.bytes - a.bytes || a.name.localeCompare(b.name)),
     series: entityTotals(library, input.seriesLinks, input.series),
     characters: entityTotals(library, input.characterLinks, input.characters),
     artists: sortedEntities(artists, input.artists)

@@ -104,10 +104,8 @@
 }
 
 .storage-bar-name {
+  gap: 0.4rem;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   justify-content: flex-start;
   padding: 0 0.3rem;
   border: none;
@@ -119,10 +117,25 @@
   text-align: left;
 }
 
+.storage-bar-name svg {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.storage-bar-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 button.storage-bar-name {
-  display: block;
-  line-height: 2rem;
   cursor: pointer;
+}
+
+/* The chevron says "opens inside", next to the name, on folders only. */
+.storage-bar-open {
+  margin-left: auto;
 }
 
 button.storage-bar-name:hover {

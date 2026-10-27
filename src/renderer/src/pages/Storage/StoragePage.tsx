@@ -10,6 +10,7 @@ import {
 } from '../../components/EntityCountButton/EntityCountButton'
 import { useStorageOverview } from '../../hooks/useStorageOverview'
 import { formatFileSize } from '../../utils/fileSize'
+import { useManageParamsSource } from '../Manage/useManageParam'
 import { StorageBarList, type StorageBarItem } from './StorageBarList'
 import '../Manage/ManagePage.css'
 import './StoragePage.css'
@@ -64,34 +65,57 @@ export default function StoragePage(): JSX.Element {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { data, loading, error } = useStorageOverview()
-  const [tab, setTab] = useState<StorageTab>('folders')
-  const [folder, setFolder] = useState('')
+  // In the URL like Metadata's (one params source for both), so Back from a
+  // file's page or the gallery returns to the same tab and folder.
+  const params = useManageParamsSource()
+  const [tab, setTabState] = useState<StorageTab>(() => {
+    const saved = params.get('tab')
+    return TABS.some((entry) => entry.tab === saved) ? (saved as StorageTab) : 'folders'
+  })
+  const [folder, setFolderState] = useState(() => params.get('folder'))
+  function setTab(next: StorageTab): void {
+    setTabState(next)
+    params.set('tab', next)
+  }
+  function setFolder(next: string): void {
+    setFolderState(next)
+    params.set('folder', next)
+  }
   const size = (bytes: number): string => formatFileSize(bytes, i18n.language)
 
+  // A folder's subfolders and its own files, together by size, like a disk
+  // usage tool: every folder opens (to its files, if nothing else), every
+  // file opens its media page.
   const folderItems = useMemo((): StorageBarItem[] => {
     if (!data) return []
-    const hasChildren = new Set(
-      data.folders.map((entry) => parentFolder(entry.path)).filter((p) => p !== null)
-    )
-    return data.folders
+    const subfolders = data.folders
       .filter((entry: StorageFolder) => parentFolder(entry.path) === folder)
-      .map((entry) => {
+      .map((entry): StorageBarItem => {
         const name = ABSOLUTE.test(entry.path) ? entry.path : (entry.path.split('\\').pop() ?? '')
-        const drillable = !ABSOLUTE.test(entry.path) && hasChildren.has(entry.path)
         return {
-          key: entry.path,
+          key: `folder:${entry.path}`,
+          kind: 'folder',
           label: name,
           bytes: entry.bytes,
           count: entry.count,
-          ...(drillable
-            ? {
-                actionLabel: t('storage.openFolder', { name }),
-                onOpen: (): void => setFolder(entry.path)
-              }
-            : {})
+          actionLabel: t('storage.openFolder', { name }),
+          onOpen: (): void => setFolder(entry.path)
         }
       })
-  }, [data, folder, t])
+    const files = data.files
+      .filter((file) => file.folder === folder)
+      .map(
+        (file): StorageBarItem => ({
+          key: `file:${file.id}`,
+          kind: 'file',
+          label: file.name,
+          bytes: file.bytes,
+          actionLabel: t('storage.openFile', { name: file.name }),
+          onOpen: (): void => void navigate(PATH.MEDIA.replace(':id', file.id))
+        })
+      )
+    return [...subfolders, ...files].sort((a, b) => b.bytes - a.bytes)
+  }, [data, folder, t, navigate])
 
   function entityItems(entities: StorageEntity[], kind: CountEntityKind): StorageBarItem[] {
     return entities.map((entity) => ({
@@ -107,7 +131,8 @@ export default function StoragePage(): JSX.Element {
 
   const active = TABS.find((entry) => entry.tab === tab) ?? TABS[0]
   const items = !data || tab === 'folders' ? folderItems : entityItems(data[tab], ENTITY_KIND[tab])
-  const crumbs = folder === '' ? [] : folder.split('\\')
+  // A folder outside the source folder is one step, under its full path.
+  const crumbs = folder === '' ? [] : ABSOLUTE.test(folder) ? [folder] : folder.split('\\')
 
   return (
     <div className="page manage-page storage-page">

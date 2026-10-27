@@ -739,6 +739,7 @@
     "tabArtists": "Artists",
     "overlapNote": "A picture counts towards every one it has, so these shares don't add up to 100%.",
     "openFolder": "Open {{name}}",
+    "openFile": "Open {{name}}",
     "openInGallery": "Show {{name}} in the gallery, heaviest first",
     "empty": "Nothing here yet."
   }

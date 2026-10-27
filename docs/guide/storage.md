@@ -16,10 +16,11 @@ the Library card says how many are still waiting.
 ## Where the space goes
 
 - **Folders** - each folder inside your source folder with its size, its
-  share of the library and how many files it holds. Click a folder to see
-  its subfolders; the path above the list goes back up. Files outside the
-  source folder show under their own full folder. These shares add up to
-  the library.
+  share of the library and how many files it holds, and next to them the
+  folder's own files, all by size. Click a folder to go inside, a file to
+  open its media page; the path above the list goes back up, and so does
+  Back. Files outside the source folder show under their own full folder.
+  These shares add up to the library.
 - **Series**, **Characters**, **Artists** - the heaviest first. A series or
   character includes its subseries and forms, as in the gallery's filters.
   A picture counts towards every series and character it has, so these

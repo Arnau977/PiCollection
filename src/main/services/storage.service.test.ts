@@ -50,6 +50,12 @@ describe('aggregateStorage', () => {
       { path: 'Genshin\\Furina', bytes: 100, count: 1 },
       { path: 'D:\\Elsewhere', bytes: 20, count: 1 }
     ])
+    expect(overview.files.map((file) => [file.folder, file.name, file.bytes])).toEqual([
+      ['Genshin\\Furina', 'a.png', 100],
+      ['Genshin', 'b.png', 50],
+      ['D:\\Elsewhere', 'c.png', 20],
+      ['Genshin', 'd.png', 0]
+    ])
     // "a" counts once under Genshin although it's linked to it and to its subseries.
     expect(overview.series).toEqual([
       { id: 'genshin', name: 'Genshin', bytes: 150, count: 2 },
