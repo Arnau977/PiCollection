@@ -1,7 +1,9 @@
 # Viewing media
 
-Click a thumbnail to open its **media page**: the picture or video, its
-artist, tags, characters and series, and **Similar media** below (see
+Click a thumbnail to open its **media page**: the picture or video, where
+the file lives (its folder inside the source folder; hover for the full
+path) with its format, resolution and size, its artist, tags, characters
+and series, and **Similar media** below (see
 [Duplicates](duplicates.md)). `←` / `→` move to the previous or next item in
 the gallery's current order, and **Edit** (`E`) opens the edit form.
 
