@@ -11,7 +11,11 @@ import { BatchEditDialog, type BatchEditSelections } from './BatchEditDialog'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
-import { useGallerySession } from '../../hooks/useGallerySession'
+import {
+  readGallerySelection,
+  useGallerySession,
+  writeGallerySelection
+} from '../../hooks/useGallerySession'
 import { hasActiveFilters } from '../../utils/hasActiveFilters'
 import { pruneMissingEntities } from '../../utils/pruneMissingEntities'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
@@ -55,7 +59,8 @@ const GalleryPage: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const confirm = useConfirm()
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(readGallerySelection()))
+  useEffect(() => writeGallerySelection(selectedIds), [selectedIds])
   const [showBatchEdit, setShowBatchEdit] = useState(false)
   const [deletingSelected, setDeletingSelected] = useState(false)
   // "Back to gallery" passes the media you were viewing (and its position
@@ -118,10 +123,18 @@ const GalleryPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- setFilters is stable
   }, [listsReady, filters, artists.data, tags.data, characters.data, series.data])
 
-  // Selected ids may no longer be relevant once the filtered/sorted set changes.
+  // Selected ids may no longer be relevant once the filtered/sorted set
+  // changes - but not on mount, which is coming back from a media with the
+  // same filters and the selection kept (readGallerySelection). Compared by
+  // value: the same filters can come back as a new object (StrictMode's
+  // double effects in dev made that clear the selection on every return).
+  const selectionKey = JSON.stringify([filters, sorting])
+  const selectionKeyRef = useRef(selectionKey)
   useEffect(() => {
+    if (selectionKeyRef.current === selectionKey) return
+    selectionKeyRef.current = selectionKey
     setSelectedIds(new Set())
-  }, [filters, sorting])
+  }, [selectionKey])
 
   // The gallery session usually already keeps the same page/filters across
   // the round trip to a media's detail view, so the item is normally already

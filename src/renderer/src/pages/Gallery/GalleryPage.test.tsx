@@ -271,6 +271,27 @@ describe('GalleryPage session persistence', () => {
     await waitFor(() => expect(screen.getByText('Page 2 of 3')).toBeInTheDocument())
   })
 
+  it('keeps the selection after opening a media and coming back', async () => {
+    const user = userEvent.setup()
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+    const { unmount } = render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+    await user.click(await screen.findByRole('button', { name: 'Select media-1' }))
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
+
+    unmount()
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('1 selected')).toBeInTheDocument()
+  })
+
   it('keeps active filters after leaving and coming back', async () => {
     window.localStorage.setItem(
       'picollection:gallery-defaults',

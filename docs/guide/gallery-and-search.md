@@ -60,7 +60,9 @@ General**. **Hide names** there hides the name under each thumbnail.
 
 ## Working with several items
 
-Select thumbnails with their checkbox (or **Select all on this page**), then:
+Select thumbnails with their checkbox (or **Select all on this page**). The
+selection stays while you open a media and come back; changing the filters or
+the order clears it. Then:
 
 - **Edit metadata**: add or remove tags, characters and series, set SFW or
   NSFW, and mark them as AI-generated or not, on all of them at once;
