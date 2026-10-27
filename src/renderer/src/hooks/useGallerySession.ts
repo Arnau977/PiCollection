@@ -23,9 +23,32 @@ export function writeGallerySession(next: GallerySession): void {
   session = next
 }
 
-/** Test helper: forgets the remembered filters. */
+/**
+ * The gallery's selection, kept the same way: opening a media to check it
+ * (instead of ticking it) and coming back mustn't lose what was selected.
+ */
+let selection: ReadonlySet<string> = new Set()
+
+export function readGallerySelection(): ReadonlySet<string> {
+  return selection
+}
+
+export function writeGallerySelection(next: ReadonlySet<string>): void {
+  selection = next
+}
+
+/** A media deleted elsewhere (its detail page) leaves the selection too. */
+export function forgetGallerySelection(id: string): void {
+  if (!selection.has(id)) return
+  const next = new Set(selection)
+  next.delete(id)
+  selection = next
+}
+
+/** Test helper: forgets the remembered filters and selection. */
 export function resetGallerySession(): void {
   session = null
+  selection = new Set()
 }
 
 interface UseGallerySessionResult extends GallerySession {

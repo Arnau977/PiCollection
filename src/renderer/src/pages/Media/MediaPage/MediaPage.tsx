@@ -9,6 +9,7 @@ import { MediaFileActions } from '../../../components/MediaFileActions/MediaFile
 import { useConfirm } from '../../../components/ConfirmDialog/ConfirmDialogContext'
 import { useMediaById } from '../../../hooks/useMediaById'
 import { useAdjacentMedia } from '../../../hooks/useAdjacentMedia'
+import { forgetGallerySelection } from '../../../hooks/useGallerySession'
 import { SHORTCUTS, ariaShortcut, formatShortcut, useShortcut } from '../../../hooks/useShortcut'
 import { MediaForm } from '../MediaForm/MediaForm'
 import { Toast } from '../../../components/Toast/Toast'
@@ -83,6 +84,7 @@ const MediaPage: React.FC = () => {
     if (!ok) return
     setDeleting(true)
     const result = await window.api.media.delete(mediaId)
+    if (result.success) forgetGallerySelection(mediaId)
     if (result.success && pendingQueue) {
       // Deleting from the pending queue moves on like "Siguiente" does
       // instead of dropping the user out of the queue.
