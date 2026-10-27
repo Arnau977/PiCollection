@@ -14,6 +14,9 @@ export function loadVideoPlayerPrefs(): VideoPlayerPrefs {
     const raw = window.localStorage.getItem(VIDEO_PLAYER_STORAGE_KEY)
     if (!raw) return DEFAULTS
     const saved = JSON.parse(raw) as Partial<VideoPlayerPrefs>
+    // Saved before mute meant volume 0: read it as muted, unmuting to full.
+    if (saved.volume === 0)
+      return { loop: saved.loop === true, volume: DEFAULTS.volume, muted: true }
     return {
       loop: saved.loop === true,
       volume:

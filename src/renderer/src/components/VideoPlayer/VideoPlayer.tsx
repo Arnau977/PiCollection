@@ -117,9 +117,7 @@ export function VideoPlayer({
   const now = (): number => videoRef.current?.currentTime ?? player.currentTime
 
   function changeVolume(delta: number): void {
-    const next = Math.round(Math.min(Math.max(player.volume + delta, 0), 1) * 100) / 100
-    // The level changes but sound stays off while muted: M unmutes.
-    player.setVolume(next, { keepMuted: true })
+    const next = player.stepVolume(delta)
     setFlash(t('videoPlayer.volumeLevel', { percent: Math.round(next * 100) }))
     if (flashTimer.current) clearTimeout(flashTimer.current)
     flashTimer.current = setTimeout(() => setFlash(null), FLASH_MS)
@@ -135,8 +133,14 @@ export function VideoPlayer({
     togglePlay: player.togglePlay,
     back: () => player.skip(-SKIP_SECONDS),
     forward: () => player.skip(SKIP_SECONDS),
-    volumeUp: () => changeVolume(VOLUME_STEP),
-    volumeDown: () => changeVolume(-VOLUME_STEP),
+    // A forced-muted host (the edit-form preview) has no volume to change:
+    // leaving these out keeps ↑ / ↓ scrolling its long form.
+    ...(muted
+      ? {}
+      : {
+          volumeUp: (): void => changeVolume(VOLUME_STEP),
+          volumeDown: (): void => changeVolume(-VOLUME_STEP)
+        }),
     frameBack: () => stepFrame(-1),
     frameForward: () => stepFrame(1),
     loop: () => player.setLoop(!player.loop),

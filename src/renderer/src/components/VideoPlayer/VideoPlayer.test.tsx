@@ -202,19 +202,21 @@ describe('VideoPlayer section, frames and volume keys', () => {
     expect(video().currentTime).toBe(before)
   })
 
-  it('↑ raises the volume 1% with keyboard focus inside, and shows it', () => {
+  it('↑ raises the volume 1% with nothing focused and shows it; ← stays with the page', () => {
     window.localStorage.setItem(
       'picollection:video-player',
       JSON.stringify({ loop: false, volume: 0.5, muted: false })
     )
     render(<VideoPlayer src="app://x.mp4" />)
-    fireEvent.keyDown(document.body, { key: 'Tab' })
-    act(() => screen.getByRole('button', { name: /^Play/ }).focus())
+    withDuration(10)
+    at(4)
 
     key('ArrowUp')
+    key('ArrowLeft')
 
     expect(video().volume).toBeCloseTo(0.51)
     expect(screen.getByText('Volume 51%')).toBeInTheDocument()
+    expect(video().currentTime).toBe(4)
   })
 
   it('arrows go to the player in full screen even with nothing focused', () => {
@@ -306,19 +308,22 @@ describe('VideoPlayer section edge cases', () => {
     expect(button).not.toHaveAttribute('aria-pressed')
   })
 
-  it('↓ on a muted video lowers the volume without unmuting it', () => {
+  it('↓ while muted stays muted, ↑ unmutes back to the kept level', () => {
     window.localStorage.setItem(
       'picollection:video-player',
-      JSON.stringify({ loop: false, volume: 0.5, muted: true })
+      JSON.stringify({ loop: false, volume: 0.6, muted: true })
     )
     render(<VideoPlayer src="app://x.mp4" />)
     fireEvent.keyDown(document.body, { key: 'Tab' })
     act(() => screen.getByRole('button', { name: /^Play/ }).focus())
 
     key('ArrowDown')
-
     expect(video().muted).toBe(true)
-    expect(video().volume).toBeCloseTo(0.49)
+    expect(video().volume).toBeCloseTo(0.6)
+
+    key('ArrowUp')
+    expect(video().muted).toBe(false)
+    expect(video().volume).toBeCloseTo(0.6)
   })
 
   it('folds speed and the actions into a More menu in compact mode, in separate sections', async () => {
