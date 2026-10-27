@@ -42,7 +42,9 @@ Below the search bar:
   missing them.
 - **More filters**: SFW / NSFW, AI-generated (all, only, exclude), and type
   (image, video, GIF).
-- **Sort by** date or name, ascending or descending.
+- **Sort by** date, name or size on disk, ascending or descending. Sizes are
+  read in the background (the first time, the whole library); a file not
+  read yet sorts last when going from the heaviest.
 
 When filters hide part of your library, a notice says so, with **Clear
 filters**, and an empty result reads "No media matches these filters". A

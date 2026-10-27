@@ -26,7 +26,7 @@ export const MediaFiltersSchema = z.object({
 })
 
 export const SortingSchema = z.object({
-  prop: z.enum(['name', 'createdAt']).optional(),
+  prop: z.enum(['name', 'createdAt', 'fileSize']).optional(),
   desc: z.boolean().optional()
 })
 

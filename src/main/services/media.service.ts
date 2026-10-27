@@ -138,6 +138,7 @@ async function hydrateMedia(db: Kysely<DB>, rows: MediaTable[]): Promise<MediaMo
       ...(autoTagIds.length ? { autoTagIds } : {}),
       isAiGenerated: row.is_ai_generated === 1,
       createdAt: row.created_at,
+      ...(row.file_size != null ? { fileSize: row.file_size } : {}),
       artist,
       tags,
       characters,
@@ -525,6 +526,7 @@ export const mediaService = {
         width: null,
         height: null,
         has_alpha: null,
+        file_size: null,
         artist_id: target.artist_id ?? input.artistId ?? null
       })
       await mediaRepo.addMediaTagsBulk(trx, [target.id], input.tagIds)

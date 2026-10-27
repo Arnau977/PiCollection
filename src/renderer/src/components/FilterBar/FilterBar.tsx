@@ -112,6 +112,7 @@ export function FilterBar({
           >
             <option value="createdAt">{t('filters.sortDate')}</option>
             <option value="name">{t('filters.sortName')}</option>
+            <option value="fileSize">{t('filters.sortSize')}</option>
           </select>
         </label>
 

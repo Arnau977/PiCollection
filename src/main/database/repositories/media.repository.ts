@@ -8,7 +8,8 @@ import { MEDIA_MATCHES_RULE, autoMediaTags, effectiveMediaTags } from './autoTag
 
 const SORT_COLUMNS: Record<string, keyof MediaTable> = {
   name: 'name',
-  createdAt: 'created_at'
+  createdAt: 'created_at',
+  fileSize: 'file_size'
 }
 
 const DEFAULT_LIMIT = 200
@@ -922,4 +923,24 @@ export async function countLibraryMedia(db: Kysely<DB>): Promise<number> {
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .executeTakeFirst()
   return Number(row?.count ?? 0)
+}
+
+/** Media whose file size hasn't been read yet, in id order after `afterId` (a cursor: a missing file stays null without being picked up again in the same pass). */
+export function listMediaWithoutFileSize(
+  db: Kysely<DB>,
+  afterId: string,
+  limit: number
+): Promise<Pick<MediaTable, 'id' | 'route'>[]> {
+  return db
+    .selectFrom('media')
+    .select(['id', 'route'])
+    .where('file_size', 'is', null)
+    .where('id', '>', afterId)
+    .orderBy('id')
+    .limit(limit)
+    .execute()
+}
+
+export async function setMediaFileSize(db: Kysely<DB>, id: string, bytes: number): Promise<void> {
+  await db.updateTable('media').set({ file_size: bytes }).where('id', '=', id).execute()
 }

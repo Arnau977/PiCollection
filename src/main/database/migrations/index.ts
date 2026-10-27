@@ -22,6 +22,7 @@ import * as m0020AutoTags from './0020_auto_tags'
 import * as m0021CharacterInspiredBy from './0021_character_inspired_by'
 import * as m0022AutoTagsDanbooruSizes from './0022_auto_tags_danbooru_sizes'
 import * as m0023RereadTransparency from './0023_reread_transparency'
+import * as m0024MediaFileSize from './0024_media_file_size'
 
 export const migrations: Record<string, Migration> = {
   '0001_initial_schema': m0001InitialSchema,
@@ -46,5 +47,6 @@ export const migrations: Record<string, Migration> = {
   '0020_auto_tags': m0020AutoTags,
   '0021_character_inspired_by': m0021CharacterInspiredBy,
   '0022_auto_tags_danbooru_sizes': m0022AutoTagsDanbooruSizes,
-  '0023_reread_transparency': m0023RereadTransparency
+  '0023_reread_transparency': m0023RereadTransparency,
+  '0024_media_file_size': m0024MediaFileSize
 }
