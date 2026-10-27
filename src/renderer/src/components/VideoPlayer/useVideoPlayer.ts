@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { loadVideoPlayerPrefs, saveVideoPlayerPrefs } from './videoPlayerPrefs'
 
-/** Unmuting never lands quieter than this. */
-const MIN_UNMUTED_VOLUME = 0.1
+/**
+ * A level held this long counts as chosen: it's what unmuting restores. A
+ * slide or held key down to 0 passes through 1-2% on the way, which mustn't.
+ */
+const SETTLE_MS = 500
 
 export interface VideoPlayerState {
   playing: boolean
@@ -19,14 +22,14 @@ export interface VideoPlayerState {
   skip: (delta: number) => void
   setLoop: (loop: boolean) => void
   /**
-   * Mute is volume 0: setting 0 mutes (keeping the last audible level for
-   * unmute), anything above unmutes.
+   * Mute is volume 0: setting 0 mutes and keeps the last level held still
+   * (SETTLE_MS) for unmuting; anything above unmutes.
    */
   setVolume: (volume: number) => void
   /**
-   * One key step (↑ / ↓). From mute, a step up unmutes from the kept level
-   * (muted at 60% -> 61%), like other players; a step down stays muted.
-   * Returns the level now heard, for the on-screen readout.
+   * One key step (↑ / ↓). From mute, a step up just unmutes back to the kept
+   * level; a step down stays muted. Returns the level now heard, for the
+   * on-screen readout.
    */
   stepVolume: (delta: number) => number
   toggleMute: () => void
@@ -58,6 +61,9 @@ export function useVideoPlayer(
   const [rate, setRateState] = useState(1)
   const [fullscreen, setFullscreen] = useState(false)
   const forcedMute = opts.muted === true
+  const settledVolume = useRef(prefs.volume)
+  const settleTimer = useRef<ReturnType<typeof setTimeout>>()
+  useEffect(() => (): void => clearTimeout(settleTimer.current), [])
 
   useEffect(() => {
     const video = videoRef.current
@@ -126,7 +132,13 @@ export function useVideoPlayer(
   function setVolume(next: number): void {
     const video = videoRef.current
     if (!video) return
-    if (next > 0) video.volume = next
+    clearTimeout(settleTimer.current)
+    if (next > 0) {
+      video.volume = next
+      settleTimer.current = setTimeout(() => (settledVolume.current = next), SETTLE_MS)
+    } else {
+      video.volume = settledVolume.current
+    }
     if (!forcedMute) video.muted = next === 0
     setVolumeState(video.volume)
     setMutedState(video.muted)
@@ -161,7 +173,10 @@ export function useVideoPlayer(
     stepVolume: (delta): number => {
       const video = videoRef.current
       if (!video) return 0
-      if (video.muted && delta <= 0) return 0
+      if (video.muted) {
+        if (delta > 0) setVolume(video.volume)
+        return video.muted ? 0 : video.volume
+      }
       const next = Math.round(Math.min(Math.max(video.volume + delta, 0), 1) * 100) / 100
       setVolume(next)
       return video.muted ? 0 : next
@@ -170,9 +185,8 @@ export function useVideoPlayer(
       const video = videoRef.current
       if (!video) return
       video.muted = !video.muted
-      // Sliding down to 0 keeps the last step (1-2%) as the level: unmuting
-      // back to it would sound like nothing happened.
-      if (!video.muted && video.volume < MIN_UNMUTED_VOLUME) video.volume = MIN_UNMUTED_VOLUME
+      clearTimeout(settleTimer.current)
+      settledVolume.current = video.volume
       setVolumeState(video.volume)
       setMutedState(video.muted)
       if (!forcedMute) persist({ volume: video.volume, muted: video.muted })

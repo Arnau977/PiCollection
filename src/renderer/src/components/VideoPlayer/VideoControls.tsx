@@ -304,7 +304,7 @@ export function VideoControls({
             if (e.key === 'Escape') setVolumeDismissed(true)
           }}
           // While muted the slider reads 0%, so its own arrows would unmute
-          // at 1%; step from the kept level instead (muted at 60% -> 61%).
+          // at 1%; go through stepVolume, which unmutes to the kept level.
           onKeyDownCapture={(e) => {
             if (!player.muted || !(e.target instanceof HTMLInputElement)) return
             const delta = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1 }[e.key]

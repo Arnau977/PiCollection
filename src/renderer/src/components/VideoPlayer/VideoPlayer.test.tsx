@@ -306,7 +306,7 @@ describe('VideoPlayer section edge cases', () => {
     expect(button).not.toHaveAttribute('aria-pressed')
   })
 
-  it('steps from the kept level when muted: ↓ stays muted, ↑ unmutes one step up', () => {
+  it('↓ while muted stays muted, ↑ unmutes back to the kept level', () => {
     window.localStorage.setItem(
       'picollection:video-player',
       JSON.stringify({ loop: false, volume: 0.6, muted: true })
@@ -321,7 +321,7 @@ describe('VideoPlayer section edge cases', () => {
 
     key('ArrowUp')
     expect(video().muted).toBe(false)
-    expect(video().volume).toBeCloseTo(0.61)
+    expect(video().volume).toBeCloseTo(0.6)
   })
 
   it('folds speed and the actions into a More menu in compact mode, in separate sections', async () => {

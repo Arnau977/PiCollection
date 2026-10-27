@@ -72,10 +72,14 @@ describe('useVideoPlayer', () => {
     expect(loadVideoPlayerPrefs().muted).toBe(false)
   })
 
-  it('mutes at volume 0 and keeps the level to unmute to', () => {
+  it('mutes at volume 0 and unmutes to the last level held, not the slide past it', () => {
+    vi.useFakeTimers()
     mount()
     act(() => player.setVolume(0.6))
+    act(() => vi.advanceTimersByTime(500))
+    act(() => player.setVolume(0.02))
     act(() => player.setVolume(0))
+    vi.useRealTimers()
     expect(video.muted).toBe(true)
     expect(video.volume).toBeCloseTo(0.6)
 
