@@ -3,7 +3,11 @@ import type { SauceNaoName } from '@shared/models'
 import { danbooruFetch } from './danbooruHttp'
 import { readDanbooruCredentials } from './danbooruSettings'
 
-const DANBOORU_POST_URL = /^https?:\/\/danbooru\.donmai\.us\/posts\/(\d+)/i
+/**
+ * A Danbooru post page, in today's form (`/posts/123`) or the old one
+ * SauceNAO still links to (`/post/show/123`).
+ */
+const DANBOORU_POST_URL = /^https?:\/\/danbooru\.donmai\.us\/(?:posts|post\/show)\/(\d+)/i
 const MAX_TAGS = 25
 const FETCH_TIMEOUT_MS = 8000
 
@@ -28,42 +32,69 @@ const TAG_STOPLIST = new Set([
   'md5_mismatch'
 ])
 
+export interface DanbooruPostTags {
+  /** General tags, meta ones dropped, capped at MAX_TAGS. */
+  tags: SauceNaoName[]
+  /** Full character tags, qualifiers kept ("gold ship (run! ruin! launcher!) (umamusume)"). */
+  characters: SauceNaoName[]
+  /** Copyright tags. */
+  series: SauceNaoName[]
+}
+
+/** A space-separated tag string as cleaned, case-insensitively unique names. */
+function namesFrom(
+  tagString: unknown,
+  options: { skip?: Set<string>; max?: number } = {}
+): SauceNaoName[] {
+  if (typeof tagString !== 'string') return []
+  const names: SauceNaoName[] = []
+  const seen = new Set<string>()
+  for (const rawTag of tagString.split(' ')) {
+    if (!rawTag || options.skip?.has(rawTag.toLowerCase())) continue
+    const cleaned = cleanEntityName(rawTag)
+    const key = cleaned.toLowerCase()
+    if (!cleaned || seen.has(key)) continue
+    seen.add(key)
+    names.push({ name: cleaned })
+    if (options.max && names.length >= options.max) break
+  }
+  return names
+}
+
 /**
- * SauceNAO's booru results carry characters/series/artist but no general
- * tag list - when the winning match is a Danbooru post, this fetches its
- * general tags as a follow-up. Returns [] for any non-Danbooru URL, missing
- * Danbooru credentials (see Settings - unidentified requests are what got
- * this app 403'd by Cloudflare in the first place), network failure,
- * timeout, or malformed response; never throws.
+ * When SauceNAO's winning match is a Danbooru post, reads the post itself:
+ * its general tags (SauceNAO's results carry none), and its characters and
+ * copyrights as they are today - SauceNAO keeps a copy from when it indexed
+ * the picture, often before forms like "gold ship (run! ruin! launcher!)"
+ * were tagged. Null for any non-Danbooru URL, missing Danbooru credentials
+ * (see Settings - unidentified requests are what got this app 403'd by
+ * Cloudflare in the first place), network failure, timeout, or malformed
+ * response; never throws.
  */
-export async function fetchDanbooruTags(sourceUrl: string | undefined): Promise<SauceNaoName[]> {
+export async function fetchDanbooruPostTags(
+  sourceUrl: string | undefined
+): Promise<DanbooruPostTags | null> {
   const match = sourceUrl?.match(DANBOORU_POST_URL)
-  if (!match) return []
-  if (!readDanbooruCredentials()) return []
+  if (!match) return null
+  if (!readDanbooruCredentials()) return null
 
   try {
     const res = await danbooruFetch(new URL(`https://danbooru.donmai.us/posts/${match[1]}.json`), {
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
     })
-    if (!res.ok) return []
+    if (!res.ok) return null
 
-    const body = (await res.json()) as { tag_string_general?: unknown }
-    if (typeof body.tag_string_general !== 'string' || !body.tag_string_general.trim()) return []
-
-    const names: SauceNaoName[] = []
-    const seen = new Set<string>()
-    for (const rawTag of body.tag_string_general.split(' ')) {
-      if (!rawTag || TAG_STOPLIST.has(rawTag.toLowerCase())) continue
-      const cleaned = cleanEntityName(rawTag)
-      if (!cleaned) continue
-      const key = cleaned.toLowerCase()
-      if (seen.has(key)) continue
-      seen.add(key)
-      names.push({ name: cleaned })
-      if (names.length >= MAX_TAGS) break
+    const body = (await res.json()) as {
+      tag_string_general?: unknown
+      tag_string_character?: unknown
+      tag_string_copyright?: unknown
     }
-    return names
+    return {
+      tags: namesFrom(body.tag_string_general, { skip: TAG_STOPLIST, max: MAX_TAGS }),
+      characters: namesFrom(body.tag_string_character),
+      series: namesFrom(body.tag_string_copyright)
+    }
   } catch {
-    return []
+    return null
   }
 }

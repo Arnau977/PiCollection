@@ -4,7 +4,7 @@ import type { SauceNaoLookup, SauceNaoQuota } from '@shared/models'
 import { resolveThumbnail } from '../../thumbnails/thumbnails'
 import { AppError } from '../../errors'
 import { readSauceNaoApiKey } from './sauceNaoSettings'
-import { fetchDanbooruTags } from '../danbooruTags'
+import { fetchDanbooruPostTags } from '../danbooruTags'
 import { SauceNaoResponseSchema, pickBestMatch } from './sauceNao.parse'
 import { logError, logInfo } from '../../logging/logger'
 import { createRateLimiter } from '../rateLimiter'
@@ -269,7 +269,11 @@ async function searchImage(
     // That search was the last one of the window - don't wait for a rejection.
     if (parsed.data.header?.long_remaining === 0) markDailyLimitReached()
     if (lookup.match) {
-      lookup.match.tags = await fetchDanbooruTags(lookup.match.sourceUrl)
+      const post = await fetchDanbooruPostTags(lookup.match.sourceUrl)
+      lookup.match.tags = post?.tags ?? []
+      // The post as it is today beats SauceNAO's older copy of its tags.
+      if (post?.characters.length) lookup.match.characters = post.characters
+      if (post?.series.length) lookup.match.series = post.series
     }
     // Only successful lookups are cached - a thrown error above never
     // reaches here, so a failed attempt (rate limit, missing key, etc.)
