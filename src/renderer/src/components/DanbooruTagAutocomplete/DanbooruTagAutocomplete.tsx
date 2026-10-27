@@ -51,7 +51,7 @@ export function DanbooruTagAutocomplete({
     const query = debouncedValue.trim()
     // Keeps the plain text input working either way - only the Danbooru-
     // backed suggestion dropdown is unavailable without a configured account
-    // (see useDanbooruCredentialsConfigured), same as fetchDanbooruTags and
+    // (see useDanbooruCredentialsConfigured), same as fetchDanbooruPostTags and
     // lookupTagWiki refusing the call on the main-process side.
     if (query.length < MIN_QUERY_LENGTH || !hasDanbooruAccount) {
       setSuggestions([])

@@ -30,7 +30,7 @@ export function resetDanbooruRateLimiterForTests(): void {
  * tightened). With credentials configured in Settings this authenticates as
  * that account (HTTP Basic) and identifies it in the UA; without them it
  * falls back to an honest, anonymous UA that may still occasionally be
- * challenged. Shared by every Danbooru request in the app: fetchDanbooruTags,
+ * challenged. Shared by every Danbooru request in the app: fetchDanbooruPostTags,
  * autocompleteDanbooruTags, lookupTagWiki, resolveDanbooruUserId.
  */
 export function danbooruRequestHeaders(): HeadersInit {

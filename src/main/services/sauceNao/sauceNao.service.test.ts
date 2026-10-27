@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const resolveThumbnail = vi.fn()
 const readSauceNaoApiKey = vi.fn()
-const fetchDanbooruTags = vi.fn()
+const fetchDanbooruPostTags = vi.fn()
 const readFile = vi.fn()
 const logInfo = vi.fn()
 const logError = vi.fn()
@@ -16,7 +16,7 @@ vi.mock('./sauceNaoSettings', () => ({
   readSauceNaoApiKey: (...args: unknown[]) => readSauceNaoApiKey(...args)
 }))
 vi.mock('../danbooruTags', () => ({
-  fetchDanbooruTags: (...args: unknown[]) => fetchDanbooruTags(...args)
+  fetchDanbooruPostTags: (...args: unknown[]) => fetchDanbooruPostTags(...args)
 }))
 vi.mock('fs', () => ({
   promises: { readFile: (...args: unknown[]) => readFile(...args) }
@@ -48,7 +48,7 @@ beforeEach(() => {
   resolveThumbnail.mockReset().mockResolvedValue('/cache/thumb.png')
   readFile.mockReset().mockResolvedValue(Buffer.from('fake-png-bytes'))
   readSauceNaoApiKey.mockReset().mockReturnValue(undefined)
-  fetchDanbooruTags.mockReset().mockResolvedValue([])
+  fetchDanbooruPostTags.mockReset().mockResolvedValue(null)
   logInfo.mockReset()
   logError.mockReset()
   rateLimitRun.mockReset().mockImplementation((fn: () => Promise<unknown>) => fn())
@@ -274,8 +274,12 @@ describe('lookupSauceNao', () => {
     expect(String(calledUrl)).not.toContain('api_key')
   })
 
-  it('enriches a match with Danbooru tags', async () => {
-    fetchDanbooruTags.mockResolvedValue([{ name: '1girl' }, { name: 'blue hair' }])
+  it("enriches a Danbooru match with the post's tags, and its current characters and series", async () => {
+    fetchDanbooruPostTags.mockResolvedValue({
+      tags: [{ name: '1girl' }, { name: 'blue hair' }],
+      characters: [{ name: 'ishtar (swimsuit rider) (fate)' }, { name: 'ishtar (fate)' }],
+      series: [{ name: 'fate/grand order' }]
+    })
     vi.mocked(fetch).mockResolvedValue(
       jsonResponse({
         header: {},
@@ -293,8 +297,13 @@ describe('lookupSauceNao', () => {
 
     const result = await lookupSauceNao('/pic.png')
 
-    expect(fetchDanbooruTags).toHaveBeenCalledWith('https://danbooru.donmai.us/posts/123')
+    expect(fetchDanbooruPostTags).toHaveBeenCalledWith('https://danbooru.donmai.us/posts/123')
     expect(result.match?.tags).toEqual([{ name: '1girl' }, { name: 'blue hair' }])
+    expect(result.match?.characters).toEqual([
+      { name: 'ishtar (swimsuit rider) (fate)' },
+      { name: 'ishtar (fate)' }
+    ])
+    expect(result.match?.series).toEqual([{ name: 'fate/grand order' }])
   })
 
   it('does not call the Danbooru enrichment when there is no match', async () => {
@@ -302,7 +311,7 @@ describe('lookupSauceNao', () => {
 
     await lookupSauceNao('/pic.png')
 
-    expect(fetchDanbooruTags).not.toHaveBeenCalled()
+    expect(fetchDanbooruPostTags).not.toHaveBeenCalled()
   })
 
   it('serves a repeat lookup for the same file from the cache without a new request', async () => {

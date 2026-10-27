@@ -125,6 +125,10 @@ tagging below does the same.
   the gallery up by title instead, and doesn't touch Source URL.
 - Creating the artist from a suggestion also links their Pixiv or X profile
   when SauceNAO knows it.
+- When the match is a Danbooru post (and you've set your Danbooru account in
+  Settings), the post itself is read too: its tags, and its characters and
+  series as they are today. SauceNAO's own copy is often older, from before
+  forms like `gold_ship_(run!_ruin!_launcher!)_(umamusume)` were tagged.
 - Booru character tags are read the booru way: in
   `pyra_(pro_swimmer)_(xenoblade)`, the last parenthesis is the series and
   the earlier one a form, so it's suggested as "Pyra (Pro Swimmer)", a form of
