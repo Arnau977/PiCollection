@@ -23,6 +23,12 @@ export interface VideoPlayerState {
    * unmute), anything above unmutes.
    */
   setVolume: (volume: number) => void
+  /**
+   * One key step (↑ / ↓). From mute, a step up unmutes from the kept level
+   * (muted at 60% -> 61%), like other players; a step down stays muted.
+   * Returns the level now heard, for the on-screen readout.
+   */
+  stepVolume: (delta: number) => number
   toggleMute: () => void
   setRate: (rate: number) => void
   toggleFullscreen: (container: HTMLElement) => void
@@ -117,6 +123,16 @@ export function useVideoPlayer(
     [videoRef]
   )
 
+  function setVolume(next: number): void {
+    const video = videoRef.current
+    if (!video) return
+    if (next > 0) video.volume = next
+    if (!forcedMute) video.muted = next === 0
+    setVolumeState(video.volume)
+    setMutedState(video.muted)
+    persist({ volume: video.volume, ...(forcedMute ? {} : { muted: video.muted }) })
+  }
+
   return {
     playing,
     currentTime,
@@ -141,14 +157,14 @@ export function useVideoPlayer(
       setLoopState(next)
       persist({ loop: next })
     },
-    setVolume: (next): void => {
+    setVolume,
+    stepVolume: (delta): number => {
       const video = videoRef.current
-      if (!video) return
-      if (next > 0) video.volume = next
-      if (!forcedMute) video.muted = next === 0
-      setVolumeState(video.volume)
-      setMutedState(video.muted)
-      persist({ volume: video.volume, ...(forcedMute ? {} : { muted: video.muted }) })
+      if (!video) return 0
+      if (video.muted && delta <= 0) return 0
+      const next = Math.round(Math.min(Math.max(video.volume + delta, 0), 1) * 100) / 100
+      setVolume(next)
+      return video.muted ? 0 : next
     },
     toggleMute: (): void => {
       const video = videoRef.current

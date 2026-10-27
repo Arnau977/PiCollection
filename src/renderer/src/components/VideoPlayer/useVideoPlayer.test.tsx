@@ -72,6 +72,18 @@ describe('useVideoPlayer', () => {
     expect(loadVideoPlayerPrefs().muted).toBe(false)
   })
 
+  it('mutes at volume 0 and keeps the level to unmute to', () => {
+    mount()
+    act(() => player.setVolume(0.6))
+    act(() => player.setVolume(0))
+    expect(video.muted).toBe(true)
+    expect(video.volume).toBeCloseTo(0.6)
+
+    act(() => player.toggleMute())
+    expect(video.muted).toBe(false)
+    expect(video.volume).toBeCloseTo(0.6)
+  })
+
   it('remembers loop and volume changes, but not speed', () => {
     mount()
     act(() => player.setLoop(true))
