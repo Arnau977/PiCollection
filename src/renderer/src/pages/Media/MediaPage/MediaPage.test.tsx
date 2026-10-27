@@ -6,6 +6,8 @@ import { MemoryRouter } from 'react-router-dom'
 import type { MediaModel } from '@shared/models'
 import MediaPage from './MediaPage'
 
+vi.mock('../../../hooks/useSourceFolder', () => ({ useSourceFolder: () => 'D:/Pictures' }))
+
 const navigateMock = vi.fn()
 
 vi.mock('react-router-dom', async (importOriginal) => {

@@ -7,6 +7,8 @@ import type { MediaModel } from '@shared/models'
 import { __resetEntityListCachesForTests } from '../../hooks/useEntityLists'
 import Media from './Media'
 
+vi.mock('../../hooks/useSourceFolder', () => ({ useSourceFolder: () => 'D:/Pictures' }))
+
 function makeMedia(overrides: Partial<MediaModel> = {}): MediaModel {
   return {
     id: '1',
@@ -155,6 +157,15 @@ describe('Media', () => {
 
     rerender(<Media {...makeMedia({ sfw: false })} />)
     expect(screen.getByTitle('Explicit content')).toBeInTheDocument()
+  })
+
+  it('shows where the file lives relative to the source folder, with its format', () => {
+    // Separators either way: stored routes use the OS's, and the path shows Windows'.
+    render(<Media {...makeMedia({ route: 'Genshin/Furina/a.png' })} />)
+
+    expect(screen.getByText(/^Genshin.Furina.a\.png$/)).toBeInTheDocument()
+    expect(screen.getByText('PNG')).toBeInTheDocument()
+    expect(screen.getByTitle(/^D:.Pictures.Genshin.Furina.a\.png$/)).toBeInTheDocument()
   })
 
   it('shows the added date as DD/MM/YYYY, with the time on hover', () => {

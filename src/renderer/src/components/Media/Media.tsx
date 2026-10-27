@@ -20,6 +20,7 @@ import { formatDate, formatDateTime } from '../../utils/formatDate'
 import { Lightbox } from '../Lightbox/Lightbox'
 import { VideoPlayer, type Section } from '../VideoPlayer/VideoPlayer'
 import { TagFinder } from '../TagFinder/TagFinder'
+import { MediaFileInfo } from './MediaFileInfo'
 import { SimilarMediaPanel } from './SimilarMediaPanel'
 import { TagChip } from './TagChip'
 import { autoTagProperties, useAutoTags } from '../../hooks/useAutoTags'
@@ -158,6 +159,7 @@ export default function Media({
               </a>
             )}
           </div>
+          <MediaFileInfo route={route} src={mediaUrl} type={type} />
         </div>
 
         <div className="media-detail-section media-detail-section-artist">

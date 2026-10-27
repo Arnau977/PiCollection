@@ -151,6 +151,35 @@
   gap: var(--space-2);
 }
 
+/* Where the file lives and what it is, muted under the badges (text-muted:
+   6.74:1 on the page). Same pieces as the compare view's labels. */
+.media-detail-file {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.media-detail-file-path {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  /* Deep folders and long file names wrap instead of widening the panel. */
+  overflow-wrap: anywhere;
+}
+
+.media-detail-file-path svg {
+  flex-shrink: 0;
+}
+
+.media-detail-file-meta {
+  font-variant-numeric: tabular-nums;
+}
+
 .media-detail-section {
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface);

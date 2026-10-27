@@ -298,6 +298,14 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   the page uses them for previous/next. The forced-muted edit-form preview
   registers no volume keys, so its form keeps arrow scrolling.
 
+- **File facts read as one muted line, not a card or badges**: the detail
+  page shows where the file lives (relative to the source folder, full path
+  on hover) and "PNG · 1334 × 1000 · 1,9 MB" under its badges
+  (text-muted, 6.74:1), the same pieces and order as the compare view's
+  labels. Badges stay for states (SFW, AI, date, source); a card would push
+  the taxonomy down for four small facts. Where:
+  `components/Media/MediaFileInfo.tsx`, helpers in `utils/fileSize.ts`.
+
 - **Copying a still for a reverse image search uses the Camera icon**:
   **Copy frame** in the player (the frame on screen, full size) and **Copy
   first frame** next to Copy image for GIFs (Copy image puts a GIF on the

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { splitRoute } from '../../utils/splitRoute'
 import { relativeFolder } from '../../utils/relativeFolder'
 import type { Dimensions } from './dividerBounds'
-import { fileFormat, formatFileSize } from './fileSize'
+import { fileFormat, formatFileSize } from '../../utils/fileSize'
 import type { ComparedMedia } from './MediaCompare'
 
 interface CompareLabelProps {
