@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { CharacterModel, SeriesModel, TagModel } from '@shared/models'
 import { MultiSelectAutocomplete } from '../../../components/Autocomplete/MultiSelectAutocomplete'
@@ -7,6 +8,8 @@ import { formatCharacterOptionLabel } from '../../../utils/matchEntityNames'
 import type { MediaFormField } from './mediaFormError'
 import { TagChip } from '../../../components/Media/TagChip'
 import { autoTagProperties, useAutoTags } from '../../../hooks/useAutoTags'
+import { CharacterParentBar } from './CharacterParentBar'
+import type { CharacterParentLinks } from './useCharacterParentLinks'
 
 interface MediaFormTaxonomyFieldsProps {
   /** The field a failed save pointed at (see MediaFormSaveError). */
@@ -24,6 +27,8 @@ interface MediaFormTaxonomyFieldsProps {
   selectedCharacterIds: string[]
   onCharactersChange: (characterIds: string[]) => void
   onCreateCharacter: (name: string, seriesIds?: string[]) => void
+  /** "Form of" links set from the form (useCharacterParentLinks). */
+  characterLinks?: Pick<CharacterParentLinks, 'parentOf' | 'setParent' | 'excludedParents'>
 
   seriesOptions: SeriesModel[]
   pendingSeries: SeriesModel[]
@@ -45,6 +50,7 @@ export function MediaFormTaxonomyFields({
   selectedCharacterIds,
   onCharactersChange,
   onCreateCharacter,
+  characterLinks,
   seriesOptions,
   pendingSeries,
   selectedSeriesIds,
@@ -57,6 +63,25 @@ export function MediaFormTaxonomyFields({
   // One picked by hand as well is just a normal tag now.
   const shownAutoTags = autoTags.filter((tag) => !selectedTagIds.includes(tag.id))
   const { status: autoTagStatus } = useAutoTags({ enabled: shownAutoTags.length > 0 })
+  // The chip whose "form of" bar is open; its button gets focus back on close.
+  const [linkingId, setLinkingId] = useState<string | null>(null)
+  const linkOpener = useRef<HTMLElement | null>(null)
+  const charactersById = new Map(characterOptions.map((character) => [character.id, character]))
+  const linking =
+    linkingId && selectedCharacterIds.includes(linkingId)
+      ? charactersById.get(linkingId)
+      : undefined
+
+  // Worked out once per render, not once per option (a library has hundreds).
+  const excludedParents = linking && characterLinks?.excludedParents(linking.id)
+  const parentOptions = excludedParents
+    ? characterOptions.filter((character) => !excludedParents.has(character.id))
+    : []
+
+  function closeLinking(): void {
+    setLinkingId(null)
+    linkOpener.current?.focus()
+  }
 
   return (
     <div className="media-form-group">
@@ -118,6 +143,39 @@ export function MediaFormTaxonomyFields({
           onChange={onCharactersChange}
           onCreate={onCreateCharacter}
           invalid={invalidField === 'characters'}
+          chipHint={(character) => {
+            const parentId = characterLinks?.parentOf(character.id)
+            const parent = parentId ? charactersById.get(parentId) : undefined
+            return parent ? (
+              <span className="chip-hint">{t('suggestions.formOf', { parent: parent.name })}</span>
+            ) : null
+          }}
+          chipAction={
+            characterLinks && {
+              label: t('characterParent.action'),
+              isActive: (id) => id === linking?.id,
+              onClick: (id): void => {
+                linkOpener.current = document.activeElement as HTMLElement | null
+                setLinkingId((prev) => (prev === id ? null : id))
+              }
+            }
+          }
+          chipsHeader={
+            characterLinks &&
+            linking && (
+              <CharacterParentBar
+                childName={linking.name}
+                parentId={characterLinks.parentOf(linking.id)}
+                options={parentOptions}
+                getOptionLabel={formatCharacterOptionLabel}
+                onPick={(parentId) => {
+                  characterLinks.setParent(linking.id, parentId)
+                  closeLinking()
+                }}
+                onClose={closeLinking}
+              />
+            )
+          }
         />
       </div>
       <div className="field-accent field-accent-series" data-form-field="series">

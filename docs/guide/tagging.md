@@ -72,6 +72,16 @@ Searching or filtering by the parent also finds media tagged only with a
 child, so "Pyra" finds her swimsuit pictures too. See [Gallery and
 search](gallery-and-search.md#filters) for filtering by *only* the parent.
 
+You don't have to leave the edit form to set one. Each character chip has a
+**Form of…** button that opens a bar under the field to pick the base
+character (or **Not a form**), for a new character or one already in your
+library. A new character whose name points at one you have is linked on its
+own: "Pyra (Pro Swimmer)" under "Pyra", or "Gold ship (summer) (Umamusume)"
+under "Gold ship (Umamusume)"; a single parenthesis naming one of your series
+("Asuna (Blue Archive)") is read as the series instead. The chip shows "·
+form of Pyra", the form replaces its base on that media, and the link is
+saved with the media (Cancel drops it).
+
 ## Characters inspired by another
 
 Some characters are modelled on one from another game - Evanescia (Honkai:

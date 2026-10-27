@@ -33,7 +33,8 @@ export interface MediaFormDrafts {
   createArtist: (name: string, social?: { name: string; url: string }) => void
   createTag: (name: string) => void
   /** `parentName`: create it as a form/costume of that character (created too if missing). */
-  createCharacter: (name: string, parentName?: string) => void
+  /** Returns the draft's id. */
+  createCharacter: (name: string, parentName?: string) => string
   createSeries: (name: string) => string
   /**
    * A "missing" series chip isn't always actually missing - a SauceNAO series
@@ -106,7 +107,7 @@ export function useMediaFormDrafts({
   // A new character starts with no series of its own: its series is only
   // derived from what the media actually ends up tagged with (see
   // linkCharactersToSoleSeries), never from a suggestion the user didn't accept.
-  function createCharacter(name: string, parentName?: string): void {
+  function createCharacter(name: string, parentName?: string): string {
     const draft: CharacterModel = { id: crypto.randomUUID(), name, series: [] }
     setPendingCharacters((prev) => [...prev, draft])
     if (parentName) pendingCharacterParents.current.set(draft.id, parentName)
@@ -125,6 +126,7 @@ export function useMediaFormDrafts({
       ...prev,
       characterIds: [...(prev.characterIds ?? []).filter((id) => id !== parent?.id), draft.id]
     }))
+    return draft.id
   }
 
   function createSeries(name: string): string {
