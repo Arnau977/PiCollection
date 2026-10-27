@@ -50,6 +50,8 @@ The [user guide](docs/guide/README.md) explains each of these step by step.
 - **Pending queue and Discarded list** - tag later without cluttering the
   library; deleted media never deletes files, which you clean up from one
   place. [Pending and discarded](docs/guide/pending-and-discarded.md)
+- **Disk space** - what the library weighs by folder, series, character and
+  artist, and what deleted files still take. [Disk space](docs/guide/storage.md)
 - **Duplicate detection** - exact and visually similar copies, a side-by-side
   comparison, and replacing a copy while keeping its tags.
   [Duplicates](docs/guide/duplicates.md)

@@ -1,5 +1,6 @@
 const KB = 1024
 const MB = KB * 1024
+const GB = MB * 1024
 
 /**
  * Human-readable size in the same 1024-based units Windows Explorer shows,
@@ -7,7 +8,13 @@ const MB = KB * 1024
  */
 export function formatFileSize(bytes: number, locale: string): string {
   const [value, unit, digits] =
-    bytes >= MB ? [bytes / MB, 'MB', 1] : bytes >= KB ? [bytes / KB, 'KB', 0] : [bytes, 'B', 0]
+    bytes >= GB
+      ? [bytes / GB, 'GB', 2]
+      : bytes >= MB
+        ? [bytes / MB, 'MB', 1]
+        : bytes >= KB
+          ? [bytes / KB, 'KB', 0]
+          : [bytes, 'B', 0]
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(value)
   return `${number} ${unit}`
 }

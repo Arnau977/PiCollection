@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Home, Images, Inbox, Database, Settings } from 'lucide-react'
+import { Home, Images, Inbox, Database, HardDrive, Settings } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 // The same mark the app icons are generated from (scripts/generate-icons.mjs).
 import logoUrl from '../../../../../resources/logo.svg?url'
@@ -94,6 +94,10 @@ export function AppHeader(): JSX.Element {
         <NavLink to={PATH.MANAGE} className={navLinkClassName} title={t('nav.manage')}>
           <Database size={19} aria-hidden="true" />
           <span className="app-sidebar-label">{t('nav.manage')}</span>
+        </NavLink>
+        <NavLink to={PATH.STORAGE} className={navLinkClassName} title={t('nav.storage')}>
+          <HardDrive size={19} aria-hidden="true" />
+          <span className="app-sidebar-label">{t('nav.storage')}</span>
         </NavLink>
         <NavLink to={PATH.SETTINGS} className={navLinkClassName} title={t('nav.settings')}>
           <span className="app-sidebar-icon-wrap">

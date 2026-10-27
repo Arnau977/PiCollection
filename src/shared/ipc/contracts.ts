@@ -287,7 +287,8 @@ export const IPC = {
     delete: 'db:series:delete'
   },
   stats: {
-    getSummary: 'db:stats:get-summary'
+    getSummary: 'db:stats:get-summary',
+    getStorage: 'db:stats:get-storage'
   },
   system: {
     openThirdPartyNotices: 'system:open-third-party-notices',
