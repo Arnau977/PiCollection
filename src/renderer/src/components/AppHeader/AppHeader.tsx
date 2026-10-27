@@ -4,6 +4,8 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Home, Images, Inbox, Database, Settings } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
+// The same mark the app icons are generated from (scripts/generate-icons.mjs).
+import logoUrl from '../../../../../resources/logo.svg?url'
 import { useAppUpdater } from '../../hooks/useAppUpdater'
 import { useBackupToast } from '../../hooks/useBackupToast'
 import { useAutoImportToast } from '../../hooks/useAutoImportToast'
@@ -64,9 +66,7 @@ export function AppHeader(): JSX.Element {
   return (
     <aside className="app-sidebar">
       <NavLink to={PATH.HOME} className="app-brand" end>
-        <span className="app-brand-mark" aria-hidden="true">
-          π
-        </span>
+        <img className="app-brand-mark" src={logoUrl} alt="" width={28} height={28} />
         <span className="app-brand-text">PiCollection</span>
       </NavLink>
 

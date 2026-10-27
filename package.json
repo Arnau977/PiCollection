@@ -20,6 +20,7 @@
     "dev": "node scripts/generate-third-party-notices.mjs && electron-vite dev",
     "build": "npm run typecheck && node scripts/generate-third-party-notices.mjs && electron-vite build",
     "rebuild": "electron-builder install-app-deps",
+    "icons": "node scripts/generate-icons.mjs",
     "migrate:create": "node scripts/create-migration.mjs",
     "migrate:up": "tsx scripts/migrate.ts up",
     "migrate:down": "tsx scripts/migrate.ts down",

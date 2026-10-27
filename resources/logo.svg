@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- PiCollection's mark: a cat peeking over a stack of photos, a pi on the
+       front one. Source of every app icon: npm run icons
+       (scripts/generate-icons.mjs) writes build/ and resources/ from it. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a84a61"/>
+      <stop offset="1" stop-color="#7c3246"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="92" height="92" rx="24" fill="url(#tile)"/>
+  <polygon points="26,46 31,18 47,36" fill="#f0a860"/>
+  <polygon points="53,36 69,18 74,46" fill="#f0a860"/>
+  <polygon points="31,40 33,26 41,35" fill="#6e2a3c"/>
+  <polygon points="59,35 67,26 69,40" fill="#6e2a3c"/>
+  <ellipse cx="50" cy="50" rx="25" ry="17" fill="#f0a860"/>
+  <circle cx="41" cy="46" r="3" fill="#2a1a20"/>
+  <circle cx="59" cy="46" r="3" fill="#2a1a20"/>
+  <rect x="18" y="52" width="58" height="34" rx="5" fill="#e3bfa0" transform="rotate(-8 47 69)"/>
+  <rect x="24" y="54" width="58" height="34" rx="5" fill="#fbeadb" transform="rotate(4 53 71)"/>
+  <g stroke="#9b4358" stroke-width="5" stroke-linecap="round" fill="none" transform="rotate(4 53 71)">
+    <path d="M41 64 H65"/>
+    <path d="M47 64 V79"/>
+    <path d="M59 64 V74 Q59 80 65 79"/>
+  </g>
+</svg>
