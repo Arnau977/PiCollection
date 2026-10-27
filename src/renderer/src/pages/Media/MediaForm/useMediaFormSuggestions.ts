@@ -215,7 +215,10 @@ export function useMediaFormSuggestions({
           ? { name: artist.socialLabel ?? 'Link', url: artist.socialUrl }
           : undefined
       drafts.createArtist(name, social)
-    } else if (category === 'tags') drafts.createTag(name)
+    } else if (category === 'tags') {
+      // Booru tags come all-lowercase; created like local AI's (see addWd14Suggestion).
+      drafts.createTag(titleCaseTagName(name))
+    }
     // Accepting a character never accepts a suggested series along with it -
     // that series chip stays for the user to accept or ignore on its own.
     else if (category === 'characters') drafts.createCharacter(name, sauce.characterParents[name])

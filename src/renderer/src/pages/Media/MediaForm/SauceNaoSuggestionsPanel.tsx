@@ -6,6 +6,7 @@ import type { MediaInput } from '@shared/models'
 import { toThumbUrl } from '@shared/utils/mediaUrl'
 import { PATH } from '../../../app.routes.const'
 import { AUTO_APPLY_SIMILARITY } from '../../../hooks/useSauceNaoSuggestions'
+import { titleCaseTagName } from '../../../utils/matchEntityNames'
 import { CharacterFormOfHint } from './CharacterFormOfHint'
 import { SAUCE_MISSING_CATEGORIES } from './missingSuggestionCounts'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
@@ -240,7 +241,7 @@ export function SauceNaoSuggestionsPanel({
                           onClick={() => onAddMissing(category, name)}
                         >
                           <Plus size={12} />
-                          {name}
+                          {category === 'tags' ? titleCaseTagName(name) : name}
                           {category === 'characters' && (
                             <CharacterFormOfHint parent={sauce.characterParents[name]} />
                           )}
