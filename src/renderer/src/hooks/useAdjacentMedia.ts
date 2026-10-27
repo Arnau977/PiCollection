@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { readGallerySession } from './useGallerySession'
-import { FALLBACK_GALLERY_DEFAULTS } from '../utils/gallerySettings'
+import { loadGalleryDefaults } from '../utils/gallerySettings'
 import type { MediaFilters, Sorting } from '@shared/models'
 
 interface AdjacentMedia {
@@ -47,12 +47,18 @@ export function useAdjacentMedia(
       filters = override.filters
       sorting = override.sorting
     } else {
+      // The list the gallery itself would show: its remembered filters, or
+      // with none yet (no visit since the app started, e.g. arriving from
+      // Storage) the same defaults it opens with - and never Pending, which
+      // the gallery always leaves out. Anything else gives positions the
+      // gallery then can't find (a page past its last).
       const session = readGallerySession()
-      filters = session?.filters ?? {}
-      sorting = session?.sorting ?? {
-        prop: FALLBACK_GALLERY_DEFAULTS.sortProp,
-        desc: FALLBACK_GALLERY_DEFAULTS.sortDesc
+      const defaults = loadGalleryDefaults()
+      filters = {
+        ...(session?.filters ?? { sfw: defaults.sfw, type: defaults.type }),
+        pendingTagging: false
       }
+      sorting = session?.sorting ?? { prop: defaults.sortProp, desc: defaults.sortDesc }
     }
 
     window.api.media

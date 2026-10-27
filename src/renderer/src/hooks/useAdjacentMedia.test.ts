@@ -70,7 +70,10 @@ describe('useAdjacentMedia', () => {
     renderHook(() => useAdjacentMedia('a'))
 
     await waitFor(() => expect(getOrderedIds).toHaveBeenCalled())
-    expect(getOrderedIds).toHaveBeenCalledWith({ sfw: true }, { prop: 'name' })
+    expect(getOrderedIds).toHaveBeenCalledWith(
+      { sfw: true, pendingTagging: false },
+      { prop: 'name' }
+    )
   })
 
   it('falls back to default sorting when there is no gallery session', async () => {
@@ -80,7 +83,11 @@ describe('useAdjacentMedia', () => {
     renderHook(() => useAdjacentMedia('a'))
 
     await waitFor(() => expect(getOrderedIds).toHaveBeenCalled())
-    expect(getOrderedIds).toHaveBeenCalledWith({}, { prop: 'createdAt', desc: true })
+    // The gallery's own defaults, and never Pending - the list the gallery shows.
+    expect(getOrderedIds).toHaveBeenCalledWith(expect.objectContaining({ pendingTagging: false }), {
+      prop: 'createdAt',
+      desc: true
+    })
   })
 
   it('uses the override filters/sorting instead of the gallery session when provided', async () => {

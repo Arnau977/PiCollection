@@ -741,6 +741,7 @@
     "openFolder": "Open {{name}}",
     "openFile": "Open {{name}}",
     "openInGallery": "Show {{name}} in the gallery, heaviest first",
-    "empty": "Nothing here yet."
+    "empty": "Nothing here yet.",
+    "backToStorage": "Back to Disk space"
   }
 }

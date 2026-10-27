@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ChevronRight, FolderOpen } from 'lucide-react'
 import type { StorageEntity, StorageFolder } from '@shared/models'
 import { PATH } from '../../app.routes.const'
@@ -11,6 +11,7 @@ import {
 import { useStorageOverview } from '../../hooks/useStorageOverview'
 import { formatFileSize } from '../../utils/fileSize'
 import { useManageParamsSource } from '../Manage/useManageParam'
+import type { MediaPageReturn } from '../Media/MediaPage/MediaPage'
 import { StorageBarList, type StorageBarItem } from './StorageBarList'
 import '../Manage/ManagePage.css'
 import './StoragePage.css'
@@ -64,6 +65,7 @@ function parentFolder(path: string): string | null {
 export default function StoragePage(): JSX.Element {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const { data, loading, error } = useStorageOverview()
   // In the URL like Metadata's (one params source for both), so Back from a
   // file's page or the gallery returns to the same tab and folder.
@@ -111,11 +113,19 @@ export default function StoragePage(): JSX.Element {
           label: file.name,
           bytes: file.bytes,
           actionLabel: t('storage.openFile', { name: file.name }),
-          onOpen: (): void => void navigate(PATH.MEDIA.replace(':id', file.id))
+          onOpen: (): void =>
+            void navigate(PATH.MEDIA.replace(':id', file.id), {
+              state: {
+                returnTo: {
+                  path: `${location.pathname}${location.search}`,
+                  labelKey: 'storage.backToStorage'
+                }
+              } satisfies MediaPageReturn
+            })
         })
       )
     return [...subfolders, ...files].sort((a, b) => b.bytes - a.bytes)
-  }, [data, folder, t, navigate])
+  }, [data, folder, t, navigate, location])
 
   function entityItems(entities: StorageEntity[], kind: CountEntityKind): StorageBarItem[] {
     return entities.map((entity) => ({

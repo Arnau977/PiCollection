@@ -741,6 +741,7 @@
     "openFolder": "Abrir {{name}}",
     "openFile": "Abrir {{name}}",
     "openInGallery": "Ver {{name}} en la galería, de más a menos pesado",
-    "empty": "Aquí no hay nada todavía."
+    "empty": "Aquí no hay nada todavía.",
+    "backToStorage": "Volver a Espacio en disco"
   }
 }
