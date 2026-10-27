@@ -14,6 +14,7 @@ import { linkedMediaCount } from '../../utils/linkedMediaCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { ArtistModel } from '@shared/models'
 import { useRevealAfterSave } from './useRevealAfterSave'
+import { useManageParam } from './useManageParam'
 
 export function ArtistsManager(): JSX.Element {
   const { t } = useTranslation()
@@ -24,7 +25,7 @@ export function ArtistsManager(): JSX.Element {
   const [editing, setEditing] = useState<ArtistModel | null>(null)
   const [socialName, setSocialName] = useState('')
   const [socialUrl, setSocialUrl] = useState('')
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useManageParam('artists.search')
   const debouncedSearch = useDebouncedValue(search, 200)
   const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<ManageSort>(() => loadManageSort('artists'))

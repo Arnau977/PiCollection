@@ -23,6 +23,7 @@ import { ManageSortControl } from '../../components/ManageSortControl/ManageSort
 import { EntityCountButton } from '../../components/EntityCountButton/EntityCountButton'
 import { linkedMediaCount } from '../../utils/linkedMediaCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
+import { useManageParam } from './useManageParam'
 
 interface TagFormValues {
   name: string
@@ -38,7 +39,7 @@ export function TagsManager(): JSX.Element {
   const { listRef, reveal } = useRevealAfterSave(tags)
   const [form, setForm] = useState<TagFormValues>(EMPTY_FORM)
   const [editing, setEditing] = useState<TagModel | null>(null)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useManageParam('tags.search')
   const debouncedSearch = useDebouncedValue(search, 200)
   const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<ManageSort>(() => loadManageSort('tags'))

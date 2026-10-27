@@ -88,14 +88,15 @@ describe('ManagePage', () => {
     expect(screen.getByText('Alice')).toBeVisible()
   })
 
-  it('opens on the tab in the URL, so Back returns to it', () => {
+  it('opens on the tab and its search from the URL, so Back returns to them', () => {
     render(
-      <MemoryRouter initialEntries={['/manage?tab=characters']}>
+      <MemoryRouter initialEntries={['/manage?tab=characters&characters.search=ali']}>
         <ManagePage />
       </MemoryRouter>
     )
 
     expect(screen.getByRole('tab', { name: 'Characters' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getAllByDisplayValue('ali')).toHaveLength(1)
     expect(screen.getByText('Alice')).toBeVisible()
   })
 
