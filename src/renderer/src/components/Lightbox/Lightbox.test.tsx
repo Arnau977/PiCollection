@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SHORTCUTS, useShortcut } from '../../hooks/useShortcut'
 import { Lightbox } from './Lightbox'
@@ -35,6 +35,35 @@ describe('Lightbox zoom', () => {
   it('offers no zoom for a video', () => {
     renderLightbox('video')
     expect(screen.queryByRole('button', { name: 'Zoom in (+)' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Lightbox click outside', () => {
+  it('ignores the click that ends a pan, but closes on the next one after zooming back out', async () => {
+    Object.assign(HTMLElement.prototype, {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+      hasPointerCapture: vi.fn(() => false)
+    })
+    const onClose = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <Lightbox src="app://pic.png" type="image" alt="Pic" route="pic.png" onClose={onClose} />
+    )
+    const image = screen.getByRole('img', { name: 'Pic' })
+    const backdrop = screen.getByRole('dialog')
+
+    await user.click(screen.getByRole('button', { name: 'Zoom in (+)' }))
+    fireEvent.pointerDown(image, { button: 0, pointerId: 1, clientX: 100, clientY: 100 })
+    fireEvent.pointerMove(image, { pointerId: 1, clientX: 160, clientY: 140 })
+    fireEvent.pointerUp(image, { pointerId: 1, clientX: 160, clientY: 140 })
+    fireEvent.click(backdrop)
+    expect(onClose).not.toHaveBeenCalled()
+
+    await user.keyboard('0')
+    fireEvent.pointerDown(backdrop, { button: 0 })
+    fireEvent.click(backdrop)
+    expect(onClose).toHaveBeenCalled()
   })
 })
 
