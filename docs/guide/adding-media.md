@@ -26,10 +26,11 @@ Needs a [source folder](getting-started.md#pick-a-source-folder-recommended).
    instead). A click on empty space or **Esc** clears the selection and
    **Ctrl+A** selects everything (all pages). All of this applies to the
    folder you're in: picks in other folders stay selected. Files already in
-   your library (*Already added*) and files you discarded
-   earlier (*Discarded*) are greyed out and can't be selected. Each folder's
-   number counts only the files still left to import; folders with nothing
-   left are hidden, and a checkbox next to the path shows them again. The
+   your library and files you discarded earlier are hidden, and so are
+   folders with nothing left to import; **Show what's already added or
+   discarded** next to the path brings them back, greyed out (*Already
+   added*, *Discarded*) and not selectable. Each folder's number counts only
+   the files still left to import. The
    button says how many files will actually be imported (**Import N
    files**), whichever folders you picked them in.
 2. The files open one by one in the edit form, **File N of M** at the top.
