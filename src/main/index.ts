@@ -2,6 +2,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, dialog, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
+import iconIco from '../../resources/icon.ico?asset'
 import { initDb } from './database/connection'
 import { resolveElectronDbPath, resolveBackupsDir } from './database/electronDbPath'
 import { runMigrations } from './database/migrations/migrator'
@@ -121,7 +122,15 @@ function createWindow(): BrowserWindow {
     minHeight: MIN_HEIGHT,
     show: false,
     title: `PiCollection${is.dev ? ' (Dev)' : ''} - ${APP_VERSION}`,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    // Windows: an installed build takes it from its .exe already, but under
+    // `npm run dev` the .exe is Electron's own, so the title bar and taskbar
+    // showed its atom. The .ico carries every size Windows picks from.
+    // macOS uses the app bundle's icon.
+    ...(process.platform === 'linux'
+      ? { icon }
+      : process.platform === 'win32'
+        ? { icon: iconIco }
+        : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
