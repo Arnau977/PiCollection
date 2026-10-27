@@ -133,8 +133,14 @@ export function VideoPlayer({
     togglePlay: player.togglePlay,
     back: () => player.skip(-SKIP_SECONDS),
     forward: () => player.skip(SKIP_SECONDS),
-    volumeUp: () => changeVolume(VOLUME_STEP),
-    volumeDown: () => changeVolume(-VOLUME_STEP),
+    // A forced-muted host (the edit-form preview) has no volume to change:
+    // leaving these out keeps ↑ / ↓ scrolling its long form.
+    ...(muted
+      ? {}
+      : {
+          volumeUp: (): void => changeVolume(VOLUME_STEP),
+          volumeDown: (): void => changeVolume(-VOLUME_STEP)
+        }),
     frameBack: () => stepFrame(-1),
     frameForward: () => stepFrame(1),
     loop: () => player.setLoop(!player.loop),

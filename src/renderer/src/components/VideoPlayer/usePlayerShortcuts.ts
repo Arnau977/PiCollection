@@ -128,15 +128,17 @@ export function usePlayerShortcuts(
       const onRange = active instanceof HTMLInputElement && active.type === 'range'
       if (inPlayer && isTypingTarget(active) && !onRange) return
 
-      if (ARROW_ACTIONS.has(action) && !onRange) {
-        // Plain arrows are the page's (previous/next item, scrolling): the
-        // player only takes them with keyboard focus inside it - or in full
-        // screen, where there's no page to give them to. A focused slider
-        // (timeline, volume) moves its own value with them.
+      if (ARROW_ACTIONS.has(action) && onRange) {
+        // A focused slider (timeline, volume) moves its own value with them.
+        return
+      }
+      if (action === 'back' || action === 'forward') {
+        // ← / → are the page's previous/next item: the player only takes
+        // them with keyboard focus inside it - or in full screen, where
+        // there's no page to give them to. ↑ / ↓ have no such job, so they
+        // change the volume like Space or M act, as players do.
         const fullscreen = document.fullscreenElement?.contains(container) ?? false
         if (!fullscreen && (!inPlayer || !keyboardFocus)) return
-      } else if (ARROW_ACTIONS.has(action)) {
-        return
       }
       // Space on a focused pill button presses that button natively.
       if (

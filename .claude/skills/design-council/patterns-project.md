@@ -293,6 +293,10 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   (`accent-fg` drops to 1.86:1 over a bright frame). Shortcuts go to the
   player in front (`usePlayerShortcuts`: the topmost modal's, else the
   page's), since `useShortcut` stands down while any modal is open.
+  `↑`/`↓` (volume) act like Space/M - nothing else focused is enough -
+  while `←`/`→` need keyboard focus in the player or full screen, since
+  the page uses them for previous/next. The forced-muted edit-form preview
+  registers no volume keys, so its form keeps arrow scrolling.
 
 - **Copying a still for a reverse image search uses the Camera icon**:
   **Copy frame** in the player (the frame on screen, full size) and **Copy

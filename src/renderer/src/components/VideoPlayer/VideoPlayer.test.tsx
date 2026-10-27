@@ -202,19 +202,21 @@ describe('VideoPlayer section, frames and volume keys', () => {
     expect(video().currentTime).toBe(before)
   })
 
-  it('↑ raises the volume 1% with keyboard focus inside, and shows it', () => {
+  it('↑ raises the volume 1% with nothing focused and shows it; ← stays with the page', () => {
     window.localStorage.setItem(
       'picollection:video-player',
       JSON.stringify({ loop: false, volume: 0.5, muted: false })
     )
     render(<VideoPlayer src="app://x.mp4" />)
-    fireEvent.keyDown(document.body, { key: 'Tab' })
-    act(() => screen.getByRole('button', { name: /^Play/ }).focus())
+    withDuration(10)
+    at(4)
 
     key('ArrowUp')
+    key('ArrowLeft')
 
     expect(video().volume).toBeCloseTo(0.51)
     expect(screen.getByText('Volume 51%')).toBeInTheDocument()
+    expect(video().currentTime).toBe(4)
   })
 
   it('arrows go to the player in full screen even with nothing focused', () => {
