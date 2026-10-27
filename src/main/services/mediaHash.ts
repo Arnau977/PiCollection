@@ -79,9 +79,17 @@ export interface ImageProperties {
   /** After EXIF rotation; a GIF's or animated WebP's first frame. */
   width: number
   height: number
-  /** Whether any pixel is see-through - an alpha channel alone isn't enough. */
+  /**
+   * Whether a real part of it is see-through (`TRANSPARENT_SHARE`) - an
+   * alpha channel alone isn't enough, nor a few soft edge pixels.
+   */
   hasAlpha: boolean
 }
+
+/** Alpha below this counts as see-through rather than export noise (247-254 is common). */
+const TRANSPARENT_ALPHA = 128
+/** Share of see-through pixels that makes a picture transparent. */
+const TRANSPARENT_SHARE = 0.01
 
 /**
  * Reads a picture's size and transparency from the file itself (never a
@@ -94,7 +102,7 @@ export async function readImageProperties(filePath: string): Promise<ImageProper
     const height = metadata.pageHeight ?? metadata.height
     if (!metadata.width || !height) return null
     const rotated = (metadata.orientation ?? 1) >= 5
-    const hasAlpha = metadata.hasAlpha ? !(await sharp(filePath).stats()).isOpaque : false
+    const hasAlpha = metadata.hasAlpha ? await isMostlySeeThrough(filePath) : false
     return {
       width: rotated ? height : metadata.width,
       height: rotated ? metadata.width : height,
@@ -103,6 +111,13 @@ export async function readImageProperties(filePath: string): Promise<ImageProper
   } catch {
     return null
   }
+}
+
+async function isMostlySeeThrough(filePath: string): Promise<boolean> {
+  const alpha = await sharp(filePath).extractChannel('alpha').raw().toBuffer()
+  let seeThrough = 0
+  for (const value of alpha) if (value < TRANSPARENT_ALPHA) seeThrough++
+  return seeThrough >= alpha.length * TRANSPARENT_SHARE
 }
 
 const DCT_SIZE = 32
