@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
-import { Crosshair, SquareCheck, SquareX, X } from 'lucide-react'
+import { CornerDownRight, Crosshair, SquareCheck, SquareX, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Autocomplete } from './Autocomplete'
 
@@ -8,6 +8,17 @@ export interface ChipToggle {
   isAvailable: (value: string) => boolean
   isOn: (value: string) => boolean
   onToggle: (value: string) => void
+  /** Accessible name, followed by the chip's own label. */
+  label: string
+}
+
+/**
+ * A button on each chip that opens something about it elsewhere (e.g. the
+ * edit form's "form of" bar); `isActive` marks the chip it's open for.
+ */
+export interface ChipAction {
+  isActive: (value: string) => boolean
+  onClick: (value: string) => void
   /** Accessible name, followed by the chip's own label. */
   label: string
 }
@@ -53,6 +64,9 @@ interface MultiSelectAutocompleteProps<T> {
   chipFilter?: (option: T) => boolean
   /** Rendered between the picker and the chips (e.g. the tag finder's bar). */
   chipsHeader?: ReactNode
+  chipAction?: ChipAction
+  /** Extra muted text after a chip's label (e.g. "form of Gold Ship"). */
+  chipHint?: (option: T) => ReactNode
 }
 
 export function MultiSelectAutocomplete<T>({
@@ -72,7 +86,9 @@ export function MultiSelectAutocomplete<T>({
   chipExclusion,
   invalid,
   chipFilter,
-  chipsHeader
+  chipsHeader,
+  chipAction,
+  chipHint
 }: MultiSelectAutocompleteProps<T>): JSX.Element {
   const { t } = useTranslation()
   const selectedSet = useMemo(() => new Set(selectedValues), [selectedValues])
@@ -136,6 +152,19 @@ export function MultiSelectAutocomplete<T>({
                   </button>
                 )}
                 <span className="chip-label">{getOptionLabel(option)}</span>
+                {chipHint?.(option)}
+                {chipAction && (
+                  <button
+                    type="button"
+                    className="chip-toggle"
+                    aria-expanded={chipAction.isActive(getOptionValue(option))}
+                    aria-label={`${chipAction.label}: ${getOptionLabel(option)}`}
+                    title={chipAction.label}
+                    onClick={() => chipAction.onClick(getOptionValue(option))}
+                  >
+                    <CornerDownRight size={12} />
+                  </button>
+                )}
                 {chipToggle?.isAvailable(getOptionValue(option)) && (
                   <button
                     type="button"

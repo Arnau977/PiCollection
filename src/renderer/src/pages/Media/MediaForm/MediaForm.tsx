@@ -17,6 +17,7 @@ import { MediaFormSaveError } from './MediaFormSaveError'
 import { toMediaFormError, type MediaFormError } from './mediaFormError'
 import { SuggestionsRail } from './SuggestionsRail'
 import { useMediaFormDrafts } from './useMediaFormDrafts'
+import { useCharacterParentLinks } from './useCharacterParentLinks'
 import { useMediaFormSuggestions } from './useMediaFormSuggestions'
 import { useAiMetadataDetection } from './useAiMetadataDetection'
 import type { VideoFrameSource } from '../../../components/VideoPlayer/videoFrame'
@@ -115,6 +116,12 @@ export function MediaForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per detection; turning it off afterwards sticks
   }, [aiDetection])
   const drafts = useMediaFormDrafts({ input, setInput, artists, tags, characters, series })
+  const characterLinks = useCharacterParentLinks({
+    setInput,
+    characters: characters.data,
+    pendingCharacters: drafts.pendingCharacters,
+    series: series.data
+  })
   const previewFrame = useRef<VideoFrameSource>(null)
   const suggestions = useMediaFormSuggestions({
     input,
@@ -173,6 +180,7 @@ export function MediaForm({
     let resolution: Awaited<ReturnType<typeof drafts.resolveForSave>>
     try {
       resolution = await drafts.resolveForSave()
+      await characterLinks.apply(resolution.idMap)
     } catch (err) {
       setSaving(false)
       setError({ message: err instanceof Error ? err.message : 'Failed to save' })
@@ -219,6 +227,7 @@ export function MediaForm({
     let resolution: Awaited<ReturnType<typeof drafts.resolveForSave>>
     try {
       resolution = await drafts.resolveForSave({ pendingTagging: true })
+      await characterLinks.apply(resolution.idMap)
     } catch (err) {
       setSaving(false)
       setError({ message: err instanceof Error ? err.message : 'Failed to save' })
@@ -264,6 +273,7 @@ export function MediaForm({
     let resolution: Awaited<ReturnType<typeof drafts.resolveForSave>>
     try {
       resolution = await drafts.resolveForSave()
+      await characterLinks.apply(resolution.idMap)
     } catch (err) {
       setSaving(false)
       setError({ message: err instanceof Error ? err.message : 'Failed to save' })
@@ -366,7 +376,10 @@ export function MediaForm({
               pendingCharacters={drafts.pendingCharacters}
               selectedCharacterIds={input.characterIds ?? []}
               onCharactersChange={suggestions.handleCharactersChange}
-              onCreateCharacter={(name) => drafts.createCharacter(name)}
+              onCreateCharacter={(name) =>
+                characterLinks.autoLink(drafts.createCharacter(name), name)
+              }
+              characterLinks={characterLinks}
               seriesOptions={seriesOptions}
               pendingSeries={drafts.pendingSeries}
               selectedSeriesIds={input.seriesIds ?? []}

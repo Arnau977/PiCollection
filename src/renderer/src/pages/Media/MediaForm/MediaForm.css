@@ -704,3 +704,28 @@
   color: var(--color-text-muted);
   font-size: 0.78rem;
 }
+
+/* "Form of" bar under the Characters field, in the slot the tag finder's
+   bar uses above the tag chips: one row, the picker taking the room left. */
+.character-parent-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.character-parent-bar-icon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.character-parent-bar-label {
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.character-parent-bar-picker {
+  flex: 1 1 14rem;
+  min-width: 0;
+}

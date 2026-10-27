@@ -705,5 +705,12 @@
     "chipAuto": "automatic",
     "formLabel": "Automatic",
     "formHint": "Set in Settings > Data > Automatic tags"
+  },
+  "characterParent": {
+    "action": "Form of…",
+    "barLabel": "{{name}} is a form of",
+    "picker": "Base character",
+    "remove": "Not a form",
+    "close": "Close"
   }
 }

@@ -705,5 +705,12 @@
     "chipAuto": "automática",
     "formLabel": "Automáticas",
     "formHint": "Se configuran en Ajustes > Datos > Etiquetas automáticas"
+  },
+  "characterParent": {
+    "action": "Variante de…",
+    "barLabel": "{{name}} es una variante de",
+    "picker": "Personaje base",
+    "remove": "No es variante",
+    "close": "Cerrar"
   }
 }

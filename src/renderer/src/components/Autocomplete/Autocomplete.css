@@ -149,7 +149,8 @@
   border-radius: 999px;
 }
 
-.multi-select-chips .chip .chip-toggle[aria-pressed='true'] {
+.multi-select-chips .chip .chip-toggle[aria-pressed='true'],
+.multi-select-chips .chip .chip-toggle[aria-expanded='true'] {
   background: var(--accent-text);
   color: var(--accent);
 }
@@ -283,4 +284,11 @@
   color: var(--color-text-muted);
   font-weight: 400;
   cursor: default;
+}
+
+/* A chip's extra context, e.g. "· form of Gold Ship": same color as its label
+   (highlight-foreground, 6.29:1 on the chip), set apart by weight and size. */
+.multi-select-chips .chip .chip-hint {
+  font-size: 0.75rem;
+  font-style: italic;
 }

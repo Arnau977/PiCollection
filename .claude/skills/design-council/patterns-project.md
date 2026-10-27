@@ -119,6 +119,14 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   applies (e.g. the crosshair "only this one, without its forms" on a
   character/series that has children), `aria-pressed`, inverted when on.
   Where: `MultiSelectAutocomplete.tsx`, `FilterBar.tsx`.
+- **Setting something about one chip opens an inline bar under the field**,
+  not a floating popover: the chip gets a round button in the toggle's
+  style (`ChipAction`, `aria-expanded`), the bar sits in the field's
+  `chipsHeader` slot (where the tag finder's goes), focus moves to its
+  picker and returns to the chip's button on Esc/×. The result shows inside
+  the chip as `chipHint` text in the chip's own color (6.29:1). Where:
+  the edit form's "Form of…" (`CharacterParentBar.tsx`,
+  `MediaFormTaxonomyFields.tsx`).
 - **Include/exclude on a filter chip is a checkbox-like box at its start**
   (`ChipExclusion`): square-check = must have, square-x = must not have
   (the square frame keeps it distinct from the bare remove ×); no chip is
