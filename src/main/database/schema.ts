@@ -73,6 +73,8 @@ export interface MediaTable {
   height?: number | null
   /** 1 when the picture really uses transparency, not just has an alpha channel. */
   has_alpha?: number | null
+  /** Bytes on disk; null until read (fileSizes.service.ts). */
+  file_size?: number | null
 }
 
 export interface MediaTagTable {

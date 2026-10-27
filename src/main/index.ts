@@ -13,6 +13,7 @@ import {
 } from './database/migrations/preMigrationBackup'
 import { backfillMediaHashes } from './services/mediaHashBackfill'
 import { analyzeNewFiles } from './services/autoTags.service'
+import { readNewFileSizes } from './services/fileSizes.service'
 import { onAppStateChanged } from './events/appStateEvents'
 import { registerMediaProtocolHandler, registerMediaProtocolScheme } from './media-protocol'
 import { registerIpcHandlers } from './ipc/registerIpcHandlers'
@@ -301,10 +302,14 @@ app.whenReady().then(async () => {
   // Fire-and-forget: fills in hash/phash for media added before duplicate
   // detection existed, without delaying the window from showing.
   // Same for automatic tags: reads size/transparency of pictures not read
-  // yet - now, and after any media change (a new or replaced file).
+  // yet - now, and after any media change (a new or replaced file) - and
+  // for each file's weight on disk (sorting by size).
   void analyzeNewFiles()
+  void readNewFileSizes()
   onAppStateChanged((change) => {
-    if (change === 'media') void analyzeNewFiles()
+    if (change !== 'media') return
+    void analyzeNewFiles()
+    void readNewFileSizes()
   })
   backfillMediaHashes().catch((err) => {
     console.error('Media hash backfill failed', err)

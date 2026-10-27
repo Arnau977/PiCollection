@@ -13,6 +13,8 @@ export interface MediaModel {
   sfw: boolean
   isAiGenerated: boolean
   createdAt: number
+  /** Bytes on disk, once read in the background (absent until then). */
+  fileSize?: number
   artist?: ArtistModel
   tags?: TagModel[]
   /** Tags in `tags` that only apply through an automatic rule (Settings > Automatic tags), never saved as the media's own. */
