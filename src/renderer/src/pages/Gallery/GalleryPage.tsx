@@ -125,14 +125,16 @@ const GalleryPage: React.FC = () => {
 
   // Selected ids may no longer be relevant once the filtered/sorted set
   // changes - but not on mount, which is coming back from a media with the
-  // same filters and the selection kept (readGallerySelection).
-  const selectionFiltersRef = useRef({ filters, sorting })
+  // same filters and the selection kept (readGallerySelection). Compared by
+  // value: the same filters can come back as a new object (StrictMode's
+  // double effects in dev made that clear the selection on every return).
+  const selectionKey = JSON.stringify([filters, sorting])
+  const selectionKeyRef = useRef(selectionKey)
   useEffect(() => {
-    const prev = selectionFiltersRef.current
-    if (prev.filters === filters && prev.sorting === sorting) return
-    selectionFiltersRef.current = { filters, sorting }
+    if (selectionKeyRef.current === selectionKey) return
+    selectionKeyRef.current = selectionKey
     setSelectedIds(new Set())
-  }, [filters, sorting])
+  }, [selectionKey])
 
   // The gallery session usually already keeps the same page/filters across
   // the round trip to a media's detail view, so the item is normally already
