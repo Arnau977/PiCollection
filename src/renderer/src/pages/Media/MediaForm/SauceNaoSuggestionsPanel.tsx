@@ -3,7 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ExternalLink, Link2, Plus, ScanSearch } from 'lucide-react'
 import type { MediaInput } from '@shared/models'
+import { toThumbUrl } from '@shared/utils/mediaUrl'
 import { PATH } from '../../../app.routes.const'
+import { AUTO_APPLY_SIMILARITY } from '../../../hooks/useSauceNaoSuggestions'
+import { titleCaseTagName } from '../../../utils/matchEntityNames'
 import { CharacterFormOfHint } from './CharacterFormOfHint'
 import { SAUCE_MISSING_CATEGORIES } from './missingSuggestionCounts'
 import type { MediaFormSuggestions } from './useMediaFormSuggestions'
@@ -134,10 +137,58 @@ export function SauceNaoSuggestionsPanel({
                 {t('sauceNao.quota', { count: sauce.remaining.long })}
               </span>
             )}
-            <button type="button" className="btn" onClick={sauce.reset}>
-              {t('sauceNao.dismiss')}
-            </button>
+            {/* While held, Reject below already does this. */}
+            {sauce.decision !== 'held' && (
+              <button type="button" className="btn" onClick={sauce.reset}>
+                {t('sauceNao.dismiss')}
+              </button>
+            )}
           </div>
+
+          {/* Side by side, so a wrong match (another drawing entirely) shows
+              before its artist, URL, series and characters are trusted. */}
+          <div className="sauce-compare" role="group" aria-label={t('sauceNao.compareLabel')}>
+            <figure className="sauce-compare-side">
+              <img src={toThumbUrl(inputRoute)} alt="" />
+              <figcaption>{t('sauceNao.compareYours')}</figcaption>
+            </figure>
+            <figure className="sauce-compare-side">
+              {sauce.match.thumbnail ? (
+                <img src={sauce.match.thumbnail} alt="" />
+              ) : (
+                <span className="sauce-compare-missing" aria-hidden="true" />
+              )}
+              <figcaption>{t('sauceNao.compareMatch')}</figcaption>
+            </figure>
+          </div>
+
+          {sauce.decision === 'held' && (
+            <>
+              <p className="sauce-hint">
+                {t('sauceNao.heldHint', { value: AUTO_APPLY_SIMILARITY })}
+              </p>
+              <div className="sauce-decision">
+                <button type="button" className="btn btn-primary" onClick={sauce.accept}>
+                  {t('sauceNao.accept')}
+                </button>
+                <button type="button" className="btn" onClick={sauce.reject}>
+                  {t('sauceNao.reject')}
+                </button>
+              </div>
+            </>
+          )}
+          {sauce.decision === 'applied' && (
+            <div className="sauce-decision">
+              <button
+                type="button"
+                className="btn"
+                title={t('sauceNao.notThisOneTitle')}
+                onClick={sauce.reject}
+              >
+                {t('sauceNao.notThisOne')}
+              </button>
+            </div>
+          )}
           {/* The match shows as soon as SauceNAO answers; its tags still wait on
               Danbooru's character lookup, so hold their place meanwhile. */}
           {sauce.status === 'loading' ? (
@@ -148,7 +199,9 @@ export function SauceNaoSuggestionsPanel({
               <span className="sauce-skeleton-line is-short" aria-hidden="true" />
             </div>
           ) : (
-            <p className="sauce-hint">{t('sauceNao.applied', { count: sauce.appliedCount })}</p>
+            sauce.decision === 'applied' && (
+              <p className="sauce-hint">{t('sauceNao.applied', { count: sauce.appliedCount })}</p>
+            )
           )}
 
           {/* An empty field is filled on its own (see useMediaFormSuggestions); a
@@ -188,7 +241,7 @@ export function SauceNaoSuggestionsPanel({
                           onClick={() => onAddMissing(category, name)}
                         >
                           <Plus size={12} />
-                          {name}
+                          {category === 'tags' ? titleCaseTagName(name) : name}
                           {category === 'characters' && (
                             <CharacterFormOfHint parent={sauce.characterParents[name]} />
                           )}

@@ -5,6 +5,7 @@ import { resolveThumbnail } from '../../thumbnails/thumbnails'
 import { AppError } from '../../errors'
 import { readSauceNaoApiKey } from './sauceNaoSettings'
 import { fetchDanbooruPostTags } from '../danbooruTags'
+import { fetchMatchThumbnail } from './matchThumbnail'
 import { SauceNaoResponseSchema, pickBestMatch } from './sauceNao.parse'
 import { logError, logInfo } from '../../logging/logger'
 import { createRateLimiter } from '../rateLimiter'
@@ -265,11 +266,15 @@ async function searchImage(
       throw new Error(message || 'SauceNAO could not process that image.')
     }
 
-    const lookup = pickBestMatch(parsed.data)
+    const { thumbnailUrl, ...lookup } = pickBestMatch(parsed.data)
     // That search was the last one of the window - don't wait for a rejection.
     if (parsed.data.header?.long_remaining === 0) markDailyLimitReached()
     if (lookup.match) {
-      const post = await fetchDanbooruPostTags(lookup.match.sourceUrl)
+      const [post, thumbnail] = await Promise.all([
+        fetchDanbooruPostTags(lookup.match.sourceUrl),
+        fetchMatchThumbnail(thumbnailUrl)
+      ])
+      lookup.match.thumbnail = thumbnail
       lookup.match.tags = post?.tags ?? []
       // The post as it is today beats SauceNAO's older copy of its tags.
       if (post?.characters.length) lookup.match.characters = post.characters

@@ -601,7 +601,15 @@
     "missingCharacters": "Personajes nuevos",
     "missingSeries": "Series nuevas",
     "noApiKeyHint": "Las sugerencias de tags necesitan una API key gratuita de SauceNAO.",
-    "noApiKeyHintLink": "Añádela en Ajustes"
+    "noApiKeyHintLink": "Añádela en Ajustes",
+    "compareYours": "Tuya",
+    "compareMatch": "SauceNAO",
+    "compareLabel": "Tu imagen junto a la coincidencia que encontró SauceNAO",
+    "heldHint": "Menos de un {{value}} % de similitud: compáralas antes de aplicar.",
+    "accept": "Aplicar",
+    "reject": "Rechazar",
+    "notThisOne": "No es esta",
+    "notThisOneTitle": "Quita el artista, la URL de origen, los personajes, las series y las etiquetas que añadió esta coincidencia"
   },
   "wd14": {
     "button": "Sugerir tags localmente",

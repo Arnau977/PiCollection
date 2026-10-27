@@ -127,6 +127,12 @@ the frame the edit form's preview shows, so pause on the one you want (until
 you play or move the preview, it uses the video's cover frame); local AI
 tagging below does the same.
 
+- The match shows next to your picture: **Yours** and SauceNAO's own small
+  copy of what it found, with how similar they are. At 85% or more it's
+  applied right away, and **Not this one** takes back the artist, source
+  URL, characters, series and tags it added (anything you changed since
+  stays). Below 85% nothing is applied until you press **Apply**; **Reject**
+  drops it.
 - It needs a free SauceNAO API key: **Settings > Advanced > SauceNAO API key**.
   Without one, the button doesn't appear.
 - The matched post's link fills an empty **Source URL**, or is offered as a

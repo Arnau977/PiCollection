@@ -601,7 +601,15 @@
     "missingCharacters": "New characters",
     "missingSeries": "New series",
     "noApiKeyHint": "Tag suggestions need a free SauceNAO API key.",
-    "noApiKeyHintLink": "Add one in Settings"
+    "noApiKeyHintLink": "Add one in Settings",
+    "compareYours": "Yours",
+    "compareMatch": "SauceNAO",
+    "compareLabel": "Your picture next to the match SauceNAO found",
+    "heldHint": "Below {{value}}% similar: compare them before applying.",
+    "accept": "Apply",
+    "reject": "Reject",
+    "notThisOne": "Not this one",
+    "notThisOneTitle": "Takes back the artist, source URL, characters, series and tags this match added"
   },
   "wd14": {
     "button": "Suggest tags locally",
