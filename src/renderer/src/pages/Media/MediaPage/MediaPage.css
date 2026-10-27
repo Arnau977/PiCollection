@@ -31,12 +31,3 @@
      window edge / OS taskbar on a maximized window. */
   padding-bottom: var(--space-7);
 }
-
-/* While editing, MediaForm fills this box and scrolls itself. Left scrollable,
-   the padding above gave it a little overflow: a wheel past the form's end
-   (or a focus scrollIntoView) scrolled this region too, taking the form's
-   Cancel/Save bar off the top. clip, unlike hidden, also stops script scrolls. */
-.media-page-scroll-region.is-editing {
-  overflow: clip;
-  padding-bottom: 0;
-}
