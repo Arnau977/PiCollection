@@ -292,6 +292,10 @@ input[type='checkbox'] {
 /* A tag a rule gives (Settings > Automatic tags), not one of the media's own:
    outlined instead of filled, so it reads as derived without relying on color. */
 .chip-list li.chip-auto {
+  /* Holds its .visually-hidden label: with no positioned ancestor, that
+     absolute span escaped every scroll region and stretched the document,
+     so the wheel scrolled the whole page and took the action bar along. */
+  position: relative;
   background: transparent;
   outline: 1px dashed currentColor;
   outline-offset: -1px;
