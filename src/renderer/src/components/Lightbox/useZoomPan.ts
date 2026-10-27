@@ -100,6 +100,18 @@ export function useZoomPan(
     [constrain, target]
   )
 
+  // `dragged` answers "was the click now ending a pan?" - so any new press
+  // starts it over, wherever it lands. Reset only by a press on the image, a
+  // pan followed by a wheel zoom-out kept it set, and the next click on the
+  // backdrop was taken for the end of that pan instead of closing.
+  useEffect(() => {
+    const reset = (): void => {
+      dragged.current = false
+    }
+    document.addEventListener('pointerdown', reset, true)
+    return (): void => document.removeEventListener('pointerdown', reset, true)
+  }, [])
+
   // React's onWheel listener is passive, so it can't stop the page from scrolling.
   useEffect(() => {
     const el = target.current
