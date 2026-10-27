@@ -107,9 +107,10 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   const [reloadToken, setReloadToken] = useState(0)
   const [filePage, setFilePage] = useState(0)
   const [preview, setPreview] = useState<PreviewState | null>(null)
-  // Folders whose files are all added or discarded are hidden unless asked
-  // for - after a few imports they'd otherwise crowd out the ones left to do.
-  const [showFinished, setShowFinished] = useState(false)
+  // Files already added or discarded, and folders holding nothing else, are
+  // hidden unless asked for - after a few imports they'd otherwise crowd
+  // out what's left to do.
+  const [showDone, setShowDone] = useState(false)
   const previewTimer = useRef<ReturnType<typeof setTimeout>>()
   const folderClickTimer = useRef<ReturnType<typeof setTimeout>>()
 
@@ -187,9 +188,13 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
   const importCount = countFilesToImport(selectedFiles, selectedFolders)
   const folders = state.kind === 'loaded' ? state.result.folders : []
   const finishedCount = folders.filter((folder) => folder.fileCount === 0).length
-  const shownFolders = showFinished ? folders : folders.filter((folder) => folder.fileCount > 0)
+  const shownFolders = showDone ? folders : folders.filter((folder) => folder.fileCount > 0)
   const files = state.kind === 'loaded' ? state.result.files : []
-  const pageFiles = files.slice(filePage * FILES_PER_PAGE, (filePage + 1) * FILES_PER_PAGE)
+  const doneFileCount = files.filter((file) => !isPickable(file)).length
+  const doneCount = finishedCount + doneFileCount
+  // Filtered before paging, so hiding them never leaves a page half empty.
+  const shownFiles = showDone ? files : files.filter(isPickable)
+  const pageFiles = shownFiles.slice(filePage * FILES_PER_PAGE, (filePage + 1) * FILES_PER_PAGE)
   const selectableFolders: SelectableItem[] = folders
     .filter((folder) => folder.fileCount > 0)
     .map((folder) => ({ kind: 'folder', path: folder.relativePath, fileCount: folder.fileCount }))
@@ -263,14 +268,17 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
               </Fragment>
             )
           })}
-          {finishedCount > 0 && (
+          {doneCount > 0 && (
             <label className="folder-browser-show-finished">
               <input
                 type="checkbox"
-                checked={showFinished}
-                onChange={(e) => setShowFinished(e.target.checked)}
+                checked={showDone}
+                onChange={(e) => {
+                  setShowDone(e.target.checked)
+                  setFilePage(0)
+                }}
               />
-              {t('folderBrowser.showFinished', { count: finishedCount })}
+              {t('folderBrowser.showDone', { count: doneCount })}
             </label>
           )}
         </nav>
@@ -395,20 +403,20 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
                   </div>
                 )
               })}
-              {shownFolders.length === 0 && state.result.files.length === 0 && (
+              {shownFolders.length === 0 && shownFiles.length === 0 && (
                 <p className="folder-browser-status">
-                  {finishedCount > 0 ? t('folderBrowser.allFinished') : t('folderBrowser.empty')}
+                  {doneCount > 0 ? t('folderBrowser.allFinished') : t('folderBrowser.empty')}
                 </p>
               )}
             </div>
           )}
         </div>
 
-        {state.kind === 'loaded' && state.result.files.length > FILES_PER_PAGE && (
+        {state.kind === 'loaded' && shownFiles.length > FILES_PER_PAGE && (
           <div className="folder-browser-pagination">
             <Pagination
               page={filePage}
-              totalPages={Math.ceil(state.result.files.length / FILES_PER_PAGE)}
+              totalPages={Math.ceil(shownFiles.length / FILES_PER_PAGE)}
               onPageChange={setFilePage}
             />
           </div>

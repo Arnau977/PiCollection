@@ -127,7 +127,7 @@ describe('FolderBrowser', () => {
     expect(screen.getByRole('button', { name: 'Import 7 files' })).toBeInTheDocument()
   })
 
-  it('disables cataloged and discarded files so they cannot be selected', async () => {
+  it('hides added and discarded files until asked, then shows them disabled', async () => {
     browse.mockResolvedValue({
       success: true,
       data: {
@@ -140,14 +140,32 @@ describe('FolderBrowser', () => {
             cataloged: true,
             discarded: false
           },
-          { name: 'b.png', relativePath: 'b.png', type: 'image', cataloged: false, discarded: true }
+          {
+            name: 'b.png',
+            relativePath: 'b.png',
+            type: 'image',
+            cataloged: false,
+            discarded: true
+          },
+          {
+            name: 'c.png',
+            relativePath: 'c.png',
+            type: 'image',
+            cataloged: false,
+            discarded: false
+          }
         ]
       }
     })
 
     render(<FolderBrowser onStartImport={vi.fn()} />)
 
-    expect((await screen.findByText('a.png')).closest('button')).toBeDisabled()
+    await screen.findByText('c.png')
+    expect(screen.queryByText('a.png')).not.toBeInTheDocument()
+    expect(screen.queryByText('b.png')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText("Show what's already added or discarded (2)"))
+    expect(screen.getByText('a.png').closest('button')).toBeDisabled()
     expect(screen.getByText('b.png').closest('button')).toBeDisabled()
     expect(screen.getByText('Discarded')).toBeInTheDocument()
   })
@@ -238,7 +256,7 @@ describe('FolderBrowser', () => {
     expect(screen.getByText('5')).toBeInTheDocument()
     expect(screen.queryByText('Done')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByLabelText('Show 1 folder with nothing left to import'))
+    fireEvent.click(screen.getByLabelText("Show what's already added or discarded (1)"))
     fireEvent.click(screen.getByText('Done'))
     await new Promise((resolve) => setTimeout(resolve, 250))
 
@@ -330,9 +348,10 @@ describe('FolderBrowser', () => {
       )
       fireEvent.click(await screen.findByText('d.png'))
       // jsdom has no layout: the grid starts 100px in, tiles in a row 100px apart.
+      // c.png is already added, so it's hidden.
       const scroll = container.querySelector<HTMLElement>('.folder-browser-scroll')!
       scroll.getBoundingClientRect = () => new DOMRect(100, 0, 500, 200)
-      for (const [i, name] of ['a', 'b', 'c', 'd'].entries()) {
+      for (const [i, name] of ['a', 'b', 'd'].entries()) {
         const tile = screen.getByText(`${name}.png`).closest('button')!
         tile.getBoundingClientRect = () => new DOMRect(110 + i * 100, 0, 90, 90)
       }
