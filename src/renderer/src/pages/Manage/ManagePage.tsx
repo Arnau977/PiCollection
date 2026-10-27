@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { TagsManager } from './TagsManager'
 import { CharactersManager } from './CharactersManager'
 import { ArtistsManager } from './ArtistsManager'
@@ -7,11 +7,22 @@ import { SeriesManager } from './SeriesManager'
 import { DiscardedManager } from './DiscardedManager'
 import './ManagePage.css'
 
-type ManageTab = 'artists' | 'tags' | 'characters' | 'series' | 'discarded'
+const MANAGE_TABS = ['artists', 'tags', 'characters', 'series', 'discarded'] as const
+type ManageTab = (typeof MANAGE_TABS)[number]
+
+function isManageTab(value: string | null): value is ManageTab {
+  return (MANAGE_TABS as readonly (string | null)[]).includes(value)
+}
 
 export default function ManagePage(): JSX.Element {
   const { t } = useTranslation()
-  const [tab, setTab] = useState<ManageTab>('artists')
+  // In the URL so Back (Alt+←, the mouse's back button) from a media count
+  // returns to the tab it was clicked on. Switching tabs replaces the entry
+  // instead of adding one, like Explorer's view changes.
+  const [params, setParams] = useSearchParams()
+  const requested = params.get('tab')
+  const tab: ManageTab = isManageTab(requested) ? requested : 'artists'
+  const setTab = (next: ManageTab): void => setParams({ tab: next }, { replace: true })
 
   return (
     <div className="page manage-page">

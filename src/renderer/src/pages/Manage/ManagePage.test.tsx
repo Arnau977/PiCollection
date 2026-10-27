@@ -88,6 +88,17 @@ describe('ManagePage', () => {
     expect(screen.getByText('Alice')).toBeVisible()
   })
 
+  it('opens on the tab in the URL, so Back returns to it', () => {
+    render(
+      <MemoryRouter initialEntries={['/manage?tab=characters']}>
+        <ManagePage />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('tab', { name: 'Characters' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText('Alice')).toBeVisible()
+  })
+
   it('switches to the series tab', async () => {
     const user = userEvent.setup()
     render(<ManagePage />, { wrapper: MemoryRouter })
