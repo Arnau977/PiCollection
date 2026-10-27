@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs'
 import { basename, extname } from 'path'
-import { getDb } from '../../database/connection'
+import { getDb, isDbOpen } from '../../database/connection'
 import * as mediaRepo from '../../database/repositories/media.repository'
 import * as discardedRepo from '../../database/repositories/discardedMedia.repository'
 import { computeFileHash } from '../mediaHash'
@@ -50,6 +50,9 @@ export async function processNewFiles(absPaths: string[]): Promise<ProcessResult
   const settings = readWatcherSettings()
 
   for (const path of absPaths) {
+    // A restore or quit closed the DB mid-batch: the rest would only fail
+    // one by one, each logging an error.
+    if (!isDbOpen()) break
     try {
       const type = typeForExtension(path)
       if (!type || !isPathUnderRoot(path, sourceFolder)) continue
