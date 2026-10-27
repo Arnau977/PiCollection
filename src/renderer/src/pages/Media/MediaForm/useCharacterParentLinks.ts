@@ -1,4 +1,4 @@
-import { useState, type Dispatch, type SetStateAction } from 'react'
+import { useMemo, useState, type Dispatch, type SetStateAction } from 'react'
 import type { CharacterModel, MediaInput, SeriesModel } from '@shared/models'
 import { detectCharacterParent } from './detectCharacterParent'
 
@@ -36,9 +36,15 @@ export function useCharacterParentLinks({
 }: UseCharacterParentLinksArgs): CharacterParentLinks {
   const [links, setLinks] = useState<Map<string, string | null>>(new Map())
 
+  // Indexed once per list change: chips and the bar ask for every character.
+  const ownParents = useMemo(
+    () => new Map(characters.map((character) => [character.id, character.parentId ?? null])),
+    [characters]
+  )
+
   function parentOf(characterId: string): string | null {
     if (links.has(characterId)) return links.get(characterId) ?? null
-    return characters.find((character) => character.id === characterId)?.parentId ?? null
+    return ownParents.get(characterId) ?? null
   }
 
   function setParent(characterId: string, parentId: string | null): void {
@@ -60,16 +66,18 @@ export function useCharacterParentLinks({
   }
 
   function excludedParents(characterId: string): Set<string> {
-    const all = [...characters, ...pendingCharacters]
+    const children = new Map<string, string[]>()
+    for (const character of [...characters, ...pendingCharacters]) {
+      const parent = parentOf(character.id)
+      if (parent) children.set(parent, [...(children.get(parent) ?? []), character.id])
+    }
     const excluded = new Set([characterId])
-    let grew = true
-    while (grew) {
-      grew = false
-      for (const character of all) {
-        const parent = parentOf(character.id)
-        if (parent && excluded.has(parent) && !excluded.has(character.id)) {
-          excluded.add(character.id)
-          grew = true
+    const queue = [characterId]
+    for (let id = queue.pop(); id !== undefined; id = queue.pop()) {
+      for (const child of children.get(id) ?? []) {
+        if (!excluded.has(child)) {
+          excluded.add(child)
+          queue.push(child)
         }
       }
     }

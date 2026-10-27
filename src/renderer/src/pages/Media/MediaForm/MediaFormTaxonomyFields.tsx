@@ -72,6 +72,12 @@ export function MediaFormTaxonomyFields({
       ? charactersById.get(linkingId)
       : undefined
 
+  // Worked out once per render, not once per option (a library has hundreds).
+  const excludedParents = linking && characterLinks?.excludedParents(linking.id)
+  const parentOptions = excludedParents
+    ? characterOptions.filter((character) => !excludedParents.has(character.id))
+    : []
+
   function closeLinking(): void {
     setLinkingId(null)
     linkOpener.current?.focus()
@@ -160,9 +166,7 @@ export function MediaFormTaxonomyFields({
               <CharacterParentBar
                 childName={linking.name}
                 parentId={characterLinks.parentOf(linking.id)}
-                options={characterOptions.filter(
-                  (character) => !characterLinks.excludedParents(linking.id).has(character.id)
-                )}
+                options={parentOptions}
                 getOptionLabel={formatCharacterOptionLabel}
                 onPick={(parentId) => {
                   characterLinks.setParent(linking.id, parentId)
