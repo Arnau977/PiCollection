@@ -250,7 +250,10 @@ const MediaPage: React.FC = () => {
           {deleteError}
         </p>
       )}
-      <div className="media-page-scroll-region" ref={scrollRegionRef}>
+      <div
+        className={`media-page-scroll-region${isEditing ? ' is-editing' : ''}`}
+        ref={scrollRegionRef}
+      >
         {isEditing ? (
           <MediaForm
             key={media.id}
