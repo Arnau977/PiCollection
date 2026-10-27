@@ -35,8 +35,9 @@ suggested tags) shows what it means, from Danbooru's tag wiki.
 **Settings > Data > Automatic tags** gives a tag of yours to every picture
 with a property of the file itself:
 
-- **Transparency** - some pixels are see-through (an alpha channel that's
-  never used doesn't count);
+- **Transparency** - at least 1% of the picture is see-through (an alpha
+  channel that's never used, or only softens a few edge pixels, doesn't
+  count);
 - sizes, with Danbooru's own rules: **Lowres** (both sides 500 px or less),
   **Highres** (1600 px wide or 1200 px tall), **Absurdres** (3200 wide or
   2400 tall), **Incredibly absurdres** (10,000 px on a side), **Tall image**

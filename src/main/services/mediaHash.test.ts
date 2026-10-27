@@ -120,7 +120,7 @@ describe('sameShape', () => {
 })
 
 describe('readImageProperties', () => {
-  it('counts transparency only when a pixel is see-through, and gives undecodable files null', async () => {
+  it('counts transparency only when a real share is see-through, and gives undecodable files null', async () => {
     const opaqueWithAlpha = join(sourceDir, 'opaque.png')
     await figure(STANDING).ensureAlpha().png().toFile(opaqueWithAlpha)
     const cutout = join(sourceDir, 'cutout.png')
@@ -131,6 +131,14 @@ describe('readImageProperties', () => {
     )
       .png()
       .toFile(cutout)
+    // Alpha 254 everywhere and one see-through corner pixel: export noise, not transparency.
+    const noisyAlpha = join(sourceDir, 'noisy-alpha.png')
+    const noisy = Buffer.alloc(40 * 20 * 4, 200)
+    for (let i = 3; i < noisy.length; i += 4) noisy[i] = 254
+    noisy[3] = 0
+    await sharp(noisy, { raw: { width: 40, height: 20, channels: 4 } })
+      .png()
+      .toFile(noisyAlpha)
     const broken = join(sourceDir, 'broken.png')
     await fs.writeFile(broken, 'not a picture')
 
@@ -139,6 +147,7 @@ describe('readImageProperties', () => {
       height: 400,
       hasAlpha: false
     })
+    expect((await readImageProperties(noisyAlpha))?.hasAlpha).toBe(false)
     expect(await readImageProperties(cutout)).toEqual({ width: 40, height: 20, hasAlpha: true })
     expect(await readImageProperties(broken)).toBeNull()
   })
