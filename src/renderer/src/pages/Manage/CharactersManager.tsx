@@ -31,6 +31,7 @@ import { EntityCountButton } from '../../components/EntityCountButton/EntityCoun
 import { linkedMediaCount } from '../../utils/linkedMediaCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { CharacterModel, SeriesModel } from '@shared/models'
+import { useManageParam } from './useManageParam'
 
 interface CharacterFormValues {
   name: string
@@ -64,11 +65,11 @@ export function CharactersManager(): JSX.Element {
   const confirm = useConfirm()
   const [form, setForm] = useState<CharacterFormValues>(EMPTY_FORM)
   const [editing, setEditing] = useState<CharacterModel | null>(null)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useManageParam('characters.search')
   const debouncedSearch = useDebouncedValue(search, 200)
   const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<ManageSort>(() => loadManageSort('characters'))
-  const [seriesFilter, setSeriesFilter] = useState<string>('')
+  const [seriesFilter, setSeriesFilter] = useManageParam('characters.series')
 
   function updateSort(next: ManageSort): void {
     setSort(next)

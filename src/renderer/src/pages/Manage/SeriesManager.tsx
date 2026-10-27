@@ -30,6 +30,7 @@ import { EntityCountButton } from '../../components/EntityCountButton/EntityCoun
 import { linkedMediaCount } from '../../utils/linkedMediaCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { SeriesModel } from '@shared/models'
+import { useManageParam } from './useManageParam'
 
 interface SeriesFormValues {
   name: string
@@ -50,7 +51,7 @@ export function SeriesManager(): JSX.Element {
   const confirm = useConfirm()
   const [form, setForm] = useState<SeriesFormValues>(EMPTY_FORM)
   const [editing, setEditing] = useState<SeriesModel | null>(null)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useManageParam('series.search')
   const debouncedSearch = useDebouncedValue(search, 200)
   const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<ManageSort>(() => loadManageSort('series'))
