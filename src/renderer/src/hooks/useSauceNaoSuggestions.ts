@@ -44,7 +44,7 @@ type Status = 'idle' | 'loading' | 'ready' | 'error'
  * drawing whose artist, URL, series and characters then had to be removed
  * by hand - come in under it.
  */
-export const AUTO_APPLY_SIMILARITY = 90
+export const AUTO_APPLY_SIMILARITY = 85
 
 /** Whether the shown match was applied, or still waits for the user. */
 export type MatchDecision = 'applied' | 'held'
