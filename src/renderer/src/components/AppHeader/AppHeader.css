@@ -25,15 +25,10 @@
 }
 
 .app-brand-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   flex-shrink: 0;
-  color: var(--accent-fg);
-  font-weight: 800;
-  font-size: 1.6rem;
-  font-style: normal;
-  line-height: 1;
+  width: 28px;
+  height: 28px;
 }
 
 .app-brand-text {

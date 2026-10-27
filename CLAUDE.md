@@ -24,6 +24,7 @@ npm run lint           # eslint --fix, repo-wide - avoid on this checkout (see v
 npm run typecheck       # tsc, node config + web config
 npm run build            # typecheck + electron-vite build
 npm run build:win|mac|linux   # + electron-builder installer
+npm run icons            # regenerate every app icon from resources/logo.svg
 npm run migrate:create <name>   # scaffold a migration
 npm run migrate:up / migrate:down   # apply/roll back against .data/picollection.dev.sqlite
 ```

@@ -1,7 +1,7 @@
 import { app, Menu, nativeImage, Tray, type BrowserWindow, type NativeImage } from 'electron'
 import iconPng from '../../../resources/icon.png?asset'
-// Copy of build/icon.ico (the installer/taskbar icon) - keep both in sync
-// when the app icon changes. build/ itself isn't shipped with the app.
+// Same as build/icon.ico (the installer/taskbar icon): both are written from
+// resources/logo.svg by `npm run icons`. build/ itself isn't shipped with the app.
 import iconIco from '../../../resources/icon.ico?asset'
 
 let tray: Tray | null = null
