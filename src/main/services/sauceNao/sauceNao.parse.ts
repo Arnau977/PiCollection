@@ -21,7 +21,9 @@ export const SauceNaoResponseSchema = z.object({
           .object({
             similarity: z.union([z.string(), z.number()]).optional(),
             index_id: z.number().optional(),
-            index_name: z.string().optional()
+            index_name: z.string().optional(),
+            // SauceNAO's own small copy of the matched picture.
+            thumbnail: z.string().optional()
           })
           .optional(),
         data: z
@@ -119,7 +121,7 @@ function gallerySearch(
 export function pickBestMatch(
   parsed: SauceNaoResponse,
   minSimilarity: number = MIN_SIMILARITY
-): SauceNaoLookup {
+): SauceNaoLookup & { thumbnailUrl?: string } {
   const remaining = {
     short: parsed.header?.short_remaining ?? 0,
     long: parsed.header?.long_remaining ?? 0
@@ -130,6 +132,7 @@ export function pickBestMatch(
       similarity: Number.parseFloat(String(result.header?.similarity ?? '')) || 0,
       indexName: cleanIndexName(result.header?.index_name),
       indexId: result.header?.index_id,
+      thumbnailUrl: result.header?.thumbnail,
       data: result.data ?? {}
     }))
     .filter((candidate) => candidate.similarity >= minSimilarity)
@@ -175,5 +178,6 @@ export function pickBestMatch(
     tags: []
   }
 
-  return { match, remaining }
+  // Fetched by the service (fetchMatchThumbnail), not part of the match itself.
+  return { match, remaining, thumbnailUrl: chosen.thumbnailUrl }
 }

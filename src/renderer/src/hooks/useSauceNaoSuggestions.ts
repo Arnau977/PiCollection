@@ -25,13 +25,31 @@ interface UseSauceNaoSuggestionsArgs {
   tags: TagModel[]
   characters: CharacterModel[]
   series: SeriesModel[]
-  /** Called exactly once per successful lookup, with the IDs of entities that already exist. */
+  /**
+   * Called once per accepted match (on its own at AUTO_APPLY_SIMILARITY and
+   * up, otherwise on accept), with the IDs of entities that already exist.
+   */
   onApplyExisting: (payload: ApplyPayload) => void
+  /** "Not this one" on an applied match: take back what onApplyExisting added. */
+  onRevertApplied?: () => void
   /** The edit form's video preview: a video is searched by the frame it shows. */
   videoFrame?: RefObject<VideoFrameSource | null>
 }
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
+
+/**
+ * A match this similar is applied on its own (with "Not this one" to take
+ * it back); below it waits for Accept / Reject. Wrong matches - a different
+ * drawing whose artist, URL, series and characters then had to be removed
+ * by hand - come in under it.
+ */
+export const AUTO_APPLY_SIMILARITY = 90
+
+/** Whether the shown match was applied, or still waits for the user. */
+export type MatchDecision = 'applied' | 'held'
+
+type Matched = ReturnType<typeof matchSuggestionCandidate>
 
 /** Matches `DAILY_LIMIT_ERROR_CODE` in the main process's sauceNao.service.ts. */
 const DAILY_LIMIT_ERROR_CODE = 'SAUCE_NAO_DAILY_LIMIT'
@@ -51,6 +69,11 @@ interface UseSauceNaoSuggestionsResult {
   held: HeldCharacter[]
   /** Drops a held character once the user has picked. */
   resolveHeld: (originalId: string) => void
+  decision: MatchDecision | null
+  /** Applies a held match. */
+  accept: () => void
+  /** Drops the match; an applied one is taken back first (onRevertApplied). */
+  reject: () => void
   /** `type` lets a video fall back to a frame captured here when the OS can't thumbnail it. */
   run: (route: string, type?: MediaModel['type']) => Promise<void>
   dismiss: (category: SuggestionCategory, name: string) => void
@@ -63,6 +86,7 @@ export function useSauceNaoSuggestions({
   characters,
   series,
   onApplyExisting,
+  onRevertApplied,
   videoFrame
 }: UseSauceNaoSuggestionsArgs): UseSauceNaoSuggestionsResult {
   const [status, setStatus] = useState<Status>('idle')
@@ -74,6 +98,21 @@ export function useSauceNaoSuggestions({
   const [characterParents, setCharacterParents] = useState<Record<string, string>>({})
   const [held, setHeld] = useState<HeldCharacter[]>([])
   const [missing, setMissing] = useState<Record<SuggestionCategory, string[]>>(EMPTY_MISSING)
+  const [decision, setDecision] = useState<MatchDecision | null>(null)
+  const [heldMatch, setHeldMatch] = useState<{ matched: Matched; sourceUrl?: string } | null>(null)
+
+  const applyMatched = useCallback(
+    (matched: Matched, sourceUrl?: string) => {
+      onApplyExisting({ ...matched.applied, sourceUrl })
+      setMissing(matched.missing)
+      setCharacterParents(matched.characterParents)
+      setHeld(matched.held)
+      setAppliedCount(matched.appliedCount)
+      setHeldMatch(null)
+      setDecision('applied')
+    },
+    [onApplyExisting]
+  )
 
   // The pause lives in the main process, so it survives closing this form.
   const refreshQuota = useCallback(async () => {
@@ -123,6 +162,8 @@ export function useSauceNaoSuggestions({
 
       setRemaining(result.data.remaining)
 
+      setDecision(null)
+      setHeldMatch(null)
       if (!result.data.match) {
         setMatch(null)
         setMissing(EMPTY_MISSING)
@@ -141,15 +182,23 @@ export function useSauceNaoSuggestions({
         { artists, tags, characters, series },
         danbooru
       )
-      onApplyExisting({ ...matched.applied, sourceUrl: found.sourceUrl })
-      setMissing(matched.missing)
-      setCharacterParents(matched.characterParents)
-      setHeld(matched.held)
-      setAppliedCount(matched.appliedCount)
+      if (found.similarity >= AUTO_APPLY_SIMILARITY) {
+        applyMatched(matched, found.sourceUrl)
+      } else {
+        setMissing(EMPTY_MISSING)
+        setHeld([])
+        setAppliedCount(0)
+        setHeldMatch({ matched, sourceUrl: found.sourceUrl })
+        setDecision('held')
+      }
       setStatus('ready')
     },
-    [status, artists, tags, characters, series, onApplyExisting, refreshQuota, videoFrame]
+    [status, artists, tags, characters, series, applyMatched, refreshQuota, videoFrame]
   )
+
+  const accept = useCallback(() => {
+    if (heldMatch) applyMatched(heldMatch.matched, heldMatch.sourceUrl)
+  }, [heldMatch, applyMatched])
 
   const dismiss = useCallback((category: SuggestionCategory, name: string) => {
     setMissing((prev) => ({
@@ -163,6 +212,8 @@ export function useSauceNaoSuggestions({
   }, [])
 
   const reset = useCallback(() => {
+    setDecision(null)
+    setHeldMatch(null)
     setStatus('idle')
     setError(null)
     setMatch(null)
@@ -173,7 +224,18 @@ export function useSauceNaoSuggestions({
     setHeld([])
   }, [])
 
+  const reject = useCallback(() => {
+    if (decision === 'applied') onRevertApplied?.()
+    const left = remaining
+    reset()
+    // The quota line stays: rejecting a match doesn't give a search back.
+    setRemaining(left)
+  }, [decision, onRevertApplied, remaining, reset])
+
   return {
+    decision,
+    accept,
+    reject,
     characterParents,
     held,
     resolveHeld,

@@ -1,4 +1,4 @@
-import type { Dispatch, RefObject, SetStateAction } from 'react'
+import { useRef, type Dispatch, type RefObject, type SetStateAction } from 'react'
 import type {
   ArtistModel,
   CharacterModel,
@@ -85,6 +85,19 @@ export interface MediaFormSuggestions {
  * implication rules that apply regardless of whether an entity was picked by
  * hand or accepted from a suggestion chip.
  */
+/** What an applied SauceNAO match put in the form, for taking it back. */
+interface SauceAdded {
+  artistId?: string
+  sourceUrl?: string
+  tagIds: string[]
+  characterIds: string[]
+  seriesIds: string[]
+}
+
+function added(before: string[] | undefined, after: string[] | undefined): string[] {
+  return (after ?? []).filter((id) => !(before ?? []).includes(id))
+}
+
 export function useMediaFormSuggestions({
   input,
   setInput,
@@ -97,6 +110,7 @@ export function useMediaFormSuggestions({
   videoFrame
 }: UseMediaFormSuggestionsArgs): MediaFormSuggestions {
   const hasSauceNaoApiKey = useSauceNaoApiKey()
+  const sauceAdded = useRef<SauceAdded | null>(null)
 
   // A suggestion's own matching only ever sees what's actually in the
   // library (tags.data etc.) - a pending draft added earlier in *this* edit
@@ -118,7 +132,7 @@ export function useMediaFormSuggestions({
           (id) => !(prev.characterIds ?? []).includes(id)
         )
         const nextSeriesIds = Array.from(new Set([...(prev.seriesIds ?? []), ...seriesIds]))
-        return {
+        const next = {
           ...prev,
           // Suggestions only ever add - never overwrite a choice already made.
           artistId: prev.artistId ?? artistId,
@@ -127,7 +141,32 @@ export function useMediaFormSuggestions({
           characterIds: nextCharacterIds,
           seriesIds: withImpliedSeries(characters.data, addedCharacterIds, nextSeriesIds)
         }
+        // Exactly what this match added, for "Not this one" (onRevertApplied).
+        sauceAdded.current = {
+          artistId: prev.artistId ? undefined : (next.artistId ?? undefined),
+          sourceUrl: next.sourceUrl !== prev.sourceUrl ? next.sourceUrl : undefined,
+          tagIds: added(prev.tagIds, next.tagIds),
+          characterIds: addedCharacterIds,
+          seriesIds: added(prev.seriesIds, next.seriesIds)
+        }
+        return next
       })
+    },
+    // Takes back only what the match added and the user hasn't changed since.
+    onRevertApplied: () => {
+      const taken = sauceAdded.current
+      sauceAdded.current = null
+      if (!taken) return
+      const without = (ids: string[] | undefined, drop: string[]): string[] =>
+        (ids ?? []).filter((id) => !drop.includes(id))
+      setInput((prev) => ({
+        ...prev,
+        artistId: taken.artistId && prev.artistId === taken.artistId ? undefined : prev.artistId,
+        sourceUrl: taken.sourceUrl && prev.sourceUrl === taken.sourceUrl ? '' : prev.sourceUrl,
+        tagIds: without(prev.tagIds, taken.tagIds),
+        characterIds: without(prev.characterIds, taken.characterIds),
+        seriesIds: without(prev.seriesIds, taken.seriesIds)
+      }))
     }
   })
 

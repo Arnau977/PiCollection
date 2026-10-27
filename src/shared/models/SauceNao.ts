@@ -36,6 +36,12 @@ export interface SauceNaoMatch {
   search?: { url: string; site: string }
   /** Shown for context only - never written into the media's own name field. */
   title?: string
+  /**
+   * SauceNAO's small copy of the matched picture as a `data:` URL, to compare
+   * with the user's before trusting the match. Downloaded by the main
+   * process: the renderer's CSP loads no remote images.
+   */
+  thumbnail?: string
   artist: SauceNaoArtist | null
   /** Full booru character tags, qualifiers included ("pyra (pro swimmer) (xenoblade)"). */
   characters: SauceNaoName[]

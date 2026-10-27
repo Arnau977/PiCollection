@@ -95,6 +95,61 @@ describe('useSauceNaoSuggestions', () => {
     expect(result.current.remaining).toEqual({ short: 5, long: 90 })
   })
 
+  it('holds a less similar match until accepted, and drops it on reject', async () => {
+    setApi(
+      vi.fn().mockResolvedValue({
+        success: true,
+        data: { match: makeMatch({ similarity: 72 }), remaining: { short: 5, long: 90 } }
+      })
+    )
+    const { result, onApplyExisting } = renderSuggestions()
+
+    await act(async () => {
+      await result.current.run('/pic.png')
+    })
+    expect(result.current.decision).toBe('held')
+    expect(onApplyExisting).not.toHaveBeenCalled()
+    expect(result.current.missing.characters).toEqual([])
+
+    act(() => result.current.accept())
+    expect(onApplyExisting).toHaveBeenCalledTimes(1)
+    expect(result.current.decision).toBe('applied')
+    expect(result.current.missing.characters).toEqual(['New Character'])
+
+    act(() => result.current.reject())
+    expect(result.current.match).toBeNull()
+    expect(result.current.remaining).toEqual({ short: 5, long: 90 })
+  })
+
+  it('takes back an applied match on "Not this one"', async () => {
+    setApi(
+      vi.fn().mockResolvedValue({
+        success: true,
+        data: { match: makeMatch(), remaining: { short: 5, long: 90 } }
+      })
+    )
+    const onRevertApplied = vi.fn()
+    const { result } = renderHook(() =>
+      useSauceNaoSuggestions({
+        artists,
+        tags,
+        characters,
+        series,
+        onApplyExisting: vi.fn(),
+        onRevertApplied
+      })
+    )
+
+    await act(async () => {
+      await result.current.run('/pic.png')
+    })
+    expect(result.current.decision).toBe('applied')
+    act(() => result.current.reject())
+
+    expect(onRevertApplied).toHaveBeenCalledTimes(1)
+    expect(result.current.match).toBeNull()
+  })
+
   it('capitalizes missing character and series names, but not tags or artist', async () => {
     setApi(
       vi.fn().mockResolvedValue({
