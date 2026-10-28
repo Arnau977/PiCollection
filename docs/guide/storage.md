@@ -27,9 +27,11 @@ Under the cards, a bar splits the library by file type - **Images**,
   open its media page; the path above the list goes back up, and so does
   Back. Files outside the source folder show under their own full folder.
   These shares add up to the library.
-- **Series**, **Characters**, **Artists** - the heaviest first. A series or
-  character includes its subseries and forms, as in the gallery's filters.
-  A picture counts towards every series and character it has, so these
+- **Series**, **Characters**, **Artists**, **Tags** - the heaviest first.
+  Tags include the automatic ones (Settings > Automatic tags), as in the
+  gallery. A series or character includes its subseries and forms, as in
+  the gallery's filters.
+  A picture counts towards every series, character and tag it has, so these
   shares don't add up to 100%. Click one to open the gallery filtered to it,
   heaviest first.
 

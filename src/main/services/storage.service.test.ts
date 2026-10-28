@@ -40,7 +40,13 @@ describe('aggregateStorage', () => {
         { id: 'genshin-sub', name: 'Genshin 2', parent_id: 'genshin' }
       ],
       characters: [],
-      artists: [{ id: 'x', name: 'Artist', parent_id: null }]
+      artists: [{ id: 'x', name: 'Artist', parent_id: null }],
+      tagLinks: [
+        { media_id: 'a', entity_id: 'big' },
+        { media_id: 'c', entity_id: 'big' },
+        { media_id: 'p', entity_id: 'big' }
+      ],
+      tags: [{ id: 'big', name: 'Big', parent_id: null }]
     })
 
     expect(overview.library).toEqual({
@@ -72,5 +78,6 @@ describe('aggregateStorage', () => {
       { id: 'genshin-sub', name: 'Genshin 2', bytes: 100, count: 1 }
     ])
     expect(overview.artists).toEqual([{ id: 'x', name: 'Artist', bytes: 150, count: 2 }])
+    expect(overview.tags).toEqual([{ id: 'big', name: 'Big', bytes: 120, count: 2 }])
   })
 })

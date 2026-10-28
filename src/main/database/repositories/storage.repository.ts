@@ -1,5 +1,6 @@
 import type { Kysely } from 'kysely'
 import type { DB } from '../schema'
+import { effectiveMediaTags } from './autoTag.repository'
 
 /** Every media row's file facts the disk-space overview adds up. */
 export function listMediaSizes(db: Kysely<DB>): Promise<
@@ -33,13 +34,23 @@ export function listMediaCharacterLinks(
     .execute()
 }
 
+/** Tags as everything else reads them: a media's own plus those automatic rules add. */
+export function listMediaTagLinks(
+  db: Kysely<DB>
+): Promise<{ media_id: string; entity_id: string }[]> {
+  return db
+    .selectFrom(effectiveMediaTags(db).as('t'))
+    .select(['t.media_id', 't.tag_id as entity_id'])
+    .execute()
+}
+
 export function listNamedEntities(
   db: Kysely<DB>,
-  table: 'series' | 'character' | 'artist'
+  table: 'series' | 'character' | 'artist' | 'tag'
 ): Promise<{ id: string; name: string; parent_id: string | null }[]> {
-  if (table === 'artist') {
+  if (table === 'artist' || table === 'tag') {
     return db
-      .selectFrom('artist')
+      .selectFrom(table)
       .select(['id', 'name'])
       .execute()
       .then((rows) => rows.map((row) => ({ ...row, parent_id: null })))

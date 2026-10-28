@@ -24,7 +24,7 @@ import {
 import '../Manage/ManagePage.css'
 import './StoragePage.css'
 
-type StorageTab = 'folders' | 'series' | 'characters' | 'artists'
+type StorageTab = 'folders' | 'series' | 'characters' | 'artists' | 'tags'
 
 const TABS: { tab: StorageTab; className: string; labelKey: string; color: string }[] = [
   { tab: 'folders', className: '', labelKey: 'storage.tabFolders', color: 'var(--accent-fg)' },
@@ -45,13 +45,15 @@ const TABS: { tab: StorageTab; className: string; labelKey: string; color: strin
     className: 'stats-tab-artists',
     labelKey: 'storage.tabArtists',
     color: 'var(--color-artist)'
-  }
+  },
+  { tab: 'tags', className: 'stats-tab-tags', labelKey: 'manage.tags', color: 'var(--color-tag)' }
 ]
 
 const ENTITY_KIND: Record<Exclude<StorageTab, 'folders'>, CountEntityKind> = {
   series: 'series',
   characters: 'character',
-  artists: 'artist'
+  artists: 'artist',
+  tags: 'tag'
 }
 
 const ABSOLUTE = /^([a-z]:|[\\/])/i

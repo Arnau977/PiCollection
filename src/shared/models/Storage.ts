@@ -20,7 +20,7 @@ export interface StorageFile {
   bytes: number
 }
 
-/** One series/character/artist: its media, through the hierarchy for series and characters. */
+/** One series/character/artist/tag: its media, through the hierarchy for series and characters. */
 export interface StorageEntity extends StorageTotal {
   id: string
   name: string
@@ -60,4 +60,6 @@ export interface StorageOverview {
   series: StorageEntity[]
   characters: StorageEntity[]
   artists: StorageEntity[]
+  /** Own tags plus automatic ones, as the gallery reads them. */
+  tags: StorageEntity[]
 }

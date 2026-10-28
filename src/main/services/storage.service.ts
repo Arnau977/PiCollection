@@ -36,6 +36,8 @@ export interface StorageInput {
   series: NamedEntity[]
   characters: NamedEntity[]
   artists: NamedEntity[]
+  tagLinks: { media_id: string; entity_id: string }[]
+  tags: NamedEntity[]
 }
 
 const ABSOLUTE = /^([a-z]:|[\\/])/i
@@ -152,7 +154,8 @@ export function aggregateStorage(input: StorageInput): Omit<StorageOverview, 'di
     files: files.sort((a, b) => b.bytes - a.bytes || a.name.localeCompare(b.name)),
     series: entityTotals(library, input.seriesLinks, input.series),
     characters: entityTotals(library, input.characterLinks, input.characters),
-    artists: sortedEntities(artists, input.artists)
+    artists: sortedEntities(artists, input.artists),
+    tags: entityTotals(library, input.tagLinks, input.tags)
   }
 }
 
@@ -185,19 +188,40 @@ async function sourceDisk(): Promise<StorageDisk | null> {
 export const storageService = {
   async getOverview(): Promise<StorageOverview> {
     const db = getDb()
-    const [media, seriesLinks, characterLinks, series, characters, artists, discarded, disk] =
-      await Promise.all([
-        storageRepo.listMediaSizes(db),
-        storageRepo.listMediaSeriesLinks(db),
-        storageRepo.listMediaCharacterLinks(db),
-        storageRepo.listNamedEntities(db, 'series'),
-        storageRepo.listNamedEntities(db, 'character'),
-        storageRepo.listNamedEntities(db, 'artist'),
-        discardedOnDisk(),
-        sourceDisk()
-      ])
+    const [
+      media,
+      seriesLinks,
+      characterLinks,
+      tagLinks,
+      series,
+      characters,
+      artists,
+      tags,
+      discarded,
+      disk
+    ] = await Promise.all([
+      storageRepo.listMediaSizes(db),
+      storageRepo.listMediaSeriesLinks(db),
+      storageRepo.listMediaCharacterLinks(db),
+      storageRepo.listMediaTagLinks(db),
+      storageRepo.listNamedEntities(db, 'series'),
+      storageRepo.listNamedEntities(db, 'character'),
+      storageRepo.listNamedEntities(db, 'artist'),
+      storageRepo.listNamedEntities(db, 'tag'),
+      discardedOnDisk(),
+      sourceDisk()
+    ])
     return {
-      ...aggregateStorage({ media, seriesLinks, characterLinks, series, characters, artists }),
+      ...aggregateStorage({
+        media,
+        seriesLinks,
+        characterLinks,
+        tagLinks,
+        series,
+        characters,
+        artists,
+        tags
+      }),
       discarded,
       disk
     }
