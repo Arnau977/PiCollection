@@ -35,7 +35,10 @@ Under the cards, a bar splits the library by file type - **Images**,
 
 **Sort by** (next to the tabs) orders any of these lists by size (the same
 as by share), by number of files, by **average per file** (size over files:
-it finds the few heavy files a total hides) or by name, and the button next
+it finds the few heavy files a total hides; entries with only one or two
+files are ranked as if they also had five files of the library's average
+size, so a single heavy file doesn't top the list - the average shown is
+still the real one) or by name, and the button next
 to it flips the direction. Sorted by files or by average, the bars show
 that value instead of the size, and the average is written next to the
 file count.

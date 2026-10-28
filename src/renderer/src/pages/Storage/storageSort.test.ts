@@ -48,12 +48,16 @@ describe('parseStorageSort', () => {
 })
 
 describe('average per file', () => {
-  it('ranks by size over files, a lone file by its own size', () => {
-    const items = [item('many', 100, 10), item('few', 90, 2), item('file.gif', 30)]
-    expect(labels(sortStorageItems(items, { prop: 'average', desc: true }))).toEqual([
-      'few',
-      'file.gif',
-      'many'
-    ])
+  // A library averaging 2 MB per file (sizes here in MB).
+  const sortByAverage = (items: StorageBarItem[]): string[] =>
+    labels(sortStorageItems(items, { prop: 'average', desc: true }, 2))
+
+  it('ranks by size over files', () => {
+    expect(sortByAverage([item('many', 100, 10), item('few', 90, 2)])).toEqual(['few', 'many'])
+  })
+
+  it('pulls entries with few files toward the library average', () => {
+    // One 30 MB file vs twenty 15 MB ones.
+    expect(sortByAverage([item('lone', 30), item('steady', 300, 20)])).toEqual(['steady', 'lone'])
   })
 })

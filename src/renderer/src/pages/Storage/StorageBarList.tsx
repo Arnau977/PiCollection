@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { ChevronRight, File, Folder } from 'lucide-react'
 import { formatFileSize } from '../../utils/fileSize'
-import { sortValue, type StorageSortProp } from './storageSort'
+import { averageSize, sortValue, type StorageSortProp } from './storageSort'
 
 export interface StorageBarItem {
   key: string
@@ -24,6 +24,8 @@ interface StorageBarListProps {
   color: string
   /** The list's sort key: what the bars measure and which value stands out. */
   sortProp?: StorageSortProp
+  /** The library's average file size: what a ranked average leans toward (see storageSort). */
+  meanBytes?: number
 }
 
 function KindIcon({ kind }: { kind?: StorageBarItem['kind'] }): JSX.Element | null {
@@ -41,10 +43,11 @@ export function StorageBarList({
   items,
   totalBytes,
   color,
-  sortProp = 'size'
+  sortProp = 'size',
+  meanBytes = 0
 }: StorageBarListProps): JSX.Element {
   const { t, i18n } = useTranslation()
-  const valueOf = (item: StorageBarItem): number => sortValue(item, sortProp)
+  const valueOf = (item: StorageBarItem): number => sortValue(item, sortProp, meanBytes)
   const largest = items.reduce((max, item) => Math.max(max, valueOf(item)), 0)
   // By files or by average, the count column carries the ranked value.
   const countLeads = sortProp === 'count' || sortProp === 'average'
@@ -95,7 +98,7 @@ export function StorageBarList({
               (sortProp === 'average'
                 ? t('storage.filesAverage', {
                     count: item.count,
-                    size: formatFileSize(sortValue(item, 'average'), i18n.language)
+                    size: formatFileSize(averageSize(item), i18n.language)
                   })
                 : t('storage.files', { count: item.count }))}
           </span>

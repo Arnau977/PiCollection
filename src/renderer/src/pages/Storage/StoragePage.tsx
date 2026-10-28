@@ -156,9 +156,11 @@ export default function StoragePage(): JSX.Element {
   }
 
   const active = TABS.find((entry) => entry.tab === tab) ?? TABS[0]
+  const meanBytes = data && data.library.count > 0 ? data.library.bytes / data.library.count : 0
   const items = sortStorageItems(
     !data || tab === 'folders' ? folderItems : entityItems(data[tab], ENTITY_KIND[tab]),
-    sort
+    sort,
+    meanBytes
   )
   // A folder outside the source folder is one step, under its full path.
   const crumbs = folder === '' ? [] : ABSOLUTE.test(folder) ? [folder] : folder.split('\\')
@@ -291,6 +293,7 @@ export default function StoragePage(): JSX.Element {
                 totalBytes={data.library.bytes}
                 color={active.color}
                 sortProp={sort.prop}
+                meanBytes={meanBytes}
               />
             )}
           </div>
