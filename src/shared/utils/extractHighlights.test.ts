@@ -9,7 +9,7 @@ describe('extractHighlights', () => {
       '- Series filters now match descendant series',
       '- Fixed duplicate detection on GIFs',
       '',
-      "## What's Changed",
+      '## What\'s Changed',
       '* fix: something by @user in #123'
     ].join('\n')
 
@@ -24,7 +24,7 @@ describe('extractHighlights', () => {
       '',
       '_Fill in 2-3 bullet points of user-facing changes before publishing._',
       '',
-      "## What's Changed",
+      '## What\'s Changed',
       '* fix: something by @user in #123'
     ].join('\n')
 
@@ -32,7 +32,7 @@ describe('extractHighlights', () => {
   })
 
   it('returns null when there is no Highlights heading at all', () => {
-    const notes = "## What's Changed\n* fix: something by @user in #123"
+    const notes = '## What\'s Changed\n* fix: something by @user in #123'
     expect(extractHighlights(notes)).toBeNull()
   })
 
@@ -42,7 +42,7 @@ describe('extractHighlights', () => {
   })
 
   it('returns null for an empty Highlights section', () => {
-    const notes = "## Highlights\n\n## What's Changed\n* fix: something"
+    const notes = '## Highlights\n\n## What\'s Changed\n* fix: something'
     expect(extractHighlights(notes)).toBeNull()
   })
 

@@ -11,7 +11,7 @@ describe('normalizeReleaseNotes', () => {
     expect(normalizeReleaseNotes(undefined)).toBeNull()
   })
 
-  it("takes the first entry's note when given an array (skipped-versions case)", () => {
+  it('takes the first entry\'s note when given an array (skipped-versions case)', () => {
     expect(
       normalizeReleaseNotes([
         { version: '1.2.0', note: '## Highlights\n\n- a' },
