@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { ChevronRight, File, Folder } from 'lucide-react'
 import { formatFileSize } from '../../utils/fileSize'
+import { itemCount } from './storageSort'
 
 export interface StorageBarItem {
   key: string
@@ -21,6 +22,8 @@ interface StorageBarListProps {
   totalBytes: number
   /** CSS color of the bars - the category's own color. */
   color: string
+  /** What the bars measure and which value stands out: the list's sort key (size unless sorted by files). */
+  measure?: 'bytes' | 'count'
 }
 
 function KindIcon({ kind }: { kind?: StorageBarItem['kind'] }): JSX.Element | null {
@@ -34,16 +37,26 @@ function KindIcon({ kind }: { kind?: StorageBarItem['kind'] }): JSX.Element | nu
  * list rather than a chart, so every value is read as text (the bars only
  * add the at-a-glance proportion) and it doubles as its own table view.
  */
-export function StorageBarList({ items, totalBytes, color }: StorageBarListProps): JSX.Element {
+export function StorageBarList({
+  items,
+  totalBytes,
+  color,
+  measure = 'bytes'
+}: StorageBarListProps): JSX.Element {
   const { t, i18n } = useTranslation()
-  const largest = items[0]?.bytes ?? 0
+  const valueOf = (item: StorageBarItem): number =>
+    measure === 'count' ? itemCount(item) : item.bytes
+  const largest = items.reduce((max, item) => Math.max(max, valueOf(item)), 0)
   const percent = new Intl.NumberFormat(i18n.language, {
     style: 'percent',
     maximumFractionDigits: 1
   })
 
   return (
-    <ul className="storage-bars" style={{ '--storage-bar-color': color } as React.CSSProperties}>
+    <ul
+      className={measure === 'count' ? 'storage-bars by-count' : 'storage-bars'}
+      style={{ '--storage-bar-color': color } as React.CSSProperties}
+    >
       {items.map((item) => (
         <li key={item.key} className="storage-bar-row">
           {item.onOpen ? (
@@ -69,7 +82,7 @@ export function StorageBarList({ items, totalBytes, color }: StorageBarListProps
           <span className="storage-bar-track" aria-hidden="true">
             <span
               className="storage-bar-fill"
-              style={{ width: `${largest > 0 ? (item.bytes / largest) * 100 : 0}%` }}
+              style={{ width: `${largest > 0 ? (valueOf(item) / largest) * 100 : 0}%` }}
             />
           </span>
           <span className="storage-bar-size">{formatFileSize(item.bytes, i18n.language)}</span>

@@ -27,6 +27,11 @@ the Library card says how many are still waiting.
   shares don't add up to 100%. Click one to open the gallery filtered to it,
   heaviest first.
 
+**Sort by** (next to the tabs) orders any of these lists by size (the same
+as by share), by number of files or by name, and the button next to it
+flips the direction. Sorted by files, the bars show the file counts instead
+of the sizes.
+
 The gallery can also be sorted by size on its own: **Sort by > Size** (see
 [Gallery and search](gallery-and-search.md)).
 

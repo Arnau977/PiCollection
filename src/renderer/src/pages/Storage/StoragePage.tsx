@@ -13,6 +13,13 @@ import { formatFileSize } from '../../utils/fileSize'
 import { useManageParamsSource } from '../Manage/useManageParam'
 import type { MediaPageReturn } from '../Media/MediaPage/MediaPage'
 import { StorageBarList, type StorageBarItem } from './StorageBarList'
+import {
+  naturalStorageSort,
+  parseStorageSort,
+  sortStorageItems,
+  type StorageSort,
+  type StorageSortProp
+} from './storageSort'
 import '../Manage/ManagePage.css'
 import './StoragePage.css'
 
@@ -83,6 +90,14 @@ export default function StoragePage(): JSX.Element {
     setFolderState(next)
     params.set('folder', next)
   }
+  const [sort, setSortState] = useState(() =>
+    parseStorageSort(params.get('sort'), params.get('dir'))
+  )
+  function setSort(next: StorageSort): void {
+    setSortState(next)
+    params.set('sort', next.prop)
+    params.set('dir', next.desc ? 'desc' : 'asc')
+  }
   const size = (bytes: number): string => formatFileSize(bytes, i18n.language)
 
   // A folder's subfolders and its own files, together by size, like a disk
@@ -124,7 +139,7 @@ export default function StoragePage(): JSX.Element {
             })
         })
       )
-    return [...subfolders, ...files].sort((a, b) => b.bytes - a.bytes)
+    return [...subfolders, ...files]
   }, [data, folder, t, navigate, location])
 
   function entityItems(entities: StorageEntity[], kind: CountEntityKind): StorageBarItem[] {
@@ -140,7 +155,10 @@ export default function StoragePage(): JSX.Element {
   }
 
   const active = TABS.find((entry) => entry.tab === tab) ?? TABS[0]
-  const items = !data || tab === 'folders' ? folderItems : entityItems(data[tab], ENTITY_KIND[tab])
+  const items = sortStorageItems(
+    !data || tab === 'folders' ? folderItems : entityItems(data[tab], ENTITY_KIND[tab]),
+    sort
+  )
   // A folder outside the source folder is one step, under its full path.
   const crumbs = folder === '' ? [] : ABSOLUTE.test(folder) ? [folder] : folder.split('\\')
 
@@ -182,21 +200,43 @@ export default function StoragePage(): JSX.Element {
             </div>
           </dl>
 
-          <div className="manage-tabs" role="tablist" aria-label={t('storage.byLabel')}>
-            {TABS.map((entry) => (
+          <div className="storage-toolbar">
+            <div className="manage-tabs" role="tablist" aria-label={t('storage.byLabel')}>
+              {TABS.map((entry) => (
+                <button
+                  key={entry.tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === entry.tab}
+                  className={
+                    tab === entry.tab ? `manage-tab ${entry.className} active` : 'manage-tab'
+                  }
+                  onClick={() => setTab(entry.tab)}
+                >
+                  {t(entry.labelKey)}
+                </button>
+              ))}
+            </div>
+            <div className="manage-sort-row">
+              <label className="filter-field">
+                <span className="filter-label">{t('manage.sortBy')}</span>
+                <select
+                  value={sort.prop}
+                  onChange={(e) => setSort(naturalStorageSort(e.target.value as StorageSortProp))}
+                >
+                  <option value="size">{t('storage.sortSize')}</option>
+                  <option value="count">{t('storage.sortCount')}</option>
+                  <option value="name">{t('manage.sortName')}</option>
+                </select>
+              </label>
               <button
-                key={entry.tab}
                 type="button"
-                role="tab"
-                aria-selected={tab === entry.tab}
-                className={
-                  tab === entry.tab ? `manage-tab ${entry.className} active` : 'manage-tab'
-                }
-                onClick={() => setTab(entry.tab)}
+                className="btn"
+                onClick={() => setSort({ ...sort, desc: !sort.desc })}
               >
-                {t(entry.labelKey)}
+                {sort.desc ? t('manage.descending') : t('manage.ascending')}
               </button>
-            ))}
+            </div>
           </div>
 
           {tab === 'folders' ? (
@@ -233,7 +273,12 @@ export default function StoragePage(): JSX.Element {
             {items.length === 0 ? (
               <p className="storage-note">{t('storage.empty')}</p>
             ) : (
-              <StorageBarList items={items} totalBytes={data.library.bytes} color={active.color} />
+              <StorageBarList
+                items={items}
+                totalBytes={data.library.bytes}
+                color={active.color}
+                measure={sort.prop === 'count' ? 'count' : 'bytes'}
+              />
             )}
           </div>
         </>

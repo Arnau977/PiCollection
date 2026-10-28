@@ -742,6 +742,8 @@
     "openFile": "Open {{name}}",
     "openInGallery": "Show {{name}} in the gallery, heaviest first",
     "empty": "Nothing here yet.",
-    "backToStorage": "Back to Disk space"
+    "backToStorage": "Back to Disk space",
+    "sortSize": "Size",
+    "sortCount": "Files"
   }
 }
