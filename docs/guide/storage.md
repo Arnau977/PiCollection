@@ -13,6 +13,12 @@ the Library card says how many are still waiting.
   **Review in Metadata** opens Metadata > Discarded, where you can send them
   to the Recycle Bin.
 
+A fourth card, **Free on** (e.g. `D:\`), shows how much room is left on the
+drive holding your source folder, out of its total size.
+
+Under the cards, a bar splits the library by file type - **Images**,
+**GIFs** and **Videos** - with each one's size, share and number of files.
+
 ## Where the space goes
 
 - **Folders** - each folder inside your source folder with its size, its
@@ -28,9 +34,11 @@ the Library card says how many are still waiting.
   heaviest first.
 
 **Sort by** (next to the tabs) orders any of these lists by size (the same
-as by share), by number of files or by name, and the button next to it
-flips the direction. Sorted by files, the bars show the file counts instead
-of the sizes.
+as by share), by number of files, by **average per file** (size over files:
+it finds the few heavy files a total hides) or by name, and the button next
+to it flips the direction. Sorted by files or by average, the bars show
+that value instead of the size, and the average is written next to the
+file count.
 
 The gallery can also be sorted by size on its own: **Sort by > Size** (see
 [Gallery and search](gallery-and-search.md)).

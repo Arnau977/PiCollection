@@ -9,11 +9,12 @@ export function listMediaSizes(db: Kysely<DB>): Promise<
     file_size?: number | null
     pending_tagging: number
     artist_id: string | null
+    type: string
   }[]
 > {
   return db
     .selectFrom('media')
-    .select(['id', 'route', 'file_size', 'pending_tagging', 'artist_id'])
+    .select(['id', 'route', 'type', 'file_size', 'pending_tagging', 'artist_id'])
     .execute()
 }
 

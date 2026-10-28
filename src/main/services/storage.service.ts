@@ -1,6 +1,9 @@
 import { promises as fs } from 'fs'
+import path from 'path'
 import type {
+  StorageDisk,
   StorageEntity,
+  StorageFileType,
   StorageFile,
   StorageFolder,
   StorageOverview,
@@ -17,6 +20,7 @@ interface MediaSize {
   file_size?: number | null
   pending_tagging: number
   artist_id: string | null
+  type: string
 }
 
 interface NamedEntity {
@@ -105,8 +109,13 @@ function sortedEntities(
 }
 
 /** Pure: adds the library up by folder, series, character and artist. */
-export function aggregateStorage(input: StorageInput): Omit<StorageOverview, 'discarded'> {
+export function aggregateStorage(input: StorageInput): Omit<StorageOverview, 'discarded' | 'disk'> {
   const library = new Map<string, number>()
+  const byType: Record<StorageFileType, StorageTotal> = {
+    image: { bytes: 0, count: 0 },
+    gif: { bytes: 0, count: 0 },
+    video: { bytes: 0, count: 0 }
+  }
   const folders = new Map<string, StorageTotal>()
   const artists = new Map<string, StorageTotal>()
   const pending: StorageTotal = { bytes: 0, count: 0 }
@@ -124,6 +133,9 @@ export function aggregateStorage(input: StorageInput): Omit<StorageOverview, 'di
     library.set(media.id, bytes)
     libraryBytes += bytes
     if (media.file_size == null) unmeasured += 1
+    const type = byType[media.type as StorageFileType] ?? byType.image
+    type.bytes += bytes
+    type.count += 1
     for (const folder of foldersOf(media.route)) add(folders, folder, bytes)
     files.push({ id: media.id, ...splitFile(media.route), bytes })
     if (media.artist_id) add(artists, media.artist_id, bytes)
@@ -134,7 +146,7 @@ export function aggregateStorage(input: StorageInput): Omit<StorageOverview, 'di
     .sort((a, b) => b.bytes - a.bytes || a.path.localeCompare(b.path))
 
   return {
-    library: { bytes: libraryBytes, count: library.size, unmeasured },
+    library: { bytes: libraryBytes, count: library.size, unmeasured, byType },
     pending,
     folders: folderList,
     files: files.sort((a, b) => b.bytes - a.bytes || a.name.localeCompare(b.name)),
@@ -157,10 +169,23 @@ async function discardedOnDisk(): Promise<StorageTotal> {
   return total
 }
 
+/** Free and total space of the drive holding the source folder. */
+async function sourceDisk(): Promise<StorageDisk | null> {
+  const sourceFolder = readSourceFolder()
+  if (!sourceFolder) return null
+  const stats = await fs.statfs(sourceFolder).catch(() => null)
+  if (!stats) return null
+  return {
+    root: path.parse(path.resolve(sourceFolder)).root,
+    free: stats.bavail * stats.bsize,
+    size: stats.blocks * stats.bsize
+  }
+}
+
 export const storageService = {
   async getOverview(): Promise<StorageOverview> {
     const db = getDb()
-    const [media, seriesLinks, characterLinks, series, characters, artists, discarded] =
+    const [media, seriesLinks, characterLinks, series, characters, artists, discarded, disk] =
       await Promise.all([
         storageRepo.listMediaSizes(db),
         storageRepo.listMediaSeriesLinks(db),
@@ -168,11 +193,13 @@ export const storageService = {
         storageRepo.listNamedEntities(db, 'series'),
         storageRepo.listNamedEntities(db, 'character'),
         storageRepo.listNamedEntities(db, 'artist'),
-        discardedOnDisk()
+        discardedOnDisk(),
+        sourceDisk()
       ])
     return {
       ...aggregateStorage({ media, seriesLinks, characterLinks, series, characters, artists }),
-      discarded
+      discarded,
+      disk
     }
   }
 }

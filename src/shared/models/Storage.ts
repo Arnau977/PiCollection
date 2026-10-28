@@ -31,11 +31,26 @@ export interface StorageEntity extends StorageTotal {
  * like the gallery; Pending and discarded files still on disk are their own
  * totals. Sizes come from media.file_size, read in the background.
  */
+export type StorageFileType = 'image' | 'gif' | 'video'
+
+/** The drive holding the source folder. */
+export interface StorageDisk {
+  /** Its root, e.g. "D:\". */
+  root: string
+  /** Bytes free for this user. */
+  free: number
+  size: number
+}
+
 export interface StorageOverview {
   library: StorageTotal & {
     /** Files whose size hasn't been read yet (counted in `count`, not in `bytes`). */
     unmeasured: number
+    /** The same library split by file type. */
+    byType: Record<StorageFileType, StorageTotal>
   }
+  /** Null without a source folder, or when the drive can't be read. */
+  disk: StorageDisk | null
   pending: StorageTotal
   /** Deleted media whose files are still on disk (Metadata > Discarded). */
   discarded: StorageTotal

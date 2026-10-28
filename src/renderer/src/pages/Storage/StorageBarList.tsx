@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { ChevronRight, File, Folder } from 'lucide-react'
 import { formatFileSize } from '../../utils/fileSize'
-import { itemCount } from './storageSort'
+import { sortValue, type StorageSortProp } from './storageSort'
 
 export interface StorageBarItem {
   key: string
@@ -22,8 +22,8 @@ interface StorageBarListProps {
   totalBytes: number
   /** CSS color of the bars - the category's own color. */
   color: string
-  /** What the bars measure and which value stands out: the list's sort key (size unless sorted by files). */
-  measure?: 'bytes' | 'count'
+  /** The list's sort key: what the bars measure and which value stands out. */
+  sortProp?: StorageSortProp
 }
 
 function KindIcon({ kind }: { kind?: StorageBarItem['kind'] }): JSX.Element | null {
@@ -41,12 +41,13 @@ export function StorageBarList({
   items,
   totalBytes,
   color,
-  measure = 'bytes'
+  sortProp = 'size'
 }: StorageBarListProps): JSX.Element {
   const { t, i18n } = useTranslation()
-  const valueOf = (item: StorageBarItem): number =>
-    measure === 'count' ? itemCount(item) : item.bytes
+  const valueOf = (item: StorageBarItem): number => sortValue(item, sortProp)
   const largest = items.reduce((max, item) => Math.max(max, valueOf(item)), 0)
+  // By files or by average, the count column carries the ranked value.
+  const countLeads = sortProp === 'count' || sortProp === 'average'
   const percent = new Intl.NumberFormat(i18n.language, {
     style: 'percent',
     maximumFractionDigits: 1
@@ -54,7 +55,7 @@ export function StorageBarList({
 
   return (
     <ul
-      className={measure === 'count' ? 'storage-bars by-count' : 'storage-bars'}
+      className={countLeads ? 'storage-bars by-count' : 'storage-bars'}
       style={{ '--storage-bar-color': color } as React.CSSProperties}
     >
       {items.map((item) => (
@@ -90,7 +91,13 @@ export function StorageBarList({
             {totalBytes > 0 ? percent.format(item.bytes / totalBytes) : '–'}
           </span>
           <span className="storage-bar-count">
-            {item.count !== undefined && t('storage.files', { count: item.count })}
+            {item.count !== undefined &&
+              (sortProp === 'average'
+                ? t('storage.filesAverage', {
+                    count: item.count,
+                    size: formatFileSize(sortValue(item, 'average'), i18n.language)
+                  })
+                : t('storage.files', { count: item.count }))}
           </span>
         </li>
       ))}

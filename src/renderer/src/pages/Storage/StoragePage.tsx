@@ -13,6 +13,7 @@ import { formatFileSize } from '../../utils/fileSize'
 import { useManageParamsSource } from '../Manage/useManageParam'
 import type { MediaPageReturn } from '../Media/MediaPage/MediaPage'
 import { StorageBarList, type StorageBarItem } from './StorageBarList'
+import { StorageTypeSplit } from './StorageTypeSplit'
 import {
   naturalStorageSort,
   parseStorageSort,
@@ -198,7 +199,18 @@ export default function StoragePage(): JSX.Element {
                 )}
               </dd>
             </div>
+            {data.disk && (
+              <div className="storage-tile">
+                <dt>{t('storage.freeOn', { root: data.disk.root })}</dt>
+                <dd className="storage-tile-value">{size(data.disk.free)}</dd>
+                <dd className="storage-tile-note">
+                  {t('storage.diskOf', { size: size(data.disk.size) })}
+                </dd>
+              </div>
+            )}
           </dl>
+
+          <StorageTypeSplit byType={data.library.byType} totalBytes={data.library.bytes} />
 
           <div className="storage-toolbar">
             <div className="manage-tabs" role="tablist" aria-label={t('storage.byLabel')}>
@@ -226,6 +238,7 @@ export default function StoragePage(): JSX.Element {
                 >
                   <option value="size">{t('storage.sortSize')}</option>
                   <option value="count">{t('storage.sortCount')}</option>
+                  <option value="average">{t('storage.sortAverage')}</option>
                   <option value="name">{t('manage.sortName')}</option>
                 </select>
               </label>
@@ -277,7 +290,7 @@ export default function StoragePage(): JSX.Element {
                 items={items}
                 totalBytes={data.library.bytes}
                 color={active.color}
-                measure={sort.prop === 'count' ? 'count' : 'bytes'}
+                sortProp={sort.prop}
               />
             )}
           </div>

@@ -46,3 +46,14 @@ describe('parseStorageSort', () => {
     expect(parseStorageSort('count', 'asc')).toEqual({ prop: 'count', desc: false })
   })
 })
+
+describe('average per file', () => {
+  it('ranks by size over files, a lone file by its own size', () => {
+    const items = [item('many', 100, 10), item('few', 90, 2), item('file.gif', 30)]
+    expect(labels(sortStorageItems(items, { prop: 'average', desc: true }))).toEqual([
+      'few',
+      'file.gif',
+      'many'
+    ])
+  })
+})
