@@ -231,6 +231,10 @@ function applyMediaFilters(
   if (filters.artistId) {
     qb = qb.where('media.artist_id', '=', filters.artistId)
   }
+
+  if (filters.noArtist) {
+    qb = qb.where('media.artist_id', 'is', null)
+  }
   if (filters.sfw !== undefined) {
     qb = qb.where('media.sfw', '=', filters.sfw ? 1 : 0)
   }

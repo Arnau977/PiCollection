@@ -305,6 +305,7 @@
     "tags": "Tags",
     "characters": "Personajes",
     "noCharacter": "Sin personaje asignado",
+    "noArtist": "Sin artista asignado",
     "sfw": "SFW",
     "sfwAll": "Todo",
     "sfwOnly": "Solo SFW",

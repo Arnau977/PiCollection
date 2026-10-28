@@ -18,6 +18,7 @@ export const MediaFiltersSchema = z.object({
   exactCharacterIds: z.array(z.string()).optional(),
   seriesGroups: z.array(z.array(z.string())).optional(),
   noSeries: z.boolean().optional(),
+  noArtist: z.boolean().optional(),
   exactSeriesIds: z.array(z.string()).optional(),
   isAiGenerated: z.boolean().optional(),
   pendingTagging: z.boolean().optional(),

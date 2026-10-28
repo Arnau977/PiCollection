@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ChevronRight, File, Folder } from 'lucide-react'
+import { ChevronRight, CircleSlash, File, Folder } from 'lucide-react'
 import { formatFileSize } from '../../utils/fileSize'
 import { averageSize, sortValue, type StorageSortProp } from './storageSort'
 
@@ -9,8 +9,11 @@ export interface StorageBarItem {
   bytes: number
   /** Files it holds (folders, entities); a single file shows none. */
   count?: number
-  /** A folder (opens its contents) or a file (opens its media page) - shown by an icon. */
-  kind?: 'folder' | 'file'
+  /**
+   * A folder (opens its contents), a file (opens its media page) or the
+   * media with none of a kind (no series...) - shown by an icon.
+   */
+  kind?: 'folder' | 'file' | 'none'
   /** Accessible name of the row's action (open in gallery, open folder or file). */
   actionLabel?: string
   onOpen?: () => void
@@ -26,11 +29,14 @@ interface StorageBarListProps {
   sortProp?: StorageSortProp
   /** The library's average file size: what a ranked average leans toward (see storageSort). */
   meanBytes?: number
+  /** A row kept above the ranking, outside the sort (the media with none of this kind). */
+  pinned?: StorageBarItem
 }
 
 function KindIcon({ kind }: { kind?: StorageBarItem['kind'] }): JSX.Element | null {
   if (kind === 'folder') return <Folder size={14} aria-hidden="true" />
   if (kind === 'file') return <File size={14} aria-hidden="true" />
+  if (kind === 'none') return <CircleSlash size={14} aria-hidden="true" />
   return null
 }
 
@@ -44,11 +50,19 @@ export function StorageBarList({
   totalBytes,
   color,
   sortProp = 'size',
-  meanBytes = 0
+  meanBytes = 0,
+  pinned
 }: StorageBarListProps): JSX.Element {
   const { t, i18n } = useTranslation()
   const valueOf = (item: StorageBarItem): number => sortValue(item, sortProp, meanBytes)
-  const largest = items.reduce((max, item) => Math.max(max, valueOf(item)), 0)
+  const rows = pinned ? [pinned, ...items] : items
+  // Scaled to the ranking alone: the pinned row is often far bigger (most media
+  // have no artist) and would shrink every ranked bar to a dot; its own bar
+  // stops at full width and its values still read as text.
+  const largest = (items.length > 0 ? items : rows).reduce(
+    (max, item) => Math.max(max, valueOf(item)),
+    0
+  )
   // By files or by average, the count column carries the ranked value.
   const countLeads = sortProp === 'count' || sortProp === 'average'
   const percent = new Intl.NumberFormat(i18n.language, {
@@ -61,8 +75,11 @@ export function StorageBarList({
       className={countLeads ? 'storage-bars by-count' : 'storage-bars'}
       style={{ '--storage-bar-color': color } as React.CSSProperties}
     >
-      {items.map((item) => (
-        <li key={item.key} className="storage-bar-row">
+      {rows.map((item) => (
+        <li
+          key={item.key}
+          className={item.kind === 'none' ? 'storage-bar-row is-none' : 'storage-bar-row'}
+        >
           {item.onOpen ? (
             <button
               type="button"
@@ -86,7 +103,9 @@ export function StorageBarList({
           <span className="storage-bar-track" aria-hidden="true">
             <span
               className="storage-bar-fill"
-              style={{ width: `${largest > 0 ? (valueOf(item) / largest) * 100 : 0}%` }}
+              style={{
+                width: `${largest > 0 ? Math.min(100, (valueOf(item) / largest) * 100) : 0}%`
+              }}
             />
           </span>
           <span className="storage-bar-size">{formatFileSize(item.bytes, i18n.language)}</span>

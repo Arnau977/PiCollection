@@ -1,5 +1,12 @@
 import { useTranslation } from 'react-i18next'
-import type { ArtistModel, MediaFilters, MediaSortableProp, SeriesModel, Sorting, TagModel } from '@shared/models'
+import type {
+  ArtistModel,
+  MediaFilters,
+  MediaSortableProp,
+  SeriesModel,
+  Sorting,
+  TagModel
+} from '@shared/models'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
 import { groupEntityIds } from '@shared/query/groupEntry'
 import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
@@ -145,6 +152,17 @@ export function FilterBar({
             getOptionValue={(artist) => artist.id}
             selectedKey={filters.artistId ?? null}
             onSelect={(artist) => onFiltersChange({ ...filters, artistId: artist?.id })}
+            disabled={filters.noArtist}
+            noneToggle={{
+              checked: filters.noArtist ?? false,
+              onChange: (checked) =>
+                onFiltersChange({
+                  ...filters,
+                  noArtist: checked || undefined,
+                  artistId: checked ? undefined : filters.artistId
+                }),
+              label: t('filters.noArtist')
+            }}
           />
         </div>
 

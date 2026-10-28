@@ -40,7 +40,12 @@ function insertMedia(name: string, artistId: string | null = null): Promise<{ id
 }
 
 function insertTag(name: string): Promise<{ id: string }> {
-  return tagRepo.insertTag(db, { id: randomUUID(), name, aliases_json: '[]', created_at: Date.now() })
+  return tagRepo.insertTag(db, {
+    id: randomUUID(),
+    name,
+    aliases_json: '[]',
+    created_at: Date.now()
+  })
 }
 
 function insertCharacter(name: string): Promise<{ id: string }> {
@@ -402,6 +407,19 @@ describe('media.repository noCharacter / noSeries filters', () => {
 
     const rows = await mediaRepo.findMediaRows(db, { noSeries: true })
     expect(rows.map((r) => r.name)).toEqual(['withoutSeries'])
+  })
+
+  it('filters to media with no artist via noArtist', async () => {
+    const artist = await artistRepo.insertArtist(db, {
+      id: randomUUID(),
+      name: 'Jane Doe',
+      created_at: Date.now()
+    })
+    await insertMedia('byJane', artist.id)
+    await insertMedia('anonymous')
+
+    const rows = await mediaRepo.findMediaRows(db, { noArtist: true })
+    expect(rows.map((r) => r.name)).toEqual(['anonymous'])
   })
 
   it('combines noCharacter and noSeries filters using AND', async () => {

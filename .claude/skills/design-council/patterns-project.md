@@ -315,7 +315,10 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   one. A whole split into a few kinds (library by file type) is one
   segmented bar with 2px gaps over a legend naming each part with its
   values; its colors are a validated categorical set, never the entity
-  colors (`StorageTypeSplit.tsx`).
+  colors (`StorageTypeSplit.tsx`). A "none of this kind" total sits above
+  the ranking as a pinned row (neutral bar, italic muted label, a rule
+  under it), outside the sort and the bar scale - most media have no
+  artist, and scaling to it shrank every ranked bar to a dot.
 
 - **File facts read as one muted line, not a card or badges**: the detail
   page shows where the file lives (relative to the source folder, full path

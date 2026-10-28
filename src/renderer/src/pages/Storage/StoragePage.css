@@ -246,6 +246,23 @@ button.storage-bar-name:hover {
   color: var(--color-text-muted);
 }
 
+/* The media with none of this kind: above the ranking, in neutral ink, set
+   off by a rule under it so it doesn't read as the heaviest entry. */
+.storage-bar-row.is-none > * {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.15rem;
+  margin-bottom: 0.3rem;
+}
+
+.storage-bar-row.is-none .storage-bar-label {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.storage-bar-row.is-none .storage-bar-fill {
+  background: var(--color-text-faint);
+}
+
 /* Sorted by files: the count is what the bars and the order follow. */
 .storage-bars.by-count .storage-bar-size {
   font-weight: 400;

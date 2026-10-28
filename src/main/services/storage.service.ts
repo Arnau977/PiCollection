@@ -122,6 +122,7 @@ export function aggregateStorage(input: StorageInput): Omit<StorageOverview, 'di
   const artists = new Map<string, StorageTotal>()
   const pending: StorageTotal = { bytes: 0, count: 0 }
   const files: StorageFile[] = []
+  const without = new Map<string, StorageTotal>()
   let libraryBytes = 0
   let unmeasured = 0
 
@@ -141,6 +142,16 @@ export function aggregateStorage(input: StorageInput): Omit<StorageOverview, 'di
     for (const folder of foldersOf(media.route)) add(folders, folder, bytes)
     files.push({ id: media.id, ...splitFile(media.route), bytes })
     if (media.artist_id) add(artists, media.artist_id, bytes)
+    else add(without, 'artists', bytes)
+  }
+
+  // Linked to nothing of a kind: what the gallery's "No series/character" filters show.
+  for (const [kind, links] of [
+    ['series', input.seriesLinks],
+    ['characters', input.characterLinks]
+  ] as const) {
+    const linked = new Set(links.map((link) => link.media_id))
+    for (const [mediaId, bytes] of library) if (!linked.has(mediaId)) add(without, kind, bytes)
   }
 
   const folderList: StorageFolder[] = [...folders]
@@ -155,7 +166,12 @@ export function aggregateStorage(input: StorageInput): Omit<StorageOverview, 'di
     series: entityTotals(library, input.seriesLinks, input.series),
     characters: entityTotals(library, input.characterLinks, input.characters),
     artists: sortedEntities(artists, input.artists),
-    tags: entityTotals(library, input.tagLinks, input.tags)
+    tags: entityTotals(library, input.tagLinks, input.tags),
+    without: {
+      series: without.get('series') ?? { bytes: 0, count: 0 },
+      characters: without.get('characters') ?? { bytes: 0, count: 0 },
+      artists: without.get('artists') ?? { bytes: 0, count: 0 }
+    }
   }
 }
 

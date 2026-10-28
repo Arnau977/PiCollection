@@ -62,4 +62,6 @@ export interface StorageOverview {
   artists: StorageEntity[]
   /** Own tags plus automatic ones, as the gallery reads them. */
   tags: StorageEntity[]
+  /** Library media with no series, no character or no artist at all. */
+  without: Record<'series' | 'characters' | 'artists', StorageTotal>
 }

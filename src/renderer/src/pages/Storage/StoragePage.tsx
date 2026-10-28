@@ -2,12 +2,13 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ChevronRight, FolderOpen } from 'lucide-react'
-import type { StorageEntity, StorageFolder } from '@shared/models'
+import type { MediaFilters, StorageEntity, StorageFolder, StorageOverview } from '@shared/models'
 import { PATH } from '../../app.routes.const'
 import {
   openEntityInGallery,
+  openGalleryFiltered,
   type CountEntityKind
-} from '../../components/EntityCountButton/EntityCountButton'
+} from '../../utils/openInGallery'
 import { useStorageOverview } from '../../hooks/useStorageOverview'
 import { formatFileSize } from '../../utils/fileSize'
 import { useManageParamsSource } from '../Manage/useManageParam'
@@ -48,6 +49,22 @@ const TABS: { tab: StorageTab; className: string; labelKey: string; color: strin
   },
   { tab: 'tags', className: 'stats-tab-tags', labelKey: 'manage.tags', color: 'var(--color-tag)' }
 ]
+
+/** Each tab's "linked to none" row and the gallery filter it opens (tags have none). */
+const NONE_ROWS: Partial<
+  Record<
+    StorageTab,
+    { key: keyof StorageOverview['without']; labelKey: string; filter: MediaFilters }
+  >
+> = {
+  series: { key: 'series', labelKey: 'filters.noSeries', filter: { noSeries: true } },
+  characters: {
+    key: 'characters',
+    labelKey: 'filters.noCharacter',
+    filter: { noCharacter: true }
+  },
+  artists: { key: 'artists', labelKey: 'filters.noArtist', filter: { noArtist: true } }
+}
 
 const ENTITY_KIND: Record<Exclude<StorageTab, 'folders'>, CountEntityKind> = {
   series: 'series',
@@ -164,6 +181,21 @@ export default function StoragePage(): JSX.Element {
     sort,
     meanBytes
   )
+  const none = NONE_ROWS[tab]
+  const noneTotal = data && none ? data.without[none.key] : null
+  const pinned: StorageBarItem | undefined =
+    none && noneTotal && noneTotal.count > 0
+      ? {
+          key: `none:${tab}`,
+          kind: 'none',
+          label: t(none.labelKey),
+          bytes: noneTotal.bytes,
+          count: noneTotal.count,
+          actionLabel: t('storage.openInGallery', { name: t(none.labelKey) }),
+          onOpen: (): void =>
+            openGalleryFiltered(none.filter, navigate, { prop: 'fileSize', desc: true })
+        }
+      : undefined
   // A folder outside the source folder is one step, under its full path.
   const crumbs = folder === '' ? [] : ABSOLUTE.test(folder) ? [folder] : folder.split('\\')
 
@@ -287,7 +319,7 @@ export default function StoragePage(): JSX.Element {
           )}
 
           <div className="manage-list-scroll" role="tabpanel">
-            {items.length === 0 ? (
+            {items.length === 0 && !pinned ? (
               <p className="storage-note">{t('storage.empty')}</p>
             ) : (
               <StorageBarList
@@ -296,6 +328,7 @@ export default function StoragePage(): JSX.Element {
                 color={active.color}
                 sortProp={sort.prop}
                 meanBytes={meanBytes}
+                pinned={pinned}
               />
             )}
           </div>

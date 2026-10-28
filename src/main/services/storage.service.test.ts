@@ -79,5 +79,11 @@ describe('aggregateStorage', () => {
     ])
     expect(overview.artists).toEqual([{ id: 'x', name: 'Artist', bytes: 150, count: 2 }])
     expect(overview.tags).toEqual([{ id: 'big', name: 'Big', bytes: 120, count: 2 }])
+    // Pending ("p", with a series) is never counted as library media without one.
+    expect(overview.without).toEqual({
+      series: { bytes: 20, count: 2 },
+      characters: { bytes: 170, count: 4 },
+      artists: { bytes: 20, count: 2 }
+    })
   })
 })

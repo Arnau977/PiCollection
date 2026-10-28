@@ -44,6 +44,8 @@ export interface MediaFilters {
   /** Free-text search expression: space=AND, `OR`=OR, `-`=NOT, parentheses group. */
   query?: string
   artistId?: string
+  /** Media with no artist. Mutually exclusive with `artistId` in the UI. */
+  noArtist?: boolean
   sfw?: boolean
   isAiGenerated?: boolean
   type?: 'image' | 'video' | 'gif'
