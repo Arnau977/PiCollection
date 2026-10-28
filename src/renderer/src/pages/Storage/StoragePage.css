@@ -1,0 +1,200 @@
+/* Bounded to the viewport like Metadata (.manage-page): the tiles, tabs and
+   breadcrumb stay put, only the ranked list scrolls (.manage-list-scroll). */
+
+.storage-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.storage-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.storage-tile dt {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.storage-tile dd {
+  margin: 0;
+}
+
+.storage-tile-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.storage-tile-note {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.storage-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.storage-crumb-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.storage-crumb {
+  padding: 0.1rem 0.3rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.storage-crumb:hover,
+.storage-crumb.is-current {
+  color: var(--color-text);
+}
+
+.storage-crumb.is-current {
+  font-weight: 700;
+}
+
+.storage-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* name | bar | size | share | files. The bar is the category's color, thin,
+   rounded at its end; every value is also text, so color is never the only
+   carrier (and the list is its own table view). */
+.storage-bars {
+  display: grid;
+  grid-template-columns: minmax(8rem, 2fr) minmax(4rem, 3fr) auto auto auto;
+  column-gap: var(--space-3);
+  row-gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.storage-bar-row {
+  display: contents;
+}
+
+.storage-bar-row > * {
+  display: flex;
+  align-items: center;
+  min-height: 2rem;
+}
+
+.storage-bar-name {
+  gap: 0.4rem;
+  min-width: 0;
+  justify-content: flex-start;
+  padding: 0 0.3rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.storage-bar-name svg {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.storage-bar-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.storage-bar-name {
+  cursor: pointer;
+}
+
+/* The chevron says "opens inside", next to the name, on folders only. */
+.storage-bar-open {
+  margin-left: auto;
+}
+
+button.storage-bar-name:hover {
+  background: var(--color-surface-hover);
+}
+
+.storage-bar-track {
+  position: relative;
+}
+
+.storage-bar-fill {
+  height: 8px;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+  background: var(--storage-bar-color);
+}
+
+.storage-bar-size,
+.storage-bar-share,
+.storage-bar-count {
+  justify-content: flex-end;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.storage-bar-size {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.storage-bar-share,
+.storage-bar-count {
+  color: var(--color-text-muted);
+}
+
+/* Sorted by files: the count is what the bars and the order follow. */
+.storage-bars.by-count .storage-bar-size {
+  font-weight: 400;
+}
+
+.storage-bars.by-count .storage-bar-count {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* Tabs on the left, the list's order on the right, in one row. */
+.storage-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/* Narrow: the bar gives up room first; every value stays. */
+@media (max-width: 900px) {
+  .storage-bars {
+    grid-template-columns: minmax(5rem, 2fr) minmax(2rem, 1fr) auto auto auto;
+    column-gap: var(--space-2);
+  }
+}

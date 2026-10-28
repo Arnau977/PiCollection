@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import type { MediaFilters } from '@shared/models'
+import type { MediaFilters, Sorting } from '@shared/models'
 import { PATH } from '../../app.routes.const'
 import { readGallerySession, writeGallerySession } from '../../hooks/useGallerySession'
 import { formatCompactCount } from '../../utils/formatCompactCount'
@@ -15,6 +15,28 @@ function filterFor(kind: CountEntityKind, id: string): MediaFilters {
   // Character/series groups match descendants too, same as the rolled-up counts shown for them.
   if (kind === 'character') return { characterGroups: [[id]] }
   return { seriesGroups: [[id]] }
+}
+
+/**
+ * Opens the gallery filtered to one entity. Replaces whatever gallery filters
+ * were active; the SFW/type defaults still apply, so a "safe by default"
+ * gallery isn't bypassed by a click. `sorting` overrides the current order
+ * (the Storage page opens it heaviest first).
+ */
+export function openEntityInGallery(
+  kind: CountEntityKind,
+  id: string,
+  navigate: (path: string) => void,
+  sorting?: Sorting
+): void {
+  const defaults = loadGalleryDefaults()
+  writeGallerySession({
+    filters: { sfw: defaults.sfw, type: defaults.type, ...filterFor(kind, id) },
+    sorting: sorting ??
+      readGallerySession()?.sorting ?? { prop: defaults.sortProp, desc: defaults.sortDesc },
+    page: 0
+  })
+  navigate(PATH.GALLERY)
 }
 
 interface EntityCountButtonProps {
@@ -37,16 +59,7 @@ export function EntityCountButton({ kind, id, name, count }: EntityCountButtonPr
   if (count === 0) return <span className="manage-item-count">{label}</span>
 
   function openInGallery(): void {
-    const defaults = loadGalleryDefaults()
-    writeGallerySession({
-      filters: { sfw: defaults.sfw, type: defaults.type, ...filterFor(kind, id) },
-      sorting: readGallerySession()?.sorting ?? {
-        prop: defaults.sortProp,
-        desc: defaults.sortDesc
-      },
-      page: 0
-    })
-    navigate(PATH.GALLERY)
+    openEntityInGallery(kind, id, navigate)
   }
 
   const title = t('manage.showInGallery', { count, name })

@@ -6,6 +6,7 @@ describe('formatFileSize', () => {
     expect(formatFileSize(516_096, 'en')).toBe('504 KB')
     expect(formatFileSize(2.5 * 1024 * 1024, 'es')).toBe('2,5 MB')
     expect(formatFileSize(512, 'en')).toBe('512 B')
+    expect(formatFileSize(3.456 * 1024 ** 3, 'es')).toBe('3,46 GB')
   })
 })
 

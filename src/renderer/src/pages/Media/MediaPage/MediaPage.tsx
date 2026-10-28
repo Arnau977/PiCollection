@@ -25,11 +25,19 @@ const PENDING_QUEUE_OVERRIDE: { filters: MediaFilters; sorting: Sorting } = {
   sorting: { prop: 'createdAt', desc: false }
 }
 
+/** Where "Back" goes when the media page was opened from outside the gallery. */
+export interface MediaPageReturn {
+  returnTo?: { path: string; labelKey: string }
+}
+
 const MediaPage: React.FC = () => {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const location = useLocation()
   const pendingQueue = Boolean((location.state as { pendingQueue?: boolean } | null)?.pendingQueue)
+  // Opened from somewhere that isn't the gallery (the Storage page): its own
+  // URL, so Back returns there - to the same tab and folder - instead.
+  const returnTo = (location.state as MediaPageReturn | null)?.returnTo
   const { data: media, loading, error, refetch } = useMediaById(id)
   const { previousId, nextId, index, total } = useAdjacentMedia(
     id,
@@ -62,6 +70,10 @@ const MediaPage: React.FC = () => {
   }
 
   function goBack(): void {
+    if (returnTo) {
+      navigate(returnTo.path)
+      return
+    }
     // Always the gallery itself, never navigate(-1): browsing through one or
     // more "similar media" links (each its own history entry, unlike the
     // prev/next zones which replace) would otherwise walk back through them
@@ -109,7 +121,8 @@ const MediaPage: React.FC = () => {
     if (pendingQueue) {
       navigate(path, { state: { pendingQueue: true }, replace: true })
     } else {
-      navigate(path, { replace: true })
+      // Keeps where Back returns to while flipping through items.
+      navigate(path, { replace: true, state: returnTo ? { returnTo } : undefined })
     }
   }
 
@@ -200,7 +213,7 @@ const MediaPage: React.FC = () => {
         <div className="media-page-actions">
           <button type="button" className="btn media-page-back" onClick={goBack}>
             <ArrowLeft size={16} />
-            {t('gallery.backToGallery')}
+            {returnTo ? t(returnTo.labelKey) : t('gallery.backToGallery')}
           </button>
 
           <div className="action-bar-spacer" />

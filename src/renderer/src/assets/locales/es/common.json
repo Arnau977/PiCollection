@@ -8,7 +8,8 @@
     "pending": "Pendientes",
     "settings": "Ajustes",
     "manage": "Metadatos",
-    "notifications": "Notificaciones"
+    "notifications": "Notificaciones",
+    "storage": "Espacio"
   },
   "videoPlayer": {
     "loopSection": "Repetir tramo",
@@ -721,5 +722,28 @@
     "picker": "Personaje base",
     "remove": "No es variante",
     "close": "Cerrar"
+  },
+  "storage": {
+    "title": "Espacio en disco",
+    "library": "Biblioteca",
+    "files_one": "{{count}} archivo",
+    "files_other": "{{count}} archivos",
+    "unmeasured_one": "{{count}} aún sin medir",
+    "unmeasured_other": "{{count}} aún sin medir",
+    "reclaimable": "Recuperable",
+    "reclaimableNote_one": "{{count}} archivo eliminado sigue en disco",
+    "reclaimableNote_other": "{{count}} archivos eliminados siguen en disco",
+    "reviewDiscarded": "Revisar en Metadatos",
+    "byLabel": "Espacio por",
+    "tabFolders": "Carpetas",
+    "tabArtists": "Artistas",
+    "overlapNote": "Una imagen cuenta en cada uno de los que tiene, así que estos porcentajes no suman 100 %.",
+    "openFolder": "Abrir {{name}}",
+    "openFile": "Abrir {{name}}",
+    "openInGallery": "Ver {{name}} en la galería, de más a menos pesado",
+    "empty": "Aquí no hay nada todavía.",
+    "backToStorage": "Volver a Espacio en disco",
+    "sortSize": "Peso",
+    "sortCount": "Nº de archivos"
   }
 }

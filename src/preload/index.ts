@@ -45,6 +45,7 @@ import type {
   SourceFolderBrowseResult,
   SourceFolderMigrationPlan,
   StatsSummary,
+  StorageOverview,
   TagInput,
   TagModel,
   TagWikiEntry,
@@ -146,7 +147,8 @@ export const api = {
     delete: (id: string): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.series.delete, id)
   },
   stats: {
-    getSummary: (): Promise<IpcResult<StatsSummary>> => ipcRenderer.invoke(IPC.stats.getSummary)
+    getSummary: (): Promise<IpcResult<StatsSummary>> => ipcRenderer.invoke(IPC.stats.getSummary),
+    getStorage: (): Promise<IpcResult<StorageOverview>> => ipcRenderer.invoke(IPC.stats.getStorage)
   },
   system: {
     showInFolder: (route: string): Promise<IpcResult<void>> =>

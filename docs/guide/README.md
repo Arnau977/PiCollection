@@ -12,6 +12,7 @@ How to use PiCollection, one topic per page. New here? Start with
 | [Duplicates](duplicates.md) | Exact and similar copies, the side-by-side comparison, replacing a copy |
 | [Gallery and search](gallery-and-search.md) | Search syntax, filters (include/exclude, "only this one"), NSFW blur |
 | [Viewing media](viewing-media.md) | The media page, full-size viewer, copying images, Video to GIF |
+| [Disk space](storage.md) | What the library weighs, by folder, series, character and artist; space you can reclaim |
 | [Settings and backups](settings-and-backups.md) | Every Settings tab, manual and automatic backups, missing files |
 | [Keyboard shortcuts](keyboard-shortcuts.md) | Every shortcut in one table |
 

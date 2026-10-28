@@ -5,5 +5,6 @@ export const PATH = {
   ADD_MEDIA: '/media/add',
   PENDING: '/pending',
   SETTINGS: '/settings',
-  MANAGE: '/manage'
+  MANAGE: '/manage',
+  STORAGE: '/storage'
 }

@@ -306,6 +306,12 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   the page uses them for previous/next. The forced-muted edit-form preview
   registers no volume keys, so its form keeps arrow scrolling.
 
+- **Sizes ranked by category are a bar list, not a chart**: name, a thin
+  bar in the category's color (scaled to the largest row), then size, share
+  and file count as text - so the list is its own table view and color never
+  carries a value. Totals that stand alone are stat tiles. Where:
+  `pages/Storage/StorageBarList.tsx`, `StoragePage.tsx`.
+
 - **File facts read as one muted line, not a card or badges**: the detail
   page shows where the file lives (relative to the source folder, full path
   on hover) and "PNG · 1334 × 1000 · 1,9 MB" under its badges

@@ -207,6 +207,11 @@ const GalleryPage: React.FC = () => {
   }, [focusMediaId, focusIndex, loading, media, pageSize])
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  // A page past the last (a stale position, fewer results after a change
+  // elsewhere) would show an empty gallery with "Page 18 of 11": go to the last.
+  useEffect(() => {
+    if (!loading && !error && page >= totalPages) setPage(totalPages - 1)
+  }, [loading, error, page, totalPages, setPage])
   const filtersActive = hasActiveFilters(filters)
 
   function handlePageSizeChange(nextPageSize: number): void {

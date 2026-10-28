@@ -8,7 +8,8 @@
     "pending": "Pending",
     "settings": "Settings",
     "manage": "Metadata",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "storage": "Storage"
   },
   "videoPlayer": {
     "loopSection": "Loop section",
@@ -721,5 +722,28 @@
     "picker": "Base character",
     "remove": "Not a form",
     "close": "Close"
+  },
+  "storage": {
+    "title": "Disk space",
+    "library": "Library",
+    "files_one": "{{count}} file",
+    "files_other": "{{count}} files",
+    "unmeasured_one": "{{count}} not measured yet",
+    "unmeasured_other": "{{count}} not measured yet",
+    "reclaimable": "Reclaimable",
+    "reclaimableNote_one": "{{count}} deleted file still on disk",
+    "reclaimableNote_other": "{{count}} deleted files still on disk",
+    "reviewDiscarded": "Review in Metadata",
+    "byLabel": "Space by",
+    "tabFolders": "Folders",
+    "tabArtists": "Artists",
+    "overlapNote": "A picture counts towards every one it has, so these shares don't add up to 100%.",
+    "openFolder": "Open {{name}}",
+    "openFile": "Open {{name}}",
+    "openInGallery": "Show {{name}} in the gallery, heaviest first",
+    "empty": "Nothing here yet.",
+    "backToStorage": "Back to Disk space",
+    "sortSize": "Size",
+    "sortCount": "Files"
   }
 }
