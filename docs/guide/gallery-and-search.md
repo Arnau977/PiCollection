@@ -38,7 +38,8 @@ Below the search bar:
   crosshair on a chip switches it to **only this one**: media tagged with it
   directly. Excluding a character also leaves out its forms, unless the
   crosshair is on.
-- **No character assigned** / **No series assigned** find media still
+- **No artist assigned** / **No character assigned** / **No series
+  assigned** (the crossed-circle button in each field) find media still
   missing them.
 - **More filters**: SFW / NSFW, AI-generated (all, only, exclude), and type
   (image, video, GIF).

@@ -34,6 +34,10 @@ Under the cards, a bar splits the library by file type - **Images**,
   A picture counts towards every series, character and tag it has, so these
   shares don't add up to 100%. Click one to open the gallery filtered to it,
   heaviest first.
+- Above the ranking, **No series / character / artist assigned** says how
+  much of the library has none yet; click it to open the gallery with that
+  filter. Its bar isn't to the same scale as the ranking (it's often much
+  bigger), so read its size and share from the numbers.
 
 **Sort by** (next to the tabs) orders any of these lists by size (the same
 as by share), by number of files, by **average per file** (size over files:
