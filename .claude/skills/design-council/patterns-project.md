@@ -310,7 +310,12 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   bar in the category's color (scaled to the largest row), then size, share
   and file count as text - so the list is its own table view and color never
   carries a value. Totals that stand alone are stat tiles. Where:
-  `pages/Storage/StorageBarList.tsx`, `StoragePage.tsx`.
+  `pages/Storage/StorageBarList.tsx`, `StoragePage.tsx`. The bars measure
+  the list's sort key (size, files or average), and that value is the bold
+  one. A whole split into a few kinds (library by file type) is one
+  segmented bar with 2px gaps over a legend naming each part with its
+  values; its colors are a validated categorical set, never the entity
+  colors (`StorageTypeSplit.tsx`).
 
 - **File facts read as one muted line, not a card or badges**: the detail
   page shows where the file lives (relative to the source folder, full path

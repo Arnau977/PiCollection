@@ -13,6 +13,12 @@ the Library card says how many are still waiting.
   **Review in Metadata** opens Metadata > Discarded, where you can send them
   to the Recycle Bin.
 
+A fourth card, **Free on** (e.g. `D:\`), shows how much room is left on the
+drive holding your source folder, out of its total size.
+
+Under the cards, a bar splits the library by file type - **Images**,
+**GIFs** and **Videos** - with each one's size, share and number of files.
+
 ## Where the space goes
 
 - **Folders** - each folder inside your source folder with its size, its
@@ -21,16 +27,23 @@ the Library card says how many are still waiting.
   open its media page; the path above the list goes back up, and so does
   Back. Files outside the source folder show under their own full folder.
   These shares add up to the library.
-- **Series**, **Characters**, **Artists** - the heaviest first. A series or
-  character includes its subseries and forms, as in the gallery's filters.
-  A picture counts towards every series and character it has, so these
+- **Series**, **Characters**, **Artists**, **Tags** - the heaviest first.
+  Tags include the automatic ones (Settings > Automatic tags), as in the
+  gallery. A series or character includes its subseries and forms, as in
+  the gallery's filters.
+  A picture counts towards every series, character and tag it has, so these
   shares don't add up to 100%. Click one to open the gallery filtered to it,
   heaviest first.
 
 **Sort by** (next to the tabs) orders any of these lists by size (the same
-as by share), by number of files or by name, and the button next to it
-flips the direction. Sorted by files, the bars show the file counts instead
-of the sizes.
+as by share), by number of files, by **average per file** (size over files:
+it finds the few heavy files a total hides; entries with only one or two
+files are ranked as if they also had five files of the library's average
+size, so a single heavy file doesn't top the list - the average shown is
+still the real one) or by name, and the button next
+to it flips the direction. Sorted by files or by average, the bars show
+that value instead of the size, and the average is written next to the
+file count.
 
 The gallery can also be sorted by size on its own: **Sort by > Size** (see
 [Gallery and search](gallery-and-search.md)).

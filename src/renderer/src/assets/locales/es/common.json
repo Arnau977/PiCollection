@@ -744,6 +744,17 @@
     "empty": "Aquí no hay nada todavía.",
     "backToStorage": "Volver a Espacio en disco",
     "sortSize": "Peso",
-    "sortCount": "Nº de archivos"
+    "sortCount": "Nº de archivos",
+    "sortAverage": "Peso medio por archivo",
+    "filesAverage_one": "{{count}} archivo · {{size}} de media",
+    "filesAverage_other": "{{count}} archivos · {{size}} de media",
+    "freeOn": "Libre en {{root}}",
+    "diskOf": "de {{size}} en total",
+    "byTypeLabel": "Biblioteca por tipo de archivo",
+    "types": {
+      "image": "Imágenes",
+      "gif": "GIF",
+      "video": "Vídeos"
+    }
   }
 }

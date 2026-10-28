@@ -744,6 +744,17 @@
     "empty": "Nothing here yet.",
     "backToStorage": "Back to Disk space",
     "sortSize": "Size",
-    "sortCount": "Files"
+    "sortCount": "Files",
+    "sortAverage": "Average per file",
+    "filesAverage_one": "{{count}} file · {{size}} avg",
+    "filesAverage_other": "{{count}} files · {{size}} avg",
+    "freeOn": "Free on {{root}}",
+    "diskOf": "of {{size}} in total",
+    "byTypeLabel": "Library by file type",
+    "types": {
+      "image": "Images",
+      "gif": "GIFs",
+      "video": "Videos"
+    }
   }
 }

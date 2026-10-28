@@ -13,6 +13,7 @@ import { formatFileSize } from '../../utils/fileSize'
 import { useManageParamsSource } from '../Manage/useManageParam'
 import type { MediaPageReturn } from '../Media/MediaPage/MediaPage'
 import { StorageBarList, type StorageBarItem } from './StorageBarList'
+import { StorageTypeSplit } from './StorageTypeSplit'
 import {
   naturalStorageSort,
   parseStorageSort,
@@ -23,7 +24,7 @@ import {
 import '../Manage/ManagePage.css'
 import './StoragePage.css'
 
-type StorageTab = 'folders' | 'series' | 'characters' | 'artists'
+type StorageTab = 'folders' | 'series' | 'characters' | 'artists' | 'tags'
 
 const TABS: { tab: StorageTab; className: string; labelKey: string; color: string }[] = [
   { tab: 'folders', className: '', labelKey: 'storage.tabFolders', color: 'var(--accent-fg)' },
@@ -44,13 +45,15 @@ const TABS: { tab: StorageTab; className: string; labelKey: string; color: strin
     className: 'stats-tab-artists',
     labelKey: 'storage.tabArtists',
     color: 'var(--color-artist)'
-  }
+  },
+  { tab: 'tags', className: 'stats-tab-tags', labelKey: 'manage.tags', color: 'var(--color-tag)' }
 ]
 
 const ENTITY_KIND: Record<Exclude<StorageTab, 'folders'>, CountEntityKind> = {
   series: 'series',
   characters: 'character',
-  artists: 'artist'
+  artists: 'artist',
+  tags: 'tag'
 }
 
 const ABSOLUTE = /^([a-z]:|[\\/])/i
@@ -155,9 +158,11 @@ export default function StoragePage(): JSX.Element {
   }
 
   const active = TABS.find((entry) => entry.tab === tab) ?? TABS[0]
+  const meanBytes = data && data.library.count > 0 ? data.library.bytes / data.library.count : 0
   const items = sortStorageItems(
     !data || tab === 'folders' ? folderItems : entityItems(data[tab], ENTITY_KIND[tab]),
-    sort
+    sort,
+    meanBytes
   )
   // A folder outside the source folder is one step, under its full path.
   const crumbs = folder === '' ? [] : ABSOLUTE.test(folder) ? [folder] : folder.split('\\')
@@ -198,7 +203,18 @@ export default function StoragePage(): JSX.Element {
                 )}
               </dd>
             </div>
+            {data.disk && (
+              <div className="storage-tile">
+                <dt>{t('storage.freeOn', { root: data.disk.root })}</dt>
+                <dd className="storage-tile-value">{size(data.disk.free)}</dd>
+                <dd className="storage-tile-note">
+                  {t('storage.diskOf', { size: size(data.disk.size) })}
+                </dd>
+              </div>
+            )}
           </dl>
+
+          <StorageTypeSplit byType={data.library.byType} totalBytes={data.library.bytes} />
 
           <div className="storage-toolbar">
             <div className="manage-tabs" role="tablist" aria-label={t('storage.byLabel')}>
@@ -226,6 +242,7 @@ export default function StoragePage(): JSX.Element {
                 >
                   <option value="size">{t('storage.sortSize')}</option>
                   <option value="count">{t('storage.sortCount')}</option>
+                  <option value="average">{t('storage.sortAverage')}</option>
                   <option value="name">{t('manage.sortName')}</option>
                 </select>
               </label>
@@ -277,7 +294,8 @@ export default function StoragePage(): JSX.Element {
                 items={items}
                 totalBytes={data.library.bytes}
                 color={active.color}
-                measure={sort.prop === 'count' ? 'count' : 'bytes'}
+                sortProp={sort.prop}
+                meanBytes={meanBytes}
               />
             )}
           </div>
