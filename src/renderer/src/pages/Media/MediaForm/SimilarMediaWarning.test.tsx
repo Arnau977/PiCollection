@@ -94,3 +94,40 @@ describe('SimilarMediaWarning', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 })
+
+describe('SimilarMediaWarning copy credits', () => {
+  const credited = { ...media('variant'), characters: [{ id: 'c1', name: 'Bronya', series: [] }] }
+
+  it("copies a match's credits, then stays focusable as already copied", async () => {
+    const user = userEvent.setup()
+    const onCopyCredits = vi.fn()
+    const { rerender } = render(
+      <SimilarMediaWarning
+        matches={[
+          { media: credited, distance: 4 },
+          { media: media('bare'), distance: 6 }
+        ]}
+        title="Similar"
+        onCopyCredits={onCopyCredits}
+      />
+    )
+
+    // A match with nothing to copy gets no button.
+    expect(screen.getAllByRole('button', { name: /copy the artist/i })).toHaveLength(1)
+    await user.click(screen.getByRole('button', { name: /copy the artist.*variant/i }))
+    expect(onCopyCredits).toHaveBeenCalledWith(credited)
+
+    rerender(
+      <SimilarMediaWarning
+        matches={[{ media: credited, distance: 4 }]}
+        title="Similar"
+        onCopyCredits={onCopyCredits}
+        canCopyCredits={() => false}
+      />
+    )
+    const done = screen.getByRole('button', { name: /already in the form/i })
+    expect(done).toHaveAttribute('aria-disabled', 'true')
+    await user.click(done)
+    expect(onCopyCredits).toHaveBeenCalledTimes(1)
+  })
+})

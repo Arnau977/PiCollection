@@ -214,6 +214,12 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   alert title, "identical file", Save blocked) so it can still be replaced -
   a bare blocking error left a pending copy impossible to swap. Where:
   `src/renderer/src/pages/Media/MediaForm/SimilarMediaWarning.tsx` (#91).
+  Left of Replace, **Copy artist, characters & series** (add-only, like the
+  suggestion chips; not on an identical copy or a match with no credits)
+  turns into an aria-disabled **Already in the form** instead of vanishing,
+  so keyboard focus stays put. The row's buttons get `margin-left: auto`
+  by class, never `:first-of-type` - the match's name is a `<button>` too
+  when it opens the compare view. Where: `copyCredits.ts`.
 - **Compare two images at full size with a drag divider** (`MediaCompare`):
   both fitted to the same box so identical pictures line up; the stage
   handles the pointer (continuous, not the range input's 1% steps) and a
