@@ -234,6 +234,7 @@
     "stats": "Estadísticas",
     "topArtists": "Artistas más frecuentes",
     "topTags": "Tags más frecuentes",
+    "showAutoTags": "Mostrar etiquetas automáticas",
     "topCharacters": "Personajes más frecuentes",
     "topSeries": "Series más frecuentes",
     "noData": "Todavía no hay suficientes datos"

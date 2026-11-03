@@ -7,6 +7,8 @@ export interface EntityCount {
 export interface StatsSummary {
   topArtists: EntityCount[]
   topTags: EntityCount[]
+  /** The same ranking without the tags automatic tag rules give. */
+  topTagsWithoutAuto: EntityCount[]
   topCharacters: EntityCount[]
   topSeries: EntityCount[]
 }

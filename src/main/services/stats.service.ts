@@ -7,12 +7,13 @@ const TOP_N = 5
 export const statsService = {
   async getSummary(): Promise<StatsSummary> {
     const db = getDb()
-    const [topArtists, topTags, topCharacters, topSeries] = await Promise.all([
+    const [topArtists, topTags, topTagsWithoutAuto, topCharacters, topSeries] = await Promise.all([
       statsRepo.topArtistsByMediaCount(db, TOP_N),
       statsRepo.topTagsByMediaCount(db, TOP_N),
+      statsRepo.topTagsByMediaCount(db, TOP_N, { withoutAutoTags: true }),
       statsRepo.topCharactersByMediaCount(db, TOP_N),
       statsRepo.topSeriesByMediaCount(db, TOP_N)
     ])
-    return { topArtists, topTags, topCharacters, topSeries }
+    return { topArtists, topTags, topTagsWithoutAuto, topCharacters, topSeries }
   }
 }

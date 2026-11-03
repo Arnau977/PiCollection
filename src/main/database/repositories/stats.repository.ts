@@ -28,13 +28,18 @@ export async function topArtistsByMediaCount(
 
 export async function topTagsByMediaCount(
   db: Kysely<DB>,
-  limit: number
+  limit: number,
+  /** Leave out the tags automatic tag rules give (absurdres, transparent...), even where also added by hand. */
+  { withoutAutoTags = false }: { withoutAutoTags?: boolean } = {}
 ): Promise<EntityCountRow[]> {
   const rows = await db
     .selectFrom(effectiveMediaTags(db).as('media_tag'))
     .innerJoin('tag', 'tag.id', 'media_tag.tag_id')
     .innerJoin('media', 'media.id', 'media_tag.media_id')
     .where('media.pending_tagging', '=', 0)
+    .$if(withoutAutoTags, (qb) =>
+      qb.where('tag.id', 'not in', db.selectFrom('auto_tag_rule').select('auto_tag_rule.tag_id'))
+    )
     .select(['tag.id as id', 'tag.name as name'])
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .groupBy(['tag.id', 'tag.name'])
