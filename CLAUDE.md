@@ -57,9 +57,11 @@ Check it when you find unexplained uncommitted changes or when preparing
 release notes. Any session editing this repo from elsewhere adds an entry
 there.
 
-The opposite direction is logged too: a session here that edits the
-extension adds an entry to `C:\MyProjects\PiCollection_Capture\docs\external-changes.md`
-(that repo has no git history yet, so the log is its only record).
+The opposite direction needs no log: the extension has its own git
+repository (since 2026-11-03), so its changes are commits there. Its
+`docs/external-changes.md` is kept only as the record of what came before.
+Work that spans both repos may give the extension's part to a subagent
+working in that folder (see "Working style").
 
 ## Working style
 
@@ -218,6 +220,6 @@ code that touches the file itself is `discardedMediaService.trashFiles`
 | Disk space page | `src/main/services/storage.service.ts` (`aggregateStorage`: library/pending/discarded totals, library by file type, folders, entities through the hierarchy, tags via `effectiveMediaTags`, media with no series/character/artist; free space of the source folder's drive via `fs.statfs`) + `src/renderer/src/pages/Storage/`; sizes from `media.file_size` (`fileSizes.service.ts`) |
 | Discarded files (deleted media still on disk) | `src/main/services/discardedMedia.service.ts` + `discarded_media` table; UI in `src/renderer/src/pages/Manage/DiscardedManager.tsx` |
 | Licenses | `LICENSE` (MIT); `scripts/generate-third-party-notices.mjs` writes `resources/third-party-notices.txt` (gitignored) before `dev`/`build`, opened from Settings > Advanced. A new bundled dependency with an unusual license (LGPL like libvips, anything copyleft) also gets a line in README "Third-party licenses" |
-| Browser extension bridge | `src/main/services/extensionBridge.*.ts` — local HTTP API on 127.0.0.1 for PiCollection Capture; captures always go to Pending, start SFW, never create entities and link only a sole credited artist - the rest is source metadata offered as suggestions |
+| Browser extension bridge | `src/main/services/extensionBridge.*.ts` — local HTTP API on 127.0.0.1 for PiCollection Capture; captures always go to Pending, start SFW, never create entities and link only a sole credited artist - the rest is source metadata offered as suggestions. A picture matching a `discarded_media` hash answers `status: 'discarded'` and isn't saved unless the request says `allowDiscarded` |
 | Source-folder watcher | `src/main/services/sourceFolderWatcher/` - recursive `fs.watch` on the source folder while the app runs; a settle-and-batch queue (`settleQueue.ts`) feeds one sequential pass (`processNewFiles.ts`) that relinks moved/renamed media by content hash, skips copies and discarded files (`discarded_media.hash`), and - with auto-import on (`watcherSettings.ts`, off by default) - adds files created after it was turned on to Pending |
 | Video player | `src/renderer/src/components/VideoPlayer/` - app-styled controls over a native `<video>` (detail page, Lightbox, edit-form preview): `useVideoPlayer` (state + remembered loop/volume/mute), `usePlayerShortcuts` (keys for the player in front; only when nothing else on the page is focused; arrows only with keyboard focus inside it, so the media page keeps them for previous/next - `inputModality.ts` tells keyboard focus from a click's) |

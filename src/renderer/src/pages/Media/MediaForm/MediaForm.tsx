@@ -132,6 +132,7 @@ export function MediaForm({
     series,
     drafts,
     sourceMetadata: media?.sourceMetadata,
+    autoTagIds: media?.autoTagIds,
     videoFrame: previewFrame
   })
 

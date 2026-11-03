@@ -1,11 +1,14 @@
 import { mkdir, unlink, writeFile } from 'fs/promises'
 import { extname, join } from 'path'
 import { z } from 'zod'
+import { getDb } from '../database/connection'
+import * as discardedRepo from '../database/repositories/discardedMedia.repository'
 import { AppError } from '../errors'
 import { artistService } from './artist.service'
 import { characterService } from './character.service'
+import { computeFileHash } from './mediaHash'
 import { mediaService } from './media.service'
-import { readSourceFolder } from './sourceFolder'
+import { readSourceFolder, relativizeRoute } from './sourceFolder'
 import { seriesService } from './series.service'
 import { tagService } from './tag.service'
 import type { MediaSourceMetadata } from '@shared/models'
@@ -33,6 +36,8 @@ export const ExtensionBridgeCaptureInputSchema = z.object({
   isAiGenerated: z.boolean().optional(),
   /** Ignored: captures always go to Pending. Still accepted from older extension builds. */
   pendingTagging: z.boolean().optional(),
+  /** Save it even if the same picture was deleted from the library before (the user chose "save anyway"). */
+  allowDiscarded: z.boolean().optional(),
   /** Everything the site had, raw - stored as informational source metadata. */
   sourceMetadata: z
     .object({
@@ -53,6 +58,8 @@ export type ExtensionBridgeCaptureInput = z.infer<typeof ExtensionBridgeCaptureI
 export type ExtensionBridgeCaptureResult =
   | { status: 'created'; mediaId: string }
   | { status: 'duplicate'; mediaId: string }
+  /** The same picture was deleted from the library before; nothing was saved. */
+  | { status: 'discarded' }
 
 const FALLBACK_EXTENSION: Record<ExtensionBridgeCaptureInput['mediaType'], string> = {
   image: '.jpg',
@@ -205,6 +212,19 @@ export const extensionBridgeService = {
         // the leftover file couldn't be removed.
         await unlink(absolutePath).catch(() => {})
         return { status: 'duplicate', mediaId: duplicateCheck.exactMatch.id }
+      }
+
+      // Deleting media keeps its file and records it as discarded; the
+      // source-folder watcher and the folder browser skip such files, so a
+      // capture shouldn't quietly bring one back either. Matched by content,
+      // since a capture's own route is always new.
+      if (!input.allowDiscarded) {
+        const hash = await computeFileHash(absolutePath)
+        const route = relativizeRoute(absolutePath, sourceFolder)
+        if (hash && (await discardedRepo.isDiscarded(getDb(), { route, hash }))) {
+          await unlink(absolutePath).catch(() => {})
+          return { status: 'discarded' }
+        }
       }
 
       // The extension is a quick inbox, not a tagging tool. Which of the

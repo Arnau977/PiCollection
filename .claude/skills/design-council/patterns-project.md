@@ -169,8 +169,16 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   offers everything: library matches as "add" chips first, unknown names as
   "create" chips marked "· new" (muted `.suggestion-form-of`), an "Add the N
   already in your library" button (artists excluded) and the site's
-  rating/AI flag as hint rows. Chips disappear once the form has them.
+  rating/AI flag as hint rows. Chips disappear once the form has them,
+  automatic tags included.
   Where: `SourceSuggestionsPanel.tsx`, `useSourceSuggestions.ts`.
+- **A capture the app refuses on purpose (a picture deleted before) is a
+  "Not saved" row in the extension's queue, not a silent success**, with
+  **Save anyway** (resends with `allowDiscarded`) and **Don't save** -
+  never "Retry" (it would bounce again) nor "Discard" (clashes with the
+  app's discarded files). "Retry all" skips such rows; the notification
+  carries the same **Save anyway** button. Where (PiCollection_Capture):
+  `src/ui/queueView.ts`, `src/background/notify.ts`.
 - **A hint about a record field sits under that field, and only applies
   itself when the file itself is the source.** The file-metadata AI
   detection turns AI on for new and pending media and says why ("Marked
