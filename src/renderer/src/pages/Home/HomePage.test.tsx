@@ -22,6 +22,7 @@ function makeMedia(count: number): MediaModel[] {
 const emptyStats: StatsSummary = {
   topArtists: [],
   topTags: [],
+  topTagsWithoutAuto: [],
   topCharacters: [],
   topSeries: []
 }
@@ -96,6 +97,7 @@ describe('HomePage', () => {
       data: {
         topArtists: [{ id: 'a1', name: 'Jane Doe', count: 5 }],
         topTags: [{ id: 't1', name: 'landscape', count: 3 }],
+        topTagsWithoutAuto: [{ id: 't1', name: 'landscape', count: 3 }],
         topCharacters: [{ id: 'c1', name: 'Alice', count: 2 }],
         topSeries: [{ id: 's1', name: 'Wonderland', count: 1 }]
       }
@@ -125,6 +127,7 @@ describe('HomePage', () => {
       data: {
         topArtists: [{ id: 'a1', name: 'Jane Doe', count: 5 }],
         topTags: [{ id: 't1', name: 'landscape', count: 3 }],
+        topTagsWithoutAuto: [{ id: 't1', name: 'landscape', count: 3 }],
         topCharacters: [{ id: 'c1', name: 'Alice', count: 2 }],
         topSeries: [{ id: 's1', name: 'Wonderland', count: 1 }]
       }
@@ -150,5 +153,32 @@ describe('HomePage', () => {
 
     const noDataMessages = await screen.findAllByText('Not enough data yet')
     expect(noDataMessages).toHaveLength(4)
+  })
+
+  it('hides automatic tags from Top tags when unchecked, and remembers it', async () => {
+    const user = userEvent.setup()
+    const smile = { id: 't1', name: 'Smile', count: 3 }
+    setApi({
+      getSummary: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          ...emptyStats,
+          topTags: [{ id: 't2', name: 'Absurdres', count: 9 }, smile],
+          topTagsWithoutAuto: [smile]
+        }
+      })
+    })
+    const { unmount } = renderHomePage()
+    await user.click(await screen.findByRole('tab', { name: 'Top tags' }))
+
+    expect(await screen.findByText('Absurdres')).toBeInTheDocument()
+    await user.click(screen.getByRole('checkbox', { name: 'Show automatic tags' }))
+    expect(screen.queryByText('Absurdres')).not.toBeInTheDocument()
+    expect(screen.getByText('Smile')).toBeInTheDocument()
+
+    unmount()
+    renderHomePage()
+    await user.click(await screen.findByRole('tab', { name: 'Top tags' }))
+    expect(await screen.findByRole('checkbox', { name: 'Show automatic tags' })).not.toBeChecked()
   })
 })

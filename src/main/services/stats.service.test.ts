@@ -39,7 +39,13 @@ function baseInput(overrides: Partial<MediaInput> = {}): MediaInput {
 describe('statsService.getSummary', () => {
   it('returns empty lists when there is no media', async () => {
     const summary = await statsService.getSummary()
-    expect(summary).toEqual({ topArtists: [], topTags: [], topCharacters: [], topSeries: [] })
+    expect(summary).toEqual({
+      topArtists: [],
+      topTags: [],
+      topTagsWithoutAuto: [],
+      topCharacters: [],
+      topSeries: []
+    })
   })
 
   it('ranks artists, tags, characters and series by how much media references them', async () => {
@@ -103,7 +109,13 @@ describe('statsService.getSummary', () => {
 
     const summary = await statsService.getSummary()
 
-    expect(summary).toEqual({ topArtists: [], topTags: [], topCharacters: [], topSeries: [] })
+    expect(summary).toEqual({
+      topArtists: [],
+      topTags: [],
+      topTagsWithoutAuto: [],
+      topCharacters: [],
+      topSeries: []
+    })
   })
 
   it('leaves pending media out of the rankings', async () => {
@@ -123,6 +135,12 @@ describe('statsService.getSummary', () => {
 
     const summary = await statsService.getSummary()
 
-    expect(summary).toEqual({ topArtists: [], topTags: [], topCharacters: [], topSeries: [] })
+    expect(summary).toEqual({
+      topArtists: [],
+      topTags: [],
+      topTagsWithoutAuto: [],
+      topCharacters: [],
+      topSeries: []
+    })
   })
 })

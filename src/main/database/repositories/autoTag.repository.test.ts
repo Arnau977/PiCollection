@@ -69,6 +69,7 @@ describe('automatic tags', () => {
     expect(await statsRepo.topTagsByMediaCount(db, 5)).toEqual([
       { id: 'clear', name: 'Transparent', count: 1 }
     ])
+    expect(await statsRepo.topTagsByMediaCount(db, 5, { withoutAutoTags: true })).toEqual([])
     expect(await mediaRepo.findEntityThumbnails(db, 'tag', ['clear'])).toEqual([
       { entityId: 'clear', route: '/see-through.png', type: 'image' }
     ])

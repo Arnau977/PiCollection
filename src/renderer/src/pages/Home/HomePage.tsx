@@ -8,13 +8,20 @@ import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { itemCountForColumns } from '../../utils/fillRows'
 import { StatsBarList } from './StatsBarList'
+import { useShowAutoTags } from './useShowAutoTags'
 import './HomePage.css'
 
 // Fetches a generous fixed batch up front - comfortably more than any
 // reasonable window width could fill in 2 rows - so resizing the window
 // only re-slices the already-fetched list instead of refetching.
 const RECENT_FETCH_LIMIT = 40
-const EMPTY_STATS: StatsSummary = { topArtists: [], topTags: [], topCharacters: [], topSeries: [] }
+const EMPTY_STATS: StatsSummary = {
+  topArtists: [],
+  topTags: [],
+  topTagsWithoutAuto: [],
+  topCharacters: [],
+  topSeries: []
+}
 
 type StatsTab = 'artists' | 'tags' | 'characters' | 'series'
 
@@ -52,6 +59,11 @@ export default function HomePage(): JSX.Element {
   )
   const { data: stats, loading: loadingStats } = useStatsSummary()
   const [statsTab, setStatsTab] = useState<StatsTab>('artists')
+  const [showAutoTags, setShowAutoTags] = useShowAutoTags()
+  // Only worth offering when an automatic tag actually makes the ranking.
+  const autoTagsRanked = stats.topTags.some(
+    (tag) => !stats.topTagsWithoutAuto.some((other) => other.id === tag.id)
+  )
 
   const recentSectionRef = useRef<HTMLElement>(null)
   const [visibleCount, setVisibleCount] = useState<number | null>(null)
@@ -164,8 +176,21 @@ export default function HomePage(): JSX.Element {
               <div hidden={statsTab !== 'artists'}>
                 <StatsBarList items={stats.topArtists} category="artists" />
               </div>
-              <div hidden={statsTab !== 'tags'}>
-                <StatsBarList items={stats.topTags} category="tags" />
+              <div hidden={statsTab !== 'tags'} className="stats-tab-body">
+                {autoTagsRanked && (
+                  <label className="stats-option">
+                    <input
+                      type="checkbox"
+                      checked={showAutoTags}
+                      onChange={(e) => setShowAutoTags(e.target.checked)}
+                    />
+                    {t('home.showAutoTags')}
+                  </label>
+                )}
+                <StatsBarList
+                  items={showAutoTags ? stats.topTags : stats.topTagsWithoutAuto}
+                  category="tags"
+                />
               </div>
               <div hidden={statsTab !== 'characters'}>
                 <StatsBarList items={stats.topCharacters} category="characters" />

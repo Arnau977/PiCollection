@@ -25,6 +25,23 @@
   margin-top: var(--space-3);
 }
 
+.stats-tab-body:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* A view option over a ranking - same look as the folder browser's "Show finished". */
+.stats-option {
+  align-self: flex-end;
+  align-items: center;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  font-size: 0.85rem;
+  gap: var(--space-2);
+}
+
 .stats-empty {
   color: var(--color-text-muted);
   font-size: 0.85rem;

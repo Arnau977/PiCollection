@@ -234,6 +234,7 @@
     "stats": "Statistics",
     "topArtists": "Top artists",
     "topTags": "Top tags",
+    "showAutoTags": "Show automatic tags",
     "topCharacters": "Top characters",
     "topSeries": "Top series",
     "noData": "Not enough data yet"

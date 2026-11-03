@@ -35,7 +35,9 @@ unlocks two things:
 The header has five pages:
 
 - **Home**: your latest additions and a quick summary of your most-tagged
-  artists, tags, characters and series.
+  artists, tags, characters and series. When an [automatic
+  tag](tagging.md#automatic-tags) makes the top tags, **Show automatic tags**
+  lets you leave those out (remembered).
 - **Gallery**: the whole library as a grid or list, with search and filters
   (see [Gallery and search](gallery-and-search.md)).
 - **Pending**: media you added but haven't tagged yet, one item at a time
