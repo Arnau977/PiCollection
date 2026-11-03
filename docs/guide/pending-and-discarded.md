@@ -38,7 +38,8 @@ From there, for each file:
 asking. If a file can't be moved (e.g. it's open in another program), it
 stays listed and you're told how many failed.
 
-Discarded files are skipped the next time you batch-import their folder.
+Discarded files are skipped the next time you batch-import their folder,
+and the browser extension asks before capturing the same picture again.
 Adding the same file again (e.g. with *Single file*) takes it off the list.
 
 ---

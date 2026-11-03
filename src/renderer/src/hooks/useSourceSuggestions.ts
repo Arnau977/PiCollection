@@ -47,6 +47,8 @@ interface UseSourceSuggestionsArgs {
   metadata?: MediaSourceMetadata
   /** The form's current values - suggestions it already has are hidden. */
   input: MediaInput
+  /** Tags the media has automatically - hidden like the ones the form already has. */
+  autoTagIds?: string[]
   artists: ArtistModel[]
   tags: TagModel[]
   characters: CharacterModel[]
@@ -92,6 +94,7 @@ const EMPTY_EXISTING: Record<SuggestionCategory, ExistingSuggestion[]> = {
 export function useSourceSuggestions({
   metadata,
   input,
+  autoTagIds,
   artists,
   tags,
   characters,
@@ -171,7 +174,7 @@ export function useSourceSuggestions({
   const existing = useMemo(() => {
     const selected: Record<SuggestionCategory, string[]> = {
       artist: input.artistId ? [input.artistId] : [],
-      tags: input.tagIds ?? [],
+      tags: [...(input.tagIds ?? []), ...(autoTagIds ?? [])],
       characters: input.characterIds ?? [],
       series: input.seriesIds ?? []
     }
@@ -185,7 +188,15 @@ export function useSourceSuggestions({
       characters: visible('characters'),
       series: visible('series')
     }
-  }, [matched, isDismissed, input.artistId, input.tagIds, input.characterIds, input.seriesIds])
+  }, [
+    matched,
+    isDismissed,
+    input.artistId,
+    input.tagIds,
+    autoTagIds,
+    input.characterIds,
+    input.seriesIds
+  ])
 
   const dismiss = useCallback((category: SuggestionCategory, name: string) => {
     setDismissed((prev) => new Set(prev).add(`${category}:${name}`))

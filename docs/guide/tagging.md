@@ -55,7 +55,8 @@ covers the whole library at once: filters, search, counts and Home count it
 as if the media had the tag, and removing the rule (or the tag) leaves
 nothing behind, because it's never written into the media's own tags. On a
 media page an automatic tag has a dashed outline (hover it to see why); the
-edit form lists them read-only under **Tags**. The app reads each picture's
+edit form lists them read-only under **Tags**, and suggestions never add one
+of them as the media's own tag. The app reads each picture's
 size and transparency once, in the background (the first time, the whole
 library; Settings shows how many are left). Videos aren't analyzed.
 

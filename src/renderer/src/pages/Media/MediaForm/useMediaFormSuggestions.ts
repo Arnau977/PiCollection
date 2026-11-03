@@ -39,6 +39,8 @@ interface UseMediaFormSuggestionsArgs {
   drafts: MediaFormDrafts
   /** Set on media captured by the browser extension - what its source site had. */
   sourceMetadata?: MediaSourceMetadata
+  /** Tags the media has automatically (Settings > Automatic tags) - never saved as its own. */
+  autoTagIds?: string[]
   /** The video preview, whose shown frame SauceNAO/WD14 use. */
   videoFrame?: RefObject<VideoFrameSource | null>
 }
@@ -94,6 +96,8 @@ interface SauceAdded {
   seriesIds: string[]
 }
 
+const NO_AUTO_TAGS: string[] = []
+
 function added(before: string[] | undefined, after: string[] | undefined): string[] {
   return (after ?? []).filter((id) => !(before ?? []).includes(id))
 }
@@ -107,9 +111,13 @@ export function useMediaFormSuggestions({
   series,
   drafts,
   sourceMetadata,
+  autoTagIds = NO_AUTO_TAGS,
   videoFrame
 }: UseMediaFormSuggestionsArgs): MediaFormSuggestions {
   const hasSauceNaoApiKey = useSauceNaoApiKey()
+  // A suggested tag the media already has automatically (Danbooru's absurdres
+  // on a big picture) would otherwise be saved as its own on top.
+  const manualOnly = (tagIds: string[]): string[] => tagIds.filter((id) => !autoTagIds.includes(id))
   const sauceAdded = useRef<SauceAdded | null>(null)
 
   // A suggestion's own matching only ever sees what's actually in the
@@ -137,7 +145,7 @@ export function useMediaFormSuggestions({
           // Suggestions only ever add - never overwrite a choice already made.
           artistId: prev.artistId ?? artistId,
           sourceUrl: prev.sourceUrl?.trim() ? prev.sourceUrl : (sourceUrl ?? prev.sourceUrl),
-          tagIds: Array.from(new Set([...(prev.tagIds ?? []), ...tagIds])),
+          tagIds: Array.from(new Set([...(prev.tagIds ?? []), ...manualOnly(tagIds)])),
           characterIds: nextCharacterIds,
           seriesIds: withImpliedSeries(characters.data, addedCharacterIds, nextSeriesIds)
         }
@@ -187,7 +195,7 @@ export function useMediaFormSuggestions({
         const nextSeriesIds = Array.from(new Set([...(prev.seriesIds ?? []), ...seriesIds]))
         return {
           ...prev,
-          tagIds: Array.from(new Set([...(prev.tagIds ?? []), ...tagIds])),
+          tagIds: Array.from(new Set([...(prev.tagIds ?? []), ...manualOnly(tagIds)])),
           characterIds: nextCharacterIds,
           seriesIds: withImpliedSeries(characters.data, addedCharacterIds, nextSeriesIds)
         }
@@ -246,6 +254,7 @@ export function useMediaFormSuggestions({
   const source = useSourceSuggestions({
     metadata: sourceMetadata,
     input,
+    autoTagIds,
     artists: [...artists.data, ...drafts.pendingArtists],
     tags: [...tags.data, ...drafts.pendingTags],
     characters: [...characters.data, ...drafts.pendingCharacters],

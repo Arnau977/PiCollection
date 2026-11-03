@@ -87,6 +87,9 @@ already have, and never creates anything. Everything the site listed is kept,
 including its rating, and offered in the [suggestions
 panel](tagging.md#from-the-source-site) when you tag the media.
 
+A picture you [deleted from the library](pending-and-discarded.md#discarded-files)
+before isn't saved again: the extension says so and offers **Save anyway**.
+
 **On Pixiv**: right-clicking a page of a multi-page post saves that page, and
 the popup offers **Save all N** to take every page (each becomes its own
 pending item). Tags come in English when Pixiv has a translation. Log in to

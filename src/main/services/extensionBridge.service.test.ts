@@ -25,6 +25,11 @@ const { characterService } = await import('./character.service')
 const { seriesService } = await import('./series.service')
 const { mediaService } = await import('./media.service')
 
+function createdId(result: Awaited<ReturnType<typeof extensionBridgeService.capture>>): string {
+  if (result.status !== 'created') throw new Error(`expected created, got ${result.status}`)
+  return result.mediaId
+}
+
 let cleanup: () => Promise<void>
 let sourceDir = ''
 
@@ -118,7 +123,7 @@ describe('extensionBridgeService.capture', () => {
     expect(await tagService.getAllTags()).toEqual([])
     expect(await characterService.getAllCharacters()).toEqual([])
     expect(await seriesService.getAllSeries()).toEqual([])
-    const media = await mediaService.getMediaById(result.mediaId)
+    const media = await mediaService.getMediaById(createdId(result))
     expect(media?.sourceMetadata).toEqual({
       site: 'danbooru',
       artist: 'Some Artist',
@@ -144,7 +149,7 @@ describe('extensionBridgeService.capture', () => {
       })
     )
 
-    const media = await mediaService.getMediaById(result.mediaId)
+    const media = await mediaService.getMediaById(createdId(result))
     expect(media?.sourceMetadata).toMatchObject({
       site: 'pixiv',
       artistUrl: 'https://www.pixiv.net/users/882569'
@@ -168,7 +173,7 @@ describe('extensionBridgeService.capture', () => {
       })
     )
 
-    const media = await mediaService.getMediaById(result.mediaId)
+    const media = await mediaService.getMediaById(createdId(result))
     expect(media?.artist?.id).toBe(artist.id)
     expect(media?.tags).toEqual([])
     expect(media?.series).toEqual([])
@@ -191,7 +196,7 @@ describe('extensionBridgeService.capture', () => {
       baseCapture({ artistName: 'keihh, sketchdrif' })
     )
 
-    const media = await mediaService.getMediaById(result.mediaId)
+    const media = await mediaService.getMediaById(createdId(result))
     expect(media?.artist).toBeUndefined()
     expect(media?.sourceMetadata?.artist).toBe('keihh, sketchdrif')
   })
@@ -204,8 +209,29 @@ describe('extensionBridgeService.capture', () => {
       baseCapture({ fileName: 'different-name.jpg' })
     )
 
-    expect(second.status).toBe('duplicate')
-    expect(second.mediaId).toBe(first.status === 'created' ? first.mediaId : undefined)
+    expect(second).toEqual({
+      status: 'duplicate',
+      mediaId: first.status === 'created' ? first.mediaId : undefined
+    })
+  })
+
+  it('refuses a picture deleted from the library before, unless told to save it anyway', async () => {
+    writeSourceFolder(sourceDir)
+    const first = await extensionBridgeService.capture(baseCapture())
+    if (first.status !== 'created') throw new Error('expected created')
+    await mediaService.deleteMedia(first.mediaId)
+    const siteDir = join(sourceDir, 'Web Imports', 'danbooru')
+    const filesBefore = await fs.readdir(siteDir)
+
+    const refused = await extensionBridgeService.capture(baseCapture({ fileName: 'again.jpg' }))
+
+    expect(refused).toEqual({ status: 'discarded' })
+    expect(await fs.readdir(siteDir)).toEqual(filesBefore)
+
+    const forced = await extensionBridgeService.capture(
+      baseCapture({ fileName: 'again.jpg', allowDiscarded: true })
+    )
+    expect(forced.status).toBe('created')
   })
 
   it('always creates pending media, even when an older extension asks otherwise', async () => {
