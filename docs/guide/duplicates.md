@@ -54,6 +54,17 @@ thumbnail on the media page) to open a full-size comparison:
 - click anywhere outside the pictures (or press `Esc`) to close it; a
   drag that merely ends outside them doesn't.
 
+## Copying a variant's credits
+
+Similar pictures are often variants of the same drawing. **Copy artist,
+characters & series** on a similar item fills the form with that media's
+artist, characters and series, so both end up credited the same. It only
+adds: an artist you already picked stays, and the form's own characters and
+series are kept. Once the form has everything that item could add, the
+button reads **Already in the form**. It isn't offered for an identical
+copy, nor for an item with no artist, characters or series. Tags aren't
+copied, since variants usually differ there.
+
 ## Replacing a copy
 
 **Replace with this file** on a similar item keeps the file you're looking at

@@ -412,6 +412,9 @@
     "suggestionsTabSource": "Origen",
     "suggestionsTabSauceNao": "SauceNAO",
     "suggestionsTabWd14": "IA local",
+    "copyCredits": "Copiar artista, personajes y series",
+    "copyCreditsDone": "Ya está en el formulario",
+    "copyCreditsLabel": "Copiar el artista, los personajes y las series de {{name}}",
     "replace": "Reemplazar con este archivo",
     "replaceLabel": "Reemplazar {{name}} con este archivo",
     "replaceConfirm": "¿Reemplazar \"{{name}}\" con este archivo? Conserva sus etiquetas, personajes, series y fecha, y suma los de este formulario. \"{{name}}\" aparece en Metadatos > Eliminados."

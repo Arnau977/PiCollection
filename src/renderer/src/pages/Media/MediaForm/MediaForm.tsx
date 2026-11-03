@@ -20,6 +20,7 @@ import { useMediaFormDrafts } from './useMediaFormDrafts'
 import { useCharacterParentLinks } from './useCharacterParentLinks'
 import { useMediaFormSuggestions } from './useMediaFormSuggestions'
 import { useAiMetadataDetection } from './useAiMetadataDetection'
+import { copyCreditsFrom } from './copyCredits'
 import type { VideoFrameSource } from '../../../components/VideoPlayer/videoFrame'
 import './MediaForm.css'
 
@@ -348,6 +349,8 @@ export function MediaForm({
               previewFrameRef={previewFrame}
               onFileChange={handleFileChange}
               onReplace={onReplaced ? (target): void => void handleReplace(target) : undefined}
+              onCopyCredits={(match) => setInput((prev) => copyCreditsFrom(match, prev) ?? prev)}
+              canCopyCredits={(match) => copyCreditsFrom(match, input) !== null}
               busy={saving || deleting}
             />
 

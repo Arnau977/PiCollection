@@ -412,6 +412,9 @@
     "suggestionsTabSource": "Source",
     "suggestionsTabSauceNao": "SauceNAO",
     "suggestionsTabWd14": "Local AI",
+    "copyCredits": "Copy artist, characters & series",
+    "copyCreditsDone": "Already in the form",
+    "copyCreditsLabel": "Copy the artist, characters and series of {{name}}",
     "replace": "Replace with this file",
     "replaceLabel": "Replace {{name}} with this file",
     "replaceConfirm": "Replace \"{{name}}\" with this file? It keeps its tags, characters, series and date, and gains the ones in this form. \"{{name}}\" is listed under Metadata > Discarded."

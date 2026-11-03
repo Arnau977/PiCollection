@@ -53,6 +53,9 @@ interface MediaFormFileGroupProps {
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   /** See SimilarMediaWarning; unset where replacing isn't offered. */
   onReplace?: (media: MediaModel) => void
+  /** See SimilarMediaWarning. */
+  onCopyCredits?: (media: MediaModel) => void
+  canCopyCredits?: (media: MediaModel) => boolean
   busy?: boolean
 }
 
@@ -67,6 +70,8 @@ export function MediaFormFileGroup({
   previewFrameRef,
   onFileChange,
   onReplace,
+  onCopyCredits,
+  canCopyCredits,
   busy
 }: MediaFormFileGroupProps): JSX.Element {
   const { t } = useTranslation()
@@ -175,6 +180,8 @@ export function MediaFormFileGroup({
               : undefined
           }
           onReplace={onReplace}
+          onCopyCredits={onCopyCredits}
+          canCopyCredits={canCopyCredits}
           busy={busy}
         />
       )}
@@ -183,6 +190,8 @@ export function MediaFormFileGroup({
           media={media}
           taxonomy={taxonomy}
           onReplace={onReplace}
+          onCopyCredits={onCopyCredits}
+          canCopyCredits={canCopyCredits}
           busy={busy}
         />
       )}

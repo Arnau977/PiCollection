@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Replace } from 'lucide-react'
+import { CopyPlus, Replace } from 'lucide-react'
 import type { MediaDuplicateMatch, MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { MediaCompare, type ComparedMedia } from '../../../components/MediaCompare/MediaCompare'
 import { taxonomyOf, type ComparedTaxonomy } from '../../../components/MediaCompare/taxonomyDiff'
+import { StableLabel } from '../../../components/StableLabel/StableLabel'
 import { MediaHoverPreview } from '../../../components/MediaHoverPreview/MediaHoverPreview'
 import { useSimilarMedia } from '../../../hooks/useSimilarMedia'
 import { splitRoute } from '../../../utils/splitRoute'
+import { hasCredits } from './copyCredits'
 
 /** The file being added/edited, compared against each match. */
 export interface CurrentFile {
@@ -26,6 +28,10 @@ interface SimilarMediaWarningProps {
   current?: CurrentFile
   /** "Replace with this file": the current file takes over that match. */
   onReplace?: (media: MediaModel) => void
+  /** "Copy artist, characters & series" from that match into the form - a variant of the same drawing. */
+  onCopyCredits?: (media: MediaModel) => void
+  /** False once the form already has everything that match could add. */
+  canCopyCredits?: (media: MediaModel) => boolean
   /** Locks the replace buttons while the form saves or replaces. */
   busy?: boolean
   /**
@@ -44,6 +50,8 @@ export function SimilarMediaWarning({
   title,
   current,
   onReplace,
+  onCopyCredits,
+  canCopyCredits = (): boolean => true,
   busy = false,
   identical = false
 }: SimilarMediaWarningProps): JSX.Element | null {
@@ -91,6 +99,15 @@ export function SimilarMediaWarning({
                 ? t('addMedia.duplicateExactMatch')
                 : t('addMedia.duplicateSimilarMatch', { distance })}
             {media.pendingTagging && ` · ${t('addMedia.similarPendingBadge')}`})
+            {/* An identical copy can't be saved, so there's nothing to copy into. */}
+            {onCopyCredits && !identical && hasCredits(media) && (
+              <CopyCreditsButton
+                name={splitRoute(media.route).fileName}
+                done={!canCopyCredits(media)}
+                busy={busy}
+                onCopy={() => onCopyCredits(media)}
+              />
+            )}
             {/* A GIF made from a video (relation) isn't a copy to swap. */}
             {onReplace && !relation && (
               <button
@@ -130,6 +147,38 @@ export function SimilarMediaWarning({
 }
 
 /**
+ * Stays in place once everything is copied ("Already in the form",
+ * aria-disabled so keyboard focus isn't lost) instead of disappearing.
+ */
+function CopyCreditsButton({
+  name,
+  done,
+  busy,
+  onCopy
+}: {
+  name: string
+  done: boolean
+  busy: boolean
+  onCopy: () => void
+}): JSX.Element {
+  const { t } = useTranslation()
+  const labels = [t('addMedia.copyCredits'), t('addMedia.copyCreditsDone')]
+  return (
+    <button
+      type="button"
+      className="btn similar-match-copy"
+      onClick={done ? undefined : onCopy}
+      disabled={busy}
+      aria-disabled={done || undefined}
+      aria-label={done ? labels[1] : t('addMedia.copyCreditsLabel', { name })}
+    >
+      <CopyPlus size={14} aria-hidden="true" />
+      <StableLabel current={done ? labels[1] : labels[0]} labels={labels} />
+    </button>
+  )
+}
+
+/**
  * The same warning for media already in the app - mainly while working
  * through the pending queue, so it also lists other pending items (a batch
  * import can easily contain the same picture twice).
@@ -138,12 +187,16 @@ export function EditedMediaSimilarWarning({
   media,
   taxonomy,
   onReplace,
+  onCopyCredits,
+  canCopyCredits,
   busy
 }: {
   media: MediaModel
   /** The form's current picks, which may not be saved yet. */
   taxonomy: ComparedTaxonomy
   onReplace?: (media: MediaModel) => void
+  onCopyCredits?: (media: MediaModel) => void
+  canCopyCredits?: (media: MediaModel) => boolean
   busy?: boolean
 }): JSX.Element | null {
   const { t } = useTranslation()
@@ -153,6 +206,8 @@ export function EditedMediaSimilarWarning({
       matches={data}
       title={t('addMedia.similarToExisting')}
       onReplace={onReplace}
+      onCopyCredits={onCopyCredits}
+      canCopyCredits={canCopyCredits}
       busy={busy}
       current={{
         route: media.route,
