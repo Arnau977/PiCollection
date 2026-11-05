@@ -19,6 +19,7 @@ import {
 import { hasActiveFilters } from '@shared/query/hasActiveFilters'
 import { pruneMissingEntities } from '@shared/query/pruneMissingEntities'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
+import { useAppliedFilterLists } from './useAppliedFilterLists'
 import type { GalleryDensity } from '../../utils/gallerySettings'
 import './GalleryPage.css'
 
@@ -98,6 +99,7 @@ const GalleryPage: React.FC = () => {
     [filters, page, pageSize]
   )
   const { data: media, total, loading, error, refetch } = useMediaQuery(effectiveFilters, sorting)
+  useAppliedFilterLists(filters, setFilters, refetch)
 
   // A filter on an entity deleted or merged since it was set has no chip
   // to show (no name left) yet still applies - an invisible filter that can
