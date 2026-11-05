@@ -222,6 +222,27 @@ describe('FilterListsPage', () => {
     expect(within(row).getByText('A list inside it lost a filter')).toBeInTheDocument()
   })
 
+  it('does not save when Enter is pressed in a picker', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Edit Perfil' }))
+    await user.type(screen.getByRole('combobox', { name: /Tags/ }), 'no such tag{Enter}')
+
+    expect(update).not.toHaveBeenCalled()
+    expect(nameField()).toHaveValue('Perfil')
+  })
+
+  it('still saves on Enter in the name field', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Edit Perfil' }))
+    await user.type(nameField(), '{Enter}')
+
+    expect(update).toHaveBeenCalled()
+  })
+
   it('opens a list in the gallery', async () => {
     const user = userEvent.setup()
     renderPage()

@@ -23,6 +23,13 @@ interface FilterListFormProps {
 const getListName = (list: FilterListModel): string => list.name
 const getListId = (list: FilterListModel): string => list.id
 
+/** Enter in a picker picks; it mustn't also save whatever the form holds. */
+function keepEnterInPicker(e: React.KeyboardEvent): void {
+  if (e.key === 'Enter' && (e.target as HTMLElement).getAttribute('role') === 'combobox') {
+    e.preventDefault()
+  }
+}
+
 export function FilterListForm({
   list,
   lists,
@@ -67,7 +74,11 @@ export function FilterListForm({
   }
 
   return (
-    <form className="manage-form-panel filter-list-form" onSubmit={handleSubmit}>
+    <form
+      className="manage-form-panel filter-list-form"
+      onSubmit={handleSubmit}
+      onKeyDownCapture={keepEnterInPicker}
+    >
       <h2>{list ? t('manage.editingItem', { name: list.name }) : t('filterLists.newList')}</h2>
       <fieldset className="filter-list-form-body" disabled={saving}>
         <div className="manage-edit-actions">
