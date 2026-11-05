@@ -3,7 +3,13 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import type { CharacterModel, MediaModel, SeriesModel, TagModel } from '@shared/models'
+import type {
+  CharacterModel,
+  FilterListModel,
+  MediaModel,
+  SeriesModel,
+  TagModel
+} from '@shared/models'
 import GalleryPage from './GalleryPage'
 import { resetGallerySession, writeGallerySession } from '../../hooks/useGallerySession'
 
@@ -20,12 +26,14 @@ vi.mock('../../components/ConfirmDialog/ConfirmDialogContext', () => ({
 let tagsData: TagModel[] = []
 let charactersData: CharacterModel[] = []
 let seriesData: SeriesModel[] = []
+let filterListsState: { data: FilterListModel[]; loading: boolean; error: string | null }
 
 vi.mock('../../hooks/useEntityLists', () => ({
   useArtists: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
   useTags: () => ({ data: tagsData, loading: false, error: null, refetch: vi.fn() }),
   useCharacters: () => ({ data: charactersData, loading: false, error: null, refetch: vi.fn() }),
-  useSeries: () => ({ data: seriesData, loading: false, error: null, refetch: vi.fn() })
+  useSeries: () => ({ data: seriesData, loading: false, error: null, refetch: vi.fn() }),
+  useFilterLists: () => ({ ...filterListsState, refetch: vi.fn() })
 }))
 
 beforeEach(() => {
@@ -34,6 +42,7 @@ beforeEach(() => {
   tagsData = []
   charactersData = []
   seriesData = []
+  filterListsState = { data: [], loading: false, error: null }
 })
 
 function makeMedia(count: number): MediaModel[] {
@@ -579,6 +588,189 @@ describe('GalleryPage toolbar', () => {
     expect(
       JSON.parse(window.localStorage.getItem('picollection:gallery-defaults') ?? '{}').density
     ).toBe('large')
+  })
+})
+
+describe('GalleryPage with filter lists', () => {
+  const list = (id: string, updatedAt = 1): FilterListModel => ({
+    id,
+    name: id,
+    filters: { sfw: true },
+    includedListIds: [],
+    hasMissingEntities: false,
+    createdAt: 1,
+    updatedAt
+  })
+
+  function appliedSession(filterListIds: string[]): void {
+    writeGallerySession({
+      filters: { filterListIds },
+      sorting: { prop: 'createdAt', desc: true },
+      page: 0
+    })
+  }
+
+  it('drops an applied list that no longer exists, keeping the ones that do', async () => {
+    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+    setApi(getFiltered)
+    filterListsState.data = [list('kept')]
+    appliedSession(['kept', 'gone'])
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() =>
+      expect(getFiltered).toHaveBeenLastCalledWith(
+        expect.objectContaining({ filterListIds: ['kept'] }),
+        expect.anything()
+      )
+    )
+  })
+
+  it('keeps applied lists while the lists are still loading or failed', async () => {
+    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+    setApi(getFiltered)
+    filterListsState = { data: [], loading: false, error: 'boom' }
+    appliedSession(['a'])
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(getFiltered).toHaveBeenCalled())
+    expect(getFiltered).toHaveBeenLastCalledWith(
+      expect.objectContaining({ filterListIds: ['a'] }),
+      expect.anything()
+    )
+  })
+
+  it('reloads when a list changes while one is applied', async () => {
+    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+    setApi(getFiltered)
+    filterListsState.data = [list('a')]
+    appliedSession(['a'])
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+    await waitFor(() => expect(getFiltered).toHaveBeenCalledTimes(1))
+
+    filterListsState = { ...filterListsState, data: [list('a', 2)] }
+    rerender(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(getFiltered).toHaveBeenCalledTimes(2))
+  })
+
+  it('shows one chip per list, and removing one leaves the rest applied', async () => {
+    const user = userEvent.setup()
+    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+    setApi(getFiltered)
+    filterListsState.data = [list('a'), list('b')]
+    writeGallerySession({
+      filters: { filterListIds: ['a', 'b'], type: 'gif' },
+      sorting: { prop: 'createdAt', desc: true },
+      page: 0
+    })
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Remove list a' }))
+
+    await waitFor(() =>
+      expect(getFiltered).toHaveBeenLastCalledWith(
+        expect.objectContaining({ filterListIds: ['b'], type: 'gif' }),
+        expect.anything()
+      )
+    )
+    expect(screen.queryByRole('button', { name: 'Remove list a' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove list b' })).toBeInTheDocument()
+  })
+
+  it('keeps the chip when nothing matches', async () => {
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } }))
+    filterListsState.data = [list('a')]
+    appliedSession(['a'])
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('No media matches these filters')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove list a' })).toBeInTheDocument()
+  })
+
+  it('saves from the filters row, keeps the filters and confirms it', async () => {
+    const user = userEvent.setup()
+    const create = vi.fn().mockResolvedValue({ success: true, data: {} })
+    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+    Object.defineProperty(window, 'api', {
+      value: { media: { getFiltered }, filterList: { create } },
+      writable: true,
+      configurable: true
+    })
+    writeGallerySession({
+      filters: { type: 'gif' },
+      sorting: { prop: 'createdAt', desc: true },
+      page: 0
+    })
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Save as list' }))
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Gifs')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('List "Gifs" saved')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(getFiltered).toHaveBeenLastCalledWith(
+      expect.objectContaining({ type: 'gif' }),
+      expect.anything()
+    )
+    expect(getFiltered.mock.lastCall?.[0].filterListIds).toBeUndefined()
+  })
+
+  it('does not reload for a list change with none applied', async () => {
+    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+    setApi(getFiltered)
+    filterListsState.data = [list('a')]
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+    await waitFor(() => expect(getFiltered).toHaveBeenCalledTimes(1))
+
+    filterListsState = { ...filterListsState, data: [list('a', 2)] }
+    rerender(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+    await new Promise((resolve) => setTimeout(resolve, 20))
+
+    expect(getFiltered).toHaveBeenCalledTimes(1)
   })
 })
 

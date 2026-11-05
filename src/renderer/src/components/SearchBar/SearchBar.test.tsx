@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event'
 import type {
   ArtistModel,
   CharacterModel,
+  FilterListModel,
   MediaFilters,
   SeriesModel,
   TagModel
@@ -25,6 +26,11 @@ const series: SeriesModel[] = [
   { id: 's3', name: 'Wonderland Party' }
 ]
 
+const filterLists = [
+  { id: 'l1', name: 'Perfil' },
+  { id: 'l2', name: 'Banner' }
+] as FilterListModel[]
+
 function renderSearchBar(filters: MediaFilters = {}) {
   const onFiltersChange = vi.fn()
   render(
@@ -35,6 +41,7 @@ function renderSearchBar(filters: MediaFilters = {}) {
       tags={tags}
       characters={characters}
       series={series}
+      filterLists={filterLists}
     />
   )
   return { onFiltersChange }
@@ -46,6 +53,79 @@ function searchInput(): HTMLElement {
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
+})
+
+describe('SearchBar filter lists', () => {
+  const user = (): ReturnType<typeof userEvent.setup> =>
+    userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+  it('applies a list on top of the other filters, removing the typed word', async () => {
+    const u = user()
+    const { onFiltersChange } = renderSearchBar({ sfw: true, type: 'gif', filterListIds: ['l2'] })
+
+    await u.type(searchInput(), 'beach perf')
+    await u.click(screen.getByRole('option', { name: /Perfil/ }))
+
+    expect(onFiltersChange).toHaveBeenLastCalledWith({
+      sfw: true,
+      type: 'gif',
+      filterListIds: ['l2', 'l1'],
+      query: 'beach'
+    })
+    expect(searchInput()).toHaveValue('beach ')
+  })
+
+  it('does not offer a list that is already applied', async () => {
+    const u = user()
+    renderSearchBar({ filterListIds: ['l1'] })
+
+    await u.type(searchInput(), 'perf')
+
+    expect(screen.queryByRole('option', { name: /Perfil/ })).not.toBeInTheDocument()
+  })
+
+  it('does not offer a list after a minus, since a list cannot be excluded', async () => {
+    const u = user()
+    renderSearchBar()
+
+    await u.type(searchInput(), '-perf')
+
+    expect(screen.queryByRole('option', { name: /Perfil/ })).not.toBeInTheDocument()
+  })
+
+  it('shows the lists when the empty box gets focus, and hides them when it loses it', async () => {
+    const u = user()
+    renderSearchBar()
+
+    await u.click(searchInput())
+    expect(screen.getAllByRole('option')).toHaveLength(2)
+
+    await u.tab()
+    expect(screen.queryByRole('option')).not.toBeInTheDocument()
+  })
+
+  it('applies a browsed list with a click', async () => {
+    const u = user()
+    const { onFiltersChange } = renderSearchBar()
+
+    await u.click(searchInput())
+    await u.click(screen.getByRole('option', { name: /Perfil/ }))
+
+    expect(onFiltersChange).toHaveBeenLastCalledWith({ filterListIds: ['l1'] })
+  })
+
+  it('lets Tab leave the empty box until the user arrows onto a list', async () => {
+    const u = user()
+    const { onFiltersChange } = renderSearchBar()
+
+    searchInput().focus()
+    await u.tab()
+    expect(onFiltersChange).not.toHaveBeenCalled()
+
+    searchInput().focus()
+    await u.keyboard('{ArrowDown}{Tab}')
+    expect(onFiltersChange).toHaveBeenLastCalledWith({ filterListIds: ['l1'] })
+  })
 })
 
 afterEach(() => {
@@ -96,6 +176,7 @@ describe('SearchBar', () => {
         tags={tags}
         characters={characters}
         series={series}
+        filterLists={[]}
       />
     )
 

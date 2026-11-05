@@ -112,6 +112,20 @@ here.
 - Source: Video.js volume slider - https://videojs.org/docs/framework/html/reference/volume-slider ; Video.js v10 popover focus issue - https://github.com/videojs/v10/issues/60 ; Fluid Floe video player interactions - https://fluidproject.atlassian.net/wiki/x/13_x
 - Checked: 2026-10-21
 
+### Saved filter sets
+- Kind: pattern
+- Use when / avoid when: people repeat the same filter combination. Offer a button that saves what's applied and a place to reapply it; a saved filter is a chip with a leading bookmark, each chip removable on its own. Keep chips in a group following one naming pattern.
+- Takeaway for PiCollection: filter lists save from the active-filters row, apply from the search box and show as bookmark chips. Nothing was found on how Fluent, Lightroom or Explorer do this, so those remain unchecked.
+- Source: Visa filters pattern - https://design.visa.com/patterns/filters ; Equinor chip - https://eds.equinor.com/docs/Next/components/data-display/chip ; Volvo chips - https://designsystem.volvocars.com/web/components/chips/design/
+- Checked: 2026-11-05
+
+### Removable filter chip accessibility
+- Kind: pattern
+- Use when / avoid when: a chip can be dismissed. Screen readers announce the label and the remove action separately, and the action is a real button. Avoid dismissible chips when the item can't be picked again.
+- Takeaway for PiCollection: the × is a named button, and a removed list is offered again by the search box.
+- Source: CMS Design System filter chip - https://design.cms.gov/components/filter-chip ; Intelligence Community Design System chip - https://design.sis.gov.uk/components/chip
+- Checked: 2026-11-05
+
 ## Anti-patterns
 
 ### A badge that is almost always lit

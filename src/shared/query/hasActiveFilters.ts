@@ -16,6 +16,7 @@ export function hasActiveFilters(filters: MediaFilters): boolean {
       filters.noCharacter ||
       hasNonEmptyGroup(filters.seriesGroups) ||
       filters.noSeries ||
-      filters.noArtist
+      filters.noArtist ||
+      filters.filterListIds?.length
   )
 }

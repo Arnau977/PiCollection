@@ -491,6 +491,20 @@
     "fileCount_other": "{{count}} archivos",
     "selectionHint": "Como en el Explorador: Ctrl+clic suma · Mayús+clic: rango · arrastra desde un hueco o el margen · Ctrl+A: todo"
   },
+  "filterLists": {
+    "saveAs": "Guardar como lista",
+    "lists": "Listas",
+    "whatGetsSaved": "Se guardará",
+    "or": "o",
+    "excluded": "excluido",
+    "onlyThisOne": "{{name}} (solo este)",
+    "nothingLeft": "No queda nada que guardar",
+    "nameRequired": "Ponle un nombre a la lista",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "saved": "Lista \"{{name}}\" guardada",
+    "removeChip": "Quitar la lista {{name}}"
+  },
   "search": {
     "label": "Buscar",
     "placeholder": "(a OR b) -c   — busca tags, personajes, series, artistas y nombres",
@@ -499,6 +513,7 @@
     "characterPrefix": "Personaje",
     "artistPrefix": "Artista",
     "seriesPrefix": "Series",
+    "listPrefix": "Lista",
     "aiSuggestion": "Generado por IA",
     "notAiSuggestion": "No generado por IA"
   },

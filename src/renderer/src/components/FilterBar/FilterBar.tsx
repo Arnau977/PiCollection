@@ -7,7 +7,13 @@ import type {
   Sorting,
   TagModel
 } from '@shared/models'
-import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
+import {
+  useArtists,
+  useCharacters,
+  useFilterLists,
+  useSeries,
+  useTags
+} from '../../hooks/useEntityLists'
 import { groupEntityIds } from '@shared/query/groupEntry'
 import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import { Autocomplete } from '../Autocomplete/Autocomplete'
@@ -75,6 +81,7 @@ export function FilterBar({
   const { data: tags } = useTags()
   const { data: characters } = useCharacters()
   const { data: series } = useSeries()
+  const { data: filterLists } = useFilterLists()
   const characterParents = parentIds(characters)
   const seriesParents = parentIds(series)
 
@@ -87,6 +94,7 @@ export function FilterBar({
         tags={tags}
         characters={characters}
         series={series}
+        filterLists={filterLists}
       />
 
       <div className="filter-bar-row">

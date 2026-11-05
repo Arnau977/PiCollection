@@ -53,6 +53,27 @@ filter on an artist, tag, character or series you've since deleted or merged
 is dropped. Default filters and sorting for the gallery are set in **Settings
 > Filters**.
 
+## Filter lists
+
+A filter list is a set of filters with a name, such as "Profile picture" for
+"SFW, none of these tags". Any active filters can be saved: click **Save as
+list** in the bar under the filters, name it, and take out anything you don't
+want to keep with its ×. Taking something out there doesn't change the gallery,
+and saving doesn't either.
+
+To apply a list, click the empty search box to see your lists, or type part of
+its name and pick the one marked **List**. It shows as a chip with a bookmark;
+its × takes it off and leaves your other filters alone.
+
+Filters you add on top narrow it further, so "Profile picture" plus a character
+shows that character's pictures that pass the list. Several lists can be on at
+once, and a picture has to pass them all. If nothing can pass, the gallery is
+empty and the chips stay, so you can see why.
+
+Saving while a list is on keeps a link to it, not a copy: when you change the
+original list later, the new one follows it. Lists never cover Pending, and the
+sort order isn't saved.
+
 ## NSFW
 
 Mark media as NSFW in its edit form (for a capture, the site's rating is

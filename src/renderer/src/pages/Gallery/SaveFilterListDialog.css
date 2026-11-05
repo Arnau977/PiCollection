@@ -1,0 +1,82 @@
+/* Capped to the viewport, with only the list of items scrolling, so Save
+   never leaves the screen however many filters are active. */
+.save-list-dialog {
+  max-width: 520px;
+  max-height: calc(100vh - 2 * var(--space-5));
+}
+
+.save-list-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.save-list-name {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.save-list-heading {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.save-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 2rem;
+  overflow-y: auto;
+}
+
+.save-list-section {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-2);
+}
+
+/* text-muted on surface 6.44:1 */
+.save-list-section-label,
+.save-list-hint,
+.save-list-or {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.save-list-section-label {
+  padding-top: 0.15rem;
+}
+
+.save-list-hint {
+  margin: 0;
+}
+
+.save-list-or {
+  align-self: center;
+}
+
+.save-list-section .multi-select-chips {
+  margin: 0;
+}
+
+/* They all mount together, so the "just landed" pulse would mean nothing. */
+.save-list-section .multi-select-chips .chip {
+  animation: none;
+}
+
+/* color-danger on surface 5.93:1 */
+.save-list-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.85rem;
+}

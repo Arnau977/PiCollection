@@ -10,6 +10,11 @@ describe('hasActiveFilters', () => {
     expect(hasActiveFilters({ limit: 60, offset: 60 })).toBe(false)
   })
 
+  it('returns true when a filter list is applied', () => {
+    expect(hasActiveFilters({ filterListIds: ['a'] })).toBe(true)
+    expect(hasActiveFilters({ filterListIds: [] })).toBe(false)
+  })
+
   it('returns true when a search query is set', () => {
     expect(hasActiveFilters({ query: 'sunset' })).toBe(true)
   })
