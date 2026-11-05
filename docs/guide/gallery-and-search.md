@@ -74,6 +74,17 @@ Saving while a list is on keeps a link to it, not a copy: when you change the
 original list later, the new one follows it. Lists never cover Pending, and the
 sort order isn't saved.
 
+**Lists**, at the top of the gallery, opens the page where you create, edit and
+delete them. Each row sums up what the list holds and can open it in the
+gallery. A list can include others, except one that would loop back to it. A
+list that another one includes can't be deleted; the message names which.
+
+Deleting a tag, character, series or artist takes it out of the lists that use
+it, so they match more than before. Those lists say **Lost a filter** on this
+page, and a warning replaces the bookmark on the chip and opens this page,
+including when the list
+that lost it is inside the one you applied. Saving the list clears the warning.
+
 ## NSFW
 
 Mark media as NSFW in its edit form (for a capture, the site's rating is

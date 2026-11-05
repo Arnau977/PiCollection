@@ -1,6 +1,9 @@
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Bookmark, X } from 'lucide-react'
+import { AlertTriangle, Bookmark, X } from 'lucide-react'
+import { PATH } from '@renderer/app.routes.const'
 import { useFilterLists } from '../../hooks/useEntityLists'
+import { reachesLostFilter } from './filterListDraft'
 
 interface FilterListChipsProps {
   ids: string[]
@@ -10,6 +13,7 @@ interface FilterListChipsProps {
 /** One chip per list applied to the gallery: neutral, since a list mixes categories. */
 export function FilterListChips({ ids, onRemove }: FilterListChipsProps): JSX.Element | null {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { data } = useFilterLists()
   const applied = data.filter((list) => ids.includes(list.id))
   if (applied.length === 0) return null
@@ -18,7 +22,19 @@ export function FilterListChips({ ids, onRemove }: FilterListChipsProps): JSX.El
     <ul className="filter-list-chips">
       {applied.map((list) => (
         <li key={list.id} className="filter-list-chip">
-          <Bookmark size={14} aria-hidden="true" />
+          {reachesLostFilter(data, list.id) ? (
+            <button
+              type="button"
+              className="filter-list-chip-lost"
+              aria-label={t('filterLists.lostFilterChip')}
+              title={t('filterLists.lostFilterChip')}
+              onClick={() => navigate(PATH.FILTER_LISTS)}
+            >
+              <AlertTriangle size={14} />
+            </button>
+          ) : (
+            <Bookmark size={14} aria-hidden="true" />
+          )}
           <span className="filter-list-chip-name" title={list.name}>
             {list.name}
           </span>

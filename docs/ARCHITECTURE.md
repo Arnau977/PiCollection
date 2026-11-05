@@ -227,3 +227,4 @@ add a `Location` entity, taggable on media the same way.
 | Automatic tags | `src/main/services/autoTags.service.ts` (background size/transparency read) + `src/main/database/repositories/autoTag.repository.ts` (rules matched at query time; read tags through `effectiveMediaTags`) |
 | Local AI tagging (WD14) | `src/main/services/wd14Tagger.service.ts` + `wd14Runtime/` — runs on-device; the runtime/model are downloaded once, on request |
 | Browser extension bridge | `src/main/services/extensionBridge.*.ts` — local HTTP API on 127.0.0.1 for PiCollection Capture |
+| Saved filter lists | `src/main/services/filterList.service.ts`, `src/shared/query/mergeFilters.ts` (expanded at query time in `media.service.ts`), `src/renderer/src/pages/FilterLists/` |

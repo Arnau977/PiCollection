@@ -41,6 +41,25 @@ describe('mergeFilters', () => {
     })
   })
 
+  it('keeps an exclusion marked exact by its own side, so forms stay allowed', () => {
+    const merged = mergeFilters({}, { characterGroups: [['-p']], exactCharacterIds: ['p'] })
+    expect(merged?.exactCharacterIds).toEqual(['p'])
+
+    const onTop = mergeFilters(
+      { characterGroups: [['-p']], exactCharacterIds: ['p'] },
+      { sfw: true }
+    )
+    expect(onTop?.exactCharacterIds).toEqual(['p'])
+  })
+
+  it('lets a plain exclusion on one side beat an exact one on the other', () => {
+    const merged = mergeFilters(
+      { characterGroups: [['-p']], exactCharacterIds: ['p'] },
+      { characterGroups: [['-p']] }
+    )
+    expect(merged?.exactCharacterIds).toBeUndefined()
+  })
+
   it('removes an id excluded by either side from the exact set', () => {
     const merged = mergeFilters({ exactCharacterIds: ['p', 'q'] }, { characterGroups: [['-p']] })
     expect(merged?.exactCharacterIds).toEqual(['q'])

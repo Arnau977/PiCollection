@@ -53,6 +53,12 @@
   font-weight: 500;
 }
 
+/* color-danger on surface-2 5.58:1, and the shape differs from the bookmark. */
+.filter-list-chip .filter-list-chip-lost {
+  flex-shrink: 0;
+  color: var(--color-danger);
+}
+
 .filter-list-chip-name {
   max-width: 16rem;
   overflow: hidden;
@@ -83,6 +89,12 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+.gallery-page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .gallery-page-error {

@@ -1,0 +1,104 @@
+.filter-lists-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Wider than Metadata's form: this one holds the whole set of filters. */
+.filter-lists-page .manage-panel-split {
+  grid-template-columns: minmax(340px, 460px) minmax(0, 1fr);
+}
+
+/* Save stays at the top of the panel; only the fields scroll. */
+.filter-list-form {
+  align-self: stretch;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.filter-list-form-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+/* A grid, not a flex column: .filter-field's flex-basis would become a height. */
+.filter-list-form-fields {
+  display: grid;
+  gap: var(--space-4);
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-right: var(--space-2);
+  overflow-y: auto;
+}
+
+.filter-list-form-selects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.filter-list-form-selects .filter-field {
+  flex-basis: 110px;
+  min-width: 100px;
+}
+
+/* color-danger on surface 5.93:1; the icon and words carry it too. */
+.filter-list-lost {
+  display: flex;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.85rem;
+}
+
+.filter-list-lost svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.filter-lists-item-text {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 0.1rem var(--space-2);
+  min-width: 0;
+}
+
+.filter-lists-item-text .manage-item-name {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* color-danger on surface-2 5.58:1 */
+.filter-lists-item-lost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-danger);
+  font-size: 0.8rem;
+}
+
+/* text-muted on surface-2 6.19:1 */
+.filter-lists-item-summary {
+  flex: 1 0 100%;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .filter-lists-page .manage-panel-split {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
