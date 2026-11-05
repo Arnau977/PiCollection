@@ -40,25 +40,23 @@ export function FilterListForm({
 
   const includable = useMemo(() => listsSafeToInclude(lists, list?.id ?? null), [lists, list?.id])
 
+  // What saving will really store: a filter on something deleted doesn't count.
+  const kept = known ? pruneMissingEntities(filters, known) : filters
   const trimmedName = name.trim()
   const blockedReason = !trimmedName
     ? t('filterLists.nameRequired')
-    : !hasActiveFilters(filters) && includedListIds.length === 0
+    : !hasActiveFilters(kept) && includedListIds.length === 0
       ? t('filterLists.nothingLeft')
       : undefined
   const blocked = Boolean(blockedReason) || !known
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault()
-    if (blocked || !known || savingRef.current) return
+    if (blocked || savingRef.current) return
     savingRef.current = true
     setSaving(true)
     setError(null)
-    const input = {
-      name: trimmedName,
-      filters: pruneMissingEntities(filters, known),
-      includedListIds
-    }
+    const input = { name: trimmedName, filters: kept, includedListIds }
     const result = list
       ? await window.api.filterList.update(list.id, input)
       : await window.api.filterList.create(input)

@@ -81,7 +81,8 @@ list that another one includes can't be deleted; the message names which.
 
 Deleting a tag, character, series or artist takes it out of the lists that use
 it, so they match more than before. Those lists say **Lost a filter** on this
-page, and a warning replaces the bookmark on the chip, including when the list
+page, and a warning replaces the bookmark on the chip and opens this page,
+including when the list
 that lost it is inside the one you applied. Saving the list clears the warning.
 
 ## NSFW

@@ -54,7 +54,7 @@
 }
 
 /* color-danger on surface-2 5.58:1, and the shape differs from the bookmark. */
-.filter-list-chip-lost {
+.filter-list-chip .filter-list-chip-lost {
   flex-shrink: 0;
   color: var(--color-danger);
 }

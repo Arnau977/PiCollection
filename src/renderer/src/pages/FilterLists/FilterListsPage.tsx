@@ -16,7 +16,7 @@ import {
 } from '../../hooks/useEntityLists'
 import { filterByQuery } from '../../utils/filterByQuery'
 import { openGalleryFiltered } from '../../utils/openInGallery'
-import { describeList, type DraftNames } from '../Gallery/filterListDraft'
+import { describeList, reachesLostFilter, type DraftNames } from '../Gallery/filterListDraft'
 import { useRevealAfterSave } from '../Manage/useRevealAfterSave'
 import { FilterListForm } from './FilterListForm'
 import '../Gallery/SaveFilterListDialog.css'
@@ -169,10 +169,12 @@ export default function FilterListsPage(): JSX.Element {
                     >
                       <div className="filter-lists-item-text">
                         <span className="manage-item-name">{list.name}</span>
-                        {list.hasMissingEntities && (
+                        {reachesLostFilter(lists, list.id) && (
                           <span className="filter-lists-item-lost">
                             <AlertTriangle size={14} aria-hidden="true" />
-                            {t('filterLists.lostFilter')}
+                            {list.hasMissingEntities
+                              ? t('filterLists.lostFilter')
+                              : t('filterLists.lostFilterInside')}
                           </span>
                         )}
                         <span className="filter-lists-item-summary">{summaryOf(list)}</span>

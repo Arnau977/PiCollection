@@ -150,7 +150,7 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   scrolling. A row sums up its list in one muted line. Where:
   `pages/FilterLists/`.
 - **A filter list that lost a filter says so where it's used**: "Lost a filter"
-  on its row and a warning instead of the bookmark on the gallery chip, also
+  on its row and a warning button (opens Lists) instead of the bookmark on the gallery chip, also
   when the list that lost it is one it includes. A notice only on the
   management page wouldn't reach someone applying the list. Where:
   `FilterListChips.tsx`, `reachesLostFilter`.

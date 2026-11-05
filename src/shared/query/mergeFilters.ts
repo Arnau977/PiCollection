@@ -45,19 +45,27 @@ function crossGroups(a: string[][] | undefined, b: string[][] | undefined): stri
   return left.flatMap((l) => right.map((r) => [...new Set([...l, ...r])]))
 }
 
-/** An exclusion keeps expanding through forms and subseries, so it wins over an exact pick. */
+/** What a side excludes along with its forms or subseries: it didn't mark the id exact. */
+function plainExclusions(groups: string[][] | undefined, exact: string[] | undefined): string[] {
+  return (groups ?? [])
+    .flat()
+    .map(parseGroupEntry)
+    .filter((entry) => entry.excluded && !exact?.includes(entry.id))
+    .map((entry) => entry.id)
+}
+
+/**
+ * Exact ids apply to the whole query, so one side's pick mustn't narrow the
+ * other's exclusion: "Apta" leaving out a character's forms stays that way.
+ * A side's own exact exclusion is kept, or it would lose those forms itself.
+ */
 function mergeExactIds(
   a: string[] | undefined,
+  aGroups: string[][] | undefined,
   b: string[] | undefined,
-  groups: string[][] | undefined
+  bGroups: string[][] | undefined
 ): string[] | undefined {
-  const excluded = new Set(
-    (groups ?? [])
-      .flat()
-      .map(parseGroupEntry)
-      .filter((entry) => entry.excluded)
-      .map((entry) => entry.id)
-  )
+  const excluded = new Set([...plainExclusions(aGroups, a), ...plainExclusions(bGroups, b)])
   const ids = [...new Set([...(a ?? []), ...(b ?? [])])].filter((id) => !excluded.has(id))
   return ids.length > 0 ? ids : undefined
 }
@@ -84,7 +92,7 @@ export function mergeFilters(base: MediaFilters, extra: SavedFilters): MediaFilt
   for (const key of GROUP_KEYS) merged[key] = crossGroups(base[key], extra[key])
 
   for (const [key, groupsKey] of EXACT_KEYS) {
-    merged[key] = mergeExactIds(base[key], extra[key], merged[groupsKey])
+    merged[key] = mergeExactIds(base[key], base[groupsKey], extra[key], extra[groupsKey])
   }
 
   for (const key of NONE_KEYS) {

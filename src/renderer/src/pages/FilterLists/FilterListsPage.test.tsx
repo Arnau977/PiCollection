@@ -191,6 +191,37 @@ describe('FilterListsPage', () => {
     expect(update.mock.calls[0][1].filters).toEqual({ type: 'image', tagGroups: [['t1']] })
   })
 
+  it('counts what is left once a lost filter goes, so a list with nothing left cannot save', async () => {
+    const user = userEvent.setup()
+    lists = [
+      list({
+        id: 'solo',
+        name: 'Solo',
+        filters: { tagGroups: [['-deleted']] },
+        hasMissingEntities: true
+      })
+    ]
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Edit Solo' }))
+    await user.click(saveButton())
+
+    expect(update).not.toHaveBeenCalled()
+    expect(saveButton()).toHaveAttribute('aria-disabled', 'true')
+    expect(saveButton()).toHaveAttribute('title', 'Nothing left to save')
+  })
+
+  it('points at the included list when that is the one that lost a filter', () => {
+    lists = [
+      list({ id: 'apta', name: 'Apta', filters: { sfw: true }, hasMissingEntities: true }),
+      list({ id: 'perfil', name: 'Perfil', includedListIds: ['apta'] })
+    ]
+    renderPage()
+
+    const row = screen.getByText('Perfil').closest('li') as HTMLElement
+    expect(within(row).getByText('A list inside it lost a filter')).toBeInTheDocument()
+  })
+
   it('opens a list in the gallery', async () => {
     const user = userEvent.setup()
     renderPage()

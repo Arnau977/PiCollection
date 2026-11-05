@@ -715,7 +715,7 @@ describe('GalleryPage with filter lists', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('img', { name: /lost a filter/ })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /lost a filter/ })).toBeInTheDocument()
   })
 
   it('keeps the chip when nothing matches', async () => {
