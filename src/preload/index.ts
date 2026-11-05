@@ -55,7 +55,9 @@ import type {
   Wd14RuntimeStatus,
   Wd14TagSuggestion,
   AutoTagRuleInput,
-  AutoTagStatus
+  AutoTagStatus,
+  FilterListInput,
+  FilterListModel
 } from '@shared/models'
 import { IPC, type IpcResult } from '@shared/ipc/contracts'
 
@@ -291,6 +293,14 @@ export const api = {
       ipcRenderer.invoke(IPC.danbooru.getCredentials),
     setCredentials: (credentials: DanbooruCredentials | undefined): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.danbooru.setCredentials, credentials)
+  },
+  filterList: {
+    getAll: (): Promise<IpcResult<FilterListModel[]>> => ipcRenderer.invoke(IPC.filterList.getAll),
+    create: (input: FilterListInput): Promise<IpcResult<FilterListModel>> =>
+      ipcRenderer.invoke(IPC.filterList.create, input),
+    update: (id: string, input: FilterListInput): Promise<IpcResult<FilterListModel>> =>
+      ipcRenderer.invoke(IPC.filterList.update, { id, input }),
+    delete: (id: string): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.filterList.delete, id)
   },
   autoTags: {
     getStatus: (): Promise<IpcResult<AutoTagStatus>> => ipcRenderer.invoke(IPC.autoTags.getStatus),

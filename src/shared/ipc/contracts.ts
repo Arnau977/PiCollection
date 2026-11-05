@@ -22,8 +22,20 @@ export const MediaFiltersSchema = z.object({
   exactSeriesIds: z.array(z.string()).optional(),
   isAiGenerated: z.boolean().optional(),
   pendingTagging: z.boolean().optional(),
+  filterListIds: z.array(z.string()).optional(),
   limit: z.number().int().positive().max(500).optional(),
   offset: z.number().int().nonnegative().optional()
+})
+
+export const FilterListInputSchema = z.object({
+  name: z.string().min(1),
+  filters: MediaFiltersSchema.omit({
+    limit: true,
+    offset: true,
+    pendingTagging: true,
+    filterListIds: true
+  }),
+  includedListIds: z.array(z.string().min(1))
 })
 
 export const SortingSchema = z.object({
@@ -240,6 +252,7 @@ export const MediaUpdateSchema = UpdateByIdSchema(MediaInputSchema)
 export const ArtistUpdateSchema = UpdateByIdSchema(ArtistInputSchema)
 export const CharacterUpdateSchema = UpdateByIdSchema(CharacterInputSchema)
 export const TagUpdateSchema = UpdateByIdSchema(TagInputSchema)
+export const FilterListUpdateSchema = UpdateByIdSchema(FilterListInputSchema)
 export const SeriesUpdateSchema = UpdateByIdSchema(SeriesInputSchema)
 
 export const IPC = {
@@ -367,6 +380,12 @@ export const IPC = {
     resolveCharacters: 'danbooru:resolve-characters',
     getCredentials: 'danbooru:get-credentials',
     setCredentials: 'danbooru:set-credentials'
+  },
+  filterList: {
+    getAll: 'db:filter-list:get-all',
+    create: 'db:filter-list:create',
+    update: 'db:filter-list:update',
+    delete: 'db:filter-list:delete'
   },
   autoTags: {
     getStatus: 'auto-tags:get-status',

@@ -7,6 +7,7 @@ import * as filterListRepo from '../database/repositories/filterList.repository'
 import * as seriesRepo from '../database/repositories/series.repository'
 import * as tagRepo from '../database/repositories/tag.repository'
 import type { DB, FilterListIncludeTable, FilterListTable } from '../database/schema'
+import { notifyEntitiesChanged } from '../events/entityEvents'
 import { groupEntityIds } from '@shared/query/groupEntry'
 import { hasActiveFilters } from '@shared/query/hasActiveFilters'
 import { pruneMissingEntities, type KnownEntityIds } from '@shared/query/pruneMissingEntities'
@@ -51,7 +52,11 @@ function includesOf(rows: FilterListIncludeTable[], listId: string): string[] {
 }
 
 /** Throws if saving these includes would make the list contain itself. */
-function assertNoCycle(listId: string, includedIds: string[], rows: FilterListIncludeTable[]): void {
+function assertNoCycle(
+  listId: string,
+  includedIds: string[],
+  rows: FilterListIncludeTable[]
+): void {
   const seen = new Set<string>()
   const pending = [...includedIds]
   while (pending.length) {
@@ -120,6 +125,7 @@ export const filterListService = {
       })
       await filterListRepo.replaceFilterListIncludes(trx, id, input.includedListIds)
     })
+    notifyEntitiesChanged(['filterList'])
     return findById(id)
   },
 
@@ -135,6 +141,7 @@ export const filterListService = {
       })
       await filterListRepo.replaceFilterListIncludes(trx, id, input.includedListIds)
     })
+    notifyEntitiesChanged(['filterList'])
     return findById(id)
   },
 
@@ -150,6 +157,7 @@ export const filterListService = {
       throw new Error(`This filter list is included in: ${names}`)
     }
     await filterListRepo.deleteFilterList(db, id)
+    notifyEntitiesChanged(['filterList'])
   },
 
   /**

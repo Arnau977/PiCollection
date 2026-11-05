@@ -36,10 +36,7 @@ function splitQuery(filters: SavedFilters): SplitQuery {
  * with every group of the other. Entries are deduped because a group matches
  * by counting distinct ids, so `[x, x]` would match nothing.
  */
-function crossGroups(
-  a: string[][] | undefined,
-  b: string[][] | undefined
-): string[][] | undefined {
+function crossGroups(a: string[][] | undefined, b: string[][] | undefined): string[][] | undefined {
   const left = (a ?? []).filter((group) => group.length > 0)
   const right = (b ?? []).filter((group) => group.length > 0)
   if (left.length === 0 && right.length === 0) return undefined

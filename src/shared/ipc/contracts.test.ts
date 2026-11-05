@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { MediaBatchUpdateAssociationsSchema, MediaFiltersSchema } from './contracts'
+import {
+  FilterListInputSchema,
+  MediaBatchUpdateAssociationsSchema,
+  MediaFiltersSchema
+} from './contracts'
+
+describe('FilterListInputSchema', () => {
+  it('drops paging, Pending and list ids from the saved filters', () => {
+    const parsed = FilterListInputSchema.parse({
+      name: 'Apta',
+      filters: { sfw: true, limit: 5, pendingTagging: true, filterListIds: ['a'] },
+      includedListIds: []
+    })
+    expect(parsed.filters).toEqual({ sfw: true })
+  })
+})
 
 describe('MediaFiltersSchema', () => {
   it('keeps isAiGenerated through parsing instead of stripping it as an unknown key', () => {
