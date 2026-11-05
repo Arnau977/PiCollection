@@ -7,6 +7,7 @@ import type { MediaFilters, Sorting } from '@shared/models'
 import Media from '../../../components/Media/Media'
 import { MediaFileActions } from '../../../components/MediaFileActions/MediaFileActions'
 import { useConfirm } from '../../../components/ConfirmDialog/ConfirmDialogContext'
+import { writeGalleryReturn } from '../../../hooks/useGallerySession'
 import { useMediaById } from '../../../hooks/useMediaById'
 import { useAdjacentMedia } from '../../../hooks/useAdjacentMedia'
 import { forgetGallerySelection } from '../../../hooks/useGallerySession'
@@ -68,6 +69,13 @@ const MediaPage: React.FC = () => {
     savedScrollTop.current = scrollRegionRef.current?.scrollTop ?? 0
     setIsEditing(true)
   }
+
+  // For the mouse's back button, which skips goBack. Prev/next move on, so
+  // this follows them, and a queue or another page's detour isn't the gallery.
+  useEffect(() => {
+    if (!id || pendingQueue || returnTo) return
+    writeGalleryReturn({ mediaId: id, focusIndex: index ?? undefined })
+  }, [id, index, pendingQueue, returnTo])
 
   function goBack(): void {
     if (returnTo) {

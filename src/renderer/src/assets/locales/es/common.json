@@ -518,6 +518,10 @@
     "save": "Guardar",
     "saving": "Guardando...",
     "saved": "Lista \"{{name}}\" guardada",
+    "editInGallery": "Editar {{name}} en la galería",
+    "editing": "Editando \"{{name}}\"",
+    "saveChanges": "Guardar cambios",
+    "notSaved": "No se guarda en la lista: {{items}}",
     "removeChip": "Quitar la lista {{name}}"
   },
   "search": {

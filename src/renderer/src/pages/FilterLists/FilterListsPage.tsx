@@ -1,7 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, ArrowLeft, Bookmark, Images, Pencil, Trash2 } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Bookmark,
+  Images,
+  Pencil,
+  SlidersHorizontal,
+  Trash2
+} from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import type { FilterListModel } from '@shared/models'
 import { pruneMissingEntities, type KnownEntityIds } from '@shared/query/pruneMissingEntities'
@@ -15,7 +23,7 @@ import {
   useTags
 } from '../../hooks/useEntityLists'
 import { filterByQuery } from '../../utils/filterByQuery'
-import { openGalleryFiltered } from '../../utils/openInGallery'
+import { openGalleryFiltered, openListEditInGallery } from '../../utils/openInGallery'
 import { describeList, reachesLostFilter, type DraftNames } from '../Gallery/filterListDraft'
 import { useRevealAfterSave } from '../Manage/useRevealAfterSave'
 import { FilterListForm } from './FilterListForm'
@@ -187,6 +195,15 @@ export default function FilterListsPage(): JSX.Element {
                         onClick={() => openGalleryFiltered({ filterListIds: [list.id] }, navigate)}
                       >
                         <Images size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        aria-label={t('filterLists.editInGallery', { name: list.name })}
+                        title={t('filterLists.editInGallery', { name: list.name })}
+                        onClick={() => openListEditInGallery(list, navigate)}
+                      >
+                        <SlidersHorizontal size={16} />
                       </button>
                       <button
                         type="button"

@@ -81,14 +81,12 @@ export function SearchBar({
   const [highlighted, setHighlighted] = useState(0)
   const [dismissed, setDismissed] = useState(false)
   const [focused, setFocused] = useState(false)
-  const isFirstRender = useRef(true)
+  const appliedQuery = useRef(debouncedQuery)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
-    }
+    if (appliedQuery.current === debouncedQuery) return
+    appliedQuery.current = debouncedQuery
     onFiltersChange({ ...filters, query: debouncedQuery.trim() || undefined })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery])

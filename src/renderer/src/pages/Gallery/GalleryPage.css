@@ -84,6 +84,16 @@
   background: var(--color-surface-hover);
 }
 
+/* text-muted on accent-soft 6.27:1, color-danger on accent-soft 5.70:1. */
+.list-edit-note {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.list-edit-error {
+  color: var(--color-danger);
+}
+
 .gallery-page-header {
   display: flex;
   align-items: center;

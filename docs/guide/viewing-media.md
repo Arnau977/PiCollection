@@ -5,7 +5,9 @@ the file lives (its folder inside the source folder; hover for the full
 path) with its format, resolution and size, its artist, tags, characters
 and series, and **Similar media** below (see
 [Duplicates](duplicates.md)). `←` / `→` move to the previous or next item in
-the gallery's current order, and **Edit** (`E`) opens the edit form.
+the gallery's current order, and **Edit** (`E`) opens the edit form. **Back
+to gallery**, or your mouse's back button, returns to the page you were on with
+the last media you viewed in sight.
 
 ## Playing videos
 

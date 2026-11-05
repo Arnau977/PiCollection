@@ -1,10 +1,20 @@
 import { useCallback, useState } from 'react'
 import type { MediaFilters, Sorting } from '@shared/models'
 
+/** A list open in the gallery's filters, kept here so opening a media doesn't end it. */
+export interface ListEdit {
+  id: string
+  /** The filters to go back to on Cancel. */
+  before: MediaFilters
+  /** Gallery defaults left applied that the list itself doesn't set. */
+  heldDefaults: Pick<MediaFilters, 'sfw' | 'type'>
+}
+
 export interface GallerySession {
   filters: MediaFilters
   sorting: Sorting
   page: number
+  listEdit?: ListEdit
 }
 
 /**
@@ -45,16 +55,39 @@ export function forgetGallerySelection(id: string): void {
   selection = next
 }
 
+export interface GalleryReturn {
+  mediaId: string
+  /** Its position under the gallery's filters and sorting, once known. */
+  focusIndex?: number
+}
+
+/**
+ * The media last viewed, for going back through history (the mouse's back
+ * button), which can't carry router state the way "Back to gallery" does.
+ */
+let galleryReturn: GalleryReturn | null = null
+
+export function readGalleryReturn(): GalleryReturn | null {
+  return galleryReturn
+}
+
+export function writeGalleryReturn(next: GalleryReturn | null): void {
+  galleryReturn = next
+}
+
 /** Test helper: forgets the remembered filters and selection. */
 export function resetGallerySession(): void {
   session = null
   selection = new Set()
+  galleryReturn = null
 }
 
 interface UseGallerySessionResult extends GallerySession {
   setFilters: (filters: MediaFilters) => void
   setSorting: (sorting: Sorting) => void
   setPage: (page: number) => void
+  /** Starts or ends a list edit, swapping the filters in the same step. */
+  setListEdit: (filters: MediaFilters, listEdit: ListEdit | undefined) => void
 }
 
 export function useGallerySession(createInitial: () => GallerySession): UseGallerySessionResult {
@@ -86,6 +119,11 @@ export function useGallerySession(createInitial: () => GallerySession): UseGalle
   )
   const setSorting = useCallback((sorting: Sorting) => update({ sorting }), [update])
   const setPage = useCallback((page: number) => update({ page }), [update])
+  const setListEdit = useCallback(
+    (filters: MediaFilters, listEdit: ListEdit | undefined) =>
+      update({ filters, listEdit, page: 0 }),
+    [update]
+  )
 
-  return { ...state, setFilters, setSorting, setPage }
+  return { ...state, setFilters, setSorting, setPage, setListEdit }
 }

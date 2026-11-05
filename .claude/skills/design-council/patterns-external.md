@@ -126,6 +126,20 @@ here.
 - Source: CMS Design System filter chip - https://design.cms.gov/components/filter-chip ; Intelligence Community Design System chip - https://design.sis.gov.uk/components/chip
 - Checked: 2026-11-05
 
+### State a temporary edit mode in words, where the work happens
+- Kind: pattern
+- Use when / avoid when: a mode changes what the same controls do. Mode slips come from not seeing which mode is active, so show it persistently in plain words instead of a passing toast. Fluent places a page-level bar under the command bar; its button labels name the outcome. Offer Cancel from the first moment.
+- Takeaway for PiCollection: the list edit's bar sits right under the filters it talks about, names the list, and stays until Save changes or Cancel.
+- Source: Modes in User Interfaces (NN/g) - https://nngroup.com/articles/modes/ ; Fluent 2 message bar - https://fluent2.microsoft.design/components/web/react/core/messagebar/usage
+- Checked: 2026-11-05
+
+### Keep "update this saved view" apart from "save a new one"
+- Kind: pattern
+- Use when / avoid when: saved views or filters. Give separate routes to save changes, save as new, or go back to the saved definition; never one ambiguous Save, and a tweak mustn't overwrite the saved view by itself.
+- Takeaway for PiCollection: filters added beside a list stay loose until Edit is chosen, Save as list stays a new list, and Save changes only exists inside the edit.
+- Source: Saved Views (SaaSFrame) - https://www.saasframe.io/patterns/saved-views ; Save, update and manage a view (ChangePilot) - https://intercom.help/changepilot/en/articles/16837242-save-update-and-manage-a-view
+- Checked: 2026-11-05
+
 ## Anti-patterns
 
 ### A badge that is almost always lit

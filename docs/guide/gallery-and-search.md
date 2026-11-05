@@ -58,8 +58,9 @@ is dropped. Default filters and sorting for the gallery are set in **Settings
 A filter list is a set of filters with a name, such as "Profile picture" for
 "SFW, none of these tags". Any active filters can be saved: click **Save as
 list** in the bar under the filters, name it, and take out anything you don't
-want to keep with its ×. Taking something out there doesn't change the gallery,
-and saving doesn't either.
+want to keep with its ×. Once saved, the list shows as a chip in place of the
+filters it holds, and what you took out stays on as loose filters, so the
+results don't change.
 
 To apply a list, click the empty search box to see your lists, or type part of
 its name and pick the one marked **List**. It shows as a chip with a bookmark;
@@ -74,9 +75,20 @@ Saving while a list is on keeps a link to it, not a copy: when you change the
 original list later, the new one follows it. Lists never cover Pending, and the
 sort order isn't saved.
 
+To change a list while looking at its results, click the pencil on its chip.
+The list opens into normal filters, joined by any you had added beside it, and
+the bar says **Editing "name"**. Add, remove or exclude what you like: the
+gallery updates as you go, and you can open a picture and come back. **Save
+changes** puts it all back into the list; **Cancel** leaves the list as it was
+and brings back your earlier filters. Other lists you had on step aside until
+you finish. A gallery default the list doesn't set, such as SFW only, stays on
+but isn't saved in the list, and the bar says so. Closing the app drops an
+unfinished edit.
+
 **Lists**, at the top of the gallery, opens the page where you create, edit and
 delete them. Each row sums up what the list holds and can open it in the
-gallery. A list can include others, except one that would loop back to it. A
+gallery, either to use it or to edit it there. A list's name changes on this
+page only. A list can include others, except one that would loop back to it. A
 list that another one includes can't be deleted; the message names which.
 
 Deleting a tag, character, series or artist takes it out of the lists that use

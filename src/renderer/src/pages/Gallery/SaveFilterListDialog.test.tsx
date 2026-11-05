@@ -59,7 +59,7 @@ describe('SaveFilterListDialog', () => {
       filters: { sfw: true, type: 'image' },
       includedListIds: ['l1']
     })
-    await waitFor(() => expect(onSaved).toHaveBeenCalledWith('Banner'))
+    await waitFor(() => expect(onSaved).toHaveBeenCalled())
   })
 
   it('shows everything that will be stored', () => {

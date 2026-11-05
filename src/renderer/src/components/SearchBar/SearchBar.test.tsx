@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { StrictMode } from 'react'
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -46,6 +47,31 @@ function renderSearchBar(filters: MediaFilters = {}) {
   )
   return { onFiltersChange }
 }
+
+describe('SearchBar on mount', () => {
+  // Reapplying filters sends the gallery to page 1, so coming back from a
+  // media would lose the page. StrictMode runs mount effects twice.
+  it('leaves the filters alone until the text changes', async () => {
+    const onFiltersChange = vi.fn()
+    render(
+      <StrictMode>
+        <SearchBar
+          filters={{ query: 'a' }}
+          onFiltersChange={onFiltersChange}
+          artists={[]}
+          tags={[]}
+          characters={[]}
+          series={[]}
+          filterLists={[]}
+        />
+      </StrictMode>
+    )
+
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(onFiltersChange).not.toHaveBeenCalled()
+  })
+})
 
 function searchInput(): HTMLElement {
   return screen.getByRole('textbox', { name: 'Search' })
