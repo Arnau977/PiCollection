@@ -1,6 +1,7 @@
 import { HashRouter as Router, Route, Routes } from 'react-router-dom'
 import HomePage from './pages/Home/HomePage'
 import GalleryPage from './pages/Gallery/GalleryPage'
+import FilterListsPage from './pages/FilterLists/FilterListsPage'
 import { PATH } from './app.routes.const'
 import MediaPage from './pages/Media/MediaPage/MediaPage'
 import AddMediaPage from './pages/Media/AddMediaPage/AddMediaPage'
@@ -20,6 +21,7 @@ export default function AppRoutes(): JSX.Element {
           <Routes>
             <Route path={PATH.HOME} element={<HomePage />} />
             <Route path={PATH.GALLERY} element={<GalleryPage />} />
+            <Route path={PATH.FILTER_LISTS} element={<FilterListsPage />} />
             <Route path={PATH.MEDIA} element={<MediaPage />} />
             <Route path={PATH.ADD_MEDIA} element={<AddMediaPage />} />
             <Route path={PATH.PENDING} element={<PendingEntryPage />} />

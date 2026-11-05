@@ -23,7 +23,18 @@ describe('notifyEntitiesChanged', () => {
     notifyEntitiesChanged(['tag', 'series'])
 
     expect(window.webContents.send).toHaveBeenCalledWith(IPC.entities.changed, {
-      kinds: ['tag', 'series']
+      kinds: ['tag', 'series', 'filterList']
+    })
+  })
+
+  it('sends a filter list change on its own without repeating it', () => {
+    const window = fakeWindow()
+    setEntityEventsWindow(window as never)
+
+    notifyEntitiesChanged(['filterList'])
+
+    expect(window.webContents.send).toHaveBeenCalledWith(IPC.entities.changed, {
+      kinds: ['filterList']
     })
   })
 

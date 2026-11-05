@@ -701,6 +701,23 @@ describe('GalleryPage with filter lists', () => {
     expect(screen.getByRole('button', { name: 'Remove list b' })).toBeInTheDocument()
   })
 
+  it('warns on the chip when a list inside it lost a filter', async () => {
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } }))
+    filterListsState.data = [
+      { ...list('a'), includedListIds: ['b'] },
+      { ...list('b'), hasMissingEntities: true }
+    ]
+    appliedSession(['a'])
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('img', { name: /lost a filter/ })).toBeInTheDocument()
+  })
+
   it('keeps the chip when nothing matches', async () => {
     setApi(vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } }))
     filterListsState.data = [list('a')]

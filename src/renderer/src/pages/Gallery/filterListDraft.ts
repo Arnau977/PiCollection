@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next'
-import type { FilterListInput, MediaFilters, SavedFilters } from '@shared/models'
+import type { FilterListInput, FilterListModel, MediaFilters, SavedFilters } from '@shared/models'
 import { groupEntityIds, parseGroupEntry } from '@shared/query/groupEntry'
 
 /** What the save step will store, minus the name. */
@@ -65,6 +65,35 @@ function withoutEntry(
     next[exactField] = exact?.length ? exact : undefined
   }
   return next
+}
+
+/** A list and everything it includes, followed all the way down. */
+function reachableIds(lists: FilterListModel[], id: string): Set<string> {
+  const byId = new Map(lists.map((list) => [list.id, list]))
+  const seen = new Set<string>()
+  const pending = [id]
+  while (pending.length) {
+    const next = pending.pop()!
+    if (seen.has(next)) continue
+    seen.add(next)
+    pending.push(...(byId.get(next)?.includedListIds ?? []))
+  }
+  return seen
+}
+
+/** The lists `listId` can include: never itself, or one that would loop back to it. */
+export function listsSafeToInclude(
+  lists: FilterListModel[],
+  listId: string | null
+): FilterListModel[] {
+  if (listId === null) return lists
+  return lists.filter((list) => !reachableIds(lists, list.id).has(listId))
+}
+
+/** Whether this list, or one inside it, lost a filter to a deleted entity. */
+export function reachesLostFilter(lists: FilterListModel[], listId: string): boolean {
+  const reachable = reachableIds(lists, listId)
+  return lists.some((list) => reachable.has(list.id) && list.hasMissingEntities)
 }
 
 /** One line per thing stored, in the order the dialog shows them. */
@@ -145,4 +174,14 @@ export function describeDraft(
   groups('series', 'seriesGroups', names.series, 'exactSeriesIds')
   if (filters.noSeries) scalar('noSeries', 'series', t('filters.noSeries'))
   return items
+}
+
+/** A list's contents as one line, for telling lists apart at a glance. */
+export function describeList(list: FilterListDraft, names: DraftNames, t: TFunction): string {
+  return describeDraft(list, names, t)
+    .map((item) => {
+      if (item.section === 'lists') return t('filterLists.includes', { name: item.label })
+      return item.excluded ? t('filterLists.without', { name: item.label }) : item.label
+    })
+    .join(' · ')
 }

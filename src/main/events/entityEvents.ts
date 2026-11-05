@@ -15,11 +15,14 @@ export function setEntityEventsWindow(window: BrowserWindow): void {
  * renderer's `useEntityLists` caches can invalidate themselves instead of
  * relying on every mutation call site remembering to call `refetch()`.
  * Mirrors `autoUpdater.ts`'s `send`/`setUpdaterWindow` push pattern.
+ *
+ * Filter lists always come along: whether one lost a filter depends on the
+ * entities it mentions, so a deleted tag has to refresh them too.
  */
 export function notifyEntitiesChanged(kinds: EntityKind[]): void {
   if (!kinds.length) return
   if (entityEventsWindow && !entityEventsWindow.isDestroyed()) {
-    const event: EntitiesChangedEvent = { kinds }
+    const event: EntitiesChangedEvent = { kinds: [...new Set([...kinds, 'filterList' as const])] }
     entityEventsWindow.webContents.send(IPC.entities.changed, event)
   }
 }

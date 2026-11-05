@@ -143,6 +143,17 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   accident; taking one out touches only what's saved. Save goes aria-disabled
   with the reason when nothing is left. Where: `SaveFilterListDialog.tsx`,
   `filterListDraft.ts`.
+- **Filter lists are managed off the gallery, not in Metadata** (`/gallery/lists`,
+  a Lists button in the gallery's header): they're a way of finding media, not
+  data about it. The user questioned the Metadata tab first proposed. Same
+  split as Manage, wider form, Save fixed at the top and only the fields
+  scrolling. A row sums up its list in one muted line. Where:
+  `pages/FilterLists/`.
+- **A filter list that lost a filter says so where it's used**: "Lost a filter"
+  on its row and a warning instead of the bookmark on the gallery chip, also
+  when the list that lost it is one it includes. A notice only on the
+  management page wouldn't reach someone applying the list. Where:
+  `FilterListChips.tsx`, `reachesLostFilter`.
 - **An empty search box lists the saved lists on focus**, with nothing
   preselected so Tab still leaves the box; an arrow key picks one. The options
   stop `mousedown` so pressing one doesn't blur the box first. A list can't be

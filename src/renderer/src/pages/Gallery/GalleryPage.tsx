@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { BookmarkPlus, Plus } from 'lucide-react'
+import { Bookmark, BookmarkPlus, Plus } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import type { MediaFilters } from '@shared/models'
 import Gallery from '../../components/Gallery/Gallery'
@@ -287,10 +287,16 @@ const GalleryPage: React.FC = () => {
     <div className="page gallery-page">
       <div className="gallery-page-header">
         <h1 className="page-title">{t('gallery.title')}</h1>
-        <button className="btn btn-primary" onClick={() => navigate(PATH.ADD_MEDIA)}>
-          <Plus size={16} />
-          {t('gallery.addMedia')}
-        </button>
+        <div className="gallery-page-header-actions">
+          <button className="btn" onClick={() => navigate(PATH.FILTER_LISTS)}>
+            <Bookmark size={16} />
+            {t('filterLists.lists')}
+          </button>
+          <button className="btn btn-primary" onClick={() => navigate(PATH.ADD_MEDIA)}>
+            <Plus size={16} />
+            {t('gallery.addMedia')}
+          </button>
+        </div>
       </div>
 
       <FilterBar

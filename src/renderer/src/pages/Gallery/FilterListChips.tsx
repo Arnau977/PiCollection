@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
-import { Bookmark, X } from 'lucide-react'
+import { AlertTriangle, Bookmark, X } from 'lucide-react'
 import { useFilterLists } from '../../hooks/useEntityLists'
+import { reachesLostFilter } from './filterListDraft'
 
 interface FilterListChipsProps {
   ids: string[]
@@ -18,7 +19,18 @@ export function FilterListChips({ ids, onRemove }: FilterListChipsProps): JSX.El
     <ul className="filter-list-chips">
       {applied.map((list) => (
         <li key={list.id} className="filter-list-chip">
-          <Bookmark size={14} aria-hidden="true" />
+          {reachesLostFilter(data, list.id) ? (
+            <AlertTriangle
+              size={14}
+              className="filter-list-chip-lost"
+              role="img"
+              aria-label={t('filterLists.lostFilterChip')}
+            >
+              <title>{t('filterLists.lostFilterChip')}</title>
+            </AlertTriangle>
+          ) : (
+            <Bookmark size={14} aria-hidden="true" />
+          )}
           <span className="filter-list-chip-name" title={list.name}>
             {list.name}
           </span>

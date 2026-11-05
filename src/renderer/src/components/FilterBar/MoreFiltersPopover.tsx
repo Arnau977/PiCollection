@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MoreHorizontal } from 'lucide-react'
 import type { MediaFilters } from '@shared/models'
+import { AiFilter, SfwFilter } from './FilterSelects'
 import './MoreFiltersPopover.css'
 
 interface MoreFiltersPopoverProps {
@@ -50,43 +51,8 @@ export function MoreFiltersPopover({
 
       {open && (
         <div className="more-filters-panel" role="group" aria-label={t('filters.more')}>
-          <label className="filter-field">
-            <span className="filter-label">{t('filters.sfw')}</span>
-            <select
-              value={filters.sfw === undefined ? 'all' : filters.sfw ? 'sfw' : 'nsfw'}
-              onChange={(e) => {
-                const selected = e.target.value
-                onFiltersChange({
-                  ...filters,
-                  sfw: selected === 'all' ? undefined : selected === 'sfw'
-                })
-              }}
-            >
-              <option value="all">{t('filters.sfwAll')}</option>
-              <option value="sfw">{t('filters.sfwOnly')}</option>
-              <option value="nsfw">{t('filters.nsfwOnly')}</option>
-            </select>
-          </label>
-
-          <label className="filter-field">
-            <span className="filter-label">{t('filters.ai')}</span>
-            <select
-              value={
-                filters.isAiGenerated === undefined ? 'all' : filters.isAiGenerated ? 'ai' : 'notAi'
-              }
-              onChange={(e) => {
-                const selected = e.target.value
-                onFiltersChange({
-                  ...filters,
-                  isAiGenerated: selected === 'all' ? undefined : selected === 'ai'
-                })
-              }}
-            >
-              <option value="all">{t('filters.aiAll')}</option>
-              <option value="ai">{t('filters.aiOnly')}</option>
-              <option value="notAi">{t('filters.aiExcluded')}</option>
-            </select>
-          </label>
+          <SfwFilter filters={filters} onFiltersChange={onFiltersChange} />
+          <AiFilter filters={filters} onFiltersChange={onFiltersChange} />
         </div>
       )}
     </div>
