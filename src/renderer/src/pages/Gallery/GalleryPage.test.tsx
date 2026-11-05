@@ -672,6 +672,84 @@ describe('GalleryPage with filter lists', () => {
     await waitFor(() => expect(getFiltered).toHaveBeenCalledTimes(2))
   })
 
+  it('shows one chip per list, and removing one leaves the rest applied', async () => {
+    const user = userEvent.setup()
+    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+    setApi(getFiltered)
+    filterListsState.data = [list('a'), list('b')]
+    writeGallerySession({
+      filters: { filterListIds: ['a', 'b'], type: 'gif' },
+      sorting: { prop: 'createdAt', desc: true },
+      page: 0
+    })
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Remove list a' }))
+
+    await waitFor(() =>
+      expect(getFiltered).toHaveBeenLastCalledWith(
+        expect.objectContaining({ filterListIds: ['b'], type: 'gif' }),
+        expect.anything()
+      )
+    )
+    expect(screen.queryByRole('button', { name: 'Remove list a' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove list b' })).toBeInTheDocument()
+  })
+
+  it('keeps the chip when nothing matches', async () => {
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } }))
+    filterListsState.data = [list('a')]
+    appliedSession(['a'])
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('No media matches these filters')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove list a' })).toBeInTheDocument()
+  })
+
+  it('saves from the filters row, keeps the filters and confirms it', async () => {
+    const user = userEvent.setup()
+    const create = vi.fn().mockResolvedValue({ success: true, data: {} })
+    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+    Object.defineProperty(window, 'api', {
+      value: { media: { getFiltered }, filterList: { create } },
+      writable: true,
+      configurable: true
+    })
+    writeGallerySession({
+      filters: { type: 'gif' },
+      sorting: { prop: 'createdAt', desc: true },
+      page: 0
+    })
+
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Save as list' }))
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Gifs')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('List "Gifs" saved')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(getFiltered).toHaveBeenLastCalledWith(
+      expect.objectContaining({ type: 'gif' }),
+      expect.anything()
+    )
+    expect(getFiltered.mock.lastCall?.[0].filterListIds).toBeUndefined()
+  })
+
   it('does not reload for a list change with none applied', async () => {
     const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
     setApi(getFiltered)

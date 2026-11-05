@@ -17,7 +17,8 @@ vi.mock('../../hooks/useEntityLists', () => ({
   useArtists: () => ({ data: [], loading: false, error: null, refetch: vi.fn() }),
   useTags: () => ({ data: tagsData, loading: false, error: null, refetch: vi.fn() }),
   useCharacters: () => ({ data: charactersData, loading: false, error: null, refetch: vi.fn() }),
-  useSeries: () => ({ data: seriesData, loading: false, error: null, refetch: vi.fn() })
+  useSeries: () => ({ data: seriesData, loading: false, error: null, refetch: vi.fn() }),
+  useFilterLists: () => ({ data: [], loading: false, error: null, refetch: vi.fn() })
 }))
 
 function renderFilterBar(filters: MediaFilters = {}) {

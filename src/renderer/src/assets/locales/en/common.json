@@ -491,6 +491,20 @@
     "fileCount_other": "{{count}} files",
     "selectionHint": "As in Explorer: Ctrl+click adds · Shift+click: range · drag from a gap or the margin · Ctrl+A: all"
   },
+  "filterLists": {
+    "saveAs": "Save as list",
+    "lists": "Lists",
+    "whatGetsSaved": "What gets saved",
+    "or": "or",
+    "excluded": "excluded",
+    "onlyThisOne": "{{name}} (only this one)",
+    "nothingLeft": "Nothing left to save",
+    "nameRequired": "Give the list a name",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "List \"{{name}}\" saved",
+    "removeChip": "Remove list {{name}}"
+  },
   "search": {
     "label": "Search",
     "placeholder": "(a OR b) -c   — search tags, characters, series, artists and names",
@@ -499,6 +513,7 @@
     "characterPrefix": "Character",
     "artistPrefix": "Artist",
     "seriesPrefix": "Series",
+    "listPrefix": "List",
     "aiSuggestion": "AI generated",
     "notAiSuggestion": "Not AI generated"
   },

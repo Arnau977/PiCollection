@@ -133,6 +133,20 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   the third "not filtered" state. Excluded chips get a danger outline and a
   struck-through name, so the state never relies on color alone. Where:
   `MultiSelectAutocomplete.tsx`, `GroupedEntityFilter.tsx`.
+- **What's acting on the gallery lives in the active-filters row**: one
+  neutral chip per applied filter list (bookmark icon, `surface-2`, 13.17:1;
+  no category color, a list mixes them; the × is named "Remove list X"), then
+  **Save as list** and **Clear filters**. Where: `FilterListChips.tsx`,
+  `GalleryPage.tsx`.
+- **Saving a set of filters shows what gets stored first.** The dialog lists
+  every item by section, each with its ×, so a gallery default isn't kept by
+  accident; taking one out touches only what's saved. Save goes aria-disabled
+  with the reason when nothing is left. Where: `SaveFilterListDialog.tsx`,
+  `filterListDraft.ts`.
+- **An empty search box lists the saved lists on focus**, with nothing
+  preselected so Tab still leaves the box; an arrow key picks one. The options
+  stop `mousedown` so pressing one doesn't blur the box first. A list can't be
+  excluded, so a leading `-` doesn't offer them. Where: `SearchBar.tsx`.
 - **Finding within a media's tags filters the chips, it doesn't just
   highlight them** (Ctrl+F or a magnifier by the Tags title): a highlight
   among dozens of same-colored chips still has to be scanned. The bar says

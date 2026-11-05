@@ -55,8 +55,8 @@ The [user guide](docs/guide/README.md) explains each of these step by step.
 - **Duplicate detection** - exact and visually similar copies, a side-by-side
   comparison, and replacing a copy while keeping its tags.
   [Duplicates](docs/guide/duplicates.md)
-- **Gallery search and filters** - AND/OR/exclude search, include/exclude
-  filter chips, hierarchy-aware characters and series, NSFW blur, batch
+- **Gallery search and filters** - AND/OR/exclude search, saved filter lists
+  you can stack and nest, include/exclude filter chips, hierarchy-aware characters and series, NSFW blur, batch
   editing. [Gallery and search](docs/guide/gallery-and-search.md)
 - **Viewing media** - full-size viewer with zoom, copy image (animated GIFs
   too), Video to GIF. [Viewing media](docs/guide/viewing-media.md)

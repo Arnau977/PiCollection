@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Plus } from 'lucide-react'
+import { BookmarkPlus, Plus } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import type { MediaFilters } from '@shared/models'
 import Gallery from '../../components/Gallery/Gallery'
 import { FilterBar } from '../../components/FilterBar/FilterBar'
 import { GalleryToolbar } from '../../components/GalleryToolbar/GalleryToolbar'
+import { Toast } from '../../components/Toast/Toast'
 import { BatchEditDialog, type BatchEditSelections } from './BatchEditDialog'
+import { FilterListChips } from './FilterListChips'
+import { SaveFilterListDialog } from './SaveFilterListDialog'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
@@ -64,6 +67,9 @@ const GalleryPage: React.FC = () => {
   useEffect(() => writeGallerySelection(selectedIds), [selectedIds])
   const [showBatchEdit, setShowBatchEdit] = useState(false)
   const [deletingSelected, setDeletingSelected] = useState(false)
+  const [showSaveList, setShowSaveList] = useState(false)
+  const [savedListName, setSavedListName] = useState<string | null>(null)
+  const saveListRef = useRef<HTMLButtonElement>(null)
   // "Back to gallery" passes the media you were viewing (and its position
   // under the gallery's own filters/sorting) so its card can be scrolled
   // back into view (centered) once the grid re-renders, instead of leaving
@@ -216,6 +222,16 @@ const GalleryPage: React.FC = () => {
   }, [loading, error, page, totalPages, setPage])
   const filtersActive = hasActiveFilters(filters)
 
+  function closeSaveList(): void {
+    setShowSaveList(false)
+    saveListRef.current?.focus()
+  }
+
+  function removeFilterList(id: string): void {
+    const rest = filters.filterListIds?.filter((other) => other !== id) ?? []
+    setFilters({ ...filters, filterListIds: rest.length > 0 ? rest : undefined })
+  }
+
   function handlePageSizeChange(nextPageSize: number): void {
     setDefaults({ ...defaults, pageSize: nextPageSize })
     setPage(0)
@@ -286,7 +302,18 @@ const GalleryPage: React.FC = () => {
 
       {filtersActive && (
         <div className="gallery-active-filters">
+          <FilterListChips ids={filters.filterListIds ?? []} onRemove={removeFilterList} />
           <span>{t('gallery.filtersActive')}</span>
+          <span className="action-bar-spacer" />
+          <button
+            ref={saveListRef}
+            type="button"
+            className="btn"
+            onClick={() => setShowSaveList(true)}
+          >
+            <BookmarkPlus size={16} />
+            {t('filterLists.saveAs')}
+          </button>
           <button type="button" className="btn" onClick={() => setFilters({} as MediaFilters)}>
             {t('gallery.clearFilters')}
           </button>
@@ -351,6 +378,24 @@ const GalleryPage: React.FC = () => {
             {deletingSelected ? t('media.deleting') : t('gallery.deleteSelected')}
           </button>
         </div>
+      )}
+
+      {showSaveList && (
+        <SaveFilterListDialog
+          filters={filters}
+          onClose={closeSaveList}
+          onSaved={(name) => {
+            closeSaveList()
+            setSavedListName(name)
+          }}
+        />
+      )}
+
+      {savedListName && (
+        <Toast
+          message={t('filterLists.saved', { name: savedListName })}
+          onDismiss={() => setSavedListName(null)}
+        />
       )}
 
       {showBatchEdit && (

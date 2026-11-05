@@ -4,6 +4,7 @@ import { Search } from 'lucide-react'
 import type {
   ArtistModel,
   CharacterModel,
+  FilterListModel,
   MediaFilters,
   SeriesModel,
   TagModel
@@ -14,7 +15,7 @@ import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import { InfoTooltip } from '../InfoTooltip/InfoTooltip'
 import './SearchBar.css'
 
-type SuggestionKind = 'tag' | 'character' | 'artist' | 'series' | 'ai'
+type SuggestionKind = 'tag' | 'character' | 'artist' | 'series' | 'ai' | 'list'
 
 interface Suggestion {
   kind: SuggestionKind
@@ -31,6 +32,7 @@ interface SearchBarProps {
   tags: TagModel[]
   characters: CharacterModel[]
   series: SeriesModel[]
+  filterLists: FilterListModel[]
 }
 
 /** The word currently being typed: everything after the last space or parenthesis. */
@@ -70,13 +72,15 @@ export function SearchBar({
   artists,
   tags,
   characters,
-  series
+  series,
+  filterLists
 }: SearchBarProps): JSX.Element {
   const { t } = useTranslation()
   const [query, setQuery] = useState(filters.query ?? '')
   const debouncedQuery = useDebouncedValue(query, 300)
   const [highlighted, setHighlighted] = useState(0)
   const [dismissed, setDismissed] = useState(false)
+  const [focused, setFocused] = useState(false)
   const isFirstRender = useRef(true)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -94,7 +98,15 @@ export function SearchBar({
   const isNegated = rawToken.startsWith('-')
   const token = rawToken.replace(/^-+/, '').replace(/"/g, '').toLowerCase()
 
+  // With nothing typed the box lists the filter lists, so they can be found
+  // without remembering their names.
+  const browsingLists = !query.trim()
+
   const suggestions = useMemo<Suggestion[]>(() => {
+    const lists = filterLists
+      .filter((list) => !filters.filterListIds?.includes(list.id))
+      .map((list): Suggestion => ({ kind: 'list', id: list.id, label: list.name }))
+    if (browsingLists) return lists
     if (!token) return []
     // Every kind is scored on the same scale and ranked together, so a close
     // character match isn't pushed out of the top 8 by loose tag matches.
@@ -103,6 +115,9 @@ export function SearchBar({
       const score = fuzzyScore(name, token)
       if (score !== null) scored.push({ suggestion, score })
     }
+    // First, so a list wins a tie with the tag it may be named after. There's
+    // no excluding a list, so a leading `-` doesn't offer them.
+    if (!isNegated) for (const list of lists) add(list.label, list)
     for (const tag of tags) add(tag.name, { kind: 'tag', id: tag.id, label: tag.name })
     for (const character of characters) {
       add(character.name, {
@@ -114,7 +129,7 @@ export function SearchBar({
     for (const s of series) add(s.name, { kind: 'series', id: s.id, label: s.name })
     for (const artist of artists)
       add(artist.name, { kind: 'artist', id: artist.id, label: artist.name })
-    // Array.prototype.sort is stable, so equal scores keep the tag/character/series/artist order.
+    // Array.prototype.sort is stable, so equal scores keep the order above.
     scored.sort((a, b) => b.score - a.score)
 
     return [
@@ -130,13 +145,26 @@ export function SearchBar({
         : []),
       ...scored.map((entry) => entry.suggestion)
     ].slice(0, 8)
-  }, [token, isNegated, tags, characters, series, artists, t])
+  }, [
+    browsingLists,
+    token,
+    isNegated,
+    tags,
+    characters,
+    series,
+    artists,
+    filterLists,
+    filters.filterListIds,
+    t
+  ])
 
-  const visibleSuggestions = dismissed ? [] : suggestions
+  const visibleSuggestions = dismissed || (browsingLists && !focused) ? [] : suggestions
 
+  // Nothing is preselected while browsing: Tab must still leave the box.
+  const firstHighlight = browsingLists ? -1 : 0
   useEffect(() => {
-    setHighlighted(0)
-  }, [suggestions.length])
+    setHighlighted(firstHighlight)
+  }, [suggestions.length, firstHighlight])
 
   /**
    * Unlike tag/artist (unique names, safe to search as free text), a
@@ -196,8 +224,20 @@ export function SearchBar({
     })
   }
 
+  function applyListSuggestion(listId: string): void {
+    const nextQuery = removeTrailingToken(query)
+    setQuery(nextQuery)
+    onFiltersChange({
+      ...filters,
+      query: nextQuery.trim() || undefined,
+      filterListIds: [...(filters.filterListIds ?? []), listId]
+    })
+  }
+
   function applySuggestion(suggestion: Suggestion): void {
-    if (suggestion.kind === 'character') {
+    if (suggestion.kind === 'list') {
+      applyListSuggestion(suggestion.id)
+    } else if (suggestion.kind === 'character') {
       applyCharacterSuggestion(suggestion.id)
     } else if (suggestion.kind === 'series') {
       applySeriesSuggestion(suggestion.id)
@@ -221,7 +261,9 @@ export function SearchBar({
       setHighlighted((i) => (i + 1) % visibleSuggestions.length)
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      setHighlighted((i) => (i - 1 + visibleSuggestions.length) % visibleSuggestions.length)
+      setHighlighted(
+        (i) => (Math.max(i, 0) - 1 + visibleSuggestions.length) % visibleSuggestions.length
+      )
     } else if (e.key === 'Tab' && visibleSuggestions[highlighted]) {
       e.preventDefault()
       applySuggestion(visibleSuggestions[highlighted])
@@ -233,7 +275,8 @@ export function SearchBar({
     character: t('search.characterPrefix'),
     artist: t('search.artistPrefix'),
     series: t('search.seriesPrefix'),
-    ai: t('filters.ai')
+    ai: t('filters.ai'),
+    list: t('search.listPrefix')
   }
 
   return (
@@ -249,6 +292,17 @@ export function SearchBar({
             setQuery(e.target.value)
             setDismissed(false)
           }}
+          onFocus={() => {
+            setFocused(true)
+            if (browsingLists) setDismissed(false)
+          }}
+          onBlur={() => {
+            setFocused(false)
+            setHighlighted(firstHighlight)
+          }}
+          onClick={() => {
+            if (browsingLists) setDismissed(false)
+          }}
           onKeyDown={handleKeyDown}
           placeholder={t('search.placeholder')}
           aria-label={t('search.label')}
@@ -257,7 +311,9 @@ export function SearchBar({
       </div>
 
       {visibleSuggestions.length > 0 && (
-        <ul className="search-suggestions" role="listbox">
+        // Pressing an option mustn't blur the box, which would close the list
+        // before the click lands.
+        <ul className="search-suggestions" role="listbox" onMouseDown={(e) => e.preventDefault()}>
           {visibleSuggestions.map((suggestion, index) => (
             <li key={`${suggestion.kind}-${suggestion.id}`}>
               <button
