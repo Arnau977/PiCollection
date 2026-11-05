@@ -16,8 +16,8 @@ import {
   useGallerySession,
   writeGallerySelection
 } from '../../hooks/useGallerySession'
-import { hasActiveFilters } from '../../utils/hasActiveFilters'
-import { pruneMissingEntities } from '../../utils/pruneMissingEntities'
+import { hasActiveFilters } from '@shared/query/hasActiveFilters'
+import { pruneMissingEntities } from '@shared/query/pruneMissingEntities'
 import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
 import type { GalleryDensity } from '../../utils/gallerySettings'
 import './GalleryPage.css'

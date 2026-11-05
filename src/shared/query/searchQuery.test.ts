@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractAiToken, parseSearchQuery } from './searchQuery'
+import { extractAiToken, parseSearchQuery, serializeSearchQuery } from './searchQuery'
 
 describe('parseSearchQuery', () => {
   it('returns null for empty or whitespace-only input', () => {
@@ -221,5 +221,15 @@ describe('extractAiToken', () => {
 
   it('returns null node and undefined isAiGenerated for a null input', () => {
     expect(extractAiToken(null)).toEqual({ node: null, isAiGenerated: undefined })
+  })
+})
+
+describe('serializeSearchQuery', () => {
+  it('writes a query that parses back to the same tree', () => {
+    const inputs = ['a b', 'a OR b c', '-a', '(a OR b) (-c -d)', '"two words"', '-(a OR b)', '"OR"']
+    for (const input of inputs) {
+      const node = parseSearchQuery(input)!
+      expect(parseSearchQuery(serializeSearchQuery(node))).toEqual(node)
+    }
   })
 })

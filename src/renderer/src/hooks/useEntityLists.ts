@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { ArtistModel, CharacterModel, EntityKind, SeriesModel, TagModel } from '@shared/models'
+import type {
+  ArtistModel,
+  CharacterModel,
+  EntityKind,
+  FilterListModel,
+  SeriesModel,
+  TagModel
+} from '@shared/models'
 import type { IpcResult } from '@shared/ipc/contracts'
 
 interface ListState<T> {
@@ -93,12 +100,14 @@ export const useArtists = createListHook<ArtistModel>(() => window.api.artist.ge
 export const useTags = createListHook<TagModel>(() => window.api.tag.getAll())
 export const useCharacters = createListHook<CharacterModel>(() => window.api.character.getAll())
 export const useSeries = createListHook<SeriesModel>(() => window.api.series.getAll())
+export const useFilterLists = createListHook<FilterListModel>(() => window.api.filterList.getAll())
 
 const CACHE_BY_KIND: Record<EntityKind, { invalidate: () => void }> = {
   tag: useTags,
   character: useCharacters,
   series: useSeries,
-  artist: useArtists
+  artist: useArtists,
+  filterList: useFilterLists
 }
 
 /**

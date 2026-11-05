@@ -68,9 +68,17 @@ export interface MediaFilters {
   /** Ids in `seriesGroups` matched only by a direct link, not through their subseries. */
   exactSeriesIds?: string[]
   pendingTagging?: boolean
+  /** Saved filter lists to apply; every one is AND'd with the other filters. */
+  filterListIds?: string[]
   limit?: number
   offset?: number
 }
+
+/** The part of `MediaFilters` a saved filter list stores. */
+export type SavedFilters = Omit<
+  MediaFilters,
+  'limit' | 'offset' | 'pendingTagging' | 'filterListIds'
+>
 
 export interface MediaFilteredResult {
   items: MediaModel[]

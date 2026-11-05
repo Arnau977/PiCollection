@@ -40,6 +40,8 @@ import type {
 } from '@shared/models'
 import type { DB, MediaTable } from '../database/schema'
 import { groupEntityIds } from '@shared/query/groupEntry'
+import { mergeFilters } from '@shared/query/mergeFilters'
+import { filterListService } from './filterList.service'
 
 /** A malformed value (hand-edited DB, future shape) just hides the source info. */
 function parseSourceMetadata(raw: string | null | undefined): MediaSourceMetadata | undefined {
@@ -254,6 +256,21 @@ async function findSimilarByPhash(
 
 const SIMILAR_MEDIA_LIMIT = 12
 
+/**
+ * Replaces `filterListIds` with the filters they stand for, read now so an
+ * edit to a list applies straight away. Null when they can never all match.
+ */
+async function expandFilterLists(filters: MediaFilters): Promise<MediaFilters | null> {
+  if (!filters.filterListIds?.length) return filters
+  const { filterListIds, ...own } = filters
+  let expanded: MediaFilters | null = own
+  for (const saved of await filterListService.resolve(filterListIds)) {
+    expanded = mergeFilters(expanded, saved)
+    if (!expanded) return null
+  }
+  return expanded
+}
+
 export const mediaService = {
   async checkDuplicate(route: string): Promise<MediaDuplicateCheck> {
     const db = getDb()
@@ -308,7 +325,12 @@ export const mediaService = {
     return [...relatives, ...lookalikes].slice(0, limit)
   },
 
-  async getMediaFiltered(filters: MediaFilters, sorting?: Sorting): Promise<MediaFilteredResult> {
+  async getMediaFiltered(
+    rawFilters: MediaFilters,
+    sorting?: Sorting
+  ): Promise<MediaFilteredResult> {
+    const filters = await expandFilterLists(rawFilters)
+    if (!filters) return { items: [], total: 0 }
     const db = getDb()
     const flatSeriesIds = groupEntityIds(filters.seriesGroups)
     const seriesClosures = flatSeriesIds.length
@@ -326,7 +348,9 @@ export const mediaService = {
     return { items, total }
   },
 
-  async getMediaOrderedIds(filters: MediaFilters, sorting?: Sorting): Promise<string[]> {
+  async getMediaOrderedIds(rawFilters: MediaFilters, sorting?: Sorting): Promise<string[]> {
+    const filters = await expandFilterLists(rawFilters)
+    if (!filters) return []
     const db = getDb()
     const flatSeriesIds = groupEntityIds(filters.seriesGroups)
     const seriesClosures = flatSeriesIds.length
