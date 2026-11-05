@@ -131,6 +131,20 @@ export interface CharacterInspiredByTable {
   inspired_by_id: string
 }
 
+/** A saved set of gallery filters - see migration 0025. */
+export interface FilterListTable {
+  id: string
+  name: string
+  filters_json: string
+  created_at: number
+  updated_at: number
+}
+
+export interface FilterListIncludeTable {
+  list_id: string
+  included_id: string
+}
+
 export interface DB {
   artist: ArtistTable
   artist_social_link: ArtistSocialLinkTable
@@ -147,4 +161,6 @@ export interface DB {
   discarded_media: DiscardedMediaTable
   auto_tag_rule: AutoTagRuleTable
   character_inspired_by: CharacterInspiredByTable
+  filter_list: FilterListTable
+  filter_list_include: FilterListIncludeTable
 }
