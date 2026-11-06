@@ -28,14 +28,15 @@ export function beginListEdit(
     delete loose[key]
   }
 
-  const opened = mergeFilters(loose, list.filters) ?? list.filters
+  const merged = mergeFilters(loose, list.filters) ?? list.filters
+  const opened: MediaFilters = {
+    ...merged,
+    ...heldDefaults,
+    filterListIds: list.includedListIds.length > 0 ? list.includedListIds : undefined
+  }
   return {
-    filters: {
-      ...opened,
-      ...heldDefaults,
-      filterListIds: list.includedListIds.length > 0 ? list.includedListIds : undefined
-    },
-    listEdit: { id: list.id, before: filters, heldDefaults }
+    filters: opened,
+    listEdit: { id: list.id, name: list.name, before: filters, opened, heldDefaults }
   }
 }
 
@@ -56,6 +57,23 @@ export function listEditDraft(filters: MediaFilters, listEdit: ListEdit): Filter
     delete draft.filters[key as DefaultKey]
   }
   return draft
+}
+
+/** A draft in a form two equal drafts share, however their filters were cleared. */
+function comparable({ filters, includedListIds }: FilterListDraft): string {
+  const entries = Object.entries({ ...filters, includedListIds })
+    .filter(([, value]) => {
+      const empty = value === undefined || value === '' || (Array.isArray(value) && !value.length)
+      return !empty
+    })
+    .sort(([a], [b]) => a.localeCompare(b))
+  return JSON.stringify(entries)
+}
+
+/** Whether saving now would store something other than what was opened. */
+export function hasListEditChanges(filters: MediaFilters, listEdit: ListEdit): boolean {
+  const current = comparable(listEditDraft(filters, listEdit))
+  return current !== comparable(listEditDraft(listEdit.opened, listEdit))
 }
 
 /** Saved, the edit closes back into the list's chip, beside what it set aside. */

@@ -4,8 +4,12 @@ import type { MediaFilters, Sorting } from '@shared/models'
 /** A list open in the gallery's filters, kept here so opening a media doesn't end it. */
 export interface ListEdit {
   id: string
+  /** As it was when opened: only the "leave without saving" dialog shows it. */
+  name: string
   /** The filters to go back to on Cancel. */
   before: MediaFilters
+  /** The filters it opened into, to tell whether anything changed. */
+  opened: MediaFilters
   /** Gallery defaults left applied that the list itself doesn't set. */
   heldDefaults: Pick<MediaFilters, 'sfw' | 'type'>
 }

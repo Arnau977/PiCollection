@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { PATH } from '../../app.routes.const'
+import { ConfirmDialogProvider } from '../ConfirmDialog/ConfirmDialogContext'
 import { readGallerySession, resetGallerySession } from '../../hooks/useGallerySession'
 import { EntityCountButton } from './EntityCountButton'
 
@@ -11,12 +12,14 @@ afterEach(() => resetGallerySession())
 
 function renderAtManage(ui: JSX.Element): void {
   render(
-    <MemoryRouter initialEntries={['/manage']}>
-      <Routes>
-        <Route path="/manage" element={ui} />
-        <Route path={PATH.GALLERY} element={<p>gallery</p>} />
-      </Routes>
-    </MemoryRouter>
+    <ConfirmDialogProvider>
+      <MemoryRouter initialEntries={['/manage']}>
+        <Routes>
+          <Route path="/manage" element={ui} />
+          <Route path={PATH.GALLERY} element={<p>gallery</p>} />
+        </Routes>
+      </MemoryRouter>
+    </ConfirmDialogProvider>
   )
 }
 

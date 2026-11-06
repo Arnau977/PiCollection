@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useOpenInGallery } from '../../hooks/useOpenInGallery'
 import { formatCompactCount } from '../../utils/formatCompactCount'
-import { openEntityInGallery, type CountEntityKind } from '../../utils/openInGallery'
+import type { CountEntityKind } from '../../utils/openInGallery'
 import './EntityCountButton.css'
 
 interface EntityCountButtonProps {
@@ -18,14 +18,10 @@ interface EntityCountButtonProps {
  */
 export function EntityCountButton({ kind, id, name, count }: EntityCountButtonProps): JSX.Element {
   const { t } = useTranslation()
-  const navigate = useNavigate()
+  const { openEntity } = useOpenInGallery()
   const label = formatCompactCount(count)
 
   if (count === 0) return <span className="manage-item-count">{label}</span>
-
-  function openInGallery(): void {
-    openEntityInGallery(kind, id, navigate)
-  }
 
   const title = t('manage.showInGallery', { count, name })
   return (
@@ -34,7 +30,7 @@ export function EntityCountButton({ kind, id, name, count }: EntityCountButtonPr
       className="manage-item-count entity-count-button"
       aria-label={title}
       title={title}
-      onClick={openInGallery}
+      onClick={() => void openEntity(kind, id)}
     >
       {label}
     </button>
