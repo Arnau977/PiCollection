@@ -1,6 +1,7 @@
-import type { MediaFilters, Sorting } from '@shared/models'
+import type { FilterListModel, MediaFilters, Sorting } from '@shared/models'
 import { PATH } from '../app.routes.const'
 import { readGallerySession, writeGallerySession } from '../hooks/useGallerySession'
+import { beginListEdit } from '../pages/Gallery/listEdit'
 import { loadGalleryDefaults } from './gallerySettings'
 
 export type CountEntityKind = 'artist' | 'tag' | 'character' | 'series'
@@ -29,6 +30,24 @@ export function openGalleryFiltered(
     filters: { sfw: defaults.sfw, type: defaults.type, ...filters },
     sorting: sorting ??
       readGallerySession()?.sorting ?? { prop: defaults.sortProp, desc: defaults.sortDesc },
+    page: 0
+  })
+  navigate(PATH.GALLERY)
+}
+
+/** Opens the gallery with `list` applied and already open for editing. */
+export function openListEditInGallery(
+  list: FilterListModel,
+  navigate: (path: string) => void
+): void {
+  const defaults = loadGalleryDefaults()
+  writeGallerySession({
+    ...beginListEdit(
+      list,
+      { sfw: defaults.sfw, type: defaults.type, filterListIds: [list.id] },
+      defaults
+    ),
+    sorting: readGallerySession()?.sorting ?? { prop: defaults.sortProp, desc: defaults.sortDesc },
     page: 0
   })
   navigate(PATH.GALLERY)

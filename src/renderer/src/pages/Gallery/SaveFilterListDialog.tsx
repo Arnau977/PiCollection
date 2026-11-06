@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
-import type { MediaFilters } from '@shared/models'
+import type { FilterListModel, MediaFilters } from '@shared/models'
 import { StableLabel } from '../../components/StableLabel/StableLabel'
 import {
   useArtists,
@@ -10,7 +10,13 @@ import {
   useSeries,
   useTags
 } from '../../hooks/useEntityLists'
-import { describeDraft, toDraft, type DraftItem, type DraftSection } from './filterListDraft'
+import {
+  describeDraft,
+  toDraft,
+  type DraftItem,
+  type DraftSection,
+  type FilterListDraft
+} from './filterListDraft'
 import '../../components/Autocomplete/Autocomplete.css'
 import '../../components/ConfirmDialog/ConfirmDialog.css'
 import './SaveFilterListDialog.css'
@@ -18,7 +24,7 @@ import './SaveFilterListDialog.css'
 interface SaveFilterListDialogProps {
   filters: MediaFilters
   onClose: () => void
-  onSaved: (name: string) => void
+  onSaved: (list: FilterListModel, draft: FilterListDraft) => void
 }
 
 const SECTIONS: DraftSection[] = [
@@ -109,7 +115,7 @@ export function SaveFilterListDialog({
     const result = await window.api.filterList.create({ name: trimmedName, ...draft })
     savingRef.current = false
     setSaving(false)
-    if (result.success) onSaved(trimmedName)
+    if (result.success) onSaved(result.data, draft)
     else setError(result.error.message)
   }
 

@@ -143,6 +143,15 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   accident; taking one out touches only what's saved. Save goes aria-disabled
   with the reason when nothing is left. Where: `SaveFilterListDialog.tsx`,
   `filterListDraft.ts`.
+- **Refine a list against its results, in place.** The pencil on a list's chip
+  opens it into the gallery's normal filters, and the active-filters row turns
+  into a bar saying `Editing "X"` with **Cancel** and **Save changes**, which
+  replaces Save as list and Clear filters so there's one way out of each kind.
+  The state lives in the gallery session, so opening a media doesn't end it.
+  Going back and forth to a form on another page was what the user objected to
+  (2026-11-05). A gallery default stays on but isn't saved, and the bar says
+  so: what you see is what's stored, except what's named as not. Where:
+  `ListEditBar.tsx`, `listEdit.ts`.
 - **Filter lists are managed off the gallery, not in Metadata** (`/gallery/lists`,
   a Lists button in the gallery's header): they're a way of finding media, not
   data about it. The user questioned the Metadata tab first proposed. Same

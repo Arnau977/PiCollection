@@ -251,4 +251,15 @@ describe('FilterListsPage', () => {
 
     expect(readGallerySession()?.filters.filterListIds).toEqual(['apta'])
   })
+
+  it('opens a list for editing in the gallery', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Edit Apta in the gallery' }))
+
+    const session = readGallerySession()
+    expect(session?.listEdit).toMatchObject({ id: 'apta', before: { filterListIds: ['apta'] } })
+    expect(session?.filters.filterListIds).toBeUndefined()
+  })
 })

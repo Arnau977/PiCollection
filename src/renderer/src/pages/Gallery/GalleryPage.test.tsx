@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import type {
   CharacterModel,
   FilterListModel,
@@ -11,7 +11,11 @@ import type {
   TagModel
 } from '@shared/models'
 import GalleryPage from './GalleryPage'
-import { resetGallerySession, writeGallerySession } from '../../hooks/useGallerySession'
+import {
+  resetGallerySession,
+  writeGalleryReturn,
+  writeGallerySession
+} from '../../hooks/useGallerySession'
 
 vi.mock('../../components/FilterBar/FilterBar', () => ({
   FilterBar: () => null
@@ -497,6 +501,47 @@ describe('GalleryPage return-from-media scroll centering', () => {
     expect(scrollIntoViewMock).not.toHaveBeenCalled()
   })
 
+  it('scrolls back to the media you were on when coming back through history', async () => {
+    const scrollIntoViewMock = vi.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+    writeGalleryReturn({ mediaId: '1', focusIndex: 1 })
+
+    const { container } = render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(scrollIntoViewMock).toHaveBeenCalled())
+    expect(scrollIntoViewMock.mock.contexts[0]).toBe(container.querySelector('[data-media-id="1"]'))
+  })
+
+  it('stays at the top when opening the gallery on purpose after viewing a media', async () => {
+    const user = userEvent.setup()
+    const scrollIntoViewMock = vi.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+    writeGalleryReturn({ mediaId: '1', focusIndex: 1 })
+    function SidebarLink(): JSX.Element {
+      const navigate = useNavigate()
+      return <button onClick={() => navigate('/gallery')}>Open gallery</button>
+    }
+
+    render(
+      <MemoryRouter>
+        <Routes>
+          <Route path="/" element={<SidebarLink />} />
+          <Route path="/gallery" element={<GalleryPage />} />
+        </Routes>
+      </MemoryRouter>
+    )
+    await user.click(screen.getByRole('button', { name: 'Open gallery' }))
+
+    await waitFor(() => expect(screen.getByText('Media count: 3')).toBeInTheDocument())
+    expect(scrollIntoViewMock).not.toHaveBeenCalled()
+  })
+
   it('does not scroll anything when arriving without a focusMediaId', async () => {
     const scrollIntoViewMock = vi.fn()
     window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
@@ -735,7 +780,9 @@ describe('GalleryPage with filter lists', () => {
 
   it('saves from the filters row, keeps the filters and confirms it', async () => {
     const user = userEvent.setup()
-    const create = vi.fn().mockResolvedValue({ success: true, data: {} })
+    const create = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { id: 'gifs-id', name: 'Gifs' } })
     const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
     Object.defineProperty(window, 'api', {
       value: { media: { getFiltered }, filterList: { create } },
@@ -765,6 +812,161 @@ describe('GalleryPage with filter lists', () => {
       expect.anything()
     )
     expect(getFiltered.mock.lastCall?.[0].filterListIds).toBeUndefined()
+  })
+
+  it('shows the new list as a chip once it arrives, with the same results', async () => {
+    const user = userEvent.setup()
+    const getFiltered = vi.fn().mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+    setApi(getFiltered)
+    const saved = list('gifs')
+    Object.assign(window.api, {
+      filterList: { create: vi.fn().mockResolvedValue({ success: true, data: saved }) }
+    })
+    writeGallerySession({
+      filters: { type: 'gif' },
+      sorting: { prop: 'createdAt', desc: true },
+      page: 0
+    })
+
+    const page = (): JSX.Element => (
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+    const { rerender } = render(page())
+    await user.click(await screen.findByRole('button', { name: 'Save as list' }))
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'gifs')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await screen.findByText('List "gifs" saved')
+
+    filterListsState = { ...filterListsState, data: [saved] }
+    rerender(page())
+
+    expect(await screen.findByRole('button', { name: 'Remove list gifs' })).toBeInTheDocument()
+    await waitFor(() =>
+      expect(getFiltered.mock.lastCall?.[0]).toMatchObject({ filterListIds: ['gifs'] })
+    )
+    expect(getFiltered.mock.lastCall?.[0].type).toBeUndefined()
+  })
+
+  describe('editing a list in the gallery', () => {
+    const update = vi.fn()
+
+    function renderEditing(listFilters: FilterListModel['filters'] = { tagGroups: [['a']] }): {
+      getFiltered: ReturnType<typeof vi.fn>
+    } {
+      const getFiltered = vi
+        .fn()
+        .mockResolvedValue({ success: true, data: { items: [], total: 0 } })
+      setApi(getFiltered)
+      update.mockReset().mockResolvedValue({ success: true, data: {} })
+      tagsData = [{ id: 'a', name: 'a' } as TagModel]
+      Object.assign(window.api, { filterList: { update } })
+      filterListsState.data = [{ ...list('Apta'), filters: listFilters }]
+      appliedSession(['Apta'])
+      render(
+        <MemoryRouter>
+          <GalleryPage />
+        </MemoryRouter>
+      )
+      return { getFiltered }
+    }
+
+    it('opens the chip into filters and saves them back into the list', async () => {
+      const user = userEvent.setup()
+      const { getFiltered } = renderEditing()
+
+      await user.click(await screen.findByRole('button', { name: 'Edit Apta in the gallery' }))
+
+      expect(screen.getByRole('status')).toHaveTextContent('Editing "Apta"')
+      await waitFor(() =>
+        expect(getFiltered.mock.lastCall?.[0]).toMatchObject({ tagGroups: [['a']] })
+      )
+      expect(getFiltered.mock.lastCall?.[0].filterListIds).toBeUndefined()
+
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      await waitFor(() =>
+        expect(update).toHaveBeenCalledWith('Apta', {
+          name: 'Apta',
+          filters: expect.objectContaining({ tagGroups: [['a']] }),
+          includedListIds: []
+        })
+      )
+      expect(await screen.findByRole('button', { name: 'Remove list Apta' })).toBeInTheDocument()
+      expect(screen.queryByText('Editing "Apta"')).not.toBeInTheDocument()
+    })
+
+    it('puts the filters back on Cancel without saving', async () => {
+      const user = userEvent.setup()
+      const { getFiltered } = renderEditing()
+
+      await user.click(await screen.findByRole('button', { name: 'Edit Apta in the gallery' }))
+      await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+      await waitFor(() =>
+        expect(getFiltered.mock.lastCall?.[0]).toMatchObject({ filterListIds: ['Apta'] })
+      )
+      expect(update).not.toHaveBeenCalled()
+    })
+
+    it('keeps going after leaving the gallery and coming back', async () => {
+      const user = userEvent.setup()
+      renderEditing()
+      await user.click(await screen.findByRole('button', { name: 'Edit Apta in the gallery' }))
+
+      cleanup()
+      render(
+        <MemoryRouter>
+          <GalleryPage />
+        </MemoryRouter>
+      )
+
+      expect(await screen.findByRole('status')).toHaveTextContent('Editing "Apta"')
+    })
+
+    it('blocks saving a list with nothing left, saying why', async () => {
+      const user = userEvent.setup()
+      renderEditing({})
+
+      await user.click(await screen.findByRole('button', { name: 'Edit Apta in the gallery' }))
+      const save = screen.getByRole('button', { name: 'Save changes' })
+      await user.click(save)
+
+      expect(save).toHaveAttribute('aria-disabled', 'true')
+      expect(save).toHaveAttribute('title', 'Nothing left to save')
+      expect(update).not.toHaveBeenCalled()
+    })
+
+    it('shows why a save was refused and stays in the edit', async () => {
+      const user = userEvent.setup()
+      renderEditing()
+      update.mockResolvedValue({ success: false, error: { message: 'Name taken' } })
+
+      await user.click(await screen.findByRole('button', { name: 'Edit Apta in the gallery' }))
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Name taken')
+      expect(screen.getByRole('status')).toBeInTheDocument()
+    })
+
+    it('ends the edit when the list is deleted meanwhile', async () => {
+      const user = userEvent.setup()
+      const { getFiltered } = renderEditing()
+      await user.click(await screen.findByRole('button', { name: 'Edit Apta in the gallery' }))
+
+      cleanup()
+      filterListsState = { ...filterListsState, data: [] }
+      render(
+        <MemoryRouter>
+          <GalleryPage />
+        </MemoryRouter>
+      )
+
+      await waitFor(() => expect(getFiltered.mock.lastCall?.[0].filterListIds).toBeUndefined())
+      await waitFor(() => expect(getFiltered.mock.lastCall?.[0].tagGroups).toBeUndefined())
+      expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    })
   })
 
   it('does not reload for a list change with none applied', async () => {

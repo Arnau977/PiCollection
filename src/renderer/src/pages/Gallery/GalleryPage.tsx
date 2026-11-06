@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Bookmark, BookmarkPlus, Plus } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
@@ -10,18 +10,28 @@ import { GalleryToolbar } from '../../components/GalleryToolbar/GalleryToolbar'
 import { Toast } from '../../components/Toast/Toast'
 import { BatchEditDialog, type BatchEditSelections } from './BatchEditDialog'
 import { FilterListChips } from './FilterListChips'
+import { ListEditBar } from './ListEditBar'
+import { appliedAfterSaving, beginListEdit, filtersAfterListEdit } from './listEdit'
 import { SaveFilterListDialog } from './SaveFilterListDialog'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import {
+  readGalleryReturn,
   readGallerySelection,
   useGallerySession,
+  writeGalleryReturn,
   writeGallerySelection
 } from '../../hooks/useGallerySession'
 import { hasActiveFilters } from '@shared/query/hasActiveFilters'
 import { pruneMissingEntities } from '@shared/query/pruneMissingEntities'
-import { useArtists, useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
+import {
+  useArtists,
+  useCharacters,
+  useFilterLists,
+  useSeries,
+  useTags
+} from '../../hooks/useEntityLists'
 import { useAppliedFilterLists } from './useAppliedFilterLists'
 import type { GalleryDensity } from '../../utils/gallerySettings'
 import './GalleryPage.css'
@@ -55,11 +65,12 @@ const GalleryPage: React.FC = () => {
   const { defaults, setDefaults } = useGalleryDefaults()
   // Filters survive navigating away and back; only "Clear filters" or closing
   // the app resets them.
-  const { filters, sorting, page, setFilters, setSorting, setPage } = useGallerySession(() => ({
-    filters: { sfw: defaults.sfw, type: defaults.type },
-    sorting: { prop: defaults.sortProp, desc: defaults.sortDesc },
-    page: 0
-  }))
+  const { filters, sorting, page, listEdit, setFilters, setSorting, setPage, setListEdit } =
+    useGallerySession(() => ({
+      filters: { sfw: defaults.sfw, type: defaults.type },
+      sorting: { prop: defaults.sortProp, desc: defaults.sortDesc },
+      page: 0
+    }))
   const navigate = useNavigate()
   const location = useLocation()
   const confirm = useConfirm()
@@ -69,14 +80,25 @@ const GalleryPage: React.FC = () => {
   const [deletingSelected, setDeletingSelected] = useState(false)
   const [showSaveList, setShowSaveList] = useState(false)
   const [savedListName, setSavedListName] = useState<string | null>(null)
+  // A new list's chip waits for the list to arrive, or it'd count as deleted.
+  const [appliedOnceLoaded, setAppliedOnceLoaded] = useState<{
+    listId: string
+    filters: MediaFilters
+  } | null>(null)
   const saveListRef = useRef<HTMLButtonElement>(null)
   // "Back to gallery" passes the media you were viewing (and its position
   // under the gallery's own filters/sorting) so its card can be scrolled
   // back into view (centered) once the grid re-renders, instead of leaving
   // you at the top of whatever page you land on.
   const focusState = location.state as { focusMediaId?: string; focusIndex?: number } | null
-  const focusMediaId = focusState?.focusMediaId
-  const focusIndex = focusState?.focusIndex
+  // Going back through history (the mouse's back button) carries no state,
+  // so the media page leaves the same thing behind for it. Only then: opening
+  // the gallery on purpose starts at the top.
+  const navigationType = useNavigationType()
+  const [historyFocus] = useState(() => (navigationType === 'POP' ? readGalleryReturn() : null))
+  useEffect(() => writeGalleryReturn(null), [])
+  const focusMediaId = focusState?.focusMediaId ?? historyFocus?.mediaId
+  const focusIndex = focusState?.focusIndex ?? historyFocus?.focusIndex
   const hasScrolledToFocusRef = useRef(false)
   const hasJumpedToFocusPageRef = useRef(false)
   const [returnHighlightId, setReturnHighlightId] = useState<string | undefined>(undefined)
@@ -106,6 +128,24 @@ const GalleryPage: React.FC = () => {
   )
   const { data: media, total, loading, error, refetch } = useMediaQuery(effectiveFilters, sorting)
   useAppliedFilterLists(filters, setFilters, refetch)
+
+  const filterLists = useFilterLists()
+
+  useEffect(() => {
+    if (!appliedOnceLoaded) return
+    if (!filterLists.data.some((list) => list.id === appliedOnceLoaded.listId)) return
+    setAppliedOnceLoaded(null)
+    setFilters(appliedOnceLoaded.filters)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setFilters is stable
+  }, [appliedOnceLoaded, filterLists.data])
+
+  // The list went away mid-edit (deleted from Lists): nothing left to save to.
+  useEffect(() => {
+    if (!listEdit || filterLists.loading || filterLists.error) return
+    if (filterLists.data.some((list) => list.id === listEdit.id)) return
+    setListEdit(listEdit.before, undefined)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setListEdit is stable
+  }, [listEdit, filterLists.loading, filterLists.error, filterLists.data])
 
   // A filter on an entity deleted or merged since it was set has no chip
   // to show (no name left) yet still applies - an invisible filter that can
@@ -232,6 +272,13 @@ const GalleryPage: React.FC = () => {
     setFilters({ ...filters, filterListIds: rest.length > 0 ? rest : undefined })
   }
 
+  function editFilterList(id: string): void {
+    const list = filterLists.data.find((other) => other.id === id)
+    if (!list) return
+    const opened = beginListEdit(list, filters, defaults)
+    setListEdit(opened.filters, opened.listEdit)
+  }
+
   function handlePageSizeChange(nextPageSize: number): void {
     setDefaults({ ...defaults, pageSize: nextPageSize })
     setPage(0)
@@ -304,11 +351,29 @@ const GalleryPage: React.FC = () => {
         onFiltersChange={setFilters}
         sorting={sorting}
         onSortingChange={setSorting}
+        editingListId={listEdit?.id}
       />
 
-      {filtersActive && (
+      {listEdit && (
+        <ListEditBar
+          filters={filters}
+          listEdit={listEdit}
+          onRemoveList={removeFilterList}
+          onCancel={() => setListEdit(listEdit.before, undefined)}
+          onSaved={(name) => {
+            setListEdit(filtersAfterListEdit(listEdit), undefined)
+            setSavedListName(name)
+          }}
+        />
+      )}
+
+      {!listEdit && filtersActive && (
         <div className="gallery-active-filters">
-          <FilterListChips ids={filters.filterListIds ?? []} onRemove={removeFilterList} />
+          <FilterListChips
+            ids={filters.filterListIds ?? []}
+            onRemove={removeFilterList}
+            onEdit={editFilterList}
+          />
           <span>{t('gallery.filtersActive')}</span>
           <span className="action-bar-spacer" />
           <button
@@ -390,9 +455,11 @@ const GalleryPage: React.FC = () => {
         <SaveFilterListDialog
           filters={filters}
           onClose={closeSaveList}
-          onSaved={(name) => {
+          onSaved={(list, draft) => {
             closeSaveList()
-            setSavedListName(name)
+            setSavedListName(list.name)
+            const next = appliedAfterSaving(filters, draft, list.id)
+            if (next) setAppliedOnceLoaded({ listId: list.id, filters: next })
           }}
         />
       )}

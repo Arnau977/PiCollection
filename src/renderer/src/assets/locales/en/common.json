@@ -518,6 +518,10 @@
     "save": "Save",
     "saving": "Saving...",
     "saved": "List \"{{name}}\" saved",
+    "editInGallery": "Edit {{name}} in the gallery",
+    "editing": "Editing \"{{name}}\"",
+    "saveChanges": "Save changes",
+    "notSaved": "Not saved in the list: {{items}}",
     "removeChip": "Remove list {{name}}"
   },
   "search": {

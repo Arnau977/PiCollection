@@ -7,6 +7,7 @@ import {
   useSeries,
   useTags
 } from '../../hooks/useEntityLists'
+import { listsSafeToInclude } from '../../pages/Gallery/filterListDraft'
 import { SearchBar } from '../SearchBar/SearchBar'
 import { FilterEntityFields } from './FilterEntityFields'
 import { TypeFilter } from './FilterSelects'
@@ -18,13 +19,16 @@ interface FilterBarProps {
   onFiltersChange: (filters: MediaFilters) => void
   sorting?: Sorting
   onSortingChange: (sorting: Sorting) => void
+  /** The list open for editing: it can't be offered as a list to apply. */
+  editingListId?: string
 }
 
 export function FilterBar({
   filters,
   onFiltersChange,
   sorting,
-  onSortingChange
+  onSortingChange,
+  editingListId
 }: FilterBarProps): JSX.Element {
   const { t } = useTranslation()
   const { data: artists } = useArtists()
@@ -42,7 +46,7 @@ export function FilterBar({
         tags={tags}
         characters={characters}
         series={series}
-        filterLists={filterLists}
+        filterLists={listsSafeToInclude(filterLists, editingListId ?? null)}
       />
 
       <div className="filter-bar-row">

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, Bookmark, X } from 'lucide-react'
+import { AlertTriangle, Bookmark, Pencil, X } from 'lucide-react'
 import { PATH } from '@renderer/app.routes.const'
 import { useFilterLists } from '../../hooks/useEntityLists'
 import { reachesLostFilter } from './filterListDraft'
@@ -8,10 +8,16 @@ import { reachesLostFilter } from './filterListDraft'
 interface FilterListChipsProps {
   ids: string[]
   onRemove: (id: string) => void
+  /** Left out while a list is being edited: one edit at a time. */
+  onEdit?: (id: string) => void
 }
 
 /** One chip per list applied to the gallery: neutral, since a list mixes categories. */
-export function FilterListChips({ ids, onRemove }: FilterListChipsProps): JSX.Element | null {
+export function FilterListChips({
+  ids,
+  onRemove,
+  onEdit
+}: FilterListChipsProps): JSX.Element | null {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { data } = useFilterLists()
@@ -38,6 +44,16 @@ export function FilterListChips({ ids, onRemove }: FilterListChipsProps): JSX.El
           <span className="filter-list-chip-name" title={list.name}>
             {list.name}
           </span>
+          {onEdit && (
+            <button
+              type="button"
+              aria-label={t('filterLists.editInGallery', { name: list.name })}
+              title={t('filterLists.editInGallery', { name: list.name })}
+              onClick={() => onEdit(list.id)}
+            >
+              <Pencil size={14} />
+            </button>
+          )}
           <button
             type="button"
             aria-label={t('filterLists.removeChip', { name: list.name })}
