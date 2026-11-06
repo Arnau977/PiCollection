@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { Link, useLocation } from 'react-router-dom'
+import { TestRouter } from '../../../test-router'
 import { ImportQueue } from './ImportQueue'
 
 const expandSelection = vi.fn()
@@ -76,15 +78,65 @@ function renderQueue(onClose = vi.fn(), onLastSaved = vi.fn()) {
     }
   })
   return render(
-    <MemoryRouter>
+    <TestRouter>
       <ImportQueue
         selection={{ files: ['a.png', 'b.png'], folders: [] }}
         onClose={onClose}
         onLastSaved={onLastSaved}
       />
-    </MemoryRouter>
+    </TestRouter>
   )
 }
+
+function CurrentPath(): JSX.Element {
+  return <output>{useLocation().pathname}</output>
+}
+
+describe('ImportQueue, leaving by the sidebar', () => {
+  async function tryLeaving(): Promise<void> {
+    expandSelection.mockResolvedValue({
+      success: true,
+      data: {
+        files: [{ route: '/src/a.png', fileName: 'a.png', type: 'image' }],
+        skippedDiscarded: 0
+      }
+    })
+    render(
+      <TestRouter>
+        <Link to="/elsewhere">Home</Link>
+        <CurrentPath />
+        <ImportQueue
+          selection={{ files: ['a.png'], folders: [] }}
+          onClose={onClose}
+          onLastSaved={vi.fn()}
+        />
+      </TestRouter>
+    )
+    await screen.findByRole('button', { name: 'Next' })
+    await userEvent.setup().click(screen.getByRole('link', { name: 'Home' }))
+    await screen.findByRole('alertdialog')
+  }
+  const onClose = vi.fn()
+
+  it('stays in the queue on Keep editing', async () => {
+    await tryLeaving()
+
+    fireEvent.click(screen.getByRole('button', { name: /keep/i }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(screen.getByRole('status')).toHaveTextContent('/')
+    expect(screen.getByRole('status')).not.toHaveTextContent('elsewhere')
+  })
+
+  it('goes where the user was heading on discarding the rest', async () => {
+    await tryLeaving()
+
+    fireEvent.click(screen.getByRole('button', { name: /discard/i }))
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('/elsewhere'))
+    expect(onClose).not.toHaveBeenCalled()
+  })
+})
 
 describe('ImportQueue', () => {
   it('expands the selection and shows the form for the first file', async () => {
@@ -467,13 +519,13 @@ describe('ImportQueue', () => {
     })
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <ImportQueue
           selection={{ files: [], folders: ['sub'] }}
           onClose={vi.fn()}
           onLastSaved={vi.fn()}
         />
-      </MemoryRouter>
+      </TestRouter>
     )
 
     expect(await screen.findByText('Boom')).toBeInTheDocument()
@@ -487,13 +539,13 @@ describe('ImportQueue', () => {
     })
 
     const { container } = render(
-      <MemoryRouter>
+      <TestRouter>
         <ImportQueue
           selection={{ files: [], folders: ['sub'] }}
           onClose={onClose}
           onLastSaved={vi.fn()}
         />
-      </MemoryRouter>
+      </TestRouter>
     )
 
     expect(

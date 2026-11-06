@@ -2,7 +2,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { TestRouter } from '../../../test-router'
 import type { MediaModel } from '@shared/models'
 import MediaPage from './MediaPage'
 
@@ -59,9 +59,9 @@ vi.mock('../../../components/ConfirmDialog/ConfirmDialogContext', () => ({
 
 function renderMediaPage() {
   return render(
-    <MemoryRouter>
+    <TestRouter>
       <MediaPage />
-    </MemoryRouter>
+    </TestRouter>
   )
 }
 
@@ -528,9 +528,9 @@ describe('MediaPage delete', () => {
 describe('MediaPage pending queue', () => {
   it('starts in edit mode when arriving with location.state.pendingQueue', () => {
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
+      <TestRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
 
     expect(screen.getByRole('button', { name: /^Save/ })).toBeInTheDocument()
@@ -538,9 +538,9 @@ describe('MediaPage pending queue', () => {
 
   it('shows progress across the pending queue and a Save label once the ordered list resolves', async () => {
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
+      <TestRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
 
     // beforeEach's getOrderedIds resolves ['0', '1', '2'] - id '1' is index 1, i.e. 2 of 3.
@@ -581,9 +581,9 @@ describe('MediaPage pending queue', () => {
     const user = userEvent.setup()
 
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
+      <TestRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
     await screen.findByText('File 2 of 3')
     await user.click(screen.getByRole('button', { name: 'Next' }))
@@ -600,9 +600,9 @@ describe('MediaPage pending queue', () => {
     const user = userEvent.setup()
 
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
+      <TestRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
     await screen.findByText('File 2 of 3')
     await user.click(screen.getByRole('button', { name: 'Delete' }))
@@ -646,9 +646,9 @@ describe('MediaPage pending queue', () => {
     const user = userEvent.setup()
 
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
+      <TestRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
     await screen.findByText('File 2 of 3')
     await user.click(screen.getByRole('button', { name: 'Previous' }))
@@ -661,9 +661,9 @@ describe('MediaPage pending queue', () => {
 
   it('stays in read mode when arriving without pendingQueue state', () => {
     render(
-      <MemoryRouter initialEntries={['/media/1']}>
+      <TestRouter initialEntries={['/media/1']}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
 
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
@@ -702,9 +702,9 @@ describe('MediaPage pending queue', () => {
     })
 
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
+      <TestRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
 
     await waitFor(() =>
@@ -748,9 +748,9 @@ describe('MediaPage pending queue', () => {
     const user = userEvent.setup()
 
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
+      <TestRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
     await screen.findByRole('button', { name: 'Save' })
     await user.click(screen.getByRole('button', { name: 'Save' }))
@@ -779,9 +779,9 @@ describe('MediaPage mark resolved', () => {
     mediaData = { ...sampleMedia, pendingTagging: true }
 
     render(
-      <MemoryRouter initialEntries={['/media/1']}>
+      <TestRouter initialEntries={['/media/1']}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
 
     expect(screen.getByRole('button', { name: 'Mark resolved' })).toBeInTheDocument()
@@ -789,9 +789,9 @@ describe('MediaPage mark resolved', () => {
 
   it('does not show Mark resolved for a media that is not pending', () => {
     render(
-      <MemoryRouter initialEntries={['/media/1']}>
+      <TestRouter initialEntries={['/media/1']}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
 
     expect(screen.queryByRole('button', { name: 'Mark resolved' })).not.toBeInTheDocument()
@@ -831,9 +831,9 @@ describe('MediaPage mark resolved', () => {
     })
 
     render(
-      <MemoryRouter initialEntries={['/media/1']}>
+      <TestRouter initialEntries={['/media/1']}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
     await user.click(screen.getByRole('button', { name: 'Mark resolved' }))
 
@@ -875,9 +875,9 @@ describe('MediaPage mark resolved', () => {
     })
 
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
+      <TestRouter initialEntries={[{ pathname: '/media/1', state: { pendingQueue: true } }]}>
         <MediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
     await screen.findByRole('button', { name: 'Save' })
     await user.click(screen.getByRole('button', { name: 'Save & mark resolved' }))

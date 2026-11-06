@@ -16,8 +16,8 @@ is a picker:
 - **Creating something new**: type a name that doesn't exist and pick
   **Create "…"**. It shows as "(new)" and is only created when you save, so
   cancelling the edit leaves nothing behind.
-- `Ctrl+S` saves; leaving with unsaved changes (`Esc` or **Cancel**) asks
-  first.
+- `Ctrl+S` saves; leaving with unsaved changes asks first, whether by `Esc`,
+  **Cancel**, the sidebar or the mouse's back button.
 
 If a save fails, the error appears right under the top bar, says which field
 it's about, and **Go to <field>** jumps there.

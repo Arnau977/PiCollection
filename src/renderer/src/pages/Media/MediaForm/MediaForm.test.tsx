@@ -4,7 +4,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
 import type { CharacterModel } from '@shared/models'
-import { MemoryRouter } from 'react-router-dom'
+import { TestRouter } from '../../../test-router'
 import { MediaForm } from './MediaForm'
 
 const confirmMock = vi.fn()
@@ -70,9 +70,9 @@ function renderForm(props: Partial<ComponentProps<typeof MediaForm>> = {}) {
   const onCancel = vi.fn()
   const onSaved = vi.fn()
   const utils = render(
-    <MemoryRouter>
+    <TestRouter>
       <MediaForm onCancel={onCancel} onSaved={onSaved} {...props} />
-    </MemoryRouter>
+    </TestRouter>
   )
   return { ...utils, onCancel, onSaved }
 }
@@ -501,9 +501,9 @@ describe('MediaForm remount on media change', () => {
     tagsData = [{ id: 't1', name: 'first-tag' }]
 
     const { rerender } = render(
-      <MemoryRouter>
+      <TestRouter>
         <MediaForm key={mediaA.id} media={mediaA} onCancel={vi.fn()} onSaved={vi.fn()} />
-      </MemoryRouter>
+      </TestRouter>
     )
     expect(screen.getByDisplayValue('First picture')).toBeInTheDocument()
     expect(screen.getByText('first-tag')).toBeInTheDocument()
@@ -513,9 +513,9 @@ describe('MediaForm remount on media change', () => {
     // on MediaForm's `key` to force a fresh instance instead of carrying the
     // previous item's loaded input state into the next one.
     rerender(
-      <MemoryRouter>
+      <TestRouter>
         <MediaForm key={mediaB.id} media={mediaB} onCancel={vi.fn()} onSaved={vi.fn()} />
-      </MemoryRouter>
+      </TestRouter>
     )
 
     expect(screen.getByDisplayValue('Second picture')).toBeInTheDocument()
