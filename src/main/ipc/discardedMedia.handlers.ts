@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { discardedMediaService } from '../services/discardedMedia.service'
+import { mediaService } from '../services/media.service'
 import { ipcHandler } from './helpers'
 import { DiscardFileSchema, IPC, IdListSchema, IdSchema } from '@shared/ipc/contracts'
 
@@ -12,7 +13,7 @@ export function registerDiscardedMediaHandlers(): void {
   ipcMain.handle(
     IPC.discardedMedia.discardFile,
     ipcHandler(IPC.discardedMedia.discardFile, DiscardFileSchema, (input) =>
-      discardedMediaService.discardFile(input)
+      mediaService.discardFile(input)
     )
   )
   ipcMain.handle(

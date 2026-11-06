@@ -720,6 +720,8 @@
     "working": "Working...",
     "reason": {
       "deleted": "Deleted {{date}}",
+      "duplicate": "Repeated, deleted {{date}}",
+      "variant": "Variant, deleted {{date}}",
       "replaced": "Replaced {{date}}"
     }
   },

@@ -720,6 +720,8 @@
     "working": "Procesando...",
     "reason": {
       "deleted": "Eliminado el {{date}}",
+      "duplicate": "Repetido, eliminado el {{date}}",
+      "variant": "Variante, eliminado el {{date}}",
       "replaced": "Reemplazado el {{date}}"
     }
   },
