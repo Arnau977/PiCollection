@@ -81,15 +81,27 @@ export function SearchBar({
   const [highlighted, setHighlighted] = useState(0)
   const [dismissed, setDismissed] = useState(false)
   const [focused, setFocused] = useState(false)
-  const appliedQuery = useRef(debouncedQuery)
+  // The text the filters and the box last agreed on, which tells a change made
+  // elsewhere from this box's own typing coming back through the filters.
+  const appliedQuery = useRef(query.trim())
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (appliedQuery.current === debouncedQuery) return
-    appliedQuery.current = debouncedQuery
-    onFiltersChange({ ...filters, query: debouncedQuery.trim() || undefined })
+    const next = debouncedQuery.trim()
+    if (appliedQuery.current === next) return
+    appliedQuery.current = next
+    onFiltersChange({ ...filters, query: next || undefined })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery])
+
+  // Clearing the filters or opening and closing a list changes the query from
+  // outside. Left stale, the old text would be applied again with the next key.
+  useEffect(() => {
+    const next = filters.query ?? ''
+    if (appliedQuery.current === next.trim()) return
+    appliedQuery.current = next.trim()
+    setQuery(next)
+  }, [filters.query])
 
   // A leading `-` is syntax, not part of the name being searched for.
   const rawToken = trailingToken(query)
@@ -156,13 +168,21 @@ export function SearchBar({
     t
   ])
 
-  const visibleSuggestions = dismissed || (browsingLists && !focused) ? [] : suggestions
+  const visibleSuggestions = dismissed || !focused ? [] : suggestions
 
   // Nothing is preselected while browsing: Tab must still leave the box.
   const firstHighlight = browsingLists ? -1 : 0
   useEffect(() => {
     setHighlighted(firstHighlight)
   }, [suggestions.length, firstHighlight])
+
+  /** A suggestion that becomes a structured filter takes the typed word out of the text. */
+  function applyInPlaceOfTypedWord(changes: MediaFilters): void {
+    const nextQuery = removeTrailingToken(query)
+    setQuery(nextQuery)
+    appliedQuery.current = nextQuery.trim()
+    onFiltersChange({ ...filters, query: nextQuery.trim() || undefined, ...changes })
+  }
 
   /**
    * Unlike tag/artist (unique names, safe to search as free text), a
@@ -175,9 +195,6 @@ export function SearchBar({
    * new one - never a new OR group, per the confirmed design.
    */
   function applyCharacterSuggestion(characterId: string): void {
-    const nextQuery = removeTrailingToken(query)
-    setQuery(nextQuery)
-
     const groups = filters.characterGroups ?? []
     const nextGroups: string[][] =
       groups.length === 0
@@ -186,12 +203,7 @@ export function SearchBar({
             index === 0 && !group.includes(characterId) ? [...group, characterId] : group
           )
 
-    onFiltersChange({
-      ...filters,
-      query: nextQuery.trim() || undefined,
-      characterGroups: nextGroups,
-      noCharacter: undefined
-    })
+    applyInPlaceOfTypedWord({ characterGroups: nextGroups, noCharacter: undefined })
   }
 
   /**
@@ -203,9 +215,6 @@ export function SearchBar({
    * or starting a new one - mirroring the character suggestion's grouping.
    */
   function applySeriesSuggestion(seriesId: string): void {
-    const nextQuery = removeTrailingToken(query)
-    setQuery(nextQuery)
-
     const groups = filters.seriesGroups ?? []
     const nextGroups: string[][] =
       groups.length === 0
@@ -214,22 +223,11 @@ export function SearchBar({
             index === 0 && !group.includes(seriesId) ? [...group, seriesId] : group
           )
 
-    onFiltersChange({
-      ...filters,
-      query: nextQuery.trim() || undefined,
-      seriesGroups: nextGroups,
-      noSeries: undefined
-    })
+    applyInPlaceOfTypedWord({ seriesGroups: nextGroups, noSeries: undefined })
   }
 
   function applyListSuggestion(listId: string): void {
-    const nextQuery = removeTrailingToken(query)
-    setQuery(nextQuery)
-    onFiltersChange({
-      ...filters,
-      query: nextQuery.trim() || undefined,
-      filterListIds: [...(filters.filterListIds ?? []), listId]
-    })
+    applyInPlaceOfTypedWord({ filterListIds: [...(filters.filterListIds ?? []), listId] })
   }
 
   function applySuggestion(suggestion: Suggestion): void {

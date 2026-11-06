@@ -226,10 +226,28 @@ describe('extractAiToken', () => {
 
 describe('serializeSearchQuery', () => {
   it('writes a query that parses back to the same tree', () => {
-    const inputs = ['a b', 'a OR b c', '-a', '(a OR b) (-c -d)', '"two words"', '-(a OR b)', '"OR"']
+    const inputs = [
+      'a b',
+      'a OR b c',
+      '-a',
+      '(a OR b) (-c -d)',
+      '"two words"',
+      '-(a OR b)',
+      '"OR"',
+      '"or"',
+      '"-a"',
+      '"a(b"'
+    ]
     for (const input of inputs) {
       const node = parseSearchQuery(input)!
       expect(parseSearchQuery(serializeSearchQuery(node))).toEqual(node)
     }
+  })
+
+  it('leaves out the quotes a term does not need', () => {
+    expect(serializeSearchQuery(parseSearchQuery('"Smile"')!)).toBe('Smile')
+    expect(serializeSearchQuery(parseSearchQuery('sci-fi "two words"')!)).toBe(
+      '(sci-fi "two words")'
+    )
   })
 })
