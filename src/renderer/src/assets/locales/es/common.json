@@ -261,7 +261,7 @@
     "clearSelection": "Deseleccionar todo",
     "deleteSelected": "Eliminar seleccionados",
     "editMetadata": "Editar metadatos",
-    "confirmDeleteSelected": "¿Quitar {{count}} media seleccionados de PiCollection? Los archivos se quedan en el disco y aparecen en Metadatos > Eliminados.",
+    "confirmDeleteSelected": "¿Quitar {{count}} media seleccionados de PiCollection? Los archivos se quedan en el disco y aparecen en Espacio > Eliminados.",
     "pagination": {
       "previous": "Anterior",
       "next": "Siguiente",
@@ -353,7 +353,7 @@
     "saving": "Guardando...",
     "markResolved": "Dar por válido",
     "saveAndResolve": "Guardar y dar por válido",
-    "confirmDelete": "¿Quitar este media de PiCollection? El archivo se queda en el disco y aparece en Metadatos > Eliminados.",
+    "confirmDelete": "¿Quitar este media de PiCollection? El archivo se queda en el disco y aparece en Espacio > Eliminados.",
     "aiGeneratedTitle": "Generado mediante IA",
     "aiGeneratedBadge": "IA",
     "addedOnTitle": "Añadido el {{date}}",
@@ -418,7 +418,7 @@
     "copyCreditsLabel": "Copiar el artista, los personajes y las series de {{name}}",
     "replace": "Reemplazar con este archivo",
     "replaceLabel": "Reemplazar {{name}} con este archivo",
-    "replaceConfirm": "¿Reemplazar \"{{name}}\" con este archivo? Conserva sus etiquetas, personajes, series y fecha, y suma los de este formulario. \"{{name}}\" aparece en Metadatos > Eliminados."
+    "replaceConfirm": "¿Reemplazar \"{{name}}\" con este archivo? Conserva sus etiquetas, personajes, series y fecha, y suma los de este formulario. \"{{name}}\" aparece en Espacio > Eliminados."
   },
   "aiMetadata": {
     "detected": "Los metadatos del archivo dicen que se hizo con {{generator}}.",
@@ -469,8 +469,8 @@
     "exitDialogKeepEditing": "Seguir editando",
     "addingToPending_one": "Añadiendo {{count}} archivo a pendientes…",
     "addingToPending_other": "Añadiendo {{count}} archivos a pendientes…",
-    "skippedDiscarded_one": "Se ha omitido 1 archivo que eliminaste antes (Metadatos > Eliminados).",
-    "skippedDiscarded_other": "Se han omitido {{count}} archivos que eliminaste antes (Metadatos > Eliminados).",
+    "skippedDiscarded_one": "Se ha omitido 1 archivo que eliminaste antes (Espacio > Eliminados).",
+    "skippedDiscarded_other": "Se han omitido {{count}} archivos que eliminaste antes (Espacio > Eliminados).",
     "replaced": "Se ha reemplazado el archivo de \"{{name}}\"."
   },
   "folderBrowser": {
@@ -483,7 +483,7 @@
     "retry": "Reintentar",
     "cataloged": "Ya añadido",
     "discarded": "Eliminado",
-    "discardedTitle": "Lo eliminaste antes (Metadatos > Eliminados); una importación por lotes lo omite",
+    "discardedTitle": "Lo eliminaste antes (Espacio > Eliminados); una importación por lotes lo omite",
     "nothingLeft": "Nada pendiente",
     "showDone": "Mostrar lo ya añadido o eliminado ({{count}})",
     "allFinished": "Todo lo de esta carpeta ya está añadido o eliminado.",
@@ -704,7 +704,8 @@
     }
   },
   "discarded": {
-    "tab": "Eliminados",
+    "title": "Eliminados",
+    "backToStorage": "Volver a Espacio",
     "intro": "Archivos quitados de PiCollection que siguen en el disco. Muévelos a la papelera o déjalos donde están (dejan de aparecer aquí y un batch import puede volver a ofrecerlos).",
     "empty": "No hay nada eliminado",
     "keep": "Conservar archivo",
@@ -774,7 +775,7 @@
     "reclaimable": "Recuperable",
     "reclaimableNote_one": "{{count}} archivo eliminado sigue en disco",
     "reclaimableNote_other": "{{count}} archivos eliminados siguen en disco",
-    "reviewDiscarded": "Revisar en Metadatos",
+    "reviewDiscarded": "Revisar archivos",
     "byLabel": "Espacio por",
     "tabFolders": "Carpetas",
     "tabArtists": "Artistas",

@@ -226,9 +226,7 @@ export default function StoragePage(): JSX.Element {
               <dd className="storage-tile-value">{size(data.discarded.bytes)}</dd>
               <dd className="storage-tile-note">
                 {t('storage.reclaimableNote', { count: data.discarded.count })}{' '}
-                {data.discarded.count > 0 && (
-                  <Link to={`${PATH.MANAGE}?tab=discarded`}>{t('storage.reviewDiscarded')}</Link>
-                )}
+                <Link to={PATH.DISCARDED}>{t('storage.reviewDiscarded')}</Link>
               </dd>
             </div>
             {data.disk && (

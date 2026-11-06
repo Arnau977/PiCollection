@@ -44,7 +44,7 @@ Needs a [source folder](getting-started.md#pick-a-source-folder-recommended).
    - **Send to pending** adds it untagged to the [pending
      queue](pending-and-discarded.md) and moves on;
    - **Delete** takes it out of the queue and lists it under
-     [Metadata > Discarded](pending-and-discarded.md#discarded-files); the
+     [Disk space > Discarded](pending-and-discarded.md#discarded-files); the
      file stays on disk.
 4. **Send the remaining N to Pending** (next to *File N of M*) sends every
    file you haven't saved yet to the pending queue in one go, after asking.

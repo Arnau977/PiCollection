@@ -116,7 +116,7 @@ the order clears it. Then:
 - **Edit metadata**: add or remove tags, characters and series, set SFW or
   NSFW, and mark them as AI-generated or not, on all of them at once;
 - **Delete selected**: removes them from the app; the files stay on disk and
-  go to [Metadata > Discarded](pending-and-discarded.md#discarded-files).
+  go to [Disk space > Discarded](pending-and-discarded.md#discarded-files).
 
 ---
 ← [Duplicates](duplicates.md) · [Guide index](README.md) · Next: [Viewing media](viewing-media.md) →

@@ -4,11 +4,10 @@ import { TagsManager } from './TagsManager'
 import { CharactersManager } from './CharactersManager'
 import { ArtistsManager } from './ArtistsManager'
 import { SeriesManager } from './SeriesManager'
-import { DiscardedManager } from './DiscardedManager'
 import { ManageParamsContext, useManageParamsSource } from './useManageParam'
 import './ManagePage.css'
 
-const MANAGE_TABS = ['artists', 'tags', 'characters', 'series', 'discarded'] as const
+const MANAGE_TABS = ['artists', 'tags', 'characters', 'series'] as const
 type ManageTab = (typeof MANAGE_TABS)[number]
 
 function isManageTab(value: string | null): value is ManageTab {
@@ -72,16 +71,6 @@ export default function ManagePage(): JSX.Element {
           >
             {t('manage.series')}
           </button>
-          {/* Not a metadata category, so it keeps the plain accent when active. */}
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'discarded'}
-            className={tab === 'discarded' ? 'manage-tab active' : 'manage-tab'}
-            onClick={() => setTab('discarded')}
-          >
-            {t('discarded.tab')}
-          </button>
         </div>
 
         <div className="card manage-content">
@@ -97,12 +86,6 @@ export default function ManagePage(): JSX.Element {
           <div className="manage-tab-panel" hidden={tab !== 'series'}>
             <SeriesManager />
           </div>
-          {/* Mounted only while shown, so it reloads the list each time it's opened. */}
-          {tab === 'discarded' && (
-            <div className="manage-tab-panel">
-              <DiscardedManager />
-            </div>
-          )}
         </div>
       </div>
     </ManageParamsContext.Provider>

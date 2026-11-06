@@ -8,6 +8,7 @@ import AddMediaPage from './pages/Media/AddMediaPage/AddMediaPage'
 import PendingEntryPage from './pages/Pending/PendingEntryPage'
 import SettingsPage from './pages/Settings/SettingsPage'
 import ManagePage from './pages/Manage/ManagePage'
+import DiscardedPage from './pages/Storage/DiscardedPage'
 import StoragePage from './pages/Storage/StoragePage'
 import NotFoundPage from './pages/NotFound/NotFoundPage'
 import { AppHeader } from './components/AppHeader/AppHeader'
@@ -28,6 +29,7 @@ export default function AppRoutes(): JSX.Element {
             <Route path={PATH.SETTINGS} element={<SettingsPage />} />
             <Route path={PATH.MANAGE} element={<ManagePage />} />
             <Route path={PATH.STORAGE} element={<StoragePage />} />
+            <Route path={PATH.DISCARDED} element={<DiscardedPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>

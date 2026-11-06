@@ -10,8 +10,8 @@ the Library card says how many are still waiting.
 - **Library** - every picture and video in the gallery (Pending left out).
 - **Pending** - what's waiting in the [pending queue](pending-and-discarded.md).
 - **Reclaimable** - media you deleted whose files are still on disk.
-  **Review in Metadata** opens Metadata > Discarded, where you can send them
-  to the Recycle Bin.
+  **Review files** opens [Discarded](pending-and-discarded.md#discarded-files),
+  where you can send them to the Recycle Bin.
 
 A fourth card, **Free on** (e.g. `D:\`), shows how much room is left on the
 drive holding your source folder, out of its total size.

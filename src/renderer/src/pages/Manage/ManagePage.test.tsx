@@ -121,4 +121,15 @@ describe('ManagePage', () => {
 
     expect(within(activePanel()).getByLabelText('Name')).toHaveValue('Draft Artist')
   })
+
+  it('opens on artists for the old Discarded address, now under Disk space', () => {
+    render(
+      <MemoryRouter initialEntries={['/manage?tab=discarded']}>
+        <ManagePage />
+      </MemoryRouter>
+    )
+
+    expect(screen.queryByRole('tab', { name: 'Discarded' })).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Artists' })).toHaveAttribute('aria-selected', 'true')
+  })
 })
