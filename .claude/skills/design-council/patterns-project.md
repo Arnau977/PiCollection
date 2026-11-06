@@ -179,6 +179,19 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   preselected so Tab still leaves the box; an arrow key picks one. The options
   stop `mousedown` so pressing one doesn't blur the box first. A list can't be
   excluded, so a leading `-` doesn't offer them. Where: `SearchBar.tsx`.
+- **A long filter selection scrolls inside its field; it never collapses to
+  "+N more"**, because each chip is managed one by one. A lone group's chips
+  scroll, keeping its picker in place; several groups scroll as one stack, so
+  one thing scrolls per field. "Add OR group" stays outside, the count shows
+  from 10 chips, and a picked chip is brought into view (`revealAddedChip`).
+  Only in the gallery's filter bar: the edit form and the list form scroll
+  themselves, so a scroller there would compete. The thumb is `--color-text-faint` (3.37:1): the app-wide scrollbar
+  is 1.12:1, too faint to say there's more. Where:
+  `GroupedEntityFilter.tsx` + `.css`.
+- **A window too short for a bound page scrolls the page as a last resort.**
+  `.gallery-page` is `overflow-y: auto` and its scroll region keeps a
+  `min-height`, so bars below the filters are never clipped out of reach.
+  Where: `GalleryPage.css`.
 - **Finding within a media's tags filters the chips, it doesn't just
   highlight them** (Ctrl+F or a magnifier by the Tags title): a highlight
   among dozens of same-colored chips still has to be scanned. The bar says

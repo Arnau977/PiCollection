@@ -5,6 +5,9 @@ import { MultiSelectAutocomplete, type ChipToggle } from '../Autocomplete/MultiS
 import { InfoTooltip } from '../InfoTooltip/InfoTooltip'
 import './GroupedEntityFilter.css'
 
+/** Below this the chips can be counted at a glance, so a number would only repeat them. */
+const SHOW_COUNT_FROM = 10
+
 interface GroupedEntityFilterProps<T> {
   label: string
   groups: string[][]
@@ -48,6 +51,8 @@ export function GroupedEntityFilter<T>({
 }: GroupedEntityFilterProps<T>): JSX.Element {
   const { t } = useTranslation()
   const effectiveGroups = groups.length > 0 ? groups : [[]]
+  const hasSeveralGroups = effectiveGroups.length > 1
+  const chipCount = effectiveGroups.reduce((total, group) => total + group.length, 0)
 
   // The picker works on plain ids; exclusions are kept per group and
   // re-applied to whichever ids remain after a change.
@@ -87,54 +92,64 @@ export function GroupedEntityFilter<T>({
     <div className="grouped-entity-filter">
       <div className="grouped-entity-filter-header">
         <span className="filter-label">{label}</span>
+        {chipCount >= SHOW_COUNT_FROM && <span className="filter-label">· {chipCount}</span>}
         <InfoTooltip text={t('filters.groupTooltip')} />
       </div>
 
-      {effectiveGroups.map((group, index) => {
-        const groupLabel = effectiveGroups.length > 1 ? `${label} ${index + 1}` : label
-        return (
-          <div key={index} className="grouped-entity-filter-group">
-            {index > 0 && <div className="grouped-entity-filter-or">{t('filters.groupOr')}</div>}
-            <div className="grouped-entity-filter-row">
-              <MultiSelectAutocomplete
-                name={`${label}-group-${index}`}
-                // The filter header already shows the label, so only the
-                // accessible name is kept here to avoid a visible duplicate.
-                label={groupLabel}
-                hideLabel
-                options={options}
-                getOptionLabel={getOptionLabel}
-                getOptionValue={getOptionValue}
-                selectedValues={group.map((entry) => parseGroupEntry(entry).id)}
-                onChange={(values) => updateGroup(index, values)}
-                disabled={noneOption?.checked}
-                noneToggle={index === 0 ? noneOption : undefined}
-                chipToggle={chipToggle}
-                chipExclusion={
-                  allowExclusion
-                    ? {
-                        isExcluded: (id) => excludedIn(index).has(id),
-                        onToggle: (id) => toggleExcluded(index, id),
-                        includedLabel: t('filters.included'),
-                        excludedLabel: t('filters.excluded')
-                      }
-                    : undefined
-                }
-              />
-              {effectiveGroups.length > 1 && (
-                <button
-                  type="button"
-                  className="icon-btn"
-                  aria-label={`${t('filters.removeGroup')}: ${groupLabel}`}
-                  onClick={() => removeGroup(index)}
-                >
-                  <X size={14} />
-                </button>
-              )}
+      <div
+        className={
+          hasSeveralGroups
+            ? 'grouped-entity-filter-groups has-several-groups'
+            : 'grouped-entity-filter-groups'
+        }
+      >
+        {effectiveGroups.map((group, index) => {
+          const groupLabel = hasSeveralGroups ? `${label} ${index + 1}` : label
+          return (
+            <div key={index} className="grouped-entity-filter-group">
+              {index > 0 && <div className="grouped-entity-filter-or">{t('filters.groupOr')}</div>}
+              <div className="grouped-entity-filter-row">
+                <MultiSelectAutocomplete
+                  name={`${label}-group-${index}`}
+                  // The filter header already shows the label, so only the
+                  // accessible name is kept here to avoid a visible duplicate.
+                  label={groupLabel}
+                  hideLabel
+                  options={options}
+                  getOptionLabel={getOptionLabel}
+                  getOptionValue={getOptionValue}
+                  selectedValues={group.map((entry) => parseGroupEntry(entry).id)}
+                  onChange={(values) => updateGroup(index, values)}
+                  disabled={noneOption?.checked}
+                  noneToggle={index === 0 ? noneOption : undefined}
+                  chipToggle={chipToggle}
+                  revealAddedChip
+                  chipExclusion={
+                    allowExclusion
+                      ? {
+                          isExcluded: (id) => excludedIn(index).has(id),
+                          onToggle: (id) => toggleExcluded(index, id),
+                          includedLabel: t('filters.included'),
+                          excludedLabel: t('filters.excluded')
+                        }
+                      : undefined
+                  }
+                />
+                {hasSeveralGroups && (
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    aria-label={`${t('filters.removeGroup')}: ${groupLabel}`}
+                    onClick={() => removeGroup(index)}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
 
       <button
         type="button"

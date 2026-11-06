@@ -29,7 +29,9 @@ Below the search bar:
 
 - **Artist**, **Tags**, **Characters**, **Series**. Inside one box every
   item must match (AND). **Add OR group** starts another box that can match
-  instead, e.g. *(Ishtar AND Ereshkigal)* OR *(Rin AND Shirou)*.
+  instead, e.g. *(Ishtar AND Ereshkigal)* OR *(Rin AND Shirou)*. A long
+  selection scrolls inside its field, with the count next to the title, so
+  the results stay in view.
 - **Include or exclude**: the box at the start of a tag, character or series
   chip flips it between ✓ (must have it) and ✗ (must *not* have it), e.g.
   Rex but not Pyra. No chip means not filtered by it.
