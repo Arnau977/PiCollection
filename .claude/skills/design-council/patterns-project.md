@@ -65,10 +65,10 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
 - **Confirm before bulk or destructive actions** with the shared dialog
   (`useConfirm`); name the count in the message and on the button. Where:
   `src/renderer/src/components/ConfirmDialog/ConfirmDialogContext.tsx`.
-- **Deleting never touches the file; files are cleaned up from Manage >
+- **Deleting never touches the file; files are cleaned up from Disk space >
   Discarded.** Delete (gallery, pending, batch import - same danger button
   slot at the end of the edit form's bar, same confirm) records the file;
-  the Discarded tab (plain accent, not a category color) lists it with
+  the Discarded page lists it with
   "Keep file" / "Move to Recycle Bin" per row and a bulk "Move all N" behind
   a confirm, one sequential IPC call, all buttons locked while it runs.
   Where: `DiscardedManager.tsx`, `ImportQueue.tsx`.
@@ -155,6 +155,14 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   (2026-11-05). A gallery default stays on but isn't saved, and the bar says
   so: what you see is what's stored, except what's named as not. Where:
   `ListEditBar.tsx`, `listEdit.ts`.
+- **Discarded files live under Disk space, not in Metadata** (`/storage/discarded`,
+  from the Reclaimable card's link, with the same back button and title as
+  Lists): they're files, not data about media, and sending them to the Recycle
+  Bin is how that card's space is won back. A sub-page, not a Disk space tab:
+  those tabs break down what the library weighs. The user questioned the
+  Metadata tab. The link shows even at zero: the card counts files on disk, the
+  list every record, so hiding it would strand records whose file is gone.
+  Where: `pages/Storage/DiscardedPage.tsx`.
 - **Filter lists are managed off the gallery, not in Metadata** (`/gallery/lists`,
   a Lists button in the gallery's header): they're a way of finding media, not
   data about it. The user questioned the Metadata tab first proposed. Same

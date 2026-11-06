@@ -25,7 +25,7 @@ queue. For each item:
 
 Deleting media never deletes its file. Whether you delete from the gallery,
 the pending queue or a batch import, the file stays where it is and is listed
-under **Metadata > Discarded**, with its folder, why it left (deleted, or
+under **Disk space > Discarded**, with its folder, why it left (deleted, or
 replaced by a [better copy](duplicates.md#replacing-a-copy)) and when.
 
 From there, for each file:

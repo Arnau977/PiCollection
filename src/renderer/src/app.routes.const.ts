@@ -7,5 +7,6 @@ export const PATH = {
   PENDING: '/pending',
   SETTINGS: '/settings',
   MANAGE: '/manage',
-  STORAGE: '/storage'
+  STORAGE: '/storage',
+  DISCARDED: '/storage/discarded'
 }

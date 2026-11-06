@@ -52,7 +52,7 @@ export interface StorageOverview {
   /** Null without a source folder, or when the drive can't be read. */
   disk: StorageDisk | null
   pending: StorageTotal
-  /** Deleted media whose files are still on disk (Metadata > Discarded). */
+  /** Deleted media whose files are still on disk (Disk space > Discarded). */
   discarded: StorageTotal
   folders: StorageFolder[]
   /** Every library file with its folder, heaviest first. */

@@ -72,7 +72,7 @@ and gets rid of the other copy, without losing its tagging. After asking:
 
 - that media keeps its artist, tags, characters, series and date, gains
   whatever the current form has, and now points to the current file;
-- its old file goes to [Metadata > Discarded](pending-and-discarded.md#discarded-files)
+- its old file goes to [Disk space > Discarded](pending-and-discarded.md#discarded-files)
   as "replaced";
 - the batch import or pending queue moves on to the next item.
 

@@ -33,7 +33,7 @@ export interface SourceFolderBrowseFolder extends SourceFolderBrowseEntry {
 export interface SourceFolderBrowseFile extends SourceFolderBrowseEntry {
   type: 'image' | 'video' | 'gif'
   cataloged: boolean
-  /** Deleted from the library before (Metadata > Discarded) - a batch import skips it. */
+  /** Deleted from the library before (Disk space > Discarded) - a batch import skips it. */
   discarded: boolean
 }
 
