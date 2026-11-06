@@ -220,14 +220,16 @@ export function extractAiToken(node: QueryNode | null): {
   return { node, isAiGenerated: undefined }
 }
 
-/**
- * Writes a parsed query back as text. Terms are always quoted: a parsed value
- * can't hold a `"`, and quoting keeps a word such as `OR` a plain term.
- */
+/** Whether a term reads as syntax, not as itself, without quotes. A term can't hold a `"`. */
+function needsQuotes(term: string): boolean {
+  return /[\s()]/.test(term) || term.startsWith('-') || term.toUpperCase() === 'OR'
+}
+
+/** Writes a parsed query back as text, the way someone would type it in the search box. */
 export function serializeSearchQuery(node: QueryNode): string {
   switch (node.type) {
     case 'term':
-      return `"${node.value}"`
+      return needsQuotes(node.value) ? `"${node.value}"` : node.value
     case 'not':
       return `-${serializeSearchQuery(node.child)}`
     case 'and':

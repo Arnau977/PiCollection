@@ -451,3 +451,77 @@ describe('SearchBar', () => {
     })
   })
 })
+
+describe('SearchBar in step with the filters', () => {
+  function renderControlled(filters: MediaFilters) {
+    const onFiltersChange = vi.fn()
+    const bar = (current: MediaFilters): JSX.Element => (
+      <SearchBar
+        filters={current}
+        onFiltersChange={onFiltersChange}
+        artists={artists}
+        tags={tags}
+        characters={characters}
+        series={series}
+        filterLists={filterLists}
+      />
+    )
+    const { rerender } = render(bar(filters))
+    return { onFiltersChange, setFilters: (next: MediaFilters) => rerender(bar(next)) }
+  }
+
+  it('empties the box when the filters are cleared elsewhere', async () => {
+    const { onFiltersChange, setFilters } = renderControlled({ query: 'smile' })
+
+    setFilters({})
+    await vi.advanceTimersByTimeAsync(300)
+
+    expect(searchInput()).toHaveValue('')
+    expect(onFiltersChange).not.toHaveBeenCalled()
+  })
+
+  it('shows the text of a list opened for editing, so typing adds to it', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange, setFilters } = renderControlled({})
+
+    setFilters({ query: 'smile' })
+    await user.type(searchInput(), ' blush')
+    await vi.advanceTimersByTimeAsync(300)
+
+    expect(onFiltersChange).toHaveBeenLastCalledWith({ query: 'smile blush' })
+  })
+
+  it('keeps what is being typed when its own earlier text comes back', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const { onFiltersChange, setFilters } = renderControlled({})
+
+    await user.type(searchInput(), 'ab')
+    await vi.advanceTimersByTimeAsync(300)
+    await user.keyboard('c ')
+    setFilters(onFiltersChange.mock.lastCall![0])
+
+    expect(searchInput()).toHaveValue('abc ')
+  })
+
+  it('leaves a saved query with stray spaces alone', async () => {
+    const { onFiltersChange } = renderControlled({ query: ' smile ' })
+
+    await vi.advanceTimersByTimeAsync(300)
+
+    expect(onFiltersChange).not.toHaveBeenCalled()
+  })
+
+  it('closes the suggestions on clicking away, and they come back with the box', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    renderControlled({})
+
+    await user.type(searchInput(), 'lan')
+    expect(screen.getAllByRole('option').length).toBeGreaterThan(0)
+
+    await user.click(document.body)
+    expect(screen.queryByRole('option')).not.toBeInTheDocument()
+
+    await user.click(searchInput())
+    expect(screen.getAllByRole('option').length).toBeGreaterThan(0)
+  })
+})
