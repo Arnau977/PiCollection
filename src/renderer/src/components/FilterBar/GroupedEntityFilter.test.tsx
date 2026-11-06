@@ -80,13 +80,42 @@ describe('GroupedEntityFilter', () => {
     expect(screen.getAllByRole('button', { name: 'No character assigned' })).toHaveLength(1)
   })
 
-  it('calls onChange with an added empty group when "Add OR group" is clicked', async () => {
+  it('"Add OR group" opens a box without touching the filters, even with none selected', async () => {
+    const user = userEvent.setup()
+    const { onChange } = renderFilter([])
+
+    await user.click(screen.getByRole('button', { name: /add or group/i }))
+
+    expect(screen.getAllByRole('combobox')).toHaveLength(2)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('reports only groups with something in them when a new box is filled', async () => {
     const user = userEvent.setup()
     const { onChange } = renderFilter([['ishtar']])
 
     await user.click(screen.getByRole('button', { name: /add or group/i }))
+    await user.type(screen.getByRole('combobox', { name: 'Characters 2' }), 'Rin')
+    await user.click(await screen.findByRole('option', { name: 'Rin' }))
 
-    expect(onChange).toHaveBeenCalledWith([['ishtar'], []])
+    expect(onChange).toHaveBeenLastCalledWith([['ishtar'], ['rin']])
+  })
+
+  it('drops open boxes when the filters are cleared from outside', async () => {
+    const user = userEvent.setup()
+    const props = {
+      label: 'Characters',
+      onChange: vi.fn(),
+      options,
+      getOptionLabel: (o: Option) => o.name,
+      getOptionValue: (o: Option) => o.id
+    }
+    const { rerender } = render(<GroupedEntityFilter {...props} groups={[['ishtar']]} />)
+    await user.click(screen.getByRole('button', { name: /add or group/i }))
+
+    rerender(<GroupedEntityFilter {...props} groups={[]} />)
+
+    expect(screen.getAllByRole('combobox')).toHaveLength(1)
   })
 
   it('renders an OR divider and a combobox per group when there are multiple groups', () => {

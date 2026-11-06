@@ -122,8 +122,9 @@ describe('FilterBar', () => {
       { id: 't2', name: 'Ereshkigal' }
     ]
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    const { onFiltersChange } = renderFilterBar({ tagGroups: [['t1'], []] })
+    const { onFiltersChange } = renderFilterBar({ tagGroups: [['t1']] })
 
+    await user.click(screen.getAllByRole('button', { name: 'Add OR group' })[0])
     const comboboxes = screen.getAllByRole('combobox', { name: /^Tags/ })
     expect(comboboxes).toHaveLength(2)
     await user.type(comboboxes[1], 'Ereshkigal')
@@ -191,8 +192,9 @@ describe('FilterBar', () => {
       { id: 's2', name: 'Fate/stay night' }
     ]
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    const { onFiltersChange } = renderFilterBar({ seriesGroups: [['s1'], []] })
+    const { onFiltersChange } = renderFilterBar({ seriesGroups: [['s1']] })
 
+    await user.click(screen.getAllByRole('button', { name: 'Add OR group' })[2])
     const comboboxes = screen.getAllByRole('combobox', { name: /^Series/ })
     expect(comboboxes).toHaveLength(2)
     await user.type(comboboxes[1], 'Fate/stay')

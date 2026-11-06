@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { parseGroupEntry, toGroupEntry } from '@shared/query/groupEntry'
@@ -50,9 +51,26 @@ export function GroupedEntityFilter<T>({
   allowExclusion = false
 }: GroupedEntityFilterProps<T>): JSX.Element {
   const { t } = useTranslation()
-  const effectiveGroups = groups.length > 0 ? groups : [[]]
+  // A box with nothing in it filters nothing, so it stays here: only groups
+  // with something in them reach `onChange`, whose owners drop empty ones.
+  const [openBoxes, setOpenBoxes] = useState(0)
+  const filledGroups = groups.filter((group) => group.length > 0)
+  const isEmpty = filledGroups.length === 0
+  const shownBoxes = isEmpty ? Math.max(openBoxes, 1) : openBoxes
+  const effectiveGroups = [...filledGroups, ...Array.from({ length: shownBoxes }, () => [])]
   const hasSeveralGroups = effectiveGroups.length > 1
-  const chipCount = effectiveGroups.reduce((total, group) => total + group.length, 0)
+  const chipCount = filledGroups.reduce((total, group) => total + group.length, 0)
+
+  // Clear filters and the like empty the field from outside.
+  useEffect(() => {
+    if (isEmpty) setOpenBoxes(0)
+  }, [isEmpty])
+
+  function commit(next: string[][]): void {
+    const filled = next.filter((group) => group.length > 0)
+    setOpenBoxes(next.length - filled.length)
+    onChange(filled)
+  }
 
   // The picker works on plain ids; exclusions are kept per group and
   // re-applied to whichever ids remain after a change.
@@ -67,7 +85,7 @@ export function GroupedEntityFilter<T>({
   function updateGroup(index: number, values: string[], excluded = excludedIn(index)): void {
     const next = [...effectiveGroups]
     next[index] = values.map((id) => toGroupEntry({ id, excluded: excluded.has(id) }))
-    onChange(next)
+    commit(next)
   }
 
   function toggleExcluded(index: number, id: string): void {
@@ -81,11 +99,11 @@ export function GroupedEntityFilter<T>({
   }
 
   function addGroup(): void {
-    onChange([...effectiveGroups, []])
+    setOpenBoxes(shownBoxes + 1)
   }
 
   function removeGroup(index: number): void {
-    onChange(effectiveGroups.filter((_, i) => i !== index))
+    commit(effectiveGroups.filter((_, i) => i !== index))
   }
 
   return (
