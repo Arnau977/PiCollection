@@ -12,6 +12,58 @@
   gap: var(--space-2);
 }
 
+/* Results sit under the filters on a viewport-bound page, so a long selection
+   mustn't push them (or the bars above them) away. Exactly one thing scrolls:
+   a lone group's chips, keeping its picker in place, or the whole stack when
+   there are several, so N groups don't add up to N full heights. Only in the
+   filter bar, which doesn't scroll itself: the list form does, and a scroller
+   inside it would compete with it. */
+.grouped-entity-filter-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.filter-bar .grouped-entity-filter-groups {
+  --chips-max-height: clamp(5rem, 20vh, 11rem);
+}
+
+.filter-bar .grouped-entity-filter-groups:not(.has-several-groups) .multi-select-chips,
+.filter-bar .grouped-entity-filter-groups.has-several-groups {
+  overflow-y: auto;
+  /* Room for what overflow would clip: chip-landed's ring, focus outlines. */
+  padding: 4px;
+  margin-inline: -4px;
+}
+
+.filter-bar .grouped-entity-filter-groups:not(.has-several-groups) .multi-select-chips {
+  max-height: var(--chips-max-height);
+  margin-top: 0;
+}
+
+.filter-bar .grouped-entity-filter-groups.has-several-groups {
+  /* Plus about one picker, which scrolls along here. */
+  max-height: calc(var(--chips-max-height) + 2.75rem);
+}
+
+/* Half the signal that there's more below, so unlike the app-wide scrollbar
+   (1.12:1) it has to be seen: 3.37:1 on the panel, 6.44:1 on hover. */
+.filter-bar
+  .grouped-entity-filter-groups:not(.has-several-groups)
+  .multi-select-chips::-webkit-scrollbar-thumb,
+.filter-bar .grouped-entity-filter-groups.has-several-groups::-webkit-scrollbar-thumb {
+  background: var(--color-text-faint);
+  background-clip: padding-box;
+}
+
+.filter-bar
+  .grouped-entity-filter-groups:not(.has-several-groups)
+  .multi-select-chips::-webkit-scrollbar-thumb:hover,
+.filter-bar .grouped-entity-filter-groups.has-several-groups::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+  background-clip: padding-box;
+}
+
 .grouped-entity-filter-group {
   display: flex;
   flex-direction: column;

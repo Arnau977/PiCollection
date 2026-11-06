@@ -140,6 +140,13 @@ here.
 - Source: Saved Views (SaaSFrame) - https://www.saasframe.io/patterns/saved-views ; Save, update and manage a view (ChangePilot) - https://intercom.help/changepilot/en/articles/16837242-save-update-and-manage-a-view
 - Checked: 2026-11-05
 
+### Many selected items in a filter field
+- Kind: pattern
+- Use when / avoid when: a field can hold dozens of selected chips. Fluent 2 wraps tags by default and allows a "+n" overflow tag only when people don't need to see, edit or remove each tag; PatternFly collapses a chip group past a threshold (default 3) for filter values. Avoid "+N more" where every selection is managed individually, and expand-in-place where expanding pushes the results away again.
+- Takeaway for PiCollection: filter chips are managed one by one (include/exclude, remove), so keep them all rendered and bound the height, instead of hiding them behind a count.
+- Source: Fluent 2 tag usage - https://fluent2.microsoft.design/components/web/react/core/tag/usage ; PatternFly chip - https://patternfly.org/components/chip/html
+- Checked: 2026-11-06
+
 ## Anti-patterns
 
 ### A badge that is almost always lit
@@ -155,6 +162,13 @@ here.
 - Takeaway for PiCollection: never put the only explanation of a disabled state behind a `disabled` button's hover.
 - Source: MUI issue #33182 - https://github.com/mui/material-ui/issues/33182 ; react-spectrum discussion #9232 - https://github.com/adobe/react-spectrum/discussions/9232
 - Checked: 2026-09-27
+
+### Inline scroll area inside a scrolling page
+- Kind: anti-pattern
+- Use when / avoid when: a small scroller inside a scrolling page traps the wheel or touch, and the page starts scrolling once the inner list ends (Baymard: 26% of top e-commerce sites do it for filter options, and testing showed frustration). The objection is about the two scrollers competing; it doesn't apply when the outer area doesn't scroll. No NN/g article on it was found.
+- Takeaway for PiCollection: an inner scroller is acceptable in a fixed part of a viewport-bound page, like the gallery's filter bar, and not inside a scroll region like the edit form's.
+- Source: Baymard - Avoid Inline Scroll Areas - https://marketing-site-78zahjm59-baymard.vercel.app/blog/inline-scroll-areas ; Nested scroll bars and accessibility - https://buttondown.com/access-ability/archive/nested-scroll-bars-are-the-one-of-the-biggest
+- Checked: 2026-11-06
 
 ## Trends
 

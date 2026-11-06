@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useRef, type ReactNode } from 'react'
 import { CornerDownRight, Crosshair, SquareCheck, SquareX, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Autocomplete } from './Autocomplete'
@@ -67,6 +67,11 @@ interface MultiSelectAutocompleteProps<T> {
   chipAction?: ChipAction
   /** Extra muted text after a chip's label (e.g. "form of Gold Ship"). */
   chipHint?: (option: T) => ReactNode
+  /**
+   * Scrolls a chip picked here into view. For a height-bound chip list, where
+   * alphabetical order can otherwise land it out of sight.
+   */
+  revealAddedChip?: boolean
 }
 
 export function MultiSelectAutocomplete<T>({
@@ -88,9 +93,11 @@ export function MultiSelectAutocomplete<T>({
   chipFilter,
   chipsHeader,
   chipAction,
-  chipHint
+  chipHint,
+  revealAddedChip = false
 }: MultiSelectAutocompleteProps<T>): JSX.Element {
   const { t } = useTranslation()
+  const pendingReveal = useRef<string | null>(null)
   const selectedSet = useMemo(() => new Set(selectedValues), [selectedValues])
   const selectedOptions = useMemo(
     () => options.filter((option) => selectedSet.has(getOptionValue(option))),
@@ -106,6 +113,7 @@ export function MultiSelectAutocomplete<T>({
     if (!option) return
     const value = getOptionValue(option)
     if (!selectedValues.includes(value)) {
+      if (revealAddedChip) pendingReveal.current = value
       onChange([...selectedValues, value])
     }
   }
@@ -137,9 +145,19 @@ export function MultiSelectAutocomplete<T>({
       {shownChips.length > 0 && (
         <ul className="multi-select-chips">
           {shownChips.map((option) => {
-            const excluded = chipExclusion?.isExcluded(getOptionValue(option)) ?? false
+            const value = getOptionValue(option)
+            const excluded = chipExclusion?.isExcluded(value) ?? false
             return (
-              <li key={getOptionValue(option)} className={excluded ? 'chip is-excluded' : 'chip'}>
+              <li
+                key={value}
+                className={excluded ? 'chip is-excluded' : 'chip'}
+                ref={(chip) => {
+                  if (chip && pendingReveal.current === value) {
+                    pendingReveal.current = null
+                    chip.scrollIntoView({ block: 'nearest' })
+                  }
+                }}
+              >
                 {chipExclusion && (
                   <button
                     type="button"

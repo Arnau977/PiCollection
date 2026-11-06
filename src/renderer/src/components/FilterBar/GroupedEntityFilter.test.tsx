@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
+import { useState } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GroupedEntityFilter } from './GroupedEntityFilter'
@@ -141,6 +142,62 @@ describe('GroupedEntityFilter', () => {
     renderFilter([['ishtar']])
 
     expect(screen.getAllByText('Characters')).toHaveLength(1)
+  })
+
+  it('counts the chips across groups only once there are too many to take in', () => {
+    const ids = Array.from({ length: 9 }, (_, i) => `tag-${i}`)
+    const { rerender } = render(
+      <GroupedEntityFilter
+        label="Tags"
+        groups={[ids]}
+        onChange={vi.fn()}
+        options={[]}
+        getOptionLabel={() => ''}
+        getOptionValue={() => ''}
+      />
+    )
+    expect(screen.queryByText('· 9')).not.toBeInTheDocument()
+
+    rerender(
+      <GroupedEntityFilter
+        label="Tags"
+        groups={[ids, ['another']]}
+        onChange={vi.fn()}
+        options={[]}
+        getOptionLabel={() => ''}
+        getOptionValue={() => ''}
+      />
+    )
+    expect(screen.getByText('· 10')).toBeInTheDocument()
+  })
+
+  it('brings a picked chip into view, since the list is bound and sorted by name', async () => {
+    const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView')
+    function Harness(): JSX.Element {
+      const [groups, setGroups] = useState<string[][]>([['shirou']])
+      return (
+        <GroupedEntityFilter
+          label="Characters"
+          groups={groups}
+          onChange={setGroups}
+          options={options}
+          getOptionLabel={(o: Option) => o.name}
+          getOptionValue={(o: Option) => o.id}
+        />
+      )
+    }
+    const user = userEvent.setup()
+    render(<Harness />)
+
+    await user.type(screen.getByRole('combobox'), 'Rin')
+    await user.click(await screen.findByRole('option', { name: 'Rin' }))
+
+    expect(await screen.findByText('Rin')).toBeInTheDocument()
+    const revealed = scrollIntoView.mock.contexts.filter(
+      (element) => (element as Element).textContent === 'Rin'
+    )
+    expect(revealed).toHaveLength(1)
+    scrollIntoView.mockRestore()
   })
 
   it('still names each group for assistive tech when there are several', () => {
