@@ -42,8 +42,13 @@ node .claude/skills/contrast-check/contrast.mjs text:#1e1f26 "#ffffff:accent"
 - `--accent-fg` passes on `background`/`surface`, but **not** on
   `surface-hover` or `surface-2` (~4.2-4.4:1). On those, switch hover text to
   `--color-text` instead of keeping it accent-colored.
-- `--color-text-faint` is for non-essential decoration only (~3.4:1), never
-  for readable text.
+- `--color-text-faint` passes as small text since the 2026-11 audit (4.70:1 on
+  `surface-hover`, the worst surface). It stays the quietest text tone.
+- `--focus-ring-color` is `--accent-fg` (4.22:1 at worst); `--accent` is under
+  3:1 on every surface, so it can't be the only sign of a state.
+- A field's border carries meaning, so it's `--field-border` (3.48:1 on
+  `surface`), opaque because a translucent one blends with the dark field.
+  Decorative borders keep `--border-color`.
 
 ## Report
 

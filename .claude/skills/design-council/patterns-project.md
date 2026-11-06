@@ -185,9 +185,7 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   one thing scrolls per field. "Add OR group" stays outside, the count shows
   from 10 chips, and a picked chip is brought into view (`revealAddedChip`).
   Only in the gallery's filter bar: the edit form and the list form scroll
-  themselves, so a scroller there would compete. The thumb is `--color-text-faint` (3.37:1): the app-wide scrollbar
-  is 1.12:1, too faint to say there's more. Where:
-  `GroupedEntityFilter.tsx` + `.css`.
+  themselves, so a scroller there would compete. Where: `GroupedEntityFilter.tsx` + `.css`.
 - **A window too short for a bound page scrolls the page as a last resort.**
   `.gallery-page` is `overflow-y: auto` and its scroll region keeps a
   `min-height`, so bars below the filters are never clipped out of reach.
