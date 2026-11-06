@@ -1,7 +1,11 @@
 import type { MediaModel } from './Media'
 
-/** Why a file left the app: deleted (from the queue, pending or the library) or replaced by a similar one. */
-export type DiscardReason = 'deleted' | 'replaced'
+/**
+ * Why a file left the app, settled when it does and kept from then on: a
+ * repeat of a file still in the app, a variant of a similar one, a plain
+ * delete, or replaced by a similar one.
+ */
+export type DiscardReason = 'duplicate' | 'variant' | 'deleted' | 'replaced'
 
 /** A file taken out of the app but still on disk (until moved to the Recycle Bin). */
 export interface DiscardedMediaModel {

@@ -22,6 +22,8 @@ import { readSourceFolder, relativizeRoute, resolveRoute } from './sourceFolder'
 import { notifyEntitiesChanged } from '../events/entityEvents'
 import { notifyAppStateChanged } from '../events/appStateEvents'
 import type {
+  DiscardFileInput,
+  DiscardReason,
   ArtistModel,
   CharacterModel,
   EntityKind,
@@ -269,6 +271,22 @@ async function expandFilterLists(filters: MediaFilters): Promise<MediaFilters | 
     if (!expanded) return null
   }
   return expanded
+}
+
+/**
+ * Why a saved media is leaving: what its similar list shows right now, so
+ * this has to run before it's gone. Pending media counts only for pending
+ * media, as in that list, and a GIF and its video are relatives, not variants.
+ */
+async function discardReasonFor(row: MediaTable): Promise<DiscardReason> {
+  const copies = row.hash ? await mediaRepo.findMediaRowsByHash(getDb(), row.hash) : []
+  if (copies.some((copy) => copy.id !== row.id)) return 'duplicate'
+  const matches = await mediaService.findSimilarMedia(
+    row.id,
+    SIMILAR_MEDIA_LIMIT,
+    row.pending_tagging === 1
+  )
+  return matches.some((match) => !match.relation) ? 'variant' : 'deleted'
 }
 
 export const mediaService = {
@@ -593,15 +611,26 @@ export const mediaService = {
   /** The file stays on disk; it's recorded in the Discarded list to clean up later. */
   async deleteMedia(id: string): Promise<void> {
     const db = getDb()
+    const row = await mediaRepo.findMediaRowById(db, id)
+    // Outside the transaction: these reads go through their own connection.
+    const reason = row ? await discardReasonFor(row) : null
     await db.transaction().execute(async (trx) => {
-      const row = await mediaRepo.findMediaRowById(trx, id)
-      if (row) await recordDiscarded(trx, row, 'deleted')
+      if (row && reason) await recordDiscarded(trx, row, reason)
       await mediaRepo.deleteMediaRow(trx, id)
     })
     // The deleted media could have held any kind of association; not worth
     // fetching them first just to compute an exact subset.
     notifyEntitiesChanged(['tag', 'character', 'series', 'artist'])
     notifyAppStateChanged('media')
+  },
+
+  /** A batch-import file dropped before it was ever saved (its route is absolute). */
+  async discardFile(input: DiscardFileInput): Promise<void> {
+    const { exactMatch, similar } = await mediaService.checkDuplicate(input.route)
+    const reason = exactMatch ? 'duplicate' : similar.length > 0 ? 'variant' : 'deleted'
+    const route = relativizeRoute(input.route, readSourceFolder())
+    const hash = await computeFileHash(input.route)
+    await recordDiscarded(getDb(), { route, name: input.name, type: input.type, hash }, reason)
   },
 
   /**

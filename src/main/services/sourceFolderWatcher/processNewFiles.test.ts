@@ -17,7 +17,6 @@ const { writeSourceFolder, resetSourceFolderCache, relativizeRoute } = await imp
   '../sourceFolder'
 )
 const { mediaService } = await import('../media.service')
-const { discardedMediaService } = await import('../discardedMedia.service')
 const { processNewFiles } = await import('./processNewFiles')
 const { setAutoImport, resetWatcherSettingsCache } = await import('./watcherSettings')
 
@@ -85,7 +84,7 @@ describe('processNewFiles', () => {
 
   it('skips a file discarded by hash, and one discarded by route', async () => {
     const byHash = await write('a/gone.png', 'discarded bytes')
-    await discardedMediaService.discardFile({ route: byHash, name: 'gone', type: 'image' })
+    await mediaService.discardFile({ route: byHash, name: 'gone', type: 'image' })
     await fs.rm(byHash)
     const moved = await write('b/moved.png', 'discarded bytes')
 

@@ -200,7 +200,8 @@ the edit form's saved tags.
 Deleting media never deletes its file: `mediaService.deleteMedia` records
 the route in `discarded_media` (so do discarding an unsaved batch-import
 file and `mediaService.replaceMedia` for the file a similar media gave up),
-listed under Disk space > Discarded. A batch import's `expandSelection`
+listed under Disk space > Discarded, with a reason settled at that moment from
+what the similar check shows (`discardReasonFor` in `media.service.ts`). A batch import's `expandSelection`
 skips discarded routes, and adding a file again removes its record. The only
 code that touches the file itself is `discardedMediaService.trashFiles`
 (`shell.trashItem`, i.e. the Recycle Bin).

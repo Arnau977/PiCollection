@@ -5,14 +5,8 @@ import type { Kysely } from 'kysely'
 import { getDb } from '../database/connection'
 import * as discardedRepo from '../database/repositories/discardedMedia.repository'
 import type { DB, DiscardedMediaTable } from '../database/schema'
-import type {
-  DiscardFileInput,
-  DiscardReason,
-  DiscardedMediaModel,
-  MediaModel
-} from '@shared/models'
-import { readSourceFolder, relativizeRoute, resolveRoute } from './sourceFolder'
-import { computeFileHash } from './mediaHash'
+import type { DiscardReason, DiscardedMediaModel, MediaModel } from '@shared/models'
+import { readSourceFolder, resolveRoute } from './sourceFolder'
 
 function toModel(row: DiscardedMediaTable): DiscardedMediaModel {
   return {
@@ -50,13 +44,6 @@ export async function recordDiscarded(
 export const discardedMediaService = {
   async list(): Promise<DiscardedMediaModel[]> {
     return (await discardedRepo.listDiscarded(getDb())).map(toModel)
-  },
-
-  /** A batch-import file dropped before it was ever saved (its route is absolute). */
-  async discardFile(input: DiscardFileInput): Promise<void> {
-    const route = relativizeRoute(input.route, readSourceFolder())
-    const hash = await computeFileHash(input.route)
-    await recordDiscarded(getDb(), { route, name: input.name, type: input.type, hash }, 'deleted')
   },
 
   /**

@@ -25,8 +25,15 @@ queue. For each item:
 
 Deleting media never deletes its file. Whether you delete from the gallery,
 the pending queue or a batch import, the file stays where it is and is listed
-under **Disk space > Discarded**, with its folder, why it left (deleted, or
-replaced by a [better copy](duplicates.md#replacing-a-copy)) and when.
+under **Disk space > Discarded**, with its folder, when it left and why, noted
+at that moment:
+
+- **Repeated** - the same file was still in the app;
+- **Variant** - [similar media](duplicates.md) was still in the app, such as a
+  censored or lower-quality version. A GIF and the video it came from don't
+  count;
+- **Deleted** - neither of those, and everything deleted before this was noted;
+- **Replaced** - it gave way to a [better copy](duplicates.md#replacing-a-copy).
 
 From there, for each file:
 

@@ -68,7 +68,8 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
 - **Deleting never touches the file; files are cleaned up from Disk space >
   Discarded.** Delete (gallery, pending, batch import - same danger button
   slot at the end of the edit form's bar, same confirm) records the file;
-  the Discarded page lists it with
+  the Discarded page lists it, with why it left worked out at that moment and
+  stored (repeated, variant, deleted, replaced; never asked in the confirm), and with
   "Keep file" / "Move to Recycle Bin" per row and a bulk "Move all N" behind
   a confirm, one sequential IPC call, all buttons locked while it runs.
   Where: `DiscardedManager.tsx`, `ImportQueue.tsx`.
