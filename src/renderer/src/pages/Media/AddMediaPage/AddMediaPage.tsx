@@ -29,8 +29,9 @@ export default function AddMediaPage(): JSX.Element {
     })
   }, [])
 
+  // Replace, as for saving: whoever closes this has already been asked.
   function goToGallery(): void {
-    navigate(PATH.GALLERY)
+    navigate(PATH.GALLERY, { replace: true })
   }
 
   const showFolderBrowser = tab === 'folder' && sourceFolder && importSelection === null

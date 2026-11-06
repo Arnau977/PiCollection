@@ -48,7 +48,8 @@ Needs a [source folder](getting-started.md#pick-a-source-folder-recommended).
      file stays on disk.
 4. **Send the remaining N to Pending** (next to *File N of M*) sends every
    file you haven't saved yet to the pending queue in one go, after asking.
-   Closing the queue with files left offers the same.
+   Closing the queue with files left, or leaving it from the sidebar, offers
+   the same.
 
 Files you discarded earlier are skipped the next time you import their
 folder, and a message says how many.

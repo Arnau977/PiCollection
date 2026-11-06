@@ -143,7 +143,7 @@ const MediaPage: React.FC = () => {
     if (pendingQueue && nextId) {
       goToMedia(nextId)
     } else if (pendingQueue) {
-      navigate(PATH.GALLERY)
+      navigate(PATH.GALLERY, { replace: true })
     } else {
       refetch()
     }

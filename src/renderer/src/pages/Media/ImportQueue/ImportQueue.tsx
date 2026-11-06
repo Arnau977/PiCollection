@@ -4,6 +4,7 @@ import type { ExpandedMediaFile, MediaModel } from '@shared/models'
 import { deriveMediaName } from '@shared/utils'
 import { MediaForm } from '../MediaForm/MediaForm'
 import { ImportQueueExitDialog } from '../ImportQueueExitDialog/ImportQueueExitDialog'
+import { LeaveGuard } from '../../../components/LeaveGuard/LeaveGuard'
 import { Toast } from '../../../components/Toast/Toast'
 import { useConfirm } from '../../../components/ConfirmDialog/ConfirmDialogContext'
 import './ImportQueue.css'
@@ -34,6 +35,9 @@ export function ImportQueue({
   const confirm = useConfirm()
   const [state, setState] = useState<QueueState>({ kind: 'loading' })
   const [showExitDialog, setShowExitDialog] = useState(false)
+  // Set while the exit dialog answers for a navigation held by LeaveGuard, so
+  // leaving goes where the user was heading rather than to the gallery.
+  const heldLeave = useRef<((leave: boolean) => void) | null>(null)
   // Every item saved in this session, by route. "Guardar" doesn't advance the
   // queue, so moving past the *last* item can still open the one actually
   // saved; and going back to a saved item reopens it in edit mode - as a new
@@ -204,6 +208,26 @@ export function ImportQueue({
     onClose()
   }
 
+  function handleLeaveAttempt(decide: (leave: boolean) => void): void {
+    if (busy) {
+      decide(false)
+      return
+    }
+    heldLeave.current = decide
+    setShowExitDialog(true)
+  }
+
+  function leaveQueue(): void {
+    if (heldLeave.current) heldLeave.current(true)
+    else onClose()
+    heldLeave.current = null
+  }
+
+  function stayInQueue(): void {
+    heldLeave.current?.(false)
+    heldLeave.current = null
+  }
+
   async function handleAddRemainingToPending(): Promise<void> {
     if (runningRef.current) return
     runningRef.current = true
@@ -222,9 +246,10 @@ export function ImportQueue({
     )
 
     if (result.success) {
-      onClose()
+      leaveQueue()
       return
     }
+    stayInQueue()
     runningRef.current = false
     setBusy(false)
     setState({ kind: 'error', message: result.error.message })
@@ -243,7 +268,7 @@ export function ImportQueue({
 
   function handleDiscard(): void {
     setShowExitDialog(false)
-    onClose()
+    leaveQueue()
   }
 
   return (
@@ -266,7 +291,8 @@ export function ImportQueue({
           onNext: advance,
           onPrevious: index > 0 ? goBack : undefined,
           onSendRemainingToPending: remaining > 0 ? handleSendRemainingToPending : undefined,
-          remaining
+          remaining,
+          asksBeforeLeaving: remaining > 0
         }}
         onCancel={handleCloseClick}
         onSaved={handleSaved}
@@ -275,13 +301,17 @@ export function ImportQueue({
         deleting={deleting}
         onReplaced={handleReplaced}
       />
+      {remaining > 0 && <LeaveGuard onAttempt={handleLeaveAttempt} />}
       {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
       {showExitDialog && (
         <ImportQueueExitDialog
           remaining={remaining}
           onAddToPending={handleAddRemainingToPending}
           onDiscard={handleDiscard}
-          onKeepEditing={() => setShowExitDialog(false)}
+          onKeepEditing={() => {
+            setShowExitDialog(false)
+            stayInQueue()
+          }}
         />
       )}
       {busy && (

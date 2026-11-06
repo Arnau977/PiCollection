@@ -2,7 +2,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { TestRouter } from '../../../test-router'
 import type { ArtistModel, CharacterModel, SeriesModel, TagModel } from '@shared/models'
 import AddMediaPage from './AddMediaPage'
 
@@ -97,9 +97,9 @@ function setApi(overrides: Record<string, Record<string, unknown>> = {}): void {
 
 function renderPage() {
   return render(
-    <MemoryRouter>
+    <TestRouter>
       <AddMediaPage />
-    </MemoryRouter>
+    </TestRouter>
   )
 }
 
@@ -134,7 +134,7 @@ describe('AddMediaPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
-    expect(navigateMock).toHaveBeenCalledWith('/gallery')
+    expect(navigateMock).toHaveBeenCalledWith('/gallery', { replace: true })
   })
 
   it('derives the media name from the selected file and navigates to the new media on success', async () => {
@@ -1008,9 +1008,9 @@ describe('AddMediaPage folder tab', () => {
       }
     })
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/media/add', state: { addMediaTab: 'folder' } }]}>
+      <TestRouter initialEntries={[{ pathname: '/media/add', state: { addMediaTab: 'folder' } }]}>
         <AddMediaPage />
-      </MemoryRouter>
+      </TestRouter>
     )
 
     await vi.waitFor(() => expect(browse).toHaveBeenCalledWith(''))

@@ -1,4 +1,10 @@
-import { HashRouter as Router, Route, Routes } from 'react-router-dom'
+import {
+  createHashRouter,
+  createRoutesFromElements,
+  Outlet,
+  Route,
+  RouterProvider
+} from 'react-router-dom'
 import HomePage from './pages/Home/HomePage'
 import GalleryPage from './pages/Gallery/GalleryPage'
 import FilterListsPage from './pages/FilterLists/FilterListsPage'
@@ -13,27 +19,36 @@ import StoragePage from './pages/Storage/StoragePage'
 import NotFoundPage from './pages/NotFound/NotFoundPage'
 import { AppHeader } from './components/AppHeader/AppHeader'
 
-export default function AppRoutes(): JSX.Element {
+function AppShell(): JSX.Element {
   return (
-    <Router>
-      <div className="app-shell">
-        <AppHeader />
-        <div className="app-content">
-          <Routes>
-            <Route path={PATH.HOME} element={<HomePage />} />
-            <Route path={PATH.GALLERY} element={<GalleryPage />} />
-            <Route path={PATH.FILTER_LISTS} element={<FilterListsPage />} />
-            <Route path={PATH.MEDIA} element={<MediaPage />} />
-            <Route path={PATH.ADD_MEDIA} element={<AddMediaPage />} />
-            <Route path={PATH.PENDING} element={<PendingEntryPage />} />
-            <Route path={PATH.SETTINGS} element={<SettingsPage />} />
-            <Route path={PATH.MANAGE} element={<ManagePage />} />
-            <Route path={PATH.STORAGE} element={<StoragePage />} />
-            <Route path={PATH.DISCARDED} element={<DiscardedPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </div>
+    <div className="app-shell">
+      <AppHeader />
+      <div className="app-content">
+        <Outlet />
       </div>
-    </Router>
+    </div>
   )
+}
+
+// A data router, since only those can hold a navigation back (LeaveGuard).
+const router = createHashRouter(
+  createRoutesFromElements(
+    <Route element={<AppShell />}>
+      <Route path={PATH.HOME} element={<HomePage />} />
+      <Route path={PATH.GALLERY} element={<GalleryPage />} />
+      <Route path={PATH.FILTER_LISTS} element={<FilterListsPage />} />
+      <Route path={PATH.MEDIA} element={<MediaPage />} />
+      <Route path={PATH.ADD_MEDIA} element={<AddMediaPage />} />
+      <Route path={PATH.PENDING} element={<PendingEntryPage />} />
+      <Route path={PATH.SETTINGS} element={<SettingsPage />} />
+      <Route path={PATH.MANAGE} element={<ManagePage />} />
+      <Route path={PATH.STORAGE} element={<StoragePage />} />
+      <Route path={PATH.DISCARDED} element={<DiscardedPage />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Route>
+  )
+)
+
+export default function AppRoutes(): JSX.Element {
+  return <RouterProvider router={router} />
 }

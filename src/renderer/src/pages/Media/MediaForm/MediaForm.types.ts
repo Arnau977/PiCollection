@@ -17,4 +17,6 @@ export interface QueueInfo {
   onSendRemainingToPending?: () => void
   /** How many of those aren't saved yet - the ones the action above would send. */
   remaining?: number
+  /** The queue asks before leaving with its own dialog, so the form doesn't. */
+  asksBeforeLeaving?: boolean
 }

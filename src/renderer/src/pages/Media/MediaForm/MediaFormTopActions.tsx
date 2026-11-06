@@ -8,6 +8,7 @@ import {
   type Shortcut
 } from '../../../hooks/useShortcut'
 import { useConfirm } from '../../../components/ConfirmDialog/ConfirmDialogContext'
+import { LeaveGuard } from '../../../components/LeaveGuard/LeaveGuard'
 import { StableLabel } from '../../../components/StableLabel/StableLabel'
 import { ArrowLeft, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
 import type { MediaModel } from '@shared/models'
@@ -22,7 +23,7 @@ interface MediaFormTopActionsProps {
   deleting?: boolean
   hasExactDuplicate: boolean
   onCancel: () => void
-  /** Unsaved changes: leaving (Cancel or Esc) asks before dropping them. */
+  /** Unsaved changes: leaving, by any way out, asks before dropping them. */
   isDirty: boolean
   onMarkResolved?: () => void
   onMarkResolvedClick: () => void
@@ -80,18 +81,18 @@ export function MediaFormTopActions({
   }
   useShortcut(SHORTCUTS.save, press(saveRef))
   useShortcut(SHORTCUTS.saveAndResolve, press(resolveRef))
-  // Cancel, and Esc (which leaves the form the way E entered it), ask before
-  // dropping unsaved changes. A batch import's Close skips this: its own
-  // exit dialog already covers leaving mid-queue.
+  // A batch import's own exit dialog already covers leaving mid-queue.
+  const asksBeforeLeaving = isDirty && !queueInfo?.asksBeforeLeaving
+  function confirmDiscard(): Promise<boolean> {
+    return confirm({
+      message: t('media.discardChangesConfirm'),
+      confirmLabel: t('media.discardChanges'),
+      danger: true
+    })
+  }
+  // Cancel, and Esc, which leaves the form the way E entered it.
   async function leave(): Promise<void> {
-    if (isDirty && !queueInfo) {
-      const discard = await confirm({
-        message: t('media.discardChangesConfirm'),
-        confirmLabel: t('media.discardChanges'),
-        danger: true
-      })
-      if (!discard) return
-    }
+    if (asksBeforeLeaving && !(await confirmDiscard())) return
     onCancel()
   }
   useShortcut(SHORTCUTS.leaveEdit, () => void leave())
@@ -104,6 +105,9 @@ export function MediaFormTopActions({
 
   return (
     <div className="media-page-actions media-form-top-actions">
+      {asksBeforeLeaving && (
+        <LeaveGuard onAttempt={(decide) => void confirmDiscard().then(decide)} />
+      )}
       <button
         type="button"
         className="btn"
