@@ -10,7 +10,7 @@
   gap: var(--space-2);
   padding: 0.5rem 0.7rem;
   background: var(--field-background);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--field-border);
   border-radius: var(--radius-md);
 }
 
@@ -20,7 +20,10 @@
   border-color: transparent;
 }
 
-.search-bar-input {
+/* The row above is the field, so this input drops the global field look.
+   The row prefix outranks `input[type='text']` and its :focus rule. */
+.search-bar-input-row .search-bar-input,
+.search-bar-input-row .search-bar-input:focus {
   flex: 1 1 160px;
   min-width: 120px;
   background: transparent;

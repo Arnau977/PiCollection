@@ -46,24 +46,6 @@
   max-height: calc(var(--chips-max-height) + 2.75rem);
 }
 
-/* Half the signal that there's more below, so unlike the app-wide scrollbar
-   (1.12:1) it has to be seen: 3.37:1 on the panel, 6.44:1 on hover. */
-.filter-bar
-  .grouped-entity-filter-groups:not(.has-several-groups)
-  .multi-select-chips::-webkit-scrollbar-thumb,
-.filter-bar .grouped-entity-filter-groups.has-several-groups::-webkit-scrollbar-thumb {
-  background: var(--color-text-faint);
-  background-clip: padding-box;
-}
-
-.filter-bar
-  .grouped-entity-filter-groups:not(.has-several-groups)
-  .multi-select-chips::-webkit-scrollbar-thumb:hover,
-.filter-bar .grouped-entity-filter-groups.has-several-groups::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
-  background-clip: padding-box;
-}
-
 .grouped-entity-filter-group {
   display: flex;
   flex-direction: column;
