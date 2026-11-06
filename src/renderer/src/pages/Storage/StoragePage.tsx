@@ -4,11 +4,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ChevronRight, FolderOpen } from 'lucide-react'
 import type { MediaFilters, StorageEntity, StorageFolder, StorageOverview } from '@shared/models'
 import { PATH } from '../../app.routes.const'
-import {
-  openEntityInGallery,
-  openGalleryFiltered,
-  type CountEntityKind
-} from '../../utils/openInGallery'
+import type { CountEntityKind } from '../../utils/openInGallery'
+import { useOpenInGallery } from '../../hooks/useOpenInGallery'
 import { useStorageOverview } from '../../hooks/useStorageOverview'
 import { formatFileSize } from '../../utils/fileSize'
 import { useManageParamsSource } from '../Manage/useManageParam'
@@ -92,6 +89,7 @@ function parentFolder(path: string): string | null {
 export default function StoragePage(): JSX.Element {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const { openEntity, openFiltered } = useOpenInGallery()
   const location = useLocation()
   const { data, loading, error } = useStorageOverview()
   // In the URL like Metadata's (one params source for both), so Back from a
@@ -169,8 +167,7 @@ export default function StoragePage(): JSX.Element {
       bytes: entity.bytes,
       count: entity.count,
       actionLabel: t('storage.openInGallery', { name: entity.name }),
-      onOpen: (): void =>
-        openEntityInGallery(kind, entity.id, navigate, { prop: 'fileSize', desc: true })
+      onOpen: (): void => void openEntity(kind, entity.id, { prop: 'fileSize', desc: true })
     }))
   }
 
@@ -192,8 +189,7 @@ export default function StoragePage(): JSX.Element {
           bytes: noneTotal.bytes,
           count: noneTotal.count,
           actionLabel: t('storage.openInGallery', { name: t(none.labelKey) }),
-          onOpen: (): void =>
-            openGalleryFiltered(none.filter, navigate, { prop: 'fileSize', desc: true })
+          onOpen: (): void => void openFiltered(none.filter, { prop: 'fileSize', desc: true })
         }
       : undefined
   // A folder outside the source folder is one step, under its full path.

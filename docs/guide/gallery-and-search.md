@@ -82,8 +82,10 @@ gallery updates as you go, and you can open a picture and come back. **Save
 changes** puts it all back into the list; **Cancel** leaves the list as it was
 and brings back your earlier filters. Other lists you had on step aside until
 you finish. A gallery default the list doesn't set, such as SFW only, stays on
-but isn't saved in the list, and the bar says so. Closing the app drops an
-unfinished edit.
+but isn't saved in the list, and the bar says so. If you changed something and
+then open something else in the gallery from another page, PiCollection asks
+before dropping those changes. Closing the app drops an unfinished edit without
+asking.
 
 **Lists**, at the top of the gallery, opens the page where you create, edit and
 delete them. Each row sums up what the list holds and can open it in the

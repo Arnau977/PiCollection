@@ -522,6 +522,8 @@
     "editing": "Editing \"{{name}}\"",
     "saveChanges": "Save changes",
     "notSaved": "Not saved in the list: {{items}}",
+    "discardEditConfirm": "You're editing \"{{name}}\". Leave without saving your changes?",
+    "keepEditing": "Keep editing",
     "removeChip": "Remove list {{name}}"
   },
   "search": {

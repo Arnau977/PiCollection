@@ -522,6 +522,8 @@
     "editing": "Editando \"{{name}}\"",
     "saveChanges": "Guardar cambios",
     "notSaved": "No se guarda en la lista: {{items}}",
+    "discardEditConfirm": "Estás editando \"{{name}}\". ¿Salir sin guardar los cambios?",
+    "keepEditing": "Seguir editando",
     "removeChip": "Quitar la lista {{name}}"
   },
   "search": {

@@ -22,8 +22,8 @@ import {
   useSeries,
   useTags
 } from '../../hooks/useEntityLists'
+import { useOpenInGallery } from '../../hooks/useOpenInGallery'
 import { filterByQuery } from '../../utils/filterByQuery'
-import { openGalleryFiltered, openListEditInGallery } from '../../utils/openInGallery'
 import { describeList, reachesLostFilter, type DraftNames } from '../Gallery/filterListDraft'
 import { useRevealAfterSave } from '../Manage/useRevealAfterSave'
 import { FilterListForm } from './FilterListForm'
@@ -44,6 +44,7 @@ export default function FilterListsPage(): JSX.Element {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const confirm = useConfirm()
+  const { openFiltered, openListEdit } = useOpenInGallery()
   const filterLists = useFilterLists()
   const artists = useArtists()
   const tags = useTags()
@@ -192,7 +193,7 @@ export default function FilterListsPage(): JSX.Element {
                         className="icon-btn"
                         aria-label={t('filterLists.showInGallery', { name: list.name })}
                         title={t('filterLists.showInGallery', { name: list.name })}
-                        onClick={() => openGalleryFiltered({ filterListIds: [list.id] }, navigate)}
+                        onClick={() => void openFiltered({ filterListIds: [list.id] })}
                       >
                         <Images size={16} />
                       </button>
@@ -201,7 +202,7 @@ export default function FilterListsPage(): JSX.Element {
                         className="icon-btn"
                         aria-label={t('filterLists.editInGallery', { name: list.name })}
                         title={t('filterLists.editInGallery', { name: list.name })}
-                        onClick={() => openListEditInGallery(list, navigate)}
+                        onClick={() => void openListEdit(list)}
                       >
                         <SlidersHorizontal size={16} />
                       </button>
