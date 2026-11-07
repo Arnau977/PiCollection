@@ -124,6 +124,7 @@ export function MediaForm({
     series: series.data
   })
   const previewFrame = useRef<VideoFrameSource>(null)
+  const formRef = useRef<HTMLFormElement>(null)
   const suggestions = useMediaFormSuggestions({
     input,
     setInput,
@@ -251,6 +252,8 @@ export function MediaForm({
   // A failed save stops here with the form (and its error) still on screen.
   async function handleMarkResolved(): Promise<void> {
     if (!media || !onMarkResolved) return
+    // This button sits outside the form, so nothing checks the fields for it.
+    if (!formRef.current?.reportValidity()) return
     const saved = await saveForm()
     if (!saved) return
     setSaving(true)
@@ -337,7 +340,12 @@ export function MediaForm({
 
       <div className="media-form-scroll-region">
         <div className="media-form-layout">
-          <form id="media-form" className="media-form-card card" onSubmit={handleSubmit}>
+          <form
+            ref={formRef}
+            id="media-form"
+            className="media-form-card card"
+            onSubmit={handleSubmit}
+          >
             <MediaFormFileGroup
               queueInfo={queueInfo}
               isEditing={isEditing}

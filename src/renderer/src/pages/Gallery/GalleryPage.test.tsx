@@ -1168,7 +1168,7 @@ describe('GalleryPage batch metadata edit', () => {
     await user.click(await screen.findByRole('button', { name: 'Select media-0' }))
     await user.click(screen.getByRole('button', { name: 'Edit metadata' }))
 
-    expect(screen.getByText('Edit metadata for 1 items')).toBeInTheDocument()
+    expect(screen.getByText('Edit metadata for 1 item')).toBeInTheDocument()
   })
 
   it('applies the batch edit for every selected id, then clears selection and refetches', async () => {
@@ -1254,7 +1254,7 @@ describe('GalleryPage batch metadata edit', () => {
     await user.click(screen.getByRole('button', { name: 'Edit metadata' }))
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
-    expect(screen.queryByText('Edit metadata for 1 items')).not.toBeInTheDocument()
+    expect(screen.queryByText('Edit metadata for 1 item')).not.toBeInTheDocument()
     expect(batchUpdateAssociations).not.toHaveBeenCalled()
     expect(screen.getByText('1 selected')).toBeInTheDocument()
   })

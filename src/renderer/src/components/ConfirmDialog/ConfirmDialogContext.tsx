@@ -8,6 +8,8 @@ export interface ConfirmOptions {
   confirmLabel?: string
   cancelLabel?: string
   danger?: boolean
+  /** A notice to acknowledge: one button, nothing to decide. */
+  acknowledgeOnly?: boolean
 }
 
 type ConfirmFn = (options: ConfirmOptions | string) => Promise<boolean>

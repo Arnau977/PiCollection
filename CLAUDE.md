@@ -91,6 +91,7 @@ working in that folder (see "Working style").
   with the user follows the conversation's own language. The one exception
   is in-app user-facing strings (`src/renderer/src/assets/locales/`), which
   stay translated per their own locale.
+- Never send the user's email address in a `User-Agent` header.
 
 ## Architecture
 

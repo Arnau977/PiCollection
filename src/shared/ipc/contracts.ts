@@ -44,7 +44,7 @@ export const SortingSchema = z.object({
 })
 
 export const MediaInputSchema = z.object({
-  name: z.string().min(1),
+  name: z.string().trim().min(1),
   type: z.enum(['image', 'video', 'gif']),
   route: z.string().min(1),
   alias: z.string().optional(),

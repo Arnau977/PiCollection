@@ -209,7 +209,7 @@ export function ImportQueue({
   }
 
   function handleLeaveAttempt(decide: (leave: boolean) => void): void {
-    if (busy) {
+    if (runningRef.current) {
       decide(false)
       return
     }
@@ -246,6 +246,15 @@ export function ImportQueue({
     )
 
     if (result.success) {
+      const { skipped } = result.data
+      if (skipped > 0) {
+        setBusy(false)
+        await confirm({
+          message: t('importQueue.skippedDuplicates', { count: skipped }),
+          confirmLabel: t('confirmDialog.ok'),
+          acknowledgeOnly: true
+        })
+      }
       leaveQueue()
       return
     }

@@ -1,9 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import {
+  MediaInputSchema,
   FilterListInputSchema,
   MediaBatchUpdateAssociationsSchema,
   MediaFiltersSchema
 } from './contracts'
+
+describe('MediaInputSchema', () => {
+  const media = { sfw: true, isAiGenerated: false, type: 'image', route: '/a.png' }
+
+  it('trims the name and refuses a blank one', () => {
+    expect(MediaInputSchema.parse({ ...media, name: '  a  ' }).name).toBe('a')
+    expect(MediaInputSchema.safeParse({ ...media, name: '   ' }).success).toBe(false)
+  })
+})
 
 describe('FilterListInputSchema', () => {
   it('drops paging, Pending and list ids from the saved filters', () => {

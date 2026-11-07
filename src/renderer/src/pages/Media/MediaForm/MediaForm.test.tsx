@@ -419,6 +419,20 @@ describe('MediaForm onMarkResolved', () => {
     expect(calls).toEqual(['update', 'resolve'])
   })
 
+  it('checks the name before resolving, as Save does', async () => {
+    const mediaUpdate = vi.fn()
+    setApi({ media: { update: mediaUpdate, clearPendingTagging: vi.fn() } })
+    const onMarkResolved = vi.fn()
+    renderForm({ media: pendingMedia, onMarkResolved })
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { name: 'name', value: '   ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save & mark resolved' }))
+
+    await vi.waitFor(() => expect(screen.getByLabelText('Name')).toBeInvalid())
+    expect(mediaUpdate).not.toHaveBeenCalled()
+    expect(onMarkResolved).not.toHaveBeenCalled()
+  })
+
   it('does not resolve when saving the form fails', async () => {
     const clearPendingTagging = vi.fn()
     setApi({
@@ -644,7 +658,7 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
     await user.click(await screen.findByRole('button', { name: 'Suggest tags locally' }))
 
     expect(suggestTags).toHaveBeenCalledWith('/pic.png')
-    expect(await screen.findByText('Added 1 suggestions')).toBeInTheDocument()
+    expect(await screen.findByText('Added 1 suggestion')).toBeInTheDocument()
   })
 
   it('recognizes a series added earlier in this same edit as existing, not new, on a later WD14 run', async () => {
@@ -672,7 +686,7 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
 
     await user.click(runButton)
 
-    expect(await screen.findByText('Added 1 suggestions')).toBeInTheDocument()
+    expect(await screen.findByText('Added 1 suggestion')).toBeInTheDocument()
     expect(screen.queryByText('New series')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Honkai: star rail' })).not.toBeInTheDocument()
   })

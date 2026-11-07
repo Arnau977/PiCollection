@@ -75,6 +75,7 @@
   },
   "confirmDialog": {
     "confirm": "Confirmar",
+    "ok": "Aceptar",
     "cancel": "Cancelar"
   },
   "settings": {
@@ -198,7 +199,8 @@
     "missingFilesHint": "Comprueba si cada archivo de media todavía se encuentra en su ruta guardada, y re-enlázalos en bloque si moviste o renombraste una carpeta.",
     "missingFilesCheck": "Comprobar archivos faltantes",
     "missingFilesChecking": "Comprobando...",
-    "missingFilesClean": "Se encontraron los {{count}} archivos de media.",
+    "missingFilesClean_one": "Se encontró el archivo de media.",
+    "missingFilesClean_other": "Se encontraron los {{count}} archivos de media.",
     "missingFilesFound": "Faltan {{missing}} de {{total}} archivos.",
     "missingFilesOldRoot": "Carpeta antigua",
     "missingFilesChooseNewRoot": "Elegir carpeta nueva...",
@@ -256,12 +258,14 @@
     "clearFilters": "Limpiar filtros",
     "selectItem": "Seleccionar {{name}}",
     "deselectItem": "Deseleccionar {{name}}",
-    "selectedCount": "{{count}} seleccionados",
+    "selectedCount_one": "{{count}} seleccionado",
+    "selectedCount_other": "{{count}} seleccionados",
     "selectAllOnPage": "Seleccionar todo en esta página",
     "clearSelection": "Deseleccionar todo",
     "deleteSelected": "Eliminar seleccionados",
     "editMetadata": "Editar metadatos",
-    "confirmDeleteSelected": "¿Quitar {{count}} media seleccionados de PiCollection? Los archivos se quedan en el disco y aparecen en Espacio > Eliminados.",
+    "confirmDeleteSelected_one": "¿Quitar {{count}} media seleccionado de PiCollection? El archivo se queda en el disco y aparece en Espacio > Eliminados.",
+    "confirmDeleteSelected_other": "¿Quitar {{count}} media seleccionados de PiCollection? Los archivos se quedan en el disco y aparecen en Espacio > Eliminados.",
     "pagination": {
       "previous": "Anterior",
       "next": "Siguiente",
@@ -278,7 +282,8 @@
     }
   },
   "batchEdit": {
-    "title": "Editar metadatos de {{count}} elementos",
+    "title_one": "Editar metadatos de {{count}} elemento",
+    "title_other": "Editar metadatos de {{count}} elementos",
     "addTags": "Añadir etiquetas",
     "removeTags": "Quitar etiquetas",
     "addCharacters": "Añadir personajes",
@@ -334,6 +339,7 @@
     "noSeries": "Sin serie asignada"
   },
   "media": {
+    "nameNotBlank": "El nombre no puede estar en blanco",
     "relation": {
       "source": "Vídeo de origen",
       "derived": "GIF de este vídeo"
@@ -430,7 +436,8 @@
     "nothingLeft": "Todo lo que tenía el sitio de origen ya está en este media.",
     "new": "nuevo",
     "addExisting": "Añadir {{name}}",
-    "addAllExisting": "Añadir los {{count}} que ya tienes",
+    "addAllExisting_one": "Añadir el que ya tienes",
+    "addAllExisting_other": "Añadir los {{count}} que ya tienes",
     "aiLabel": "IA"
   },
   "tagFinder": {
@@ -464,6 +471,8 @@
     "sentToPending": "Enviado a pendientes.",
     "exitDialogTitle": "Quedan archivos por importar",
     "exitDialogMessage": "{{count}} archivo(s) no se han añadido todavía. ¿Qué quieres hacer con ellos?",
+    "skippedDuplicates_one": "No se añadió {{count}} archivo a pendientes porque es una copia exacta de otro.",
+    "skippedDuplicates_other": "No se añadieron {{count}} archivos a pendientes porque son copias exactas de otros.",
     "exitDialogAddToPending": "Añadir el resto a pendientes",
     "exitDialogDiscard": "Descartar",
     "exitDialogKeepEditing": "Seguir editando",
@@ -540,7 +549,8 @@
   },
   "manage": {
     "title": "Metadatos",
-    "showInGallery": "Ver en la galería los {{count}} media con {{name}}",
+    "showInGallery_one": "Ver en la galería el media con {{name}}",
+    "showInGallery_other": "Ver en la galería los {{count}} media con {{name}}",
     "artists": "Artistas",
     "tags": "Tags",
     "characters": "Personajes",
@@ -633,10 +643,12 @@
     "searchOn": "Buscar en {{site}}",
     "sourceUrlLabel": "URL de origen",
     "useSourceUrl": "Usar la URL de este post",
-    "applied": "Se añadieron {{count}} sugerencias",
+    "applied_one": "Se añadió {{count}} sugerencia",
+    "applied_other": "Se añadieron {{count}} sugerencias",
     "noMatch": "No se encontró ninguna coincidencia fiable.",
     "dismiss": "Descartar",
-    "quota": "{{count}} búsquedas restantes hoy",
+    "quota_one": "{{count}} búsqueda restante hoy",
+    "quota_other": "{{count}} búsquedas restantes hoy",
     "dailyLimitTooltip": "Se alcanzó el límite diario de búsquedas de SauceNAO. Las búsquedas se liberan poco a poco a lo largo de 24 horas; puedes volver a intentarlo a las {{time}}.",
     "add": "Añadir",
     "missingArtist": "Artista nuevo",
@@ -658,7 +670,8 @@
     "button": "Sugerir tags localmente",
     "searching": "Analizando...",
     "privacyHint": "Se ejecuta enteramente en este dispositivo - no se sube nada.",
-    "applied": "Se añadieron {{count}} sugerencias",
+    "applied_one": "Se añadió {{count}} sugerencia",
+    "applied_other": "Se añadieron {{count}} sugerencias",
     "noSuggestions": "No se encontraron tags con suficiente confianza.",
     "dismiss": "Descartar",
     "ratingLabel": "Clasificación",

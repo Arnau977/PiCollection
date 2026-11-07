@@ -37,6 +37,19 @@ describe('tagService', () => {
     expect(tag.aliases).toEqual(['striped horse'])
   })
 
+  it('refuses a name that only differs in case, but lets a tag change its own', async () => {
+    const tag = await tagService.createTag({ name: 'Zebra' })
+    const other = await tagService.createTag({ name: 'apple' })
+
+    await expect(tagService.createTag({ name: 'zebra' })).rejects.toMatchObject({
+      code: 'DUPLICATE'
+    })
+    await expect(tagService.updateTag(other.id, { name: 'ZEBRA' })).rejects.toMatchObject({
+      code: 'DUPLICATE'
+    })
+    expect((await tagService.updateTag(tag.id, { name: 'zebra' })).name).toBe('zebra')
+  })
+
   it('updates a tag name', async () => {
     const tag = await tagService.createTag({ name: 'old-name' })
     const updated = await tagService.updateTag(tag.id, { name: 'new-name' })

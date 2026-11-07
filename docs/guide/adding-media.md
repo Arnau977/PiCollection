@@ -48,6 +48,7 @@ Needs a [source folder](getting-started.md#pick-a-source-folder-recommended).
      file stays on disk.
 4. **Send the remaining N to Pending** (next to *File N of M*) sends every
    file you haven't saved yet to the pending queue in one go, after asking.
+   Exact copies are left out, and a notice tells you how many.
    Closing the queue with files left, or leaving it from the sidebar, offers
    the same.
 
