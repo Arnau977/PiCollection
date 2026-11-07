@@ -1,9 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createHash } from 'crypto'
-import { mkdtempSync, readFileSync, rmSync } from 'fs'
+import { mkdtempSync, readFileSync, rmSync, type WriteStream } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
 import { downloadAndVerify } from './wd14Runtime.download'
+
+const streams = vi.hoisted(() => [] as WriteStream[])
+
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>()
+  return {
+    ...actual,
+    createWriteStream: (...args: Parameters<typeof actual.createWriteStream>) => {
+      const stream = actual.createWriteStream(...args)
+      streams.push(stream)
+      return stream
+    }
+  }
+})
 
 let dir: string
 
@@ -49,6 +63,7 @@ describe('downloadAndVerify', () => {
       onBytes
     )
 
+    expect(streams.at(-1)?.closed).toBe(true)
     expect(readFileSync(dest)).toEqual(content)
     expect(onBytes).toHaveBeenCalledWith(content.length)
   })

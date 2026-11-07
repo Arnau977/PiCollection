@@ -29,7 +29,8 @@ describe('EntityCountButton', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Hololive/ }))
 
-    expect(screen.getByText('gallery')).toBeInTheDocument()
+    // Opening it is async: it first checks whether a list edit would be lost.
+    expect(await screen.findByText('gallery')).toBeInTheDocument()
     const session = readGallerySession()
     expect(session?.filters.seriesGroups).toEqual([['s1']])
     expect(session?.filters.tagGroups).toBeUndefined()
