@@ -249,7 +249,11 @@ export function CharactersManager(): JSX.Element {
           </div>
         </form>
 
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <p className="manage-error" role="alert">
+            {error}
+          </p>
+        )}
       </div>
 
       <div className="manage-list-panel">

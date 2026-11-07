@@ -18,6 +18,19 @@ afterEach(async () => {
 })
 
 describe('artistService', () => {
+  it('refuses a name that only differs in case, but lets one change its own', async () => {
+    const own = await artistService.createArtist({ name: 'Zebra' })
+    const other = await artistService.createArtist({ name: 'apple' })
+
+    await expect(artistService.createArtist({ name: 'zebra' })).rejects.toMatchObject({
+      code: 'DUPLICATE'
+    })
+    await expect(artistService.updateArtist(other.id, { name: 'ZEBRA' })).rejects.toMatchObject({
+      code: 'DUPLICATE'
+    })
+    expect((await artistService.updateArtist(own.id, { name: 'zebra' })).name).toBe('zebra')
+  })
+
   it('notifies entity-change listeners on create, update, and delete (not on social-link edits)', async () => {
     const artist = await artistService.createArtist({ name: 'temp' })
     expect(notifyEntitiesChanged).toHaveBeenCalledWith(['artist'])

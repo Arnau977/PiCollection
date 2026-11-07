@@ -24,6 +24,7 @@ import { EntityCountButton } from '../../components/EntityCountButton/EntityCoun
 import { linkedMediaCount } from '../../utils/linkedMediaCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import { useManageParam } from './useManageParam'
+import { saveErrorMessage } from './saveErrorMessage'
 
 interface TagFormValues {
   name: string
@@ -84,7 +85,7 @@ export function TagsManager(): JSX.Element {
       reveal(result.data.id)
       refetch()
     } else {
-      setError(result.error.message)
+      setError(saveErrorMessage(result.error, t))
     }
   }
 
@@ -138,7 +139,11 @@ export function TagsManager(): JSX.Element {
           </div>
         </form>
 
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <p className="manage-error" role="alert">
+            {error}
+          </p>
+        )}
       </div>
 
       <div className="manage-list-panel">

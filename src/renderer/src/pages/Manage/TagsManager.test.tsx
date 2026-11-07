@@ -83,6 +83,22 @@ describe('TagsManager', () => {
     expect(refetchTags).toHaveBeenCalled()
   })
 
+  it('shows a taken name in the app language and keeps the text', async () => {
+    const user = userEvent.setup()
+    setApi({
+      create: vi.fn().mockResolvedValue({
+        success: false,
+        error: { code: 'DUPLICATE', message: 'raw message from main' }
+      })
+    })
+    render(<TagsManager />, { wrapper: MemoryRouter })
+
+    await user.type(screen.getByLabelText('Name'), 'Landscape{Enter}')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('That name is already in use.')
+    expect(screen.getByLabelText('Name')).toHaveValue('Landscape')
+  })
+
   it('creates a new tag with aliases', async () => {
     const user = userEvent.setup()
     const create = vi.fn().mockResolvedValue({ success: true, data: { id: 't3', name: 'new-tag' } })

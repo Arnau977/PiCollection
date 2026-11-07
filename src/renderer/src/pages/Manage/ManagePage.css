@@ -372,3 +372,7 @@
   max-height: calc(6lh + 1rem + 2px);
   resize: vertical;
 }
+
+.manage-error {
+  color: var(--color-danger);
+}

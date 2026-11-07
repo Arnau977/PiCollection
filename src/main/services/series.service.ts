@@ -4,6 +4,7 @@ import * as seriesRepo from '../database/repositories/series.repository'
 import { wouldCreateCycle } from '../database/repositories/entityHierarchy'
 import { AppError } from '../errors'
 import { notifyEntitiesChanged } from '../events/entityEvents'
+import { assertNameFree } from './assertNameFree'
 import type { SeriesInput, SeriesModel } from '@shared/models'
 import type { SeriesTable } from '../database/schema'
 import { NO_MEDIA, type MediaCounts } from '../database/repositories/mediaCounts'
@@ -31,6 +32,7 @@ export const seriesService = {
   },
 
   async createSeries(input: SeriesInput): Promise<SeriesModel> {
+    assertNameFree(await seriesRepo.findAllSeries(getDb()), input.name)
     const row = await seriesRepo.insertSeries(getDb(), {
       id: randomUUID(),
       name: input.name,
@@ -43,6 +45,7 @@ export const seriesService = {
   },
 
   async updateSeries(id: string, input: SeriesInput): Promise<SeriesModel> {
+    assertNameFree(await seriesRepo.findAllSeries(getDb()), input.name, id)
     if (input.parentId) {
       const hierarchy = await seriesRepo.findSeriesHierarchy(getDb())
       if (wouldCreateCycle(hierarchy, id, input.parentId)) {
