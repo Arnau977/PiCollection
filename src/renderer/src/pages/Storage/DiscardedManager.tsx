@@ -95,7 +95,11 @@ export function DiscardedManager(): JSX.Element {
         )}
       </div>
 
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="error-text" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="manage-list-scroll">
         {items === null ? (

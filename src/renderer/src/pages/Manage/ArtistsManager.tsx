@@ -196,7 +196,7 @@ export function ArtistsManager(): JSX.Element {
         )}
 
         {error && (
-          <p className="manage-error" role="alert">
+          <p className="error-text" role="alert">
             {error}
           </p>
         )}

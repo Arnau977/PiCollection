@@ -199,7 +199,11 @@ export default function StoragePage(): JSX.Element {
     <div className="page manage-page storage-page">
       <h1 className="page-title">{t('storage.title')}</h1>
 
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="error-text" role="alert">
+          {error}
+        </p>
+      )}
       {loading && !data && <p className="loading-state">{t('gallery.loading')}</p>}
 
       {data && (

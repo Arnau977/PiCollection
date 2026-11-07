@@ -236,6 +236,11 @@ img {
   user-select: text;
 }
 
+/* Not on [role='alert'] itself: some alerts announce a status, not a failure. */
+.error-text {
+  color: var(--color-danger);
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;

@@ -107,7 +107,11 @@ export function AutoTagsSection(): JSX.Element {
           {t('autoTags.analyzing', { count: status.unanalyzed })}
         </p>
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="error-text" role="alert">
+          {error}
+        </p>
+      )}
     </section>
   )
 }

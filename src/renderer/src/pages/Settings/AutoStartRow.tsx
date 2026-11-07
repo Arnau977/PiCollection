@@ -48,7 +48,11 @@ export function AutoStartRow(): JSX.Element {
           onChange={handleToggle}
         />
       </SettingsRow>
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="error-text" role="alert">
+          {error}
+        </p>
+      )}
     </>
   )
 }

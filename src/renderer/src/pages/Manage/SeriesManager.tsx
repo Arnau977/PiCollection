@@ -247,7 +247,7 @@ export function SeriesManager(): JSX.Element {
         </form>
 
         {error && (
-          <p className="manage-error" role="alert">
+          <p className="error-text" role="alert">
             {error}
           </p>
         )}

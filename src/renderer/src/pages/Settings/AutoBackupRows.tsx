@@ -127,7 +127,11 @@ export function AutoBackupRows({ autoBackup }: AutoBackupRowsProps): JSX.Element
         </>
       )}
 
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="error-text" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

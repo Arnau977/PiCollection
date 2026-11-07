@@ -202,7 +202,9 @@ const MediaPage: React.FC = () => {
   if (error) {
     return (
       <div className="page">
-        <p role="alert">{error}</p>
+        <p className="error-text" role="alert">
+          {error}
+        </p>
       </div>
     )
   }
@@ -210,7 +212,7 @@ const MediaPage: React.FC = () => {
   if (!media) {
     return (
       <div className="page">
-        <p>{t('media.notFound')}</p>
+        <p className="error-text">{t('media.notFound')}</p>
       </div>
     )
   }
@@ -269,7 +271,7 @@ const MediaPage: React.FC = () => {
         </div>
       )}
       {deleteError && (
-        <p role="alert" className="media-page-delete-error">
+        <p className="error-text" role="alert">
           {deleteError}
         </p>
       )}

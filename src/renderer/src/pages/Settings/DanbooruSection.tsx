@@ -83,7 +83,11 @@ export function DanbooruSection(): JSX.Element {
           <span className="settings-version">{t('settings.danbooruCredentialsSaved')}</span>
         )}
       </div>
-      {status.kind === 'error' && <p role="alert">{status.message}</p>}
+      {status.kind === 'error' && (
+        <p className="error-text" role="alert">
+          {status.message}
+        </p>
+      )}
     </section>
   )
 }
