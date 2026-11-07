@@ -548,6 +548,7 @@
   },
   "manage": {
     "title": "Metadata",
+    "nameInUse": "That name is already in use.",
     "showInGallery_one": "Show the media with {{name}} in the gallery",
     "showInGallery_other": "Show the {{count}} media with {{name}} in the gallery",
     "artists": "Artists",

@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto'
 import { getDb } from '../database/connection'
 import * as artistRepo from '../database/repositories/artist.repository'
 import { notifyEntitiesChanged } from '../events/entityEvents'
+import { assertNameFree } from './assertNameFree'
 import type { ArtistInput, ArtistModel, SocialLinkInput } from '@shared/models'
 import type { ArtistSocialLinkTable, ArtistTable } from '../database/schema'
 import { NO_MEDIA, type MediaCounts } from '../database/repositories/mediaCounts'
@@ -55,6 +56,7 @@ export const artistService = {
   },
 
   async createArtist(input: ArtistInput): Promise<ArtistModel> {
+    assertNameFree(await artistRepo.findAllArtists(getDb()), input.name)
     const row = await artistRepo.insertArtist(getDb(), {
       id: randomUUID(),
       name: input.name,
@@ -66,6 +68,7 @@ export const artistService = {
 
   async updateArtist(id: string, input: ArtistInput): Promise<ArtistModel> {
     const db = getDb()
+    assertNameFree(await artistRepo.findAllArtists(db), input.name, id)
     const row = await artistRepo.updateArtist(db, id, { name: input.name })
     const links = await artistRepo.findSocialLinksForArtistIds(db, [id])
     notifyEntitiesChanged(['artist'])

@@ -18,6 +18,19 @@ afterEach(async () => {
 })
 
 describe('seriesService', () => {
+  it('refuses a name that only differs in case, but lets one change its own', async () => {
+    const own = await seriesService.createSeries({ name: 'Zebra' })
+    const other = await seriesService.createSeries({ name: 'apple' })
+
+    await expect(seriesService.createSeries({ name: 'zebra' })).rejects.toMatchObject({
+      code: 'DUPLICATE'
+    })
+    await expect(seriesService.updateSeries(other.id, { name: 'ZEBRA' })).rejects.toMatchObject({
+      code: 'DUPLICATE'
+    })
+    expect((await seriesService.updateSeries(own.id, { name: 'zebra' })).name).toBe('zebra')
+  })
+
   it('notifies entity-change listeners on create, update, and delete', async () => {
     const series = await seriesService.createSeries({ name: 'temp' })
     expect(notifyEntitiesChanged).toHaveBeenCalledWith(['series'])

@@ -31,6 +31,7 @@ import { linkedMediaCount } from '../../utils/linkedMediaCount'
 import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { SeriesModel } from '@shared/models'
 import { useManageParam } from './useManageParam'
+import { saveErrorMessage } from './saveErrorMessage'
 
 interface SeriesFormValues {
   name: string
@@ -134,7 +135,7 @@ export function SeriesManager(): JSX.Element {
       reveal(result.data.id)
       refetch()
     } else {
-      setError(result.error.message)
+      setError(saveErrorMessage(result.error, t))
     }
   }
 
@@ -245,7 +246,11 @@ export function SeriesManager(): JSX.Element {
           </div>
         </form>
 
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <p className="error-text" role="alert">
+            {error}
+          </p>
+        )}
       </div>
 
       <div className="manage-list-panel">

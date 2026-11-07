@@ -123,11 +123,15 @@ export function MissingFilesSection(): JSX.Element {
         </p>
       )}
 
-      {state.kind === 'error' && <p role="alert">{state.message}</p>}
+      {state.kind === 'error' && (
+        <p className="error-text" role="alert">
+          {state.message}
+        </p>
+      )}
 
       {state.kind === 'missing' && (
         <div className="settings-relink-form">
-          <p role="alert">
+          <p className="error-text" role="alert">
             {t('settings.missingFilesFound', {
               missing: state.missingCount,
               total: state.totalCount

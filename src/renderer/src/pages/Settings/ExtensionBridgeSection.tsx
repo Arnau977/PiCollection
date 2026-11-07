@@ -142,7 +142,11 @@ export function ExtensionBridgeSection(): JSX.Element {
         {t('settings.extensionBridgeBackgroundMode')}
       </label>
 
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="error-text" role="alert">
+          {error}
+        </p>
+      )}
     </section>
   )
 }

@@ -428,6 +428,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
 
 ## Shared components to reach for first
 
+- **Error text reads as an error at a glance**: `.error-text` (`base.css`,
+  `--color-danger`, 5.30:1 or better on every surface). `role="alert"` gives
+  no color on purpose, since some alerts are a status ("restart now"), so a
+  bare `<p role="alert">` reads as normal text: anti-pattern, it left about
+  20 errors looking like plain copy. A failure in a `Toast` passes
+  `variant="error"`, or it shows the success check.
+
 `ConfirmDialog` (via `useConfirm`), `Toast`, `EmptyState`, `Pagination`,
 `SettingsRow`, `InfoTooltip`, `TagWikiInfo`, `MediaHoverPreview`,
 `MediaFileActions`, `EntityCountButton`, `EntityThumbnail`, `Autocomplete`,

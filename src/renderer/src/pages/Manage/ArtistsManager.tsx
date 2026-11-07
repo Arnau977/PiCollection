@@ -15,6 +15,7 @@ import { useDebouncedValue } from '../../utils/useDebouncedValue'
 import type { ArtistModel } from '@shared/models'
 import { useRevealAfterSave } from './useRevealAfterSave'
 import { useManageParam } from './useManageParam'
+import { saveErrorMessage } from './saveErrorMessage'
 
 export function ArtistsManager(): JSX.Element {
   const { t } = useTranslation()
@@ -72,7 +73,7 @@ export function ArtistsManager(): JSX.Element {
       reveal(result.data.id)
       refetch()
     } else {
-      setError(result.error.message)
+      setError(saveErrorMessage(result.error, t))
     }
   }
 
@@ -194,7 +195,11 @@ export function ArtistsManager(): JSX.Element {
           </div>
         )}
 
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <p className="error-text" role="alert">
+            {error}
+          </p>
+        )}
       </div>
 
       <div className="manage-list-panel">

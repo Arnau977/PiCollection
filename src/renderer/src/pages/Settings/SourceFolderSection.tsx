@@ -108,7 +108,11 @@ export function SourceFolderSection(): JSX.Element {
         <p className="settings-version">{t('settings.sourceFolderScanning')}</p>
       )}
       {state.kind === 'done' && <p className="settings-version">{state.message}</p>}
-      {state.kind === 'error' && <p role="alert">{state.message}</p>}
+      {state.kind === 'error' && (
+        <p className="error-text" role="alert">
+          {state.message}
+        </p>
+      )}
 
       {(state.kind === 'plan' || state.kind === 'applying') && (
         <div className="settings-relink-form">

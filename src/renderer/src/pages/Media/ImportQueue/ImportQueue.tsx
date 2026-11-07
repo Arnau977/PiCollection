@@ -43,7 +43,7 @@ export function ImportQueue({
   // saved; and going back to a saved item reopens it in edit mode - as a new
   // file it would be flagged as a duplicate of itself and refuse to save.
   const [saved, setSaved] = useState<ReadonlyMap<string, MediaModel>>(() => new Map())
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ message: string; failed?: boolean } | null>(null)
   const [deleting, setDeleting] = useState(false)
   // Set for the whole duration of the "add remaining to pending" bulk create.
   // While it's true a full-screen overlay blocks every control (Close, Next,
@@ -65,7 +65,7 @@ export function ImportQueue({
       setState({ kind: 'ready', items: result.data.files, index: 0 })
       const { skippedDiscarded } = result.data
       if (skippedDiscarded > 0) {
-        setToast(t('importQueue.skippedDiscarded', { count: skippedDiscarded }))
+        setToast({ message: t('importQueue.skippedDiscarded', { count: skippedDiscarded }) })
       }
     })
     return () => {
@@ -77,7 +77,12 @@ export function ImportQueue({
 
   if (state.kind === 'loading')
     return <p className="settings-version">{t('importQueue.loading')}</p>
-  if (state.kind === 'error') return <p role="alert">{state.message}</p>
+  if (state.kind === 'error')
+    return (
+      <p className="error-text" role="alert">
+        {state.message}
+      </p>
+    )
 
   const { items, index } = state
 
@@ -126,7 +131,7 @@ export function ImportQueue({
   // saved-and-ready-to-review the way onLastSaved expects (the whole point
   // was deferring review), so this just closes the queue instead.
   function handleSentToPending(): void {
-    setToast(t('importQueue.sentToPending'))
+    setToast({ message: t('importQueue.sentToPending') })
     goToNextOrFinish(onClose)
   }
 
@@ -147,7 +152,7 @@ export function ImportQueue({
         })
     setDeleting(false)
     if (!result.success) {
-      setToast(result.error.message)
+      setToast({ message: result.error.message, failed: true })
       return
     }
     removeCurrent()
@@ -155,7 +160,7 @@ export function ImportQueue({
 
   // The current file now lives in the media it replaced; show the next one.
   function handleReplaced(target: MediaModel): void {
-    setToast(t('importQueue.replaced', { name: target.name }))
+    setToast({ message: t('importQueue.replaced', { name: target.name }) })
     // The target may be a file saved earlier in this queue: its old file is
     // discarded now, so that item leaves the queue too.
     removeCurrent((route) => saved.get(route)?.id === target.id)
@@ -311,7 +316,13 @@ export function ImportQueue({
         onReplaced={handleReplaced}
       />
       {remaining > 0 && <LeaveGuard onAttempt={handleLeaveAttempt} />}
-      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+      {toast && (
+        <Toast
+          message={toast.message}
+          variant={toast.failed ? 'error' : 'success'}
+          onDismiss={() => setToast(null)}
+        />
+      )}
       {showExitDialog && (
         <ImportQueueExitDialog
           remaining={remaining}

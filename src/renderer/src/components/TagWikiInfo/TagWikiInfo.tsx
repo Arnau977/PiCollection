@@ -119,7 +119,11 @@ export function TagWikiInfo({ tagName }: TagWikiInfoProps): JSX.Element | null {
                 {t('manage.tagWikiLoading')}
               </p>
             )}
-            {state === 'error' && <p role="alert">{error}</p>}
+            {state === 'error' && (
+              <p className="error-text" role="alert">
+                {error}
+              </p>
+            )}
             {state === 'not-found' && <p>{t('manage.tagWikiNotFound')}</p>}
             {state === 'loaded' && (
               <>

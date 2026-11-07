@@ -89,7 +89,9 @@ export function LocalTaggingSection(): JSX.Element {
       )}
 
       {status === 'error' && errorMessage && (
-        <p role="alert">{t('settings.localTaggingError', { message: errorMessage })}</p>
+        <p className="error-text" role="alert">
+          {t('settings.localTaggingError', { message: errorMessage })}
+        </p>
       )}
 
       {status === 'installed' ? (

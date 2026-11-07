@@ -322,7 +322,9 @@ export default function SettingsPage(): JSX.Element {
             </div>
 
             {updater.status.state !== 'idle' && (
-              <p className="update-status">
+              <p
+                className={`update-status${updater.status.state === 'error' ? ' error-text' : ''}`}
+              >
                 {updater.status.state === 'checking' && t('settings.checkingForUpdates')}
                 {updater.status.state === 'not-available' && t('settings.upToDate')}
                 {updater.status.state === 'available' &&
@@ -445,7 +447,11 @@ export default function SettingsPage(): JSX.Element {
                 {t('settings.licensesOpen')}
               </button>
             </SettingsRow>
-            {licensesError && <p role="alert">{licensesError}</p>}
+            {licensesError && (
+              <p className="error-text" role="alert">
+                {licensesError}
+              </p>
+            )}
           </section>
         </TabPanel>
       </Tabs>

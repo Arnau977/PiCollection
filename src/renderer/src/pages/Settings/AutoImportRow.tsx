@@ -43,7 +43,11 @@ export function AutoImportRow(): JSX.Element {
           onChange={(e) => void handleToggle(e.target.checked)}
         />
       </SettingsRow>
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="error-text" role="alert">
+          {error}
+        </p>
+      )}
     </>
   )
 }

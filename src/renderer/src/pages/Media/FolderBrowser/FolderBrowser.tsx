@@ -292,7 +292,9 @@ export function FolderBrowser({ onStartImport }: FolderBrowserProps): JSX.Elemen
           )}
           {state.kind === 'error' && (
             <div className="folder-browser-error">
-              <p role="alert">{state.message}</p>
+              <p className="error-text" role="alert">
+                {state.message}
+              </p>
               <button type="button" className="btn" onClick={retry}>
                 {t('folderBrowser.retry')}
               </button>

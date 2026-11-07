@@ -79,7 +79,11 @@ export function BackupSection({ autoBackup }: { autoBackup: UseAutoBackup }): JS
 
       <AutoBackupRows autoBackup={autoBackup} />
 
-      {status.kind === 'error' && <p role="alert">{status.message}</p>}
+      {status.kind === 'error' && (
+        <p className="error-text" role="alert">
+          {status.message}
+        </p>
+      )}
       {status.kind === 'importedNeedsRestart' && (
         <div className="settings-field-actions">
           <p role="alert">{t('settings.backupImportedNeedsRestart')}</p>

@@ -517,6 +517,20 @@ describe('ImportQueue', () => {
     await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
   })
 
+  it('shows a failed delete as an error, not with the success toast', async () => {
+    confirmMock.mockResolvedValue(true)
+    discardFile.mockResolvedValue({
+      success: false,
+      error: { code: 'INTERNAL', message: 'disk full' }
+    })
+    renderQueue()
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('disk full')
+  })
+
   it('surfaces an error and unblocks when the bulk create fails', async () => {
     mediaCreateMany.mockResolvedValue({
       success: false,
