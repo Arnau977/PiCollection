@@ -11,10 +11,10 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog({ options, onConfirm, onCancel }: ConfirmDialogProps): JSX.Element {
   const { t } = useTranslation()
-  const cancelRef = useRef<HTMLButtonElement>(null)
+  const firstButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    cancelRef.current?.focus()
+    firstButtonRef.current?.focus()
   }, [])
 
   useEffect(() => {
@@ -40,12 +40,15 @@ export function ConfirmDialog({ options, onConfirm, onCancel }: ConfirmDialogPro
         {options.title && <h3 className="confirm-dialog-title">{options.title}</h3>}
         <p className="confirm-dialog-message">{options.message}</p>
         <div className="confirm-dialog-actions">
-          <button type="button" className="btn" ref={cancelRef} onClick={onCancel}>
-            {options.cancelLabel ?? t('confirmDialog.cancel')}
-          </button>
+          {!options.acknowledgeOnly && (
+            <button type="button" className="btn" ref={firstButtonRef} onClick={onCancel}>
+              {options.cancelLabel ?? t('confirmDialog.cancel')}
+            </button>
+          )}
           <button
             type="button"
             className={options.danger ? 'btn btn-danger' : 'btn btn-primary'}
+            ref={options.acknowledgeOnly ? firstButtonRef : undefined}
             onClick={onConfirm}
           >
             {options.confirmLabel ?? t('confirmDialog.confirm')}

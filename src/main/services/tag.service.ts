@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import { getDb } from '../database/connection'
+import { AppError } from '../errors'
 import * as tagRepo from '../database/repositories/tag.repository'
 import { notifyEntitiesChanged } from '../events/entityEvents'
 import type { TagInput, TagModel } from '@shared/models'
@@ -17,6 +18,15 @@ function toModel(row: TagTable, counts?: MediaCounts): TagModel {
   }
 }
 
+/** The UNIQUE index only catches exact matches; "Foo" and "foo" are the same tag to the user. */
+async function assertNameFree(name: string, ownId?: string): Promise<void> {
+  const lowered = name.toLowerCase()
+  const tags = await tagRepo.findAllTags(getDb())
+  if (tags.some((tag) => tag.id !== ownId && tag.name.toLowerCase() === lowered)) {
+    throw new AppError('DUPLICATE', 'That name is already in use.')
+  }
+}
+
 export const tagService = {
   async getAllTags(): Promise<TagModel[]> {
     const db = getDb()
@@ -28,6 +38,7 @@ export const tagService = {
   },
 
   async createTag(input: TagInput): Promise<TagModel> {
+    await assertNameFree(input.name)
     const row = await tagRepo.insertTag(getDb(), {
       id: randomUUID(),
       name: input.name,
@@ -39,6 +50,7 @@ export const tagService = {
   },
 
   async updateTag(id: string, input: TagInput): Promise<TagModel> {
+    await assertNameFree(input.name, id)
     const row = await tagRepo.updateTag(getDb(), id, {
       name: input.name,
       aliases_json: JSON.stringify(input.aliases ?? [])

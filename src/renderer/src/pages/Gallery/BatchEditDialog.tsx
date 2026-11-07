@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { CharacterModel, SeriesModel, TagModel } from '@shared/models'
 import { useCharacters, useSeries, useTags } from '../../hooks/useEntityLists'
+import { isTypingTarget } from '../../hooks/useShortcut'
 import { MultiSelectAutocomplete } from '../../components/Autocomplete/MultiSelectAutocomplete'
 import { formatCharacterOptionLabel } from '../../utils/matchEntityNames'
 import '../../components/ConfirmDialog/ConfirmDialog.css'
@@ -90,6 +91,18 @@ export function BatchEditDialog({ count, onApply, onCancel }: BatchEditDialogPro
   const characters = useCharacters()
   const series = useSeries()
   const [selections, setSelections] = useState<BatchEditSelections>(EMPTY_SELECTIONS)
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent): void {
+      if (e.key !== 'Escape' || e.defaultPrevented) return
+      // As with useShortcut: the first Esc leaves the field, the next one closes.
+      // A stray Esc right after picking a tag shouldn't lose the picks.
+      if (isTypingTarget(e.target)) e.target.blur()
+      else onCancel()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return (): void => document.removeEventListener('keydown', handleKeyDown)
+  }, [onCancel])
 
   const hasSelection =
     [

@@ -448,6 +448,27 @@ describe('ImportQueue', () => {
     expect(mediaCreate).not.toHaveBeenCalled()
   })
 
+  it('says how many exact copies were skipped before leaving', async () => {
+    mediaCreateMany.mockResolvedValue({
+      success: true,
+      data: { created: 1, skipped: 1, createdIds: ['m1'] }
+    })
+    const onClose = vi.fn()
+    renderQueue(onClose)
+    await screen.findByText('File 1 of 2')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add remaining to Pending' }))
+
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+    expect(confirmMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining("1 file wasn't added to Pending"),
+        acknowledgeOnly: true
+      })
+    )
+  })
+
   it('still opens the exit dialog on the last item, since it is itself unprocessed, and Add to Pending only sends that one', async () => {
     const onClose = vi.fn()
     const { container } = renderQueue(onClose)

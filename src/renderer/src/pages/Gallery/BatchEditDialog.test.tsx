@@ -30,6 +30,20 @@ describe('BatchEditDialog', () => {
     expect(screen.getByText('Edit metadata for 3 items')).toBeInTheDocument()
   })
 
+  it('closes on Esc once the list and the field are left', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<BatchEditDialog count={3} onApply={vi.fn()} onCancel={onCancel} />)
+
+    await user.type(screen.getByRole('combobox', { name: /^Add tags/ }), 'sun')
+    await screen.findByRole('option', { name: 'sunset' })
+    await user.keyboard('{Escape}{Escape}')
+    expect(onCancel).not.toHaveBeenCalled()
+
+    await user.keyboard('{Escape}')
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
   it('disables Apply until at least one add/remove selection is made', async () => {
     const user = userEvent.setup()
     render(<BatchEditDialog count={1} onApply={vi.fn()} onCancel={vi.fn()} />)

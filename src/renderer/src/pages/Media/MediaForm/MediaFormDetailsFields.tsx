@@ -48,6 +48,8 @@ export function MediaFormDetailsFields({
             value={input.name}
             onChange={onChange}
             required
+            pattern=".*\S.*"
+            title={t('media.nameNotBlank')}
           />
         </div>
       )}

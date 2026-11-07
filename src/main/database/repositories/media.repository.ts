@@ -138,7 +138,10 @@ function applyClosureGroupedFilter<O>(
  * character or series contains the text.
  */
 function compileTerm(eb: ExpressionBuilder<DB, 'media'>, term: string): Expression<SqlBool> {
-  const pattern = `%${term}%`
+  // `%` and `_` in a search are plain characters, not LIKE wildcards.
+  const pattern = `%${term.replace(/[\\%_]/g, '\\$&')}%`
+  const contains = (column: string): Expression<SqlBool> =>
+    sql<SqlBool>`${sql.ref(column)} like ${pattern} escape '\\'`
 
   return eb.or([
     eb(
@@ -148,7 +151,7 @@ function compileTerm(eb: ExpressionBuilder<DB, 'media'>, term: string): Expressi
         .selectFrom('media_tag')
         .innerJoin('tag', 'tag.id', 'media_tag.tag_id')
         .select('media_tag.media_id')
-        .where('tag.name', 'like', pattern)
+        .where(contains('tag.name'))
     ),
     // A tag an automatic rule gives this row (the rule's condition reads the outer media).
     eb.exists(
@@ -157,7 +160,7 @@ function compileTerm(eb: ExpressionBuilder<DB, 'media'>, term: string): Expressi
         .innerJoin('tag', 'tag.id', 'auto_tag_rule.tag_id')
         .select('auto_tag_rule.tag_id')
         .where(MEDIA_MATCHES_RULE)
-        .where('tag.name', 'like', pattern)
+        .where(contains('tag.name'))
     ),
     eb(
       'media.id',
@@ -166,7 +169,7 @@ function compileTerm(eb: ExpressionBuilder<DB, 'media'>, term: string): Expressi
         .selectFrom('media_character')
         .innerJoin('character', 'character.id', 'media_character.character_id')
         .select('media_character.media_id')
-        .where('character.name', 'like', pattern)
+        .where(contains('character.name'))
     ),
     eb(
       'media.id',
@@ -175,7 +178,7 @@ function compileTerm(eb: ExpressionBuilder<DB, 'media'>, term: string): Expressi
         .selectFrom('media_series')
         .innerJoin('series', 'series.id', 'media_series.series_id')
         .select('media_series.media_id')
-        .where('series.name', 'like', pattern)
+        .where(contains('series.name'))
     ),
     // The NULL guard matters: without it `artist_id IN (...)` yields NULL for
     // artist-less media, and negating NULL would silently drop those rows from
@@ -185,10 +188,10 @@ function compileTerm(eb: ExpressionBuilder<DB, 'media'>, term: string): Expressi
       eb(
         'media.artist_id',
         'in',
-        eb.selectFrom('artist').select('artist.id').where('artist.name', 'like', pattern)
+        eb.selectFrom('artist').select('artist.id').where(contains('artist.name'))
       )
     ]),
-    eb('media.name', 'like', pattern)
+    contains('media.name')
   ])
 }
 

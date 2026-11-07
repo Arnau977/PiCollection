@@ -644,7 +644,7 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
     await user.click(await screen.findByRole('button', { name: 'Suggest tags locally' }))
 
     expect(suggestTags).toHaveBeenCalledWith('/pic.png')
-    expect(await screen.findByText('Added 1 suggestions')).toBeInTheDocument()
+    expect(await screen.findByText('Added 1 suggestion')).toBeInTheDocument()
   })
 
   it('recognizes a series added earlier in this same edit as existing, not new, on a later WD14 run', async () => {
@@ -672,7 +672,7 @@ describe('MediaForm deferred entity creation (edit mode)', () => {
 
     await user.click(runButton)
 
-    expect(await screen.findByText('Added 1 suggestions')).toBeInTheDocument()
+    expect(await screen.findByText('Added 1 suggestion')).toBeInTheDocument()
     expect(screen.queryByText('New series')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Honkai: star rail' })).not.toBeInTheDocument()
   })

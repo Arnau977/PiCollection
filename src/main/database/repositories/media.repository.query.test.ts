@@ -64,6 +64,14 @@ async function names(query: string): Promise<string[]> {
 }
 
 describe('media.repository free-text query', () => {
+  it('takes % and _ in a search as plain characters', async () => {
+    await insertMedia('100%_done')
+    await insertMedia('plain')
+
+    expect(await names('%')).toEqual(['100%_done'])
+    expect(await names('_')).toEqual(['100%_done'])
+  })
+
   it('matches a term against a tag name', async () => {
     const tag = await insertTag('landscape')
     const tagged = await insertMedia('tagged')

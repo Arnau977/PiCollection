@@ -75,6 +75,7 @@
   },
   "confirmDialog": {
     "confirm": "Confirm",
+    "ok": "OK",
     "cancel": "Cancel"
   },
   "settings": {
@@ -198,7 +199,8 @@
     "missingFilesHint": "Check whether every media file can still be found at its saved path, and relink them in bulk if you moved or renamed a folder.",
     "missingFilesCheck": "Check for missing files",
     "missingFilesChecking": "Checking...",
-    "missingFilesClean": "All {{count}} media files found.",
+    "missingFilesClean_one": "The media file was found.",
+    "missingFilesClean_other": "All {{count}} media files found.",
     "missingFilesFound": "{{missing}} of {{total}} files are missing.",
     "missingFilesOldRoot": "Old folder",
     "missingFilesChooseNewRoot": "Choose new folder...",
@@ -261,7 +263,8 @@
     "clearSelection": "Clear selection",
     "deleteSelected": "Delete selected",
     "editMetadata": "Edit metadata",
-    "confirmDeleteSelected": "Remove {{count}} selected media from PiCollection? The files stay on disk and are listed under Disk space > Discarded.",
+    "confirmDeleteSelected_one": "Remove {{count}} selected media from PiCollection? The file stays on disk and is listed under Disk space > Discarded.",
+    "confirmDeleteSelected_other": "Remove {{count}} selected media from PiCollection? The files stay on disk and are listed under Disk space > Discarded.",
     "pagination": {
       "previous": "Previous",
       "next": "Next",
@@ -278,7 +281,8 @@
     }
   },
   "batchEdit": {
-    "title": "Edit metadata for {{count}} items",
+    "title_one": "Edit metadata for {{count}} item",
+    "title_other": "Edit metadata for {{count}} items",
     "addTags": "Add tags",
     "removeTags": "Remove tags",
     "addCharacters": "Add characters",
@@ -334,6 +338,7 @@
     "noSeries": "No series assigned"
   },
   "media": {
+    "nameNotBlank": "The name can't be blank",
     "relation": {
       "source": "Source video",
       "derived": "GIF from it"
@@ -430,7 +435,8 @@
     "nothingLeft": "Everything the source site had is already on this media.",
     "new": "new",
     "addExisting": "Add {{name}}",
-    "addAllExisting": "Add the {{count}} already in your library",
+    "addAllExisting_one": "Add the one already in your library",
+    "addAllExisting_other": "Add the {{count}} already in your library",
     "aiLabel": "AI"
   },
   "tagFinder": {
@@ -464,6 +470,8 @@
     "sentToPending": "Sent to Pending.",
     "exitDialogTitle": "Files left to import",
     "exitDialogMessage": "{{count}} file(s) haven't been added yet. What would you like to do with them?",
+    "skippedDuplicates_one": "{{count}} file wasn't added to Pending because it's an exact copy of another.",
+    "skippedDuplicates_other": "{{count}} files weren't added to Pending because they're exact copies of others.",
     "exitDialogAddToPending": "Add remaining to Pending",
     "exitDialogDiscard": "Discard",
     "exitDialogKeepEditing": "Keep editing",
@@ -540,7 +548,8 @@
   },
   "manage": {
     "title": "Metadata",
-    "showInGallery": "Show the {{count}} media with {{name}} in the gallery",
+    "showInGallery_one": "Show the media with {{name}} in the gallery",
+    "showInGallery_other": "Show the {{count}} media with {{name}} in the gallery",
     "artists": "Artists",
     "tags": "Tags",
     "characters": "Characters",
@@ -633,10 +642,12 @@
     "searchOn": "Search on {{site}}",
     "sourceUrlLabel": "Source URL",
     "useSourceUrl": "Use this post's URL",
-    "applied": "Added {{count}} suggestions",
+    "applied_one": "Added {{count}} suggestion",
+    "applied_other": "Added {{count}} suggestions",
     "noMatch": "No confident match found.",
     "dismiss": "Dismiss",
-    "quota": "{{count}} searches left today",
+    "quota_one": "{{count}} search left today",
+    "quota_other": "{{count}} searches left today",
     "dailyLimitTooltip": "SauceNAO's daily search limit was reached. Searches free up gradually over 24 hours; you can try again at {{time}}.",
     "add": "Add",
     "missingArtist": "New artist",
@@ -658,7 +669,8 @@
     "button": "Suggest tags locally",
     "searching": "Analyzing...",
     "privacyHint": "Runs entirely on this device - nothing is uploaded.",
-    "applied": "Added {{count}} suggestions",
+    "applied_one": "Added {{count}} suggestion",
+    "applied_other": "Added {{count}} suggestions",
     "noSuggestions": "No confident tags found.",
     "dismiss": "Dismiss",
     "ratingLabel": "Rating",
