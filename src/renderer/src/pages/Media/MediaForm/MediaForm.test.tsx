@@ -419,6 +419,20 @@ describe('MediaForm onMarkResolved', () => {
     expect(calls).toEqual(['update', 'resolve'])
   })
 
+  it('checks the name before resolving, as Save does', async () => {
+    const mediaUpdate = vi.fn()
+    setApi({ media: { update: mediaUpdate, clearPendingTagging: vi.fn() } })
+    const onMarkResolved = vi.fn()
+    renderForm({ media: pendingMedia, onMarkResolved })
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { name: 'name', value: '   ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save & mark resolved' }))
+
+    await vi.waitFor(() => expect(screen.getByLabelText('Name')).toBeInvalid())
+    expect(mediaUpdate).not.toHaveBeenCalled()
+    expect(onMarkResolved).not.toHaveBeenCalled()
+  })
+
   it('does not resolve when saving the form fails', async () => {
     const clearPendingTagging = vi.fn()
     setApi({
