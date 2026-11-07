@@ -53,7 +53,15 @@ if [ "$mode" != "--no-tests" ]; then
     elif [ "$known" -gt 0 ]; then
       other="$failed"
     fi
-    if [ -n "$other" ]; then echo "$other"; status=1; fi
+    if [ -n "$other" ]; then
+      echo "$other"
+      # The reason, not just the name: a flaky failure may not come back.
+      log="${TMPDIR:-/tmp}/picollection-verify-tests.log"
+      echo "$out" | sed 's/\x1b\[[0-9;]*m//g' > "$log"
+      grep -E "^\s*([A-Za-z]*Error|Error):" "$log" | sort | uniq -c | head -10
+      echo "full log: $log"
+      status=1
+    fi
   fi
   # Errors thrown outside a test (e.g. a mock missing a newly called API
   # method) fail CI even when every test passes, and have no FAIL line.

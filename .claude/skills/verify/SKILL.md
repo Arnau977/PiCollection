@@ -27,6 +27,9 @@ Exit code 0 means clean. What it handles so you don't re-derive it:
   `window.api` mock missing a method the code now calls) fail CI with no
   `FAIL` line, so the script reports them separately. When adding an API
   method, grep every `*.test.ts` *and* `*.test.tsx` that mocks that namespace.
+- **Failed tests**: besides the `FAIL` lines it prints each error once and
+  saves the full run to the `full log` path it names. Read it before calling
+  a failure flaky: the next run overwrites it, and a flaky one may not return.
 - **Known environmental failure**: the 2 `extensionBridge.server.test.ts`
   cases fail with `EADDRINUSE 127.0.0.1:8934` whenever the PiCollection app
   is open, because they bind the bridge's real port. The script labels them

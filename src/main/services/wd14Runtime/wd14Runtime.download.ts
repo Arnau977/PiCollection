@@ -1,5 +1,6 @@
 import { createHash } from 'crypto'
 import { createWriteStream, promises as fs } from 'fs'
+import { finished } from 'stream/promises'
 import * as tar from 'tar'
 import type { PinnedAsset } from './wd14Runtime.assets'
 
@@ -28,11 +29,10 @@ export async function downloadAndVerify(
       downloaded += value.length
       onBytes(downloaded)
     }
-    await new Promise<void>((resolve, reject) => {
-      fileStream.end((err: NodeJS.ErrnoException | null | undefined) =>
-        err ? reject(err) : resolve()
-      )
-    })
+    // Not `end(callback)`: that fires with the file still open, and Windows won't
+    // delete the file's folder until it's closed.
+    fileStream.end()
+    await finished(fileStream)
   } catch (err) {
     fileStream.close()
     await fs.rm(destPath, { force: true })
