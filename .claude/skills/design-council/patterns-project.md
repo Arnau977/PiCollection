@@ -351,8 +351,12 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   `src/renderer/src/components/Lightbox/useZoomPan.ts`.
 - **Thumbnail badges share the bottom-right corner** (`.media-thumb-badges`):
   AI (named for screen readers, since it isn't visible in the picture),
-  then GIF/play; top-left is the selection checkbox. Same dark translucent
+  then ANIM/play; top-left is the selection checkbox. Same dark translucent
   pill, white text 4.74:1 over a white picture. Where: `MediaThumb.tsx`.
+- **"Animated", not "GIF", names the media type** (GIFs and animated WebPs
+  share type `gif` internally): ANIM badge, Animated type filter and Disk
+  space split. "GIF" stays only where the GIF format itself is meant (Make
+  GIF, "GIF from it"). Where: locales `typeGif`, `media.animatedBadge`.
 - **Batch-import tiles show why a file can't be picked**: green "Already
   added" (`is-cataloged`), neutral dashed "Discarded" (`is-discarded`,
   text on surface-2 13.17:1; the grey filter is on the image only so the

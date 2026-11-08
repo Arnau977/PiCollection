@@ -326,7 +326,7 @@
     "typeAll": "All",
     "typeImage": "Image",
     "typeVideo": "Video",
-    "typeGif": "Gif",
+    "typeGif": "Animated",
     "sortBy": "Sort by",
     "sortDate": "Date",
     "sortName": "Name",
@@ -364,6 +364,7 @@
     "confirmDelete": "Remove this media from PiCollection? The file stays on disk and is listed under Disk space > Discarded.",
     "aiGeneratedTitle": "Generated using AI",
     "aiGeneratedBadge": "AI",
+    "animatedBadge": "ANIM",
     "addedOnTitle": "Added on {{date}}",
     "copyLocation": "Copy location",
     "locationCopied": "Copied!",
@@ -827,7 +828,7 @@
     "byTypeLabel": "Library by file type",
     "types": {
       "image": "Images",
-      "gif": "GIFs",
+      "gif": "Animated",
       "video": "Videos"
     }
   }

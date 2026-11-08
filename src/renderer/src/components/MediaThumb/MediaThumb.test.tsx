@@ -34,7 +34,7 @@ describe('MediaThumb previews', () => {
   it('names the AI badge, only for AI-generated media', () => {
     const { rerender } = render(<MediaThumb type="gif" route="/pics/a.gif" alt="A" isAiGenerated />)
     expect(screen.getByRole('img', { name: 'Generated using AI' })).toBeInTheDocument()
-    expect(screen.getByText('GIF')).toBeInTheDocument()
+    expect(screen.getByText('ANIM')).toBeInTheDocument()
 
     rerender(<MediaThumb type="gif" route="/pics/a.gif" alt="A" />)
     expect(screen.queryByRole('img', { name: 'Generated using AI' })).not.toBeInTheDocument()

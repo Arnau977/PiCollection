@@ -97,7 +97,7 @@ export function MediaThumb({ type, route, alt, isAiGenerated }: MediaThumbProps)
         )}
         {type === 'gif' && !hovered && (
           <span className="media-thumb-gif-badge" aria-hidden="true">
-            GIF
+            {t('media.animatedBadge')}
           </span>
         )}
       </span>

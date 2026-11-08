@@ -327,7 +327,7 @@
     "typeAll": "Todos",
     "typeImage": "Imagen",
     "typeVideo": "Video",
-    "typeGif": "Gif",
+    "typeGif": "Animado",
     "sortBy": "Ordenar por",
     "sortDate": "Fecha",
     "sortName": "Nombre",
@@ -365,6 +365,7 @@
     "confirmDelete": "¿Quitar este media de PiCollection? El archivo se queda en el disco y aparece en Espacio > Eliminados.",
     "aiGeneratedTitle": "Generado mediante IA",
     "aiGeneratedBadge": "IA",
+    "animatedBadge": "ANIM",
     "addedOnTitle": "Añadido el {{date}}",
     "copyLocation": "Copiar ubicación",
     "locationCopied": "¡Copiado!",
@@ -828,7 +829,7 @@
     "byTypeLabel": "Biblioteca por tipo de archivo",
     "types": {
       "image": "Imágenes",
-      "gif": "GIF",
+      "gif": "Animados",
       "video": "Vídeos"
     }
   }

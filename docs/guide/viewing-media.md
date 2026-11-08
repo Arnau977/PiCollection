@@ -47,7 +47,7 @@ the × closes it and shows them all again.
 
 ## Full-size viewer
 
-Click an image or GIF (on its page or in the edit form) to open it full
+Click an image or animated media (on its page or in the edit form) to open it full
 screen:
 
 - zoom with the mouse wheel (toward the cursor), a double-click, `+` / `-` /
@@ -65,7 +65,7 @@ while adding a file, before it's saved - and in the viewer):
   animated WebPs are copied as a file on Windows, so they paste *animated*
   into apps like Discord or Telegram; image editors like Paint get the first
   frame.
-- **Copy first frame** (GIFs) copies just the first frame as a still
+- **Copy first frame** (animated media) copies just the first frame as a still
   picture, for a reverse image search.
 - **Copy location** copies the file's full path.
 - **Open in file explorer** shows the file in its folder.
