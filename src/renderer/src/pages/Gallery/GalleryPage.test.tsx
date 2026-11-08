@@ -251,6 +251,24 @@ describe('GalleryPage active filters indicator', () => {
     expect(lastCallFilters.sfw).toBeUndefined()
     expect(screen.queryByText('Filters are hiding some media')).not.toBeInTheDocument()
   })
+
+  it('still says filters are active with the filter panel hidden', async () => {
+    window.localStorage.setItem(
+      'picollection:gallery-defaults',
+      JSON.stringify({ sfw: true, sortProp: 'createdAt', sortDesc: true, blurNsfw: true })
+    )
+    window.localStorage.setItem('picollection.gallery.filterPanelOpen', 'false')
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(2), total: 2 } }))
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('Filters are hiding some media')).toBeInTheDocument()
+    expect(screen.queryByRole('complementary', { name: 'Filters' })).not.toBeInTheDocument()
+    window.localStorage.removeItem('picollection.gallery.filterPanelOpen')
+  })
 })
 
 describe('GalleryPage session persistence', () => {

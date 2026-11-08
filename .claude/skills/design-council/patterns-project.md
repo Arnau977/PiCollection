@@ -137,10 +137,25 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   the third "not filtered" state. Excluded chips get a danger outline and a
   struck-through name, so the state never relies on color alone. Where:
   `MultiSelectAutocomplete.tsx`, `GroupedEntityFilter.tsx`.
+- **Gallery filters: global controls on one top row, entity filters in a
+  left panel** (2026-11-08). Search, type, sort and More filters stay on top;
+  Artist/Tags/Characters/Series stack in a panel left of the grid that
+  scrolls as a whole (so chips are never capped inside it). The gallery page
+  has no max-width (2026-11-08): `--page-max-w` is for text pages, and the
+  grid's auto-fill columns turn extra width into more thumbnails per row. A **Filters** button at the
+  start of the top row (accent-soft while open) slides it shut in 220ms
+  (width and fade; no motion under `prefers-reduced-motion`), remembered in
+  localStorage; below 1180px it opens over the
+  grid's left side like a drawer (stacked above the grid, a filled panel
+  pushed the grid out of a 760px-tall window). The user wanted the grid's height back: the
+  filters and the list-edit bar used to push it about 300px down. Where:
+  `GalleryFilterPanel.tsx`, `FilterBar.tsx`, `GalleryPage.css`.
 - **What's acting on the gallery lives in the active-filters row**: one
   neutral chip per applied filter list (bookmark icon, `surface-2`, 13.17:1;
   no category color, a list mixes them; the × is named "Remove list X"), then
-  **Save as list** and **Clear filters**. Where: `FilterListChips.tsx`,
+  **Save as list** and **Clear filters**. It's the top of the filter panel,
+  stacked, or a row above the grid while the panel is hidden, so an active
+  filter or a list edit never goes unseen. Where: `FilterListChips.tsx`,
   `GalleryPage.tsx`.
 - **Saving a set of filters shows what gets stored first.** The dialog lists
   every item by section, each with its ×, so a gallery default isn't kept by
@@ -179,13 +194,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   preselected so Tab still leaves the box; an arrow key picks one. The options
   stop `mousedown` so pressing one doesn't blur the box first. A list can't be
   excluded, so a leading `-` doesn't offer them. Where: `SearchBar.tsx`.
-- **A long filter selection scrolls inside its field; it never collapses to
-  "+N more"**, because each chip is managed one by one. A lone group's chips
-  scroll, keeping its picker in place; several groups scroll as one stack, so
-  one thing scrolls per field. "Add OR group" stays outside, the count shows
-  from 10 chips, and a picked chip is brought into view (`revealAddedChip`).
-  Only in the gallery's filter bar: the edit form and the list form scroll
-  themselves, so a scroller there would compete. Where: `GroupedEntityFilter.tsx` + `.css`.
+- **A long filter selection never collapses to "+N more"**, because each
+  chip is managed one by one. Every chip stays rendered at full height and
+  the container scrolls as a whole: the gallery's filter panel, the edit
+  form, the list form. (Until 2026-11-08 the gallery's top filter bar
+  scrolled each field's chips; the side panel made that a scroller inside a
+  scroller.) The count shows from 10 chips, and a picked chip is brought into
+  view (`revealAddedChip`). Where: `GroupedEntityFilter.tsx` + `.css`.
 - **A window too short for a bound page scrolls the page as a last resort.**
   `.gallery-page` is `overflow-y: auto` and its scroll region keeps a
   `min-height`, so bars below the filters are never clipped out of reach.

@@ -300,6 +300,9 @@
     "cancel": "Cancel"
   },
   "filters": {
+    "panel": "Filters",
+    "showPanel": "Show filters",
+    "hidePanel": "Hide filters",
     "included": "Included, click to exclude",
     "excluded": "Excluded, click to include",
     "exactCharacter": "Only this one, without its forms",

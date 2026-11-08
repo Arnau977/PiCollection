@@ -225,7 +225,9 @@ export function Autocomplete<T>({
             <ListBoxItem
               id={CREATE_KEY}
               textValue={trimmedQuery}
-              className="autocomplete-create-item"
+              // A className replaces react-aria's default one, which carries the
+              // options' padding, size and focus colors: keep it.
+              className="react-aria-ListBoxItem autocomplete-create-item"
             >
               <Plus size={14} />
               {t('autocomplete.createOption', { name: trimmedQuery })}
@@ -236,7 +238,7 @@ export function Autocomplete<T>({
             <ListBoxItem
               id={ALREADY_ADDED_KEY}
               textValue={trimmedQuery}
-              className="autocomplete-create-item autocomplete-added-item"
+              className="react-aria-ListBoxItem autocomplete-create-item autocomplete-added-item"
               isDisabled
             >
               <Check size={14} aria-hidden="true" />

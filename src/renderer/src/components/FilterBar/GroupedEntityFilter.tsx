@@ -114,13 +114,7 @@ export function GroupedEntityFilter<T>({
         <InfoTooltip text={t('filters.groupTooltip')} />
       </div>
 
-      <div
-        className={
-          hasSeveralGroups
-            ? 'grouped-entity-filter-groups has-several-groups'
-            : 'grouped-entity-filter-groups'
-        }
-      >
+      <div className="grouped-entity-filter-groups">
         {effectiveGroups.map((group, index) => {
           const groupLabel = hasSeveralGroups ? `${label} ${index + 1}` : label
           return (

@@ -301,6 +301,9 @@
     "cancel": "Cancelar"
   },
   "filters": {
+    "panel": "Filtros",
+    "showPanel": "Mostrar filtros",
+    "hidePanel": "Ocultar filtros",
     "included": "Incluido, pulsa para excluir",
     "excluded": "Excluido, pulsa para incluir",
     "exactCharacter": "Solo este, sin sus formas",

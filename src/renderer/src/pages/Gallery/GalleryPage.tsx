@@ -10,6 +10,8 @@ import { GalleryToolbar } from '../../components/GalleryToolbar/GalleryToolbar'
 import { Toast } from '../../components/Toast/Toast'
 import { BatchEditDialog, type BatchEditSelections } from './BatchEditDialog'
 import { FilterListChips } from './FilterListChips'
+import { GalleryFilterPanel } from './GalleryFilterPanel'
+import { FILTER_PANEL_ID, useFilterPanelOpen } from './useFilterPanelOpen'
 import { ListEditBar } from './ListEditBar'
 import { appliedAfterSaving, beginListEdit, filtersAfterListEdit } from './listEdit'
 import { SaveFilterListDialog } from './SaveFilterListDialog'
@@ -86,6 +88,7 @@ const GalleryPage: React.FC = () => {
     filters: MediaFilters
   } | null>(null)
   const saveListRef = useRef<HTMLButtonElement>(null)
+  const [panelOpen, togglePanel] = useFilterPanelOpen()
   // "Back to gallery" passes the media you were viewing (and its position
   // under the gallery's own filters/sorting) so its card can be scrolled
   // back into view (centered) once the grid re-renders, instead of leaving
@@ -330,6 +333,49 @@ const GalleryPage: React.FC = () => {
     refetch()
   }
 
+  // Where it shows depends on the panel: at its top, or above the gallery
+  // while the panel is hidden, so an active filter or an edit never goes unseen.
+  const filterStatus = (
+    <>
+      {listEdit && (
+        <ListEditBar
+          filters={filters}
+          listEdit={listEdit}
+          onRemoveList={removeFilterList}
+          onCancel={() => setListEdit(listEdit.before, undefined)}
+          onSaved={(name) => {
+            setListEdit(filtersAfterListEdit(listEdit), undefined)
+            setSavedListName(name)
+          }}
+        />
+      )}
+
+      {!listEdit && filtersActive && (
+        <div className="gallery-active-filters">
+          <FilterListChips
+            ids={filters.filterListIds ?? []}
+            onRemove={removeFilterList}
+            onEdit={editFilterList}
+          />
+          <span className="gallery-active-filters-text">{t('gallery.filtersActive')}</span>
+          <span className="action-bar-spacer" />
+          <button
+            ref={saveListRef}
+            type="button"
+            className="btn"
+            onClick={() => setShowSaveList(true)}
+          >
+            <BookmarkPlus size={16} />
+            {t('filterLists.saveAs')}
+          </button>
+          <button type="button" className="btn" onClick={() => setFilters({} as MediaFilters)}>
+            {t('gallery.clearFilters')}
+          </button>
+        </div>
+      )}
+    </>
+  )
+
   return (
     <div className="page gallery-page">
       <div className="gallery-page-header">
@@ -352,104 +398,85 @@ const GalleryPage: React.FC = () => {
         sorting={sorting}
         onSortingChange={setSorting}
         editingListId={listEdit?.id}
+        panelToggle={{
+          open: panelOpen,
+          controls: FILTER_PANEL_ID,
+          onToggle: togglePanel
+        }}
       />
 
-      {listEdit && (
-        <ListEditBar
+      <div className="gallery-body">
+        <GalleryFilterPanel
           filters={filters}
-          listEdit={listEdit}
-          onRemoveList={removeFilterList}
-          onCancel={() => setListEdit(listEdit.before, undefined)}
-          onSaved={(name) => {
-            setListEdit(filtersAfterListEdit(listEdit), undefined)
-            setSavedListName(name)
-          }}
+          onFiltersChange={setFilters}
+          open={panelOpen}
+          header={filterStatus}
         />
-      )}
 
-      {!listEdit && filtersActive && (
-        <div className="gallery-active-filters">
-          <FilterListChips
-            ids={filters.filterListIds ?? []}
-            onRemove={removeFilterList}
-            onEdit={editFilterList}
-          />
-          <span>{t('gallery.filtersActive')}</span>
-          <span className="action-bar-spacer" />
-          <button
-            ref={saveListRef}
-            type="button"
-            className="btn"
-            onClick={() => setShowSaveList(true)}
-          >
-            <BookmarkPlus size={16} />
-            {t('filterLists.saveAs')}
-          </button>
-          <button type="button" className="btn" onClick={() => setFilters({} as MediaFilters)}>
-            {t('gallery.clearFilters')}
-          </button>
-        </div>
-      )}
+        <div className="gallery-main">
+          {!panelOpen && filterStatus}
 
-      <GalleryToolbar
-        total={total}
-        density={defaults.density}
-        onDensityChange={handleDensityChange}
-        blurNsfw={defaults.blurNsfw}
-        onBlurNsfwChange={(blurNsfw) => setDefaults({ ...defaults, blurNsfw })}
-        pageSize={pageSize}
-        onPageSizeChange={handlePageSizeChange}
-        page={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
-      />
-
-      <div className="gallery-scroll-region" ref={scrollRegionRef}>
-        {error && (
-          <p className="gallery-page-error" role="alert">
-            {error}
-          </p>
-        )}
-        {loading ? (
-          <p className="loading-state">{t('gallery.loading')}</p>
-        ) : (
-          <Gallery
-            media={media}
-            blurNsfw={defaults.blurNsfw}
-            hideNames={defaults.hideNames}
+          <GalleryToolbar
+            total={total}
             density={defaults.density}
-            selectedIds={selectedIds}
-            onToggleSelect={toggleSelect}
-            returnHighlightId={returnHighlightId}
-            filtered={filtersActive}
+            onDensityChange={handleDensityChange}
+            blurNsfw={defaults.blurNsfw}
+            onBlurNsfwChange={(blurNsfw) => setDefaults({ ...defaults, blurNsfw })}
+            pageSize={pageSize}
+            onPageSizeChange={handlePageSizeChange}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
           />
-        )}
-      </div>
 
-      {selectedIds.size > 0 && (
-        <div className="gallery-bulk-bar">
-          <span className="gallery-bulk-count">
-            {t('gallery.selectedCount', { count: selectedIds.size })}
-          </span>
-          <button type="button" className="btn" onClick={selectAllOnPage}>
-            {t('gallery.selectAllOnPage')}
-          </button>
-          <button type="button" className="btn" onClick={clearSelection}>
-            {t('gallery.clearSelection')}
-          </button>
-          <button type="button" className="btn" onClick={() => setShowBatchEdit(true)}>
-            {t('gallery.editMetadata')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-danger"
-            disabled={deletingSelected}
-            onClick={handleDeleteSelected}
-          >
-            {deletingSelected ? t('media.deleting') : t('gallery.deleteSelected')}
-          </button>
+          <div className="gallery-scroll-region" ref={scrollRegionRef}>
+            {error && (
+              <p className="gallery-page-error" role="alert">
+                {error}
+              </p>
+            )}
+            {loading ? (
+              <p className="loading-state">{t('gallery.loading')}</p>
+            ) : (
+              <Gallery
+                media={media}
+                blurNsfw={defaults.blurNsfw}
+                hideNames={defaults.hideNames}
+                density={defaults.density}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                returnHighlightId={returnHighlightId}
+                filtered={filtersActive}
+              />
+            )}
+          </div>
+
+          {selectedIds.size > 0 && (
+            <div className="gallery-bulk-bar">
+              <span className="gallery-bulk-count">
+                {t('gallery.selectedCount', { count: selectedIds.size })}
+              </span>
+              <button type="button" className="btn" onClick={selectAllOnPage}>
+                {t('gallery.selectAllOnPage')}
+              </button>
+              <button type="button" className="btn" onClick={clearSelection}>
+                {t('gallery.clearSelection')}
+              </button>
+              <button type="button" className="btn" onClick={() => setShowBatchEdit(true)}>
+                {t('gallery.editMetadata')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                disabled={deletingSelected}
+                onClick={handleDeleteSelected}
+              >
+                {deletingSelected ? t('media.deleting') : t('gallery.deleteSelected')}
+              </button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {showSaveList && (
         <SaveFilterListDialog

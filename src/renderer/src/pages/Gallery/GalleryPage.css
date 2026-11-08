@@ -12,6 +12,172 @@
   padding-bottom: 0;
 }
 
+/* The whole window's width: `--page-max-w` keeps text pages readable, but
+   the grid fills its columns automatically, so more width only means more
+   thumbnails per row. */
+.gallery-page {
+  --filter-panel-w: 19rem;
+  --panel-slide: 220ms ease;
+  max-width: none;
+}
+
+/* The panel and the gallery share what's left under the filter row. Each
+   scrolls on its own; the min-height keeps the gallery usable (and the page's
+   own last-resort scroll above) in a short window. */
+.gallery-body {
+  flex: 1 1 auto;
+  min-height: 20rem;
+  display: flex;
+  gap: var(--space-5);
+}
+
+/* The outer box slides (its width, or its height when stacked above the
+   grid) and clips; the card inside keeps its full width meanwhile, so the
+   fields don't reflow on every frame. Closing hides it only once the slide is
+   over (the visibility delay), which also takes it out of the Tab order. */
+.gallery-filter-panel {
+  flex: 0 0 var(--filter-panel-w);
+  min-width: 0;
+  display: flex;
+  overflow: hidden;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    flex-basis var(--panel-slide),
+    margin var(--panel-slide),
+    opacity var(--panel-slide),
+    visibility 0s linear 0s;
+}
+
+.gallery-filter-panel.is-closed {
+  flex-basis: 0;
+  /* Takes back the gap beside it, so the grid really reaches the edge. */
+  margin-right: calc(-1 * var(--space-5));
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    flex-basis var(--panel-slide),
+    margin var(--panel-slide),
+    opacity var(--panel-slide),
+    visibility 0s linear 220ms;
+}
+
+.gallery-filter-panel-inner {
+  flex: 0 0 var(--filter-panel-w);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow-y: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-filter-panel,
+  .gallery-filter-panel.is-closed {
+    transition: none;
+  }
+}
+
+.gallery-filter-panel-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* `.filter-field` and the group filters carry row-layout flex sizes. */
+.gallery-filter-panel-fields > * {
+  flex: none;
+  min-width: 0;
+}
+
+/* min-height: 0 lets the scroll region inside take the overflow; without it
+   the column grows to its whole grid and pushes everything else out. */
+.gallery-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Too narrow for a column beside the grid: the panel opens over the
+   gallery's left side, like a drawer, so the grid keeps the whole width and
+   height (stacked above it, a filled panel pushed the grid out of view). */
+@media (max-width: 1180px) {
+  .gallery-body {
+    position: relative;
+  }
+
+  .gallery-filter-panel {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 5;
+    width: min(var(--filter-panel-w), 90%);
+    margin-right: 0;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.45));
+    transition:
+      width var(--panel-slide),
+      opacity var(--panel-slide),
+      visibility 0s linear 0s;
+  }
+
+  .gallery-filter-panel.is-closed {
+    width: 0;
+    margin-right: 0;
+    transition:
+      width var(--panel-slide),
+      opacity var(--panel-slide),
+      visibility 0s linear 220ms;
+  }
+
+  .gallery-filter-panel-inner {
+    flex: 0 0 min(var(--filter-panel-w), 90vw);
+  }
+}
+
+/* What's acting on the gallery, at the panel's top: a narrow stack, a list
+   edit's name beside its pencil and everything else on its own line. On the
+   card, accent-soft flattens to rgb(50, 35, 44), where accent-fg text is only
+   4.28:1: text there is color-text (12.71:1), text-muted 6.03:1, color-danger
+   5.38:1; the pencil keeps accent-fg (an icon, over 3:1). */
+.gallery-filter-panel .gallery-active-filters {
+  flex-shrink: 0;
+  color: var(--color-text);
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+/* The pencil's width and the gap, so the buttons can't share this line. */
+.gallery-filter-panel .gallery-active-filters [role='status'] {
+  flex: 1 1 calc(100% - 16px - var(--space-2));
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gallery-filter-panel .filter-list-chips,
+.gallery-filter-panel .gallery-active-filters-text,
+.gallery-filter-panel .list-edit-note,
+.gallery-filter-panel .list-edit-error {
+  flex-basis: 100%;
+}
+
+.gallery-filter-panel .filter-list-chip-name {
+  max-width: 10rem;
+}
+
+.gallery-filter-panel .gallery-active-filters > svg {
+  color: var(--accent-fg);
+}
+
+.gallery-filter-panel .action-bar-spacer {
+  display: none;
+}
+
+.gallery-filter-panel .gallery-active-filters .btn {
+  flex: 1 1 auto;
+}
+
 .gallery-page .filter-bar {
   /* `.filter-bar` sets its own margin-bottom for pages that aren't flex
      columns; here the parent's `gap` already provides that spacing, so
