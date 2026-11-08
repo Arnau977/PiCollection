@@ -610,6 +610,20 @@
   "mediaThumb": {
     "missingFile": "Archivo no encontrado"
   },
+  "contextMenu": {
+    "open": "Abrir",
+    "cut": "Cortar",
+    "copy": "Copiar",
+    "paste": "Pegar",
+    "selectAll": "Seleccionar todo",
+    "chooseCompare": "Elegir para comparar",
+    "chooseInstead": "Elegir esta para comparar en su lugar",
+    "clearCompare": "Dejar de comparar",
+    "chosenHint": "Elegida para comparar. Haz clic derecho en otra imagen para compararlas",
+    "imageCopied": "Imagen copiada",
+    "locationCopied": "Ubicación copiada",
+    "copyFailed": "No se pudo copiar"
+  },
   "mediaCompare": {
     "title": "Comparar imágenes",
     "openLabel": "Comparar con \"{{name}}\"",

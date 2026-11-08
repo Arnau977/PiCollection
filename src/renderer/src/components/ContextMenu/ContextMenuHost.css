@@ -1,0 +1,46 @@
+/* "X chosen to compare": stays until a second picture is picked or it's
+   cleared, so the waiting state is never hidden. Bottom left, away from the
+   toasts on the right. Same surface as a toast: text on surface 13.95:1,
+   text-muted on surface 6.44:1, accent-fg icon 4.72:1. */
+.compare-choice {
+  position: fixed;
+  left: calc(var(--sidebar-w) + var(--space-5));
+  bottom: var(--space-5);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 460px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--border-color-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  color: var(--accent-fg);
+}
+
+.compare-choice-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+}
+
+.compare-choice-name {
+  color: var(--color-text);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compare-choice-hint {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 860px) {
+  .compare-choice {
+    left: calc(var(--sidebar-w-collapsed) + var(--space-4));
+  }
+}

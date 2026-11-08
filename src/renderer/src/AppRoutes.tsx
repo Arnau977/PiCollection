@@ -18,6 +18,7 @@ import DiscardedPage from './pages/Storage/DiscardedPage'
 import StoragePage from './pages/Storage/StoragePage'
 import NotFoundPage from './pages/NotFound/NotFoundPage'
 import { AppHeader } from './components/AppHeader/AppHeader'
+import { ContextMenuHost } from './components/ContextMenu/ContextMenuHost'
 
 function AppShell(): JSX.Element {
   return (
@@ -26,6 +27,7 @@ function AppShell(): JSX.Element {
       <div className="app-content">
         <Outlet />
       </div>
+      <ContextMenuHost />
     </div>
   )
 }

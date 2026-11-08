@@ -70,7 +70,8 @@ export default function Media({
 
   return (
     <div className="media-detail">
-      <div className="media-detail-media">
+      {/* data-media-id: the right-click menu acts on this media. */}
+      <div className="media-detail-media" data-media-id={id}>
         {(type === 'image' || type === 'gif') && (
           <img src={mediaUrl} alt={name} onClick={() => setLightboxOpen(true)} />
         )}
@@ -110,6 +111,7 @@ export default function Media({
 
       {lightboxOpen && (
         <Lightbox
+          mediaId={id}
           src={mediaUrl}
           type={type}
           alt={name}

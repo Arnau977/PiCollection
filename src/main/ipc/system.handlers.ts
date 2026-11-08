@@ -1,9 +1,9 @@
-import { app, clipboard, dialog, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { join } from 'path'
 import { z } from 'zod'
 import { ipcHandler } from './helpers'
-import { IPC } from '@shared/ipc/contracts'
+import { ContextMenuSchema, IPC } from '@shared/ipc/contracts'
 import { loadImageForClipboard } from '../services/system.service'
 import { copyFileToClipboard, isAnimatedImage } from '../services/clipboardFile'
 import { logError } from '../logging/logger'
@@ -71,6 +71,38 @@ export function registerSystemHandlers(): void {
     IPC.system.copyLocationToClipboard,
     ipcHandler(IPC.system.copyLocationToClipboard, z.string().min(1), async (route) => {
       clipboard.writeText(resolveRoute(route, readSourceFolder()))
+    })
+  )
+
+  // A native menu built from what the renderer found under the pointer (it
+  // knows the page; labels arrive translated). Resolves with the chosen
+  // action's id, or null when the menu closes without one: on Windows the
+  // close callback runs before the click, so it waits a tick for it.
+  ipcMain.handle(
+    IPC.system.showContextMenu,
+    ipcHandler(IPC.system.showContextMenu, ContextMenuSchema, (items) => {
+      const window = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
+      return new Promise<string | null>((resolve) => {
+        let settled = false
+        const settle = (id: string | null): void => {
+          if (settled) return
+          settled = true
+          resolve(id)
+        }
+        const menu = Menu.buildFromTemplate(
+          items.map((item) =>
+            'type' in item
+              ? { type: 'separator' as const }
+              : {
+                  label: item.label,
+                  role: item.role,
+                  enabled: item.enabled ?? true,
+                  click: item.role ? undefined : (): void => settle(item.id ?? null)
+                }
+          )
+        )
+        menu.popup({ window, callback: () => setTimeout(() => settle(null), 50) })
+      })
     })
   )
 

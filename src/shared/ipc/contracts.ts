@@ -38,6 +38,20 @@ export const FilterListInputSchema = z.object({
   includedListIds: z.array(z.string().min(1))
 })
 
+/** One entry of a native context menu: an action the renderer runs, a role
+ * the OS runs on the focused field (cut/copy/paste/select all), or a line. */
+export const ContextMenuItemSchema = z.union([
+  z.object({ type: z.literal('separator') }),
+  z.object({
+    id: z.string().min(1).optional(),
+    role: z.enum(['cut', 'copy', 'paste', 'selectAll']).optional(),
+    label: z.string().min(1),
+    enabled: z.boolean().optional()
+  })
+])
+export type ContextMenuItem = z.infer<typeof ContextMenuItemSchema>
+export const ContextMenuSchema = z.array(ContextMenuItemSchema).min(1)
+
 export const SortingSchema = z.object({
   prop: z.enum(['name', 'createdAt', 'fileSize']).optional(),
   desc: z.boolean().optional()
@@ -310,6 +324,7 @@ export const IPC = {
     showPathInFolder: 'system:show-path-in-folder',
     copyImageToClipboard: 'system:copy-image-to-clipboard',
     copyLocationToClipboard: 'system:copy-location-to-clipboard',
+    showContextMenu: 'system:show-context-menu',
     getAppVersion: 'system:get-app-version',
     restartApp: 'system:restart-app',
     getAutoStart: 'system:get-auto-start',

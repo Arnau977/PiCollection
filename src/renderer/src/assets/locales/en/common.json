@@ -609,6 +609,20 @@
   "mediaThumb": {
     "missingFile": "File not found"
   },
+  "contextMenu": {
+    "open": "Open",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select all",
+    "chooseCompare": "Choose to compare",
+    "chooseInstead": "Choose this one to compare instead",
+    "clearCompare": "Stop comparing",
+    "chosenHint": "Chosen to compare. Right-click another picture to compare them",
+    "imageCopied": "Image copied",
+    "locationCopied": "Location copied",
+    "copyFailed": "Couldn't copy it"
+  },
   "mediaCompare": {
     "title": "Compare images",
     "openLabel": "Compare with \"{{name}}\"",
