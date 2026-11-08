@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { AUTO_BACKUP_KEEP_COUNT_OPTIONS } from '../models/Backup'
 import { APP_ALERT_KINDS, APP_NOTIFICATION_KINDS } from '../models/Notification'
 import { AUTO_TAG_PROPERTIES } from '../models/AutoTag'
+import { normalizeTypes } from '../query/mediaTypes'
 
 export type IpcResult<T> =
   | { success: true; data: T }
@@ -11,7 +12,7 @@ export const MediaFiltersSchema = z.object({
   query: z.string().optional(),
   artistId: z.string().optional(),
   sfw: z.boolean().optional(),
-  type: z.enum(['image', 'video', 'gif']).optional(),
+  type: z.preprocess(normalizeTypes, z.array(z.enum(['image', 'video', 'gif'])).optional()),
   tagGroups: z.array(z.array(z.string())).optional(),
   characterGroups: z.array(z.array(z.string())).optional(),
   noCharacter: z.boolean().optional(),

@@ -16,7 +16,12 @@ describe('mergeFilters', () => {
   })
 
   it('returns null for different scalars', () => {
-    expect(mergeFilters({ type: 'gif' }, { type: 'image' })).toBeNull()
+    expect(mergeFilters({ type: ['gif'] }, { type: ['image'] })).toBeNull()
+    // Type filters keep only the types both allow.
+    expect(mergeFilters({ type: ['image', 'gif'] }, { type: ['gif', 'video'] })?.type).toEqual([
+      'gif'
+    ])
+    expect(mergeFilters({ type: ['image', 'gif'] }, {})?.type).toEqual(['image', 'gif'])
     expect(mergeFilters({ sfw: true }, { sfw: false })).toBeNull()
     expect(mergeFilters({ artistId: 'a' }, { artistId: 'b' })).toBeNull()
   })

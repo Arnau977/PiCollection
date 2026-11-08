@@ -10,7 +10,7 @@ export function hasActiveFilters(filters: MediaFilters): boolean {
       filters.artistId ||
       filters.sfw !== undefined ||
       filters.isAiGenerated !== undefined ||
-      filters.type ||
+      filters.type?.length ||
       hasNonEmptyGroup(filters.tagGroups) ||
       hasNonEmptyGroup(filters.characterGroups) ||
       filters.noCharacter ||

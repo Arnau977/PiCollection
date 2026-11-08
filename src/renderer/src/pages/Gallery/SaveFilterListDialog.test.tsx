@@ -44,7 +44,7 @@ describe('SaveFilterListDialog', () => {
     const user = userEvent.setup()
     const { onSaved } = renderDialog({
       sfw: true,
-      type: 'image',
+      type: ['image'],
       filterListIds: ['l1'],
       limit: 60,
       offset: 60,
@@ -56,7 +56,7 @@ describe('SaveFilterListDialog', () => {
 
     expect(create).toHaveBeenCalledWith({
       name: 'Banner',
-      filters: { sfw: true, type: 'image' },
+      filters: { sfw: true, type: ['image'] },
       includedListIds: ['l1']
     })
     await waitFor(() => expect(onSaved).toHaveBeenCalled())
@@ -68,7 +68,7 @@ describe('SaveFilterListDialog', () => {
       artistId: 'a1',
       sfw: false,
       isAiGenerated: false,
-      type: 'gif',
+      type: ['gif'],
       filterListIds: ['l1'],
       tagGroups: [['t1', '-t2']],
       characterGroups: [['c1']],
@@ -97,7 +97,7 @@ describe('SaveFilterListDialog', () => {
     const user = userEvent.setup()
     renderDialog({
       sfw: true,
-      type: 'image',
+      type: ['image'],
       filterListIds: ['l1'],
       tagGroups: [['t1', '-t2']],
       characterGroups: [['c1']],

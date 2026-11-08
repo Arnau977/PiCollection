@@ -12,7 +12,7 @@ import {
   Bug,
   Scale
 } from 'lucide-react'
-import type { MediaFilters, MediaSortableProp } from '@shared/models'
+import type { MediaSortableProp } from '@shared/models'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { useAppUpdater } from '../../hooks/useAppUpdater'
 import { useAutoBackup } from '../../hooks/useAutoBackup'
@@ -28,6 +28,8 @@ import { AutoTagsSection } from './AutoTagsSection'
 import { LocalTaggingSection } from './LocalTaggingSection'
 import { DanbooruSection } from './DanbooruSection'
 import { ExtensionBridgeSection } from './ExtensionBridgeSection'
+import { TypeFilterOptions } from '../../components/FilterBar/TypeFilterOptions'
+import { typeFilterValue, typesFromFilterValue } from '@shared/query/mediaTypes'
 import './SettingsPage.css'
 
 /** Loads/saves the optional SauceNAO API key (raises the free anonymous rate limit). */
@@ -238,19 +240,12 @@ export default function SettingsPage(): JSX.Element {
             <SettingsRow title={t('filters.type')}>
               <select
                 aria-label={t('filters.type')}
-                value={defaults.type ?? 'all'}
-                onChange={(e) => {
-                  const selected = e.target.value
-                  setDefaults({
-                    ...defaults,
-                    type: selected === 'all' ? undefined : (selected as MediaFilters['type'])
-                  })
-                }}
+                value={typeFilterValue(defaults.type)}
+                onChange={(e) =>
+                  setDefaults({ ...defaults, type: typesFromFilterValue(e.target.value) })
+                }
               >
-                <option value="all">{t('filters.typeAll')}</option>
-                <option value="image">{t('filters.typeImage')}</option>
-                <option value="video">{t('filters.typeVideo')}</option>
-                <option value="gif">{t('filters.typeGif')}</option>
+                <TypeFilterOptions />
               </select>
             </SettingsRow>
 

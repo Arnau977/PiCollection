@@ -18,7 +18,7 @@ describe('gallerySettings', () => {
   it('persists and reloads saved defaults', () => {
     saveGalleryDefaults({
       sfw: true,
-      type: 'video',
+      type: ['video'],
       sortProp: 'name',
       sortDesc: false,
       blurNsfw: false,
@@ -29,7 +29,7 @@ describe('gallerySettings', () => {
 
     expect(loadGalleryDefaults()).toEqual({
       sfw: true,
-      type: 'video',
+      type: ['video'],
       sortProp: 'name',
       sortDesc: false,
       blurNsfw: false,
@@ -44,11 +44,12 @@ describe('gallerySettings', () => {
     expect(loadGalleryDefaults()).toEqual(FALLBACK_GALLERY_DEFAULTS)
   })
 
-  it('fills in pageSize and density with fallbacks for data saved before those fields existed', () => {
+  it('fills in pageSize and density with fallbacks for data saved before those fields existed, and a single type as a list', () => {
     window.localStorage.setItem(
       'picollection:gallery-defaults',
       JSON.stringify({
         sfw: true,
+        type: 'gif',
         sortProp: 'createdAt',
         sortDesc: true,
         blurNsfw: true,
@@ -58,6 +59,7 @@ describe('gallerySettings', () => {
 
     expect(loadGalleryDefaults()).toEqual({
       sfw: true,
+      type: ['gif'],
       sortProp: 'createdAt',
       sortDesc: true,
       blurNsfw: true,

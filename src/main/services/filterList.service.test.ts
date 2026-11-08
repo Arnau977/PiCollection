@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { initTestDbSingleton } from '../database/testHelpers'
+import { getDb } from '../database/connection'
 import { filterListService } from './filterList.service'
 import { tagService } from './tag.service'
 import type { FilterListInput } from '@shared/models'
@@ -26,7 +27,7 @@ describe('filterListService', () => {
     const apta = await filterListService.create(input('Apta'))
     await filterListService.create({
       name: 'Banner',
-      filters: { type: 'image' },
+      filters: { type: ['image'] },
       includedListIds: [apta.id]
     })
 
@@ -34,10 +35,25 @@ describe('filterListService', () => {
 
     expect(all.map((list) => list.name)).toEqual(['Apta', 'Banner'])
     expect(all[1]).toMatchObject({
-      filters: { type: 'image' },
+      filters: { type: ['image'] },
       includedListIds: [apta.id],
       hasMissingEntities: false
     })
+  })
+
+  it('reads the single type a list saved before multi-type filters holds', async () => {
+    const list = await filterListService.create({
+      name: 'Old',
+      filters: { sfw: true },
+      includedListIds: []
+    })
+    await getDb()
+      .updateTable('filter_list')
+      .set({ filters_json: JSON.stringify({ sfw: true, type: 'gif' }) })
+      .where('id', '=', list.id)
+      .execute()
+
+    expect((await filterListService.getAll())[0].filters).toEqual({ sfw: true, type: ['gif'] })
   })
 
   it('refuses an empty name, a repeated name and a list with nothing in it', async () => {

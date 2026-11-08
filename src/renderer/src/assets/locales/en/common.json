@@ -327,6 +327,7 @@
     "typeImage": "Image",
     "typeVideo": "Video",
     "typeGif": "Animated",
+    "typeEither": "{{first}} or {{second}}",
     "sortBy": "Sort by",
     "sortDate": "Date",
     "sortName": "Name",

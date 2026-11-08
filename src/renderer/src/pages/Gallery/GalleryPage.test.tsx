@@ -741,7 +741,7 @@ describe('GalleryPage with filter lists', () => {
     setApi(getFiltered)
     filterListsState.data = [list('a'), list('b')]
     writeGallerySession({
-      filters: { filterListIds: ['a', 'b'], type: 'gif' },
+      filters: { filterListIds: ['a', 'b'], type: ['gif'] },
       sorting: { prop: 'createdAt', desc: true },
       page: 0
     })
@@ -756,7 +756,7 @@ describe('GalleryPage with filter lists', () => {
 
     await waitFor(() =>
       expect(getFiltered).toHaveBeenLastCalledWith(
-        expect.objectContaining({ filterListIds: ['b'], type: 'gif' }),
+        expect.objectContaining({ filterListIds: ['b'], type: ['gif'] }),
         expect.anything()
       )
     )
@@ -808,7 +808,7 @@ describe('GalleryPage with filter lists', () => {
       configurable: true
     })
     writeGallerySession({
-      filters: { type: 'gif' },
+      filters: { type: ['gif'] },
       sorting: { prop: 'createdAt', desc: true },
       page: 0
     })
@@ -826,7 +826,7 @@ describe('GalleryPage with filter lists', () => {
     expect(await screen.findByText('List "Gifs" saved')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(getFiltered).toHaveBeenLastCalledWith(
-      expect.objectContaining({ type: 'gif' }),
+      expect.objectContaining({ type: ['gif'] }),
       expect.anything()
     )
     expect(getFiltered.mock.lastCall?.[0].filterListIds).toBeUndefined()
@@ -841,7 +841,7 @@ describe('GalleryPage with filter lists', () => {
       filterList: { create: vi.fn().mockResolvedValue({ success: true, data: saved }) }
     })
     writeGallerySession({
-      filters: { type: 'gif' },
+      filters: { type: ['gif'] },
       sorting: { prop: 'createdAt', desc: true },
       page: 0
     })

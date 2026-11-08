@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { MediaFilters } from '@shared/models'
+import { typeFilterValue, typesFromFilterValue } from '@shared/query/mediaTypes'
+import { TypeFilterOptions } from './TypeFilterOptions'
 
 interface FilterSelectProps {
   filters: MediaFilters
@@ -12,19 +14,12 @@ export function TypeFilter({ filters, onFiltersChange }: FilterSelectProps): JSX
     <label className="filter-field">
       <span className="filter-label">{t('filters.type')}</span>
       <select
-        value={filters.type ?? 'all'}
-        onChange={(e) => {
-          const selected = e.target.value
-          onFiltersChange({
-            ...filters,
-            type: selected === 'all' ? undefined : (selected as MediaFilters['type'])
-          })
-        }}
+        value={typeFilterValue(filters.type)}
+        onChange={(e) =>
+          onFiltersChange({ ...filters, type: typesFromFilterValue(e.target.value) })
+        }
       >
-        <option value="all">{t('filters.typeAll')}</option>
-        <option value="image">{t('filters.typeImage')}</option>
-        <option value="video">{t('filters.typeVideo')}</option>
-        <option value="gif">{t('filters.typeGif')}</option>
+        <TypeFilterOptions />
       </select>
     </label>
   )

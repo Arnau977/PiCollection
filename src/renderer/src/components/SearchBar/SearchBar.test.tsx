@@ -87,14 +87,14 @@ describe('SearchBar filter lists', () => {
 
   it('applies a list on top of the other filters, removing the typed word', async () => {
     const u = user()
-    const { onFiltersChange } = renderSearchBar({ sfw: true, type: 'gif', filterListIds: ['l2'] })
+    const { onFiltersChange } = renderSearchBar({ sfw: true, type: ['gif'], filterListIds: ['l2'] })
 
     await u.type(searchInput(), 'beach perf')
     await u.click(screen.getByRole('option', { name: /Perfil/ }))
 
     expect(onFiltersChange).toHaveBeenLastCalledWith({
       sfw: true,
-      type: 'gif',
+      type: ['gif'],
       filterListIds: ['l2', 'l1'],
       query: 'beach'
     })
