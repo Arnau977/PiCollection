@@ -80,7 +80,7 @@ describe('SaveFilterListDialog', () => {
     for (const text of [
       'Apta',
       'beach',
-      'Gif',
+      'Animated',
       'NSFW only',
       'Exclude AI',
       'Jane',

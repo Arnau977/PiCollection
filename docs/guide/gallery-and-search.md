@@ -5,9 +5,10 @@ thumbnails. The search bar, type and sorting sit on top, and the artist, tag,
 character and series filters in a panel on the left; the **Filters** button at
 the start of the search row slides that panel shut or open, and the app remembers your
 choice. In a narrow window the panel opens over the left side of the grid instead. Thumbnails are small
-cached previews, so large collections scroll smoothly; GIFs and videos only
-play while you hover them. A corner badge marks GIFs, videos and AI-generated
-media. **Grid size** and page size are in the toolbar.
+cached previews, so large collections scroll smoothly; animated media and videos only
+play while you hover them. A corner badge marks animated media (**ANIM**), videos and AI-generated
+media. Animated media means GIFs and animated WebPs, alike everywhere (badge, hover, the **Animated** type
+filter, the Disk space split); a still WebP is a picture. **Grid size** and page size are in the toolbar.
 
 ## Search
 
@@ -47,7 +48,7 @@ In the filter panel (the rest under **More filters**):
   assigned** (the crossed-circle button in each field) find media still
   missing them.
 - **More filters**: SFW / NSFW, AI-generated (all, only, exclude), and type
-  (image, video, GIF).
+  (image, video, animated).
 - **Sort by** date, name or size on disk, ascending or descending. Sizes are
   read in the background (the first time, the whole library); a file not
   read yet sorts last when going from the heaviest.

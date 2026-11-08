@@ -24,6 +24,7 @@ import * as m0022AutoTagsDanbooruSizes from './0022_auto_tags_danbooru_sizes'
 import * as m0023RereadTransparency from './0023_reread_transparency'
 import * as m0024MediaFileSize from './0024_media_file_size'
 import * as m0025FilterLists from './0025_filter_lists'
+import * as m0026RereadWebpAnimation from './0026_reread_webp_animation'
 
 export const migrations: Record<string, Migration> = {
   '0001_initial_schema': m0001InitialSchema,
@@ -50,5 +51,6 @@ export const migrations: Record<string, Migration> = {
   '0022_auto_tags_danbooru_sizes': m0022AutoTagsDanbooruSizes,
   '0023_reread_transparency': m0023RereadTransparency,
   '0024_media_file_size': m0024MediaFileSize,
-  '0025_filter_lists': m0025FilterLists
+  '0025_filter_lists': m0025FilterLists,
+  '0026_reread_webp_animation': m0026RereadWebpAnimation
 }

@@ -17,7 +17,7 @@ A fourth card, **Free on** (e.g. `D:\`), shows how much room is left on the
 drive holding your source folder, out of its total size.
 
 Under the cards, a bar splits the library by file type - **Images**,
-**GIFs** and **Videos** - with each one's size, share and number of files.
+**Animated** (GIFs and animated WebPs) and **Videos** - with each one's size, share and number of files.
 
 ## Where the space goes
 
