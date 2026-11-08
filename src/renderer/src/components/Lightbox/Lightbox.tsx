@@ -12,10 +12,12 @@ interface LightboxProps {
   type: 'image' | 'video' | 'gif'
   alt: string
   route: string
+  /** A saved media: the right-click menu offers its file actions. */
+  mediaId?: string
   onClose: () => void
 }
 
-export function Lightbox({ src, type, alt, route, onClose }: LightboxProps): JSX.Element {
+export function Lightbox({ src, type, alt, route, mediaId, onClose }: LightboxProps): JSX.Element {
   const { t } = useTranslation()
   const imageRef = useRef<HTMLImageElement>(null)
   const zoom = useZoomPan(imageRef)
@@ -64,7 +66,7 @@ export function Lightbox({ src, type, alt, route, onClose }: LightboxProps): JSX
           <X size={20} />
         </button>
       </div>
-      <div className="lightbox-content">
+      <div className="lightbox-content" data-media-id={mediaId}>
         {type === 'video' ? (
           <VideoPlayer src={src} autoPlay className="lightbox-player" />
         ) : (

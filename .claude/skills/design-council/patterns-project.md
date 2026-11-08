@@ -441,6 +441,19 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
 `ManageSortControl`, `FilterBar`, `Lightbox`. All live in
 `src/renderer/src/components/`.
 
+## Context menu
+
+- **Right-click is a native Windows menu, not an app popover** (2026-11-08):
+  keyboard, screen readers and look come from the OS. The renderer decides
+  what to offer (it knows the page) and sends translated labels; main only
+  pops it up. A media element opts in with `data-media-id`. Copy image is
+  never offered for videos, and a GIF is copied whole, never as a frame (the
+  user's call). Comparing two unrelated pictures is two steps, like
+  Explorer's "Select for compare": the pick shows in a notice bottom-left
+  (away from toasts) until compared or cleared, name on its own line so a
+  long name can't cut the explanation. No Compare button in the selection
+  bar (the user's call). Where: `components/ContextMenu/`.
+
 # Anti-patterns learned here
 
 Each one cost a bug or a redo in this repo. Check the proposal against all

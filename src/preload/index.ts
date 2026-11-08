@@ -59,7 +59,7 @@ import type {
   FilterListInput,
   FilterListModel
 } from '@shared/models'
-import { IPC, type IpcResult } from '@shared/ipc/contracts'
+import { IPC, type ContextMenuItem, type IpcResult } from '@shared/ipc/contracts'
 
 export const api = {
   media: {
@@ -161,6 +161,8 @@ export const api = {
       ipcRenderer.invoke(IPC.system.copyImageToClipboard, route),
     copyLocationToClipboard: (route: string): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.system.copyLocationToClipboard, route),
+    showContextMenu: (items: ContextMenuItem[]): Promise<IpcResult<string | null>> =>
+      ipcRenderer.invoke(IPC.system.showContextMenu, items),
     getAppVersion: (): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.system.getAppVersion),
     openThirdPartyNotices: (): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC.system.openThirdPartyNotices),

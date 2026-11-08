@@ -2,33 +2,20 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Columns2 } from 'lucide-react'
-import type { MediaModel } from '@shared/models'
-import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { PATH } from '../../app.routes.const'
 import { useSimilarMedia } from '../../hooks/useSimilarMedia'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { MediaThumb } from '../MediaThumb/MediaThumb'
 import { MediaCompare, type ComparedMedia } from '../MediaCompare/MediaCompare'
-import { taxonomyOf } from '../MediaCompare/taxonomyDiff'
+import { toCompared, type ComparableMedia } from '../MediaCompare/toCompared'
 import './SimilarMediaPanel.css'
 
-type ShownMedia = Pick<
-  MediaModel,
-  'id' | 'route' | 'name' | 'type' | 'pendingTagging' | 'characters' | 'series' | 'tags'
->
+type ShownMedia = ComparableMedia
 
 interface SimilarMediaPanelProps {
   /** The media whose detail page this is - also the left side of a comparison. */
   media: ShownMedia
 }
-
-const toCompared = (media: ShownMedia): ComparedMedia => ({
-  src: toMediaUrl(media.route),
-  route: media.route,
-  name: media.name,
-  status: media.pendingTagging ? 'pending' : 'library',
-  taxonomy: taxonomyOf(media)
-})
 
 export function SimilarMediaPanel({ media: current }: SimilarMediaPanelProps): JSX.Element | null {
   const { t } = useTranslation()

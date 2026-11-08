@@ -70,6 +70,28 @@ while adding a file, before it's saved - and in the viewer):
 - **Copy location** copies the file's full path.
 - **Open in file explorer** shows the file in its folder.
 
+## Right-click menu
+
+Right-clicking a thumbnail in the gallery, the picture on its page or the
+picture in the viewer opens a menu with **Open** (thumbnails only), **Copy
+image** (not for videos; a GIF is copied whole, as above), **Copy location**
+and **Open in file explorer**.
+
+It can also compare any two pictures, related or not:
+
+1. Right-click one and choose **Choose to compare**. A notice at the bottom
+   names it until you compare or click its ×, even if you move to another
+   page.
+2. Right-click another and choose **Compare with "name"**: the comparison
+   from [similar pictures](duplicates.md) opens with the two side by side.
+
+Videos can't be compared this way, since the comparison slides two still
+pictures over each other.
+
+In a text box, right-click offers **Cut**, **Copy**, **Paste** and **Select
+all**, and on selected text elsewhere (a picture's name and tags on its
+page), **Copy**.
+
 ## Video to GIF
 
 **Make GIF** on a video's page turns a clip of it into a GIF, entirely on
