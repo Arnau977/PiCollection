@@ -7,7 +7,8 @@ the start of the search row slides that panel shut or open, and the app remember
 choice. In a narrow window the panel opens over the left side of the grid instead. Thumbnails are small
 cached previews, so large collections scroll smoothly; GIFs and videos only
 play while you hover them. A corner badge marks GIFs, videos and AI-generated
-media. **Grid size** and page size are in the toolbar.
+media. An animated WebP counts as a GIF everywhere (badge, hover, the GIF type
+filter, the Disk space split); a still WebP is a picture. **Grid size** and page size are in the toolbar.
 
 ## Search
 

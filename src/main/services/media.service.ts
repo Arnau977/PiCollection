@@ -10,6 +10,7 @@ import { buildClosureMap } from '../database/repositories/entityHierarchy'
 import { AppError } from '../errors'
 import * as discardedRepo from '../database/repositories/discardedMedia.repository'
 import { recordDiscarded } from './discardedMedia.service'
+import { resolveMediaType } from './animatedMediaType'
 import {
   computeFileHash,
   computePerceptualHash,
@@ -419,6 +420,7 @@ export const mediaService = {
 
     const id = randomUUID()
     const route = relativizeRoute(input.route, sourceFolder)
+    const type = await resolveMediaType(input.type, resolveRoute(route, sourceFolder))
     await db.transaction().execute(async (trx) => {
       // Back in the app, so no longer discarded.
       await discardedRepo.deleteDiscardedByRoute(trx, route)
@@ -427,7 +429,7 @@ export const mediaService = {
         name: input.name,
         sfw: input.sfw ? 1 : 0,
         is_ai_generated: input.isAiGenerated ? 1 : 0,
-        type: input.type,
+        type,
         route,
         alias: input.alias ?? null,
         source_url: input.sourceUrl ?? null,
@@ -503,14 +505,16 @@ export const mediaService = {
     const db = getDb()
     await assertRelationsExist(db, input)
     const sourceFolder = readSourceFolder()
+    const route = relativizeRoute(input.route, sourceFolder)
+    const type = await resolveMediaType(input.type, resolveRoute(route, sourceFolder))
 
     await db.transaction().execute(async (trx) => {
       await mediaRepo.updateMediaRow(trx, id, {
         name: input.name,
         sfw: input.sfw ? 1 : 0,
         is_ai_generated: input.isAiGenerated ? 1 : 0,
-        type: input.type,
-        route: relativizeRoute(input.route, sourceFolder),
+        type,
+        route,
         alias: input.alias ?? null,
         source_url: input.sourceUrl ?? null,
         artist_id: input.artistId ?? null
@@ -560,7 +564,7 @@ export const mediaService = {
       await discardedRepo.deleteDiscardedByRoute(trx, route)
       await mediaRepo.updateMediaRow(trx, target.id, {
         route,
-        type: input.type,
+        type: await resolveMediaType(input.type, absoluteRoute),
         hash,
         phash: fingerprint?.phash ?? null,
         aspect_ratio: hash ? (fingerprint?.aspectRatio ?? 0) : null,

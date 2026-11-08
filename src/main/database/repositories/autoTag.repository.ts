@@ -77,10 +77,10 @@ export async function deleteRule(db: Kysely<DB>, property: string): Promise<void
 export function listUnanalyzedMedia(
   db: Kysely<DB>,
   limit: number
-): Promise<Pick<MediaTable, 'id' | 'route'>[]> {
+): Promise<Pick<MediaTable, 'id' | 'route' | 'type'>[]> {
   return db
     .selectFrom('media')
-    .select(['id', 'route'])
+    .select(['id', 'route', 'type'])
     .where('width', 'is', null)
     .where('type', '!=', 'video')
     .limit(limit)
@@ -101,14 +101,16 @@ export async function countUnanalyzedMedia(db: Kysely<DB>): Promise<number> {
 export async function setFileProperties(
   db: Kysely<DB>,
   id: string,
-  properties: { width: number; height: number; hasAlpha: boolean }
+  properties: { width: number; height: number; hasAlpha: boolean },
+  type: MediaTable['type']
 ): Promise<void> {
   await db
     .updateTable('media')
     .set({
       width: properties.width,
       height: properties.height,
-      has_alpha: properties.hasAlpha ? 1 : 0
+      has_alpha: properties.hasAlpha ? 1 : 0,
+      type
     })
     .where('id', '=', id)
     .execute()

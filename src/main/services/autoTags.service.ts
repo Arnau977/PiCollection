@@ -4,8 +4,10 @@ import {
   DANBOORU_DEFAULT_TAGS,
   type AutoTagRuleInput,
   type AutoTagStatus,
-  type AutoTagProperty
+  type AutoTagProperty,
+  type MediaModel
 } from '@shared/models'
+import { resolveMediaType } from './animatedMediaType'
 import { getDb } from '../database/connection'
 import * as autoTagRepo from '../database/repositories/autoTag.repository'
 import * as tagRepo from '../database/repositories/tag.repository'
@@ -52,11 +54,13 @@ async function analyzePass(): Promise<void> {
     const rows = await autoTagRepo.listUnanalyzedMedia(db, BATCH_SIZE)
     if (rows.length === 0) break
     for (const row of rows) {
-      const properties = await readImageProperties(resolveRoute(row.route, sourceFolder))
+      const absolutePath = resolveRoute(row.route, sourceFolder)
+      const properties = await readImageProperties(absolutePath)
       await autoTagRepo.setFileProperties(
         db,
         row.id,
-        properties ?? { width: 0, height: 0, hasAlpha: false }
+        properties ?? { width: 0, height: 0, hasAlpha: false },
+        await resolveMediaType(row.type as MediaModel['type'], absolutePath)
       )
     }
     analyzed = true
