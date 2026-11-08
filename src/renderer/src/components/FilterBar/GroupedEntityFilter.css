@@ -12,38 +12,13 @@
   gap: var(--space-2);
 }
 
-/* Results sit under the filters on a viewport-bound page, so a long selection
-   mustn't push them (or the bars above them) away. Exactly one thing scrolls:
-   a lone group's chips, keeping its picker in place, or the whole stack when
-   there are several, so N groups don't add up to N full heights. Only in the
-   filter bar, which doesn't scroll itself: the list form does, and a scroller
-   inside it would compete with it. */
+/* Every chip stays rendered at full height: the gallery's filter panel and
+   the list form each scroll as a whole, and a scroller inside them would
+   compete with theirs. */
 .grouped-entity-filter-groups {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-}
-
-.filter-bar .grouped-entity-filter-groups {
-  --chips-max-height: clamp(5rem, 20vh, 11rem);
-}
-
-.filter-bar .grouped-entity-filter-groups:not(.has-several-groups) .multi-select-chips,
-.filter-bar .grouped-entity-filter-groups.has-several-groups {
-  overflow-y: auto;
-  /* Room for what overflow would clip: chip-landed's ring, focus outlines. */
-  padding: 4px;
-  margin-inline: -4px;
-}
-
-.filter-bar .grouped-entity-filter-groups:not(.has-several-groups) .multi-select-chips {
-  max-height: var(--chips-max-height);
-  margin-top: 0;
-}
-
-.filter-bar .grouped-entity-filter-groups.has-several-groups {
-  /* Plus about one picker, which scrolls along here. */
-  max-height: calc(var(--chips-max-height) + 2.75rem);
 }
 
 .grouped-entity-filter-group {

@@ -129,7 +129,7 @@ here.
 ### State a temporary edit mode in words, where the work happens
 - Kind: pattern
 - Use when / avoid when: a mode changes what the same controls do. Mode slips come from not seeing which mode is active, so show it persistently in plain words instead of a passing toast. Fluent places a page-level bar under the command bar; its button labels name the outcome. Offer Cancel from the first moment.
-- Takeaway for PiCollection: the list edit's bar sits right under the filters it talks about, names the list, and stays until Save changes or Cancel.
+- Takeaway for PiCollection: the list edit's bar names the list and stays until Save changes or Cancel. It first sat right under the filters; since 2026-11-08 it heads the gallery's filter panel, beside the filters it talks about, so it no longer costs the grid a row.
 - Source: Modes in User Interfaces (NN/g) - https://nngroup.com/articles/modes/ ; Fluent 2 message bar - https://fluent2.microsoft.design/components/web/react/core/messagebar/usage
 - Checked: 2026-11-05
 
@@ -146,6 +146,13 @@ here.
 - Takeaway for PiCollection: filter chips are managed one by one (include/exclude, remove), so keep them all rendered and bound the height, instead of hiding them behind a count.
 - Source: Fluent 2 tag usage - https://fluent2.microsoft.design/components/web/react/core/tag/usage ; PatternFly chip - https://patternfly.org/components/chip/html
 - Checked: 2026-11-06
+
+### Filter placement: side panel for many facets, top bar for a few
+- Kind: pattern
+- Use when / avoid when: a vertical side panel is the common default and holds many filter groups with their values visible; a horizontal toolbar frees width for the grid but gets hard to scan past about 5-8 filter types (Baymard; Shopify's rule of thumb is a sidebar above 5). Collection apps split it: Eagle keeps search and an advanced-filter button on top and navigation in a hideable left sidebar (Tab), Lightroom Classic keeps a toggleable filter bar on top. Side panels cost width and are sometimes overlooked.
+- Takeaway for PiCollection: the gallery has search + type + sort (global, few) and four entity facets with many chips (Artist, Tags, Characters, Series). A hybrid fits: global controls stay on one top row, the facets go to a collapsible left panel that uses the gutter wide windows waste, with the list-edit bar at its top.
+- Source: Baymard, horizontal filtering - https://baymard.com/blog/horizontal-filtering-sorting-design ; Shopify storefront filtering UX - https://shopify.dev/docs/storefronts/themes/navigation-search/filtering/storefront-filtering/storefront-filtering-ux ; Eagle sidebar - https://en.eagle.cool/article/475-interface-sidebar ; Lightroom Classic Library module - https://helpx.adobe.com/lightroom-classic/help/library-module-basic-workflow.html
+- Checked: 2026-11-08
 
 ## Anti-patterns
 

@@ -4,9 +4,10 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { CharacterModel, MediaFilters, SeriesModel, Sorting, TagModel } from '@shared/models'
 import { FilterBar } from './FilterBar'
+import { FilterEntityFields } from './FilterEntityFields'
 
 function corePanel(): HTMLElement {
-  return document.querySelector('.filter-bar-core') as HTMLElement
+  return screen.getByTestId('entity-fields')
 }
 
 let tagsData: TagModel[] = []
@@ -25,13 +26,19 @@ function renderFilterBar(filters: MediaFilters = {}) {
   const onFiltersChange = vi.fn()
   const onSortingChange = vi.fn()
   const sorting: Sorting = { prop: 'createdAt', desc: true }
+  // The gallery shows the entity fields in its side panel, next to the bar.
   render(
-    <FilterBar
-      filters={filters}
-      onFiltersChange={onFiltersChange}
-      sorting={sorting}
-      onSortingChange={onSortingChange}
-    />
+    <>
+      <FilterBar
+        filters={filters}
+        onFiltersChange={onFiltersChange}
+        sorting={sorting}
+        onSortingChange={onSortingChange}
+      />
+      <div data-testid="entity-fields">
+        <FilterEntityFields filters={filters} onFiltersChange={onFiltersChange} />
+      </div>
+    </>
   )
   return { onFiltersChange, onSortingChange }
 }
@@ -92,13 +99,6 @@ describe('FilterBar', () => {
     await vi.advanceTimersByTimeAsync(300)
 
     expect(onFiltersChange).toHaveBeenCalledWith({ sfw: true, query: 'sunset' })
-  })
-
-  it('always shows the artist/tags/characters/series filters, with no collapse toggle', () => {
-    renderFilterBar()
-
-    expect(screen.getByRole('combobox', { name: /artist/i })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /advanced/i })).not.toBeInTheDocument()
   })
 
   it('adds a tag to the tags filter group and merges it into the existing filters', async () => {

@@ -1,7 +1,10 @@
 # Gallery and search
 
 The **Gallery** shows your whole library (pending items aside) as a grid of
-thumbnails, with the search bar and filters on top. Thumbnails are small
+thumbnails. The search bar, type and sorting sit on top, and the artist, tag,
+character and series filters in a panel on the left; the **Filters** button at
+the start of the search row slides that panel shut or open, and the app remembers your
+choice. In a narrow window the panel opens over the left side of the grid instead. Thumbnails are small
 cached previews, so large collections scroll smoothly; GIFs and videos only
 play while you hover them. A corner badge marks GIFs, videos and AI-generated
 media. **Grid size** and page size are in the toolbar.
@@ -25,7 +28,7 @@ also finds their forms and subseries (see below), plain text doesn't.
 
 ## Filters
 
-Below the search bar:
+In the filter panel (the rest under **More filters**):
 
 - **Artist**, **Tags**, **Characters**, **Series**. Inside one box every
   item must match (AND). **Add OR group** starts another box that can match
@@ -59,7 +62,7 @@ is dropped. Default filters and sorting for the gallery are set in **Settings
 
 A filter list is a set of filters with a name, such as "Profile picture" for
 "SFW, none of these tags". Any active filters can be saved: click **Save as
-list** in the bar under the filters, name it, and take out anything you don't
+list** at the top of the filter panel, name it, and take out anything you don't
 want to keep with its ×. Once saved, the list shows as a chip in place of the
 filters it holds, and what you took out stays on as loose filters, so the
 results don't change.
