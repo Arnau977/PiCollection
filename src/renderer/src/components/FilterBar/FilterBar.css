@@ -1,23 +1,20 @@
+/* One row: the global controls (search, type, sort). The entity filters live
+   in the gallery's side panel, so this row stays one line tall where it can. */
 .filter-bar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-}
-
-.filter-bar-row {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: var(--space-4);
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
 }
 
-.filter-bar-core {
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border-color);
-  /* Columns here have different heights (group filters add a button underneath),
-     so bottom-aligning would stagger their labels. Line up the labels instead. */
-  align-items: flex-start;
+.filter-bar-search {
+  flex: 3 1 22rem;
+  min-width: 0;
+}
+
+.filter-bar > .filter-field {
+  flex: 0 1 11rem;
 }
 
 .filter-field {
@@ -41,17 +38,22 @@
   color: var(--color-text-muted);
 }
 
-.filter-sort-direction,
-.filter-more {
+.filter-bar > .filter-sort-direction,
+.filter-bar > .filter-more,
+.filter-bar > .filter-panel-toggle {
   flex: 0 0 auto;
+  min-width: 0;
 }
 
-/* The accent wrapper sits between .filter-bar-core and GroupedEntityFilter's
-   own root, which otherwise carries its flex-basis directly - without this,
-   the wrapper (a plain block box) falls back to shrink-to-fit sizing instead
-   of sharing the row evenly with the Artist field. */
-.filter-bar-core > .field-accent {
-  flex: 1 1 240px;
-  min-width: 220px;
+/* Pressed look while the panel is open, like the sidebar's active link. On
+   the filter card accent-soft flattens to rgb(50, 35, 44): the label stays
+   color-text (12.71:1), the icon takes accent-fg (4.28:1, over 3:1). */
+.filter-panel-toggle-btn[aria-expanded='true'] {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.filter-panel-toggle-btn[aria-expanded='true'] svg {
+  color: var(--accent-fg);
 }
 

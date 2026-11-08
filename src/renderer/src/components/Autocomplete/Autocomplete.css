@@ -251,11 +251,17 @@
 }
 
 .autocomplete-create-item {
-  display: flex !important;
-  align-items: center;
-  gap: 0.4rem;
   color: var(--accent-fg);
   font-weight: 600;
+}
+
+/* The icon sits in the gutter where a selected option's check goes, so the
+   text lines up with the options above it. */
+.autocomplete-create-item > svg {
+  position: absolute;
+  top: 50%;
+  left: 0.5rem;
+  transform: translateY(-50%);
 }
 
 /* Below the matches, separated from them (alone, it needs no separator) and
