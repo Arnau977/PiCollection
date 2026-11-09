@@ -1,5 +1,7 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { MediaFilters } from '@shared/models'
+import { TypeChecks } from './TypeChecks'
 
 interface FilterSelectProps {
   filters: MediaFilters
@@ -8,25 +10,18 @@ interface FilterSelectProps {
 
 export function TypeFilter({ filters, onFiltersChange }: FilterSelectProps): JSX.Element {
   const { t } = useTranslation()
+  const labelId = useId()
   return (
-    <label className="filter-field">
-      <span className="filter-label">{t('filters.type')}</span>
-      <select
-        value={filters.type ?? 'all'}
-        onChange={(e) => {
-          const selected = e.target.value
-          onFiltersChange({
-            ...filters,
-            type: selected === 'all' ? undefined : (selected as MediaFilters['type'])
-          })
-        }}
-      >
-        <option value="all">{t('filters.typeAll')}</option>
-        <option value="image">{t('filters.typeImage')}</option>
-        <option value="video">{t('filters.typeVideo')}</option>
-        <option value="gif">{t('filters.typeGif')}</option>
-      </select>
-    </label>
+    <div className="filter-field filter-type">
+      <span className="filter-label" id={labelId}>
+        {t('filters.type')}
+      </span>
+      <TypeChecks
+        types={filters.type}
+        onChange={(type) => onFiltersChange({ ...filters, type })}
+        labelledBy={labelId}
+      />
+    </div>
   )
 }
 

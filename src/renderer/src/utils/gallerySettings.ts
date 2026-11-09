@@ -1,4 +1,5 @@
 import type { MediaFilters, MediaSortableProp } from '@shared/models'
+import { normalizeTypes } from '@shared/query/mediaTypes'
 
 export const GALLERY_DEFAULTS_STORAGE_KEY = 'picollection:gallery-defaults'
 
@@ -30,7 +31,9 @@ export function loadGalleryDefaults(): GalleryDefaults {
   try {
     const raw = window.localStorage.getItem(GALLERY_DEFAULTS_STORAGE_KEY)
     if (!raw) return FALLBACK_GALLERY_DEFAULTS
-    return { ...FALLBACK_GALLERY_DEFAULTS, ...JSON.parse(raw) }
+    const stored = JSON.parse(raw) as GalleryDefaults
+    // Saved before the type filter took several types: a single one.
+    return { ...FALLBACK_GALLERY_DEFAULTS, ...stored, type: normalizeTypes(stored.type) }
   } catch {
     return FALLBACK_GALLERY_DEFAULTS
   }

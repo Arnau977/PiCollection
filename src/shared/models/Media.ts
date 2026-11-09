@@ -3,6 +3,8 @@ import { CharacterModel } from './Character'
 import { TagModel } from './Tag'
 import { SeriesModel } from './Series'
 
+export type MediaType = 'image' | 'video' | 'gif'
+
 export interface MediaModel {
   id: string
   type: 'image' | 'video' | 'gif'
@@ -48,7 +50,8 @@ export interface MediaFilters {
   noArtist?: boolean
   sfw?: boolean
   isAiGenerated?: boolean
-  type?: 'image' | 'video' | 'gif'
+  /** Any of these types; undefined matches all. Normalized by normalizeTypes. */
+  type?: MediaType[]
   /** Each inner array is AND'd together; the outer arrays are OR'd. */
   tagGroups?: string[][]
   /** Each inner array is AND'd together; the outer arrays are OR'd. */

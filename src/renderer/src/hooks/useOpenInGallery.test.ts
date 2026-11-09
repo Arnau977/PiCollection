@@ -48,7 +48,7 @@ describe('useOpenInGallery', () => {
     confirm.mockResolvedValue(false)
     const { result } = renderHook(() => useOpenInGallery())
 
-    await result.current.openFiltered({ type: 'gif' })
+    await result.current.openFiltered({ type: ['gif'] })
 
     expect(confirm).toHaveBeenCalledWith(
       expect.objectContaining({ danger: true, message: expect.stringContaining('Apta') })
@@ -74,7 +74,7 @@ describe('useOpenInGallery', () => {
     editing('Apta')
     const { result } = renderHook(() => useOpenInGallery())
 
-    await result.current.openFiltered({ type: 'gif' })
+    await result.current.openFiltered({ type: ['gif'] })
 
     expect(confirm).not.toHaveBeenCalled()
     expect(readGallerySession()?.listEdit).toBeUndefined()

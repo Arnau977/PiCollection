@@ -240,7 +240,7 @@ describe('media.repository free-text query', () => {
     })
     await mediaRepo.setMediaTags(db, video.id, [tag.id])
 
-    const rows = await mediaRepo.findMediaRows(db, { query: 'shared', type: 'video' })
+    const rows = await mediaRepo.findMediaRows(db, { query: 'shared', type: ['video'] })
     expect(rows.map((r) => r.name)).toEqual(['video'])
   })
 
@@ -383,7 +383,7 @@ describe('media.repository findMediaIds', () => {
       pending_tagging: 0
     })
 
-    const ids = await mediaRepo.findMediaIds(db, { type: 'video' })
+    const ids = await mediaRepo.findMediaIds(db, { type: ['video'] })
 
     expect(ids.map((row) => row.id)).toEqual([video.id])
     expect(ids.map((row) => row.id)).not.toContain(image.id)

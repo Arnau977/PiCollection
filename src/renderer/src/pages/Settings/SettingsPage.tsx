@@ -12,7 +12,7 @@ import {
   Bug,
   Scale
 } from 'lucide-react'
-import type { MediaFilters, MediaSortableProp } from '@shared/models'
+import type { MediaSortableProp } from '@shared/models'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import { useAppUpdater } from '../../hooks/useAppUpdater'
 import { useAutoBackup } from '../../hooks/useAutoBackup'
@@ -28,6 +28,7 @@ import { AutoTagsSection } from './AutoTagsSection'
 import { LocalTaggingSection } from './LocalTaggingSection'
 import { DanbooruSection } from './DanbooruSection'
 import { ExtensionBridgeSection } from './ExtensionBridgeSection'
+import { TypeChecks } from '../../components/FilterBar/TypeChecks'
 import './SettingsPage.css'
 
 /** Loads/saves the optional SauceNAO API key (raises the free anonymous rate limit). */
@@ -236,22 +237,11 @@ export default function SettingsPage(): JSX.Element {
             </SettingsRow>
 
             <SettingsRow title={t('filters.type')}>
-              <select
-                aria-label={t('filters.type')}
-                value={defaults.type ?? 'all'}
-                onChange={(e) => {
-                  const selected = e.target.value
-                  setDefaults({
-                    ...defaults,
-                    type: selected === 'all' ? undefined : (selected as MediaFilters['type'])
-                  })
-                }}
-              >
-                <option value="all">{t('filters.typeAll')}</option>
-                <option value="image">{t('filters.typeImage')}</option>
-                <option value="video">{t('filters.typeVideo')}</option>
-                <option value="gif">{t('filters.typeGif')}</option>
-              </select>
+              <TypeChecks
+                types={defaults.type}
+                onChange={(type) => setDefaults({ ...defaults, type })}
+                ariaLabel={t('filters.type')}
+              />
             </SettingsRow>
 
             <SettingsRow title={t('filters.sortBy')}>

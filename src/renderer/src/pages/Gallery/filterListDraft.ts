@@ -1,4 +1,6 @@
 import type { TFunction } from 'i18next'
+import { typeFilterLabel } from '../../components/FilterBar/typeFilterLabel'
+import { normalizeTypes } from '@shared/query/mediaTypes'
 import type { FilterListInput, FilterListModel, MediaFilters, SavedFilters } from '@shared/models'
 import { groupEntityIds, parseGroupEntry } from '@shared/query/groupEntry'
 
@@ -146,14 +148,8 @@ export function describeDraft(
   }
 
   if (filters.query) scalar('query', 'search', filters.query)
-  if (filters.type) {
-    const types = {
-      image: t('filters.typeImage'),
-      video: t('filters.typeVideo'),
-      gif: t('filters.typeGif')
-    }
-    scalar('type', 'type', types[filters.type])
-  }
+  const types = normalizeTypes(filters.type)
+  if (types) scalar('type', 'type', typeFilterLabel(types, t))
   if (filters.sfw !== undefined) {
     scalar('sfw', 'sfw', filters.sfw ? t('filters.sfwOnly') : t('filters.nsfwOnly'))
   }

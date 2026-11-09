@@ -8,7 +8,7 @@ import {
 } from './searchQuery'
 
 /** A filter that holds one value, so two different values can't both apply. */
-const SCALAR_KEYS = ['artistId', 'sfw', 'isAiGenerated', 'type'] as const
+const SCALAR_KEYS = ['artistId', 'sfw', 'isAiGenerated'] as const
 
 const GROUP_KEYS = ['tagGroups', 'characterGroups', 'seriesGroups'] as const
 
@@ -87,6 +87,15 @@ export function mergeFilters(base: MediaFilters, extra: SavedFilters): MediaFilt
     const [a, b] = [left[key], right[key]]
     if (a !== undefined && b !== undefined && a !== b) return null
     Object.assign(merged, { [key]: a ?? b })
+  }
+
+  // Both type filters apply: only the types in both are left.
+  if (base.type && extra.type) {
+    const types = base.type.filter((type) => extra.type?.includes(type))
+    if (types.length === 0) return null
+    merged.type = types
+  } else {
+    merged.type = base.type ?? extra.type
   }
 
   for (const key of GROUP_KEYS) merged[key] = crossGroups(base[key], extra[key])

@@ -50,7 +50,7 @@ beforeEach(() => {
   confirmMock.mockClear()
   lists = [
     list({ id: 'apta', name: 'Apta', filters: { sfw: true, tagGroups: [['-t1']] } }),
-    list({ id: 'perfil', name: 'Perfil', filters: { type: 'image' }, includedListIds: ['apta'] })
+    list({ id: 'perfil', name: 'Perfil', filters: { type: ['image'] }, includedListIds: ['apta'] })
   ]
   create.mockReset().mockResolvedValue({ success: true, data: { id: 'new' } })
   update.mockReset().mockResolvedValue({ success: true, data: { id: 'perfil' } })
@@ -93,7 +93,7 @@ describe('FilterListsPage', () => {
 
     expect(update).toHaveBeenCalledWith('perfil', {
       name: 'Avatar',
-      filters: { type: 'image' },
+      filters: { type: ['image'] },
       includedListIds: ['apta']
     })
   })
@@ -133,12 +133,12 @@ describe('FilterListsPage', () => {
     expect(create).not.toHaveBeenCalled()
     expect(saveButton()).toHaveAttribute('aria-disabled', 'true')
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Type' }), 'gif')
+    await user.click(screen.getByRole('checkbox', { name: 'Animated' }))
     await user.click(saveButton())
 
     expect(create).toHaveBeenCalledWith({
       name: 'Gifs',
-      filters: { type: 'gif' },
+      filters: { type: ['gif'] },
       includedListIds: []
     })
     await waitFor(() => expect(nameField()).toHaveValue(''))
@@ -175,7 +175,7 @@ describe('FilterListsPage', () => {
       list({
         id: 'perfil',
         name: 'Perfil',
-        filters: { type: 'image', tagGroups: [['-deleted'], ['t1']] },
+        filters: { type: ['image'], tagGroups: [['-deleted'], ['t1']] },
         hasMissingEntities: true
       })
     ]
@@ -188,7 +188,7 @@ describe('FilterListsPage', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Saving removes it')
     await user.click(saveButton())
 
-    expect(update.mock.calls[0][1].filters).toEqual({ type: 'image', tagGroups: [['t1']] })
+    expect(update.mock.calls[0][1].filters).toEqual({ type: ['image'], tagGroups: [['t1']] })
   })
 
   it('counts what is left once a lost filter goes, so a list with nothing left cannot save', async () => {

@@ -241,8 +241,8 @@ function applyMediaFilters(
   if (filters.sfw !== undefined) {
     qb = qb.where('media.sfw', '=', filters.sfw ? 1 : 0)
   }
-  if (filters.type) {
-    qb = qb.where('media.type', '=', filters.type)
+  if (filters.type?.length) {
+    qb = qb.where('media.type', 'in', filters.type)
   }
 
   qb = applyGroupedFilter(qb, db, 'media_tag', filters.tagGroups)

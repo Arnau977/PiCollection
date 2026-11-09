@@ -565,7 +565,7 @@ describe('media.repository free-text/sfw/type filtering', () => {
     const bySfw = await mediaRepo.findMediaRows(db, { sfw: true })
     expect(bySfw.map((r) => r.name)).toEqual(['Sunset picture'])
 
-    const byType = await mediaRepo.findMediaRows(db, { type: 'video' })
+    const byType = await mediaRepo.findMediaRows(db, { type: ['video'] })
     expect(byType.map((r) => r.name)).toEqual(['Sunset video'])
   })
 

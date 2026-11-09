@@ -63,14 +63,14 @@ describe('mediaService with filter lists', () => {
     )
 
     expect(await names({ filterListIds: [apta.id] })).toEqual(['harmless', 'harmless gif'])
-    expect(await names({ filterListIds: [apta.id], type: 'gif' })).toEqual(['harmless gif'])
+    expect(await names({ filterListIds: [apta.id], type: ['gif'] })).toEqual(['harmless gif'])
   })
 
   it('applies a nested list', async () => {
     const apta = await filterListService.create(
       list('Apta', { sfw: true, tagGroups: [[`-${lewd.id}`]] })
     )
-    const profile = await filterListService.create(list('Perfil', { type: 'image' }, [apta.id]))
+    const profile = await filterListService.create(list('Perfil', { type: ['image'] }, [apta.id]))
 
     expect(await names({ filterListIds: [profile.id] })).toEqual(['harmless'])
   })
@@ -80,7 +80,7 @@ describe('mediaService with filter lists', () => {
       list('Apta', { sfw: true, tagGroups: [[`-${lewd.id}`]] })
     )
     const profile = await filterListService.create(list('Perfil', {}, [apta.id]))
-    const banner = await filterListService.create(list('Banner', { type: 'image' }, [apta.id]))
+    const banner = await filterListService.create(list('Banner', { type: ['image'] }, [apta.id]))
 
     expect(await names({ filterListIds: [profile.id, banner.id] })).toEqual(['harmless'])
   })
@@ -95,19 +95,19 @@ describe('mediaService with filter lists', () => {
   })
 
   it('returns nothing on a contradiction, for pages and ordered ids', async () => {
-    const images = await filterListService.create(list('Images', { type: 'image' }))
-    const filters: MediaFilters = { filterListIds: [images.id], type: 'gif' }
+    const images = await filterListService.create(list('Images', { type: ['image'] }))
+    const filters: MediaFilters = { filterListIds: [images.id], type: ['gif'] }
 
     expect(await mediaService.getMediaFiltered(filters)).toEqual({ items: [], total: 0 })
     expect(await mediaService.getMediaOrderedIds(filters)).toEqual([])
   })
 
   it('ignores a list that no longer exists', async () => {
-    expect(await names({ filterListIds: ['gone'], type: 'gif' })).toEqual(['harmless gif'])
+    expect(await names({ filterListIds: ['gone'], type: ['gif'] })).toEqual(['harmless gif'])
   })
 
   it('uses a list edit on the next query', async () => {
-    const saved = await filterListService.create(list('Saved', { type: 'gif' }))
+    const saved = await filterListService.create(list('Saved', { type: ['gif'] }))
     await filterListService.update(saved.id, list('Saved', { sfw: false }))
 
     expect(await names({ filterListIds: [saved.id] })).toEqual(['nsfw'])
@@ -116,7 +116,7 @@ describe('mediaService with filter lists', () => {
   it('keeps filtering by what remains when a saved tag was deleted', async () => {
     const other = await tagService.createTag({ name: 'other' })
     const saved = await filterListService.create(
-      list('Saved', { type: 'gif', tagGroups: [[other.id]] })
+      list('Saved', { type: ['gif'], tagGroups: [[other.id]] })
     )
     await tagService.deleteTag(other.id)
 

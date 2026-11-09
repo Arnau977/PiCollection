@@ -80,12 +80,12 @@ describe('beginListEdit', () => {
 
   it('opens the list alone when what was beside it can never match it', () => {
     const { filters } = beginListEdit(
-      list({ type: 'video' }),
-      { type: 'image', filterListIds: ['apta'] },
+      list({ type: ['video'] }),
+      { type: ['image'], filterListIds: ['apta'] },
       {}
     )
 
-    expect(filters.type).toBe('video')
+    expect(filters.type).toEqual(['video'])
   })
 })
 

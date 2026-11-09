@@ -10,11 +10,16 @@ import type { DB, FilterListIncludeTable, FilterListTable } from '../database/sc
 import { notifyEntitiesChanged } from '../events/entityEvents'
 import { groupEntityIds } from '@shared/query/groupEntry'
 import { hasActiveFilters } from '@shared/query/hasActiveFilters'
+import { normalizeTypes } from '@shared/query/mediaTypes'
 import { pruneMissingEntities, type KnownEntityIds } from '@shared/query/pruneMissingEntities'
 import type { FilterListInput, FilterListModel, SavedFilters } from '@shared/models'
 
 function parseFilters(row: FilterListTable): SavedFilters {
-  return JSON.parse(row.filters_json)
+  const filters = JSON.parse(row.filters_json) as SavedFilters
+  // Lists saved before the type filter took several types hold a single one.
+  const type = normalizeTypes(filters.type)
+  delete filters.type
+  return type ? { ...filters, type } : filters
 }
 
 function toIdSet(rows: { id: string }[]): Set<string> {
