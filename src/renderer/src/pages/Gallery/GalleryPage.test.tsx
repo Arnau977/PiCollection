@@ -523,9 +523,13 @@ describe('GalleryPage return-from-media scroll centering', () => {
     await waitFor(() => expect(scrollIntoViewMock).toHaveBeenCalled())
     expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: 'center', behavior: 'auto' })
     // Nothing to wait out here - there's no scroll animation, so the highlight
-    // shows right away instead of waiting on a scrollend that'll never fire.
-    expect(container.querySelector('[data-media-id="1"] .media-card')).toHaveClass(
-      'gallery-return-highlight'
+    // shows without waiting on a scrollend that'll never fire. Awaited all the
+    // same: scrollIntoView runs inside the effect, before the re-render that
+    // applies the highlight, so a bare expect right after it raced that render.
+    await waitFor(() =>
+      expect(container.querySelector('[data-media-id="1"] .media-card')).toHaveClass(
+        'gallery-return-highlight'
+      )
     )
   })
 
