@@ -176,7 +176,9 @@ export function SeriesManager(): JSX.Element {
         <div className="manage-item-info">
           <span className="manage-item-name">{series.name}</span>
           {series.aliases && series.aliases.length > 0 && (
-            <span className="manage-item-aliases">{series.aliases.join(' · ')}</span>
+            <span className="manage-item-aliases" title={series.aliases.join(' · ')}>
+              {series.aliases.join(' · ')}
+            </span>
           )}
         </div>
         <EntityCountButton kind="series" id={series.id} name={series.name} count={count} />

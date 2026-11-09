@@ -329,7 +329,9 @@ export function CharactersManager(): JSX.Element {
                       </span>
                     )}
                     {character.aliases && character.aliases.length > 0 && (
-                      <span className="manage-item-aliases">{character.aliases.join(' · ')}</span>
+                      <span className="manage-item-aliases" title={character.aliases.join(' · ')}>
+                        {character.aliases.join(' · ')}
+                      </span>
                     )}
                   </div>
                   <EntityCountButton
