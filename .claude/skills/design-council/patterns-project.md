@@ -205,6 +205,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   `.gallery-page` is `overflow-y: auto` and its scroll region keeps a
   `min-height`, so bars below the filters are never clipped out of reach.
   Where: `GalleryPage.css`.
+- **The smallest window is 800 x 600 of content** (`MIN_WIDTH`/`MIN_HEIGHT`
+  in `windowBounds.ts` are the outer size, frame included: 816 x 640 on
+  Windows 11). Below 900px, bars shed height before the content does: field
+  titles become visually hidden (still naming their control), and secondary
+  button labels collapse to icon + tooltip, so the gallery's filters take two
+  rows and its toolbar one. Wider than 900px nothing changes. Where:
+  `FilterBar.css`, `GalleryToolbar.css`.
 - **Finding within a media's tags filters the chips, it doesn't just
   highlight them** (Ctrl+F or a magnifier by the Tags title): a highlight
   among dozens of same-colored chips still has to be scanned. The bar says

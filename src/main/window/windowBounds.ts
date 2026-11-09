@@ -22,8 +22,11 @@ export const DEFAULT_WINDOW_STATE: SavedWindowState = {
   isMaximized: false
 }
 
-export const MIN_WIDTH = 640
-export const MIN_HEIGHT = 480
+// Outer window size (BrowserWindow minWidth/minHeight), frame included: on
+// Windows 11 the frame and title bar take 16 x 39 px, so this leaves about
+// 800 x 600 for the app itself - the smallest size its layouts are built for.
+export const MIN_WIDTH = 816
+export const MIN_HEIGHT = 640
 
 /**
  * A window counts as visible when a reasonable slice of its title bar area
