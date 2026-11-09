@@ -307,6 +307,12 @@
   );
 }
 
+/* Real layout for every card while returning to one, so its position isn't
+   computed against the estimated height of rows never painted yet. */
+.gallery-scroll-region.is-restoring-focus .media-card {
+  content-visibility: visible;
+}
+
 .gallery-bulk-bar {
   align-items: center;
   display: flex;

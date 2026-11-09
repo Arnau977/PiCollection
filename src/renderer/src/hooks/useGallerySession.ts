@@ -79,11 +79,32 @@ export function writeGalleryReturn(next: GalleryReturn | null): void {
   galleryReturn = next
 }
 
+export interface GalleryOpenedFrom {
+  mediaId: string
+  /** The card's top, in px from the top of the gallery's scroll region. */
+  offsetTop: number
+}
+
+/**
+ * Where on screen the card stood when it was opened, so coming back to that
+ * same media puts the view exactly where it was instead of centering it.
+ */
+let galleryOpenedFrom: GalleryOpenedFrom | null = null
+
+export function readGalleryOpenedFrom(): GalleryOpenedFrom | null {
+  return galleryOpenedFrom
+}
+
+export function writeGalleryOpenedFrom(next: GalleryOpenedFrom | null): void {
+  galleryOpenedFrom = next
+}
+
 /** Test helper: forgets the remembered filters and selection. */
 export function resetGallerySession(): void {
   session = null
   selection = new Set()
   galleryReturn = null
+  galleryOpenedFrom = null
 }
 
 interface UseGallerySessionResult extends GallerySession {

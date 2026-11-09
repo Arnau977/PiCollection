@@ -19,9 +19,11 @@ import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useGalleryDefaults } from '../../hooks/useGalleryDefaults'
 import {
+  readGalleryOpenedFrom,
   readGalleryReturn,
   readGallerySelection,
   useGallerySession,
+  writeGalleryOpenedFrom,
   writeGalleryReturn,
   writeGallerySelection
 } from '../../hooks/useGallerySession'
@@ -51,6 +53,9 @@ const SCROLL_SETTLE_FALLBACK_MS = 500
 // smoothly) when the card is already mostly on screen is motion for its
 // own sake.
 const VISIBLE_ENOUGH_RATIO = 0.6
+// On the scroll region while it brings a returned-to card into view; see
+// the focus effect below.
+const RESTORING_CLASS = 'is-restoring-focus'
 
 function isMostlyVisible(target: Element, scrollRegion: Element): boolean {
   const targetRect = target.getBoundingClientRect()
@@ -204,7 +209,19 @@ const GalleryPage: React.FC = () => {
     if (target) {
       hasScrolledToFocusRef.current = true
 
+      // Cards off screen skip layout (`content-visibility: auto`) and stand
+      // in at an estimated height, so every unpainted row above the target
+      // would skew where it's centered by the gap to its real height. Lay them
+      // all out for real until the scroll settles; after that the browser
+      // remembers their sizes (`contain-intrinsic-size: auto`).
+      const region = scrollRegionRef.current
+      region?.classList.add(RESTORING_CLASS)
+      const endRestoring = (): void => {
+        requestAnimationFrame(() => region?.classList.remove(RESTORING_CLASS))
+      }
+
       const showHighlight = (): void => {
+        endRestoring()
         setReturnHighlightId(focusMediaId)
         highlightTimeoutRef.current = setTimeout(
           () => setReturnHighlightId(undefined),
@@ -212,8 +229,16 @@ const GalleryPage: React.FC = () => {
         )
       }
 
-      const region = scrollRegionRef.current
-      if (region && isMostlyVisible(target, region)) {
+      // Back to the media you opened: the view goes exactly where it was, the
+      // card in the same spot on screen. Anything else (prev/next moved on,
+      // arriving from Home) has no such spot, so its card gets centered.
+      const openedFrom = readGalleryOpenedFrom()
+      writeGalleryOpenedFrom(null)
+      if (region && openedFrom?.mediaId === focusMediaId) {
+        const offset = target.getBoundingClientRect().top - region.getBoundingClientRect().top
+        region.scrollTop += offset - openedFrom.offsetTop
+        showHighlight()
+      } else if (region && isMostlyVisible(target, region)) {
         // Already on screen - scrolling at all would just be motion for no
         // reason, so skip straight to the highlight.
         showHighlight()
@@ -256,6 +281,17 @@ const GalleryPage: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the loaded media set changes
   }, [focusMediaId, focusIndex, loading, media, pageSize])
+
+  // Notes where the opened card sits on screen, for the return trip above.
+  function rememberOpenedCard(event: React.MouseEvent<HTMLDivElement>): void {
+    const tile = (event.target as Element).closest<HTMLElement>('[data-media-id]')
+    const mediaId = tile?.dataset.mediaId
+    if (!tile || !mediaId) return
+    writeGalleryOpenedFrom({
+      mediaId,
+      offsetTop: tile.getBoundingClientRect().top - event.currentTarget.getBoundingClientRect().top
+    })
+  }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   // A page past the last (a stale position, fewer results after a change
@@ -429,7 +465,11 @@ const GalleryPage: React.FC = () => {
             onPageChange={setPage}
           />
 
-          <div className="gallery-scroll-region" ref={scrollRegionRef}>
+          <div
+            className="gallery-scroll-region"
+            ref={scrollRegionRef}
+            onClickCapture={rememberOpenedCard}
+          >
             {error && (
               <p className="gallery-page-error" role="alert">
                 {error}

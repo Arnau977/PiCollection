@@ -13,6 +13,7 @@ import type {
 import GalleryPage from './GalleryPage'
 import {
   resetGallerySession,
+  writeGalleryOpenedFrom,
   writeGalleryReturn,
   writeGallerySession
 } from '../../hooks/useGallerySession'
@@ -434,9 +435,55 @@ describe('GalleryPage return-from-media scroll centering', () => {
     }
   }
 
+  it('puts the view back where it was when returning to the media you opened, without centering', async () => {
+    mockPrefersReducedMotion(false)
+    mockCardVisibility('1', false) // the card now lays out at 5000px from the region's top
+    const scrollIntoViewMock = vi.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+    // jsdom ignores scrollTop writes; keep the region's so the jump can be read.
+    const scrollTops = new WeakMap<Element, number>()
+    const scrollTopDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop')!
+    Object.defineProperty(Element.prototype, 'scrollTop', {
+      configurable: true,
+      get(this: Element) {
+        return scrollTops.get(this) ?? 0
+      },
+      set(this: Element, value: number) {
+        scrollTops.set(this, value)
+      }
+    })
+    // It was opened 100px below the region's top.
+    writeGalleryOpenedFrom({ mediaId: '1', offsetTop: 100 })
+    setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
+
+    try {
+      const { container } = render(
+        <MemoryRouter initialEntries={[{ pathname: '/gallery', state: { focusMediaId: '1' } }]}>
+          <GalleryPage />
+        </MemoryRouter>
+      )
+
+      await waitFor(() =>
+        expect(
+          container.querySelector('[data-media-id="1"] .gallery-return-highlight')
+        ).not.toBeNull()
+      )
+      expect(container.querySelector('.gallery-scroll-region')!.scrollTop).toBe(4900)
+      expect(scrollIntoViewMock).not.toHaveBeenCalled()
+    } finally {
+      Object.defineProperty(Element.prototype, 'scrollTop', scrollTopDescriptor)
+    }
+  })
+
   it('scrolls the media item you came back from into view, centered and animated', async () => {
     mockPrefersReducedMotion(false)
-    const scrollIntoViewMock = vi.fn()
+    // Off-screen cards must be laid out for real while centering, or their
+    // estimated height skews the target's position by a row per row above it.
+    let restoringWhileScrolling = false
+    const scrollIntoViewMock = vi.fn(function (this: HTMLElement) {
+      restoringWhileScrolling =
+        this.closest('.gallery-scroll-region')?.classList.contains('is-restoring-focus') ?? false
+    })
     window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
     setApi(vi.fn().mockResolvedValue({ success: true, data: { items: makeMedia(3), total: 3 } }))
 
@@ -450,6 +497,15 @@ describe('GalleryPage return-from-media scroll centering', () => {
     const target = container.querySelector('[data-media-id="1"]')
     expect(scrollIntoViewMock.mock.contexts[0]).toBe(target)
     expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' })
+    expect(restoringWhileScrolling).toBe(true)
+    // Dropped once the scroll settles (scrollend fallback + a frame).
+    await waitFor(
+      () =>
+        expect(container.querySelector('.gallery-scroll-region')).not.toHaveClass(
+          'is-restoring-focus'
+        ),
+      { timeout: 2000 }
+    )
   })
 
   it('jumps instantly instead of animating when the user prefers reduced motion', async () => {
