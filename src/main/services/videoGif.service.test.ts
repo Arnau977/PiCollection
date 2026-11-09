@@ -80,4 +80,26 @@ describe('videoGifService.createFromVideo', () => {
       })
     ])
   })
+
+  it('saves an animated WebP as "(WebP)", stored as animated media', async () => {
+    const videoPath = join(sourceDir, 'clip.mp4')
+    await fs.writeFile(videoPath, 'video bytes')
+    const video = await mediaService.addMedia({
+      name: 'clip',
+      type: 'video',
+      route: videoPath,
+      sfw: true,
+      isAiGenerated: false
+    })
+    // RIFF....WEBPVP8X with the animation flag, as muxAnimatedWebp writes it.
+    const webp = new Uint8Array(30)
+    webp.set(new TextEncoder().encode('RIFF'), 0)
+    webp.set(new TextEncoder().encode('WEBPVP8X'), 8)
+    webp[20] = 0x02
+
+    const created = await videoGifService.createFromVideo(video.id, webp, 'webp')
+
+    expect(created).toMatchObject({ type: 'gif', name: 'clip (WebP)' })
+    expect(created.route).toMatch(/clip \(WebP\)\.webp$/)
+  })
 })

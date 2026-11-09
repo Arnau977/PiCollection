@@ -16,7 +16,7 @@ import { MediaForm } from '../MediaForm/MediaForm'
 import { Toast } from '../../../components/Toast/Toast'
 import { VideoToGifDialog } from '../VideoToGif/VideoToGifDialog'
 import type { Section } from '../../../components/VideoPlayer/VideoPlayer'
-import { formatMegabytes } from '../VideoToGif/gifPresets'
+import { FORMAT_LABEL, formatMegabytes } from '../VideoToGif/gifPresets'
 import './MediaPage.css'
 
 const TEXT_INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
@@ -312,16 +312,17 @@ const MediaPage: React.FC = () => {
           video={media}
           initialClip={videoSection}
           onClose={() => setGifDialogOpen(false)}
-          onCreated={(gif, sizeBytes, settings) => {
+          onCreated={(gif, sizeBytes, settings, format) => {
             setGifDialogOpen(false)
             const size = formatMegabytes(sizeBytes)
             setGifToast(
               settings.maxBytes && sizeBytes > settings.maxBytes
                 ? t('videoGif.createdOverLimit', {
                     size,
-                    limit: formatMegabytes(settings.maxBytes)
+                    limit: formatMegabytes(settings.maxBytes),
+                    format: FORMAT_LABEL[format]
                   })
-                : t('videoGif.created', { size })
+                : t('videoGif.created', { size, format: FORMAT_LABEL[format] })
             )
             navigate(PATH.MEDIA.replace(':id', gif.id))
           }}

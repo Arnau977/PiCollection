@@ -22,7 +22,7 @@ Mute keeps your volume: unmuting (or `↑` while muted) brings back the
 level you had. Lowering the volume to 0 counts as mute too, and unmuting
 then returns to where you started lowering it. Loop, volume and mute
 carry over to the next video; speed goes back to
-normal. A video pauses itself when a dialog (such as Make GIF) opens over it. Keys: `Space` play/pause, `L` loop, `M` mute, `F` full screen, and
+normal. A video pauses itself when a dialog (such as Make animation) opens over it. Keys: `Space` play/pause, `L` loop, `M` mute, `F` full screen, and
 `↑` / `↓` change the volume (1% per press; hold the key to keep going), and
 `←` / `→` go back or forward 5 seconds once you've tabbed into its controls
 (elsewhere they still move to the previous or next item); in full screen the
@@ -94,8 +94,8 @@ page), **Copy**.
 
 ## Video to GIF
 
-**Make GIF** on a video's page turns a clip of it into a GIF, entirely on
-your computer:
+**Make animation** on a video's page turns a clip of it into an animated GIF
+or WebP, entirely on your computer:
 
 1. Pick the clip on the dialog's player: its two markers on the timeline are
    the start and end - drag them, or press `[` / `]` at the current time, and
@@ -103,20 +103,26 @@ your computer:
    section](#playing-videos) on the video's page, the clip starts as that
    section; otherwise as the first 5 seconds. There's no length limit (a loop
    can need 15 seconds and a few frames more); from 30 seconds on, a note
-   reminds you that long GIFs get large and slow to make. The app saves GIFs
-   up to 1 GB; past that it tells you so - use a shorter clip or a smaller
+   reminds you that long animations get large and slow to make. The app saves
+   them up to 1 GB; past that it tells you so - use a shorter clip or a smaller
    size.
-2. Choose a size: **Discord (≤ 10 MB)** or **X / Twitter (≤ 15 MB)** re-encode
+2. Choose a format: **GIF** opens anywhere but holds 256 colors per frame;
+   **WebP** keeps every color in a much smaller file (about a third of the
+   GIF in a test) and Discord plays it, but X doesn't take it, so the X
+   preset is only offered for GIF. The app remembers the format you used last.
+   The same clip with the same format and size makes the very same file, so
+   making it twice says you already have it.
+3. Choose a size: **Discord (≤ 10 MB)** or **X / Twitter (≤ 15 MB)** re-encode
    smaller until the file fits; **Gallery (best quality)** keeps the video's
    own size and every frame (up to 50 fps, the fastest a GIF plays) and
    smooths colors with dithering, so the file is large - use it to rebuild a
    GIF that a site saved as MP4 (the original GIF can't be recovered exactly,
    but this gets as close as possible); **Custom** lets you set the width and
    frame rate.
-3. **Create GIF**. Progress is shown, and **Stop** cancels it.
-4. The GIF is saved next to the video and added to your library with the
+4. **Create GIF** / **Create WebP**. Progress is shown, and **Stop** cancels it.
+5. It's saved next to the video as "<video> (GIF).gif" or "<video> (WebP).webp" and added to your library with the
    video's artist, tags, characters, series and rating. The two list each
-   other under **Similar media** ("Source video" / "GIF from it").
+   other under **Similar media** ("Source video" / "Animation from it").
 
 ---
 ← [Gallery and search](gallery-and-search.md) · [Guide index](README.md) · Next: [Settings and backups](settings-and-backups.md) →

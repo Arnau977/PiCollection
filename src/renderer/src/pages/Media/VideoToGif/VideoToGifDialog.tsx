@@ -7,7 +7,10 @@ import {
   GIF_PRESETS,
   LONG_CLIP_SECONDS,
   MAX_GIF_FPS,
+  FORMAT_LABEL,
+  PRESETS_FOR_FORMAT,
   formatMegabytes,
+  type AnimationFormat,
   type GifPresetId,
   type GifSettings
 } from './gifPresets'
@@ -21,19 +24,24 @@ interface VideoToGifDialogProps {
   /** The section marked in the detail page's player: the clip starts as it. */
   initialClip?: Section | null
   onClose: () => void
-  onCreated: (gif: MediaModel, sizeBytes: number, settings: GifSettings) => void
+  onCreated: (
+    gif: MediaModel,
+    sizeBytes: number,
+    settings: GifSettings,
+    format: AnimationFormat
+  ) => void
 }
 
-const PRESET_IDS: GifPresetId[] = ['discord', 'x', 'gallery', 'custom']
+const FORMATS: AnimationFormat[] = ['gif', 'webp']
 const WIDTH_OPTIONS = [320, 480, 540, 640, 720, 960]
 const FPS_OPTIONS = [10, 12, 15, 20, 24]
 
 const round1 = (seconds: number): number => Math.round(seconds * 10) / 10
 
 /**
- * Picks a clip of a video (no length limit) on its player's timeline and a
- * size preset, then encodes it to
- * a GIF saved next to the video with the same metadata. Every input is
+ * Picks a clip of a video (no length limit) on its player's timeline, a
+ * format (GIF or WebP) and a size preset, then encodes it to an animation
+ * saved next to the video with the same metadata. Every input is
  * locked while it runs; Cancel stops the encoding.
  */
 export function VideoToGifDialog({
@@ -51,9 +59,11 @@ export function VideoToGifDialog({
     describeError: (code) =>
       code === 'video-unreadable'
         ? t('videoGif.errorUnreadable')
-        : code === 'too-large'
-          ? t('videoGif.errorTooLarge', { max: formatMegabytes(MAX_GIF_BYTES) })
-          : t('videoGif.errorEncoding')
+        : code === 'duplicate'
+          ? t('videoGif.errorDuplicate')
+          : code === 'too-large'
+            ? t('videoGif.errorTooLarge', { max: formatMegabytes(MAX_GIF_BYTES) })
+            : t('videoGif.errorEncoding')
   })
   const { clip, settings, state, busy } = gif
 
@@ -75,7 +85,9 @@ export function VideoToGifDialog({
   )
   const summary =
     settings.width === 'source' || settings.fps === 'source'
-      ? t('videoGif.summarySource', { maxFps: MAX_GIF_FPS })
+      ? t(gif.format === 'webp' ? 'videoGif.summarySourceWebp' : 'videoGif.summarySource', {
+          maxFps: MAX_GIF_FPS
+        })
       : t('videoGif.summary', {
           width: settings.width,
           fps: settings.fps,
@@ -136,9 +148,31 @@ export function VideoToGifDialog({
         </div>
 
         <fieldset className="video-gif-presets" disabled={busy}>
+          <legend>{t('videoGif.formatLegend')}</legend>
+          <div className="video-gif-preset-options">
+            {FORMATS.map((format) => (
+              <label
+                key={format}
+                className={gif.format === format ? 'video-gif-preset active' : 'video-gif-preset'}
+              >
+                <input
+                  type="radio"
+                  name="video-gif-format"
+                  value={format}
+                  checked={gif.format === format}
+                  onChange={() => gif.setFormat(format)}
+                />
+                {FORMAT_LABEL[format]}
+              </label>
+            ))}
+          </div>
+          <p className="video-gif-summary">{t(`videoGif.formatHint.${gif.format}`)}</p>
+        </fieldset>
+
+        <fieldset className="video-gif-presets" disabled={busy}>
           <legend>{t('videoGif.presetLegend')}</legend>
           <div className="video-gif-preset-options">
-            {PRESET_IDS.map((id) => (
+            {PRESETS_FOR_FORMAT[gif.format].map((id) => (
               <label
                 key={id}
                 className={gif.preset === id ? 'video-gif-preset active' : 'video-gif-preset'}
@@ -230,7 +264,7 @@ export function VideoToGifDialog({
             onClick={() => void gif.start()}
             disabled={busy || gif.clipError !== null || gif.duration === null}
           >
-            {t('videoGif.create')}
+            {t('videoGif.create', { format: FORMAT_LABEL[gif.format] })}
           </button>
         </div>
       </div>

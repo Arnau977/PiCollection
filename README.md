@@ -59,7 +59,7 @@ The [user guide](docs/guide/README.md) explains each of these step by step.
   you can stack and nest, include/exclude filter chips, hierarchy-aware characters and series, NSFW blur, batch
   editing. [Gallery and search](docs/guide/gallery-and-search.md)
 - **Viewing media** - full-size viewer with zoom, copy image (animated GIFs
-  too), Video to GIF. [Viewing media](docs/guide/viewing-media.md)
+  too), Video to GIF or animated WebP. [Viewing media](docs/guide/viewing-media.md)
 - **Backups** - manual export/restore, automatic scheduled backups, and
   relinking files you moved. [Settings and backups](docs/guide/settings-and-backups.md)
 - **Keyboard shortcuts** for the common actions.

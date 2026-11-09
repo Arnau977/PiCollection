@@ -100,9 +100,10 @@ export const api = {
       ipcRenderer.invoke(IPC.media.detectAiMetadata, { route }),
     createGifFromVideo: (
       sourceMediaId: string,
-      bytes: Uint8Array
+      bytes: Uint8Array,
+      format: 'gif' | 'webp' = 'gif'
     ): Promise<IpcResult<MediaModel>> =>
-      ipcRenderer.invoke(IPC.media.createGifFromVideo, { sourceMediaId, bytes }),
+      ipcRenderer.invoke(IPC.media.createGifFromVideo, { sourceMediaId, bytes, format }),
     findSimilar: (
       mediaId: string,
       options: { includePending?: boolean } = {}

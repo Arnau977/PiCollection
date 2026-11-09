@@ -1,5 +1,14 @@
-import { MAX_GIF_FPS, MIN_WIDTH, SHRINK_FACTOR, frameDelays, type GifSettings } from './gifPresets'
+import {
+  MAX_GIF_FPS,
+  MIN_WIDTH,
+  SHRINK_FACTOR,
+  WEBP_QUALITY,
+  frameDelays,
+  type AnimationFormat,
+  type GifSettings
+} from './gifPresets'
 import type { GifWorkerRequest, GifWorkerResponse } from './gifEncoder.worker'
+import { muxAnimatedWebp, type WebpFrame } from './muxAnimatedWebp'
 
 export interface Clip {
   start: number
@@ -137,15 +146,87 @@ async function detectFrameRate(
   return Math.min(MAX_GIF_FPS, Math.round(fps * 100) / 100)
 }
 
-async function encodeOnce(
-  video: HTMLVideoElement,
-  clip: Clip,
-  width: number,
-  fps: number,
-  dither: boolean,
-  onFrame: (done: number, total: number) => void,
+interface EncodeArgs {
+  video: HTMLVideoElement
+  clip: Clip
+  width: number
+  fps: number
+  format: AnimationFormat
+  settings: GifSettings
+  onFrame: (done: number, total: number) => void
   signal: AbortSignal
-): Promise<GifResult> {
+}
+
+/** The middle of each frame's slot, so a seek never lands on a frame boundary
+ * and shows the previous frame (which would duplicate it at the native rate). */
+function frameTime(clip: Clip, fps: number, index: number): number {
+  return clip.start + (index + 0.5) / fps
+}
+
+function toWebp(canvas: HTMLCanvasElement, quality: number): Promise<Uint8Array> {
+  return new Promise((resolve, reject) =>
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) reject(new Error('encoder-failed'))
+        else blob.arrayBuffer().then((buffer) => resolve(new Uint8Array(buffer)), reject)
+      },
+      'image/webp',
+      quality
+    )
+  )
+}
+
+/**
+ * Chromium encodes each frame as a still WebP (natively, off the page's
+ * thread), and the stills are muxed into one animation: only encoded frames
+ * are kept in memory, never the raw pixels of the whole clip.
+ */
+async function encodeWebp({
+  video,
+  clip,
+  width,
+  fps,
+  settings,
+  onFrame,
+  signal
+}: EncodeArgs): Promise<GifResult> {
+  const height = Math.max(1, Math.round((width * video.videoHeight) / video.videoWidth))
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('encoder-failed')
+
+  const total = Math.max(1, Math.round((clip.end - clip.start) * fps))
+  const delays = frameDelays(total, fps)
+  const frames: WebpFrame[] = []
+  for (let i = 0; i < total; i++) {
+    await seek(video, frameTime(clip, fps, i), signal)
+    ctx.drawImage(video, 0, 0, width, height)
+    frames.push({
+      webp: await toWebp(canvas, settings.webpQuality ?? WEBP_QUALITY),
+      duration: delays[i]
+    })
+    if (signal.aborted) throw abortError()
+    onFrame(i + 1, total)
+  }
+  return { bytes: muxAnimatedWebp(frames, width, height), width, height }
+}
+
+function encodeOnce(args: EncodeArgs): Promise<GifResult> {
+  return args.format === 'webp' ? encodeWebp(args) : encodeGif(args)
+}
+
+async function encodeGif({
+  video,
+  clip,
+  width,
+  fps,
+  settings,
+  onFrame,
+  signal
+}: EncodeArgs): Promise<GifResult> {
+  const dither = settings.dither ?? false
   const height = Math.max(1, Math.round((width * video.videoHeight) / video.videoWidth))
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -163,9 +244,7 @@ async function encodeOnce(
 
   try {
     for (let i = 0; i < total; i++) {
-      // The middle of each frame's slot, so a seek never lands on a frame boundary
-      // and shows the previous frame (which would duplicate it at the native rate).
-      await seek(video, clip.start + (i + 0.5) / fps, signal)
+      await seek(video, frameTime(clip, fps, i), signal)
       ctx.drawImage(video, 0, 0, width, height)
       const { data } = ctx.getImageData(0, 0, width, height)
       const encoded = nextMessage(worker, signal)
@@ -184,16 +263,17 @@ async function encodeOnce(
 }
 
 /**
- * Turns a clip of a video into an animated GIF, entirely in the renderer:
- * frames are grabbed by seeking a <video> and drawing it to a canvas, and a
- * worker encodes them. With a size limit, a result that's too big is
- * re-encoded narrower until it fits (or can't shrink any further). Never
- * upscales past the video's own width.
+ * Turns a clip of a video into an animated GIF or WebP, entirely in the
+ * renderer: frames are grabbed by seeking a <video> and drawing it to a
+ * canvas, then encoded (GIF in a worker, WebP by the canvas itself). With a
+ * size limit, a result that's too big is re-encoded narrower until it fits
+ * (or can't shrink any further). Never upscales past the video's own width.
  */
 export async function convertVideoToGif(
   src: string,
   clip: Clip,
   settings: GifSettings,
+  format: AnimationFormat,
   onProgress: (progress: GifProgress) => void,
   signal: AbortSignal
 ): Promise<GifResult> {
@@ -209,15 +289,16 @@ export async function convertVideoToGif(
       const report = (done: number, total: number): void =>
         onProgress({ done, total, width, attempt, previousBytes })
       report(0, 1)
-      const result = await encodeOnce(
+      const result = await encodeOnce({
         video,
         clip,
         width,
         fps,
-        settings.dither ?? false,
-        report,
+        format,
+        settings,
+        onFrame: report,
         signal
-      )
+      })
       const tooBig = settings.maxBytes !== undefined && result.bytes.length > settings.maxBytes
       const nextWidth = Math.round(width * SHRINK_FACTOR)
       if (!tooBig || nextWidth < MIN_WIDTH) return result

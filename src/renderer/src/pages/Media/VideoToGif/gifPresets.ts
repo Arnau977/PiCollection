@@ -1,5 +1,23 @@
 export type GifPresetId = 'discord' | 'x' | 'gallery' | 'custom'
 
+/**
+ * GIF opens anywhere but holds 256 colors per frame; an animated WebP keeps
+ * every color in a much smaller file. Discord plays it; X takes GIFs only.
+ */
+export type AnimationFormat = 'gif' | 'webp'
+
+/** How each format is named in labels ("Create WebP"); not translated. */
+export const FORMAT_LABEL: Record<AnimationFormat, string> = { gif: 'GIF', webp: 'WebP' }
+
+/** The size presets offered for each format: X only takes GIFs. */
+export const PRESETS_FOR_FORMAT: Record<AnimationFormat, GifPresetId[]> = {
+  gif: ['discord', 'x', 'gallery', 'custom'],
+  webp: ['discord', 'gallery', 'custom']
+}
+
+/** canvas.toBlob quality for a WebP frame, unless the preset sets its own. */
+export const WEBP_QUALITY = 0.85
+
 export interface GifSettings {
   /** Output width in px, or the video's own width; height follows its aspect ratio. */
   width: number | 'source'
@@ -13,6 +31,8 @@ export interface GifSettings {
    * doesn't matter.
    */
   dither?: boolean
+  /** WebP frame quality (0-1); WEBP_QUALITY when unset. GIFs ignore it. */
+  webpQuality?: number
 }
 
 const MB = 1024 * 1024
@@ -25,7 +45,7 @@ const MB = 1024 * 1024
 export const GIF_PRESETS: Record<Exclude<GifPresetId, 'custom'>, GifSettings> = {
   discord: { width: 480, fps: 15, maxBytes: 10 * MB },
   x: { width: 540, fps: 15, maxBytes: 15 * MB },
-  gallery: { width: 'source', fps: 'source', dither: true }
+  gallery: { width: 'source', fps: 'source', dither: true, webpQuality: 0.95 }
 }
 
 /** Starting values of the custom size, before the user picks their own. */
