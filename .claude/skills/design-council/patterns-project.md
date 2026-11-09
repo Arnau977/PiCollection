@@ -215,6 +215,14 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   `<span className="btn-label-collapse">` plus a `title` (back/cancel,
   Create animation, Delete on the media page and form); Edit/Save keep their
   words. Where: `main.css`.
+- **A side form above a list folds below 900px.** Metadata's add/edit
+  panel is a side column when wide; stacked over the list at 800 x 600 it
+  left the list one row, so there its heading becomes a disclosure button
+  (`aria-expanded`, chevron) that starts folded and opens when an item is
+  edited, the same idea as the media form's suggestions rail. Where:
+  `ManageFormPanel.tsx`. Control rows next to a list wrap
+  (`.manage-sort-row`), with a small basis on the selects so they shrink
+  before wrapping.
 - **Finding within a media's tags filters the chips, it doesn't just
   highlight them** (Ctrl+F or a magnifier by the Tags title): a highlight
   among dozens of same-colored chips still has to be scanned. The bar says

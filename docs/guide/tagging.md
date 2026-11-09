@@ -31,6 +31,10 @@ media count opens the gallery filtered to it; going back returns to the same
 tab with its search and series filter. Artists, tags and series keep one name each, whatever its upper or lower case; characters can share a name. The ⓘ next to a tag (here and on
 suggested tags) shows what it means, from Danbooru's tag wiki.
 
+In a narrow window the **Add new** form sits above the list, folded to its
+title so the list keeps the room: click the title to open it. Editing an
+entry opens it on its own.
+
 ## Automatic tags
 
 **Settings > Data > Automatic tags** gives a tag of yours to every picture

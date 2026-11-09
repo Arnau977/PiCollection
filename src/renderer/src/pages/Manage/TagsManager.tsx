@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ManageFormPanel } from './ManageFormPanel'
 import { Pencil, Tags as TagsIcon, Trash2 } from 'lucide-react'
 import type { TagModel } from '@shared/models'
 import { useTags } from '../../hooks/useEntityLists'
@@ -108,8 +109,10 @@ export function TagsManager(): JSX.Element {
 
   return (
     <div className="manage-panel manage-panel-split">
-      <div className="manage-form-panel">
-        <h2>{editing ? t('manage.editingItem', { name: editing.name }) : t('manage.addNew')}</h2>
+      <ManageFormPanel
+        title={editing ? t('manage.editingItem', { name: editing.name }) : t('manage.addNew')}
+        editing={Boolean(editing)}
+      >
         <form className="manage-add-form-stacked" onSubmit={handleSubmit}>
           <div className="field">
             <label htmlFor="tag-name">{t('manage.name')}</label>
@@ -144,7 +147,7 @@ export function TagsManager(): JSX.Element {
             {error}
           </p>
         )}
-      </div>
+      </ManageFormPanel>
 
       <div className="manage-list-panel">
         <input

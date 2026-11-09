@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ManageFormPanel } from './ManageFormPanel'
 import { Palette, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useArtists } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
@@ -124,12 +125,12 @@ export function ArtistsManager(): JSX.Element {
 
   return (
     <div className="manage-panel manage-panel-split">
-      <div className="manage-form-panel">
-        <h2>
-          {editingArtist
-            ? t('manage.editingItem', { name: editingArtist.name })
-            : t('manage.addNew')}
-        </h2>
+      <ManageFormPanel
+        title={
+          editingArtist ? t('manage.editingItem', { name: editingArtist.name }) : t('manage.addNew')
+        }
+        editing={Boolean(editingArtist)}
+      >
         <form className="manage-add-form-stacked" onSubmit={handleSubmit}>
           <input
             type="text"
@@ -200,7 +201,7 @@ export function ArtistsManager(): JSX.Element {
             {error}
           </p>
         )}
-      </div>
+      </ManageFormPanel>
 
       <div className="manage-list-panel">
         <input
