@@ -1,3 +1,9 @@
+/* base.css resets every element to normal weight: take the button's. */
+.stable-label,
+.stable-label > * {
+  font-weight: inherit;
+}
+
 .stable-label {
   display: inline-grid;
 }

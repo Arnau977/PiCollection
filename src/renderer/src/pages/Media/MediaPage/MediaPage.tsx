@@ -191,6 +191,8 @@ const MediaPage: React.FC = () => {
     keys: formatShortcut(SHORTCUTS.edit)
   })
 
+  const backLabel = returnTo ? t(returnTo.labelKey) : t('gallery.backToGallery')
+
   if (loading) {
     return (
       <div className="page">
@@ -221,9 +223,9 @@ const MediaPage: React.FC = () => {
     <div className="page media-page">
       {!isEditing && (
         <div className="media-page-actions">
-          <button type="button" className="btn media-page-back" onClick={goBack}>
+          <button type="button" className="btn media-page-back" onClick={goBack} title={backLabel}>
             <ArrowLeft size={16} />
-            {returnTo ? t(returnTo.labelKey) : t('gallery.backToGallery')}
+            <span className="btn-label-collapse">{backLabel}</span>
           </button>
 
           <div className="action-bar-spacer" />
@@ -231,9 +233,14 @@ const MediaPage: React.FC = () => {
           <MediaFileActions route={media.route} type={media.type} />
 
           {media.type === 'video' && (
-            <button type="button" className="btn" onClick={() => setGifDialogOpen(true)}>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setGifDialogOpen(true)}
+              title={t('videoGif.open')}
+            >
               <Clapperboard size={16} />
-              {t('videoGif.open')}
+              <span className="btn-label-collapse">{t('videoGif.open')}</span>
             </button>
           )}
 
@@ -264,9 +271,12 @@ const MediaPage: React.FC = () => {
             className="btn btn-danger"
             disabled={deleting}
             onClick={() => handleDelete(media.id)}
+            title={t('media.delete')}
           >
             <Trash2 size={16} />
-            {deleting ? t('media.deleting') : t('media.delete')}
+            <span className="btn-label-collapse">
+              {deleting ? t('media.deleting') : t('media.delete')}
+            </span>
           </button>
         </div>
       )}

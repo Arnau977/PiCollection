@@ -380,6 +380,31 @@ input[type='checkbox'] {
   flex: 1 1 auto;
 }
 
+/* A secondary button's label that gives way to its icon in narrow windows,
+   so an action bar stays on one row down to the 800px minimum. It still
+   names the button for screen readers; give the button a title for the
+   tooltip. Primary actions keep their words. */
+.btn-label-collapse {
+  /* base.css resets every element to normal weight; keep the button's. */
+  font-weight: inherit;
+}
+
+@media (max-width: 900px) {
+  .btn:has(> .btn-label-collapse) {
+    position: relative;
+    padding-inline: 0.7rem;
+  }
+
+  .btn-label-collapse {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
