@@ -147,6 +147,53 @@
   font-size: 1rem;
 }
 
+.manage-form-body:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Below 900px (ManageFormPanel): the heading is the button that folds the
+   form, so the list keeps the height at the minimum window. */
+.manage-form-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.manage-form-toggle svg {
+  flex-shrink: 0;
+  transition: transform 150ms ease;
+}
+
+.manage-form-toggle[aria-expanded='false'] svg {
+  transform: rotate(-90deg);
+}
+
+.manage-form-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.manage-form-panel.is-collapsed {
+  padding-block: var(--space-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manage-form-toggle svg {
+    transition: none;
+  }
+}
+
 .manage-list-panel {
   display: flex;
   flex-direction: column;
@@ -193,10 +240,19 @@
   width: 100%;
 }
 
+/* Wraps: the Characters row (sort, order, tree/flat, series filter) is wider
+   than the list column of a ~1100px window. */
 .manage-sort-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   gap: var(--space-2);
+}
+
+/* A small basis, so the selects shrink before anything wraps. */
+.manage-sort-row > .filter-field {
+  flex: 1 1 7rem;
+  min-width: 7rem;
 }
 
 .manage-view-toggle {

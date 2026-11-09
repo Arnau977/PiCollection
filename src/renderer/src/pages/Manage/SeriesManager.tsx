@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ManageFormPanel } from './ManageFormPanel'
 import { BookOpen, Pencil, Trash2 } from 'lucide-react'
 import { useSeries } from '../../hooks/useEntityLists'
 import { useConfirm } from '../../components/ConfirmDialog/ConfirmDialogContext'
@@ -204,8 +205,10 @@ export function SeriesManager(): JSX.Element {
 
   return (
     <div className="manage-panel manage-panel-split">
-      <div className="manage-form-panel">
-        <h2>{editing ? t('manage.editingItem', { name: editing.name }) : t('manage.addNew')}</h2>
+      <ManageFormPanel
+        title={editing ? t('manage.editingItem', { name: editing.name }) : t('manage.addNew')}
+        editing={Boolean(editing)}
+      >
         <form className="manage-add-form-stacked" onSubmit={handleSubmit}>
           <div className="field">
             <label htmlFor="series-name">{t('manage.name')}</label>
@@ -253,7 +256,7 @@ export function SeriesManager(): JSX.Element {
             {error}
           </p>
         )}
-      </div>
+      </ManageFormPanel>
 
       <div className="manage-list-panel">
         <input
