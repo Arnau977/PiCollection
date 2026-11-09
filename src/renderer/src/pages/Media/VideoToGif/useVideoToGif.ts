@@ -4,8 +4,10 @@ import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { MAX_GIF_BYTES } from '@shared/ipc/contracts'
 import {
   DEFAULT_CUSTOM_SETTINGS,
-  GIF_PRESETS,
   DEFAULT_CLIP_SECONDS,
+  PRESETS_FOR_FORMAT,
+  presetSettings,
+  type AnimationFormat,
   type GifPresetId,
   type GifSettings
 } from './gifPresets'
@@ -17,7 +19,21 @@ export type ConvertState =
   | { kind: 'saving' }
   | { kind: 'error'; message: string }
 
+const FORMAT_STORAGE_KEY = 'picollection.animationFormat'
+
+/** The format picked last time; GIF the first time, since it opens anywhere. */
+function readStoredFormat(): AnimationFormat {
+  try {
+    return window.localStorage.getItem(FORMAT_STORAGE_KEY) === 'webp' ? 'webp' : 'gif'
+  } catch {
+    return 'gif'
+  }
+}
+
 export interface VideoToGif {
+  format: AnimationFormat
+  /** Also moves off a size preset the new format doesn't offer. */
+  setFormat: (format: AnimationFormat) => void
   clip: Clip
   setClip: (clip: Clip) => void
   duration: number | null
@@ -40,7 +56,12 @@ interface UseVideoToGifArgs {
   /** The section marked in the player, if any: the clip starts as that. */
   initialClip?: Clip | null
   /** `sizeBytes` may still exceed the preset's limit if the GIF couldn't shrink enough. */
-  onCreated: (gif: MediaModel, sizeBytes: number, settings: GifSettings) => void
+  onCreated: (
+    gif: MediaModel,
+    sizeBytes: number,
+    settings: GifSettings,
+    format: AnimationFormat
+  ) => void
   /** Maps an internal error code to a message for the user. */
   describeError: (code: string) => string
 }
@@ -54,6 +75,7 @@ export function useVideoToGif({
   const [clip, setClip] = useState<Clip>(initialClip ?? { start: 0, end: DEFAULT_CLIP_SECONDS })
   const [duration, setDurationState] = useState<number | null>(null)
   const [preset, setPreset] = useState<GifPresetId>('discord')
+  const [format, setFormatState] = useState<AnimationFormat>(readStoredFormat)
   const [custom, setCustom] = useState<GifSettings>(DEFAULT_CUSTOM_SETTINGS)
   const [state, setState] = useState<ConvertState>({ kind: 'idle' })
   const abortRef = useRef<AbortController | null>(null)
@@ -71,7 +93,17 @@ export function useVideoToGif({
     }))
   }, [])
 
-  const settings = preset === 'custom' ? custom : GIF_PRESETS[preset]
+  function setFormat(next: AnimationFormat): void {
+    setFormatState(next)
+    if (!PRESETS_FOR_FORMAT[next].includes(preset)) setPreset('discord')
+    try {
+      window.localStorage.setItem(FORMAT_STORAGE_KEY, next)
+    } catch {
+      // Private mode or blocked storage: the choice just isn't remembered.
+    }
+  }
+
+  const settings = preset === 'custom' ? custom : presetSettings(format, preset)
   // No length cap: long clips only get a note in the dialog.
   const clipError = clip.end <= clip.start ? 'order' : null
   const busy = state.kind === 'encoding' || state.kind === 'saving'
@@ -89,6 +121,7 @@ export function useVideoToGif({
         toMediaUrl(video.route),
         clip,
         settings,
+        format,
         (progress) => setState({ kind: 'encoding', progress }),
         controller.signal
       )
@@ -99,13 +132,20 @@ export function useVideoToGif({
         return
       }
       setState({ kind: 'saving' })
-      const result = await window.api.media.createGifFromVideo(video.id, gif.bytes)
+      const result = await window.api.media.createGifFromVideo(video.id, gif.bytes, format)
       if (!result.success) {
-        setState({ kind: 'error', message: result.error.message })
+        // The same clip with the same settings gives the very same file.
+        setState({
+          kind: 'error',
+          message:
+            result.error.code === 'DUPLICATE_MEDIA'
+              ? describeError('duplicate')
+              : result.error.message
+        })
         return
       }
       setState({ kind: 'idle' })
-      onCreated(result.data, gif.bytes.length, settings)
+      onCreated(result.data, gif.bytes.length, settings, format)
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         setState({ kind: 'idle' })
@@ -122,6 +162,8 @@ export function useVideoToGif({
   }
 
   return {
+    format,
+    setFormat,
     clip,
     setClip,
     duration,

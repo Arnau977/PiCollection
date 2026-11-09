@@ -104,8 +104,11 @@ export function registerMediaHandlers(): void {
   )
   ipcMain.handle(
     IPC.media.createGifFromVideo,
-    ipcHandler(IPC.media.createGifFromVideo, CreateGifFromVideoSchema, ({ sourceMediaId, bytes }) =>
-      videoGifService.createFromVideo(sourceMediaId, bytes)
+    ipcHandler(
+      IPC.media.createGifFromVideo,
+      CreateGifFromVideoSchema,
+      ({ sourceMediaId, bytes, format }) =>
+        videoGifService.createFromVideo(sourceMediaId, bytes, format)
     )
   )
   ipcMain.handle(

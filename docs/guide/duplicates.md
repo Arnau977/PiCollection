@@ -29,7 +29,7 @@ Similar items are listed:
   import show up too;
 - on a media page, under **Similar media**.
 
-A GIF made from a video with [Video to GIF](viewing-media.md#video-to-gif)
+A GIF or WebP made from a video with [Video to GIF](viewing-media.md#video-to-gif)
 and its video always list each other there too.
 
 ## Comparing side by side

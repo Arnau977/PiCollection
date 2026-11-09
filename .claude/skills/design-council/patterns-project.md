@@ -357,6 +357,12 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   share type `gif` internally): ANIM badge, Animated type filter and Disk
   space split. "GIF" stays only where the GIF format itself is meant (Make
   GIF, "GIF from it"). Where: locales `typeGif`, `media.animatedBadge`.
+- **An output format is chosen with the same pill radios as the sizes,
+  with a visible line saying what it trades** (Make animation: GIF / WebP,
+  "opens anywhere, 256 colors" vs "every color, smaller; X doesn't take
+  it"), and a preset the format can't serve is hidden rather than disabled
+  (X with WebP). The last format is remembered. Where:
+  `VideoToGifDialog.tsx`, `gifPresets.ts` (`PRESETS_FOR_FORMAT`).
 - **A filter over a few values that can take several is a row of checkboxes**
   (Type: Image / Animated / Video), Explorer column-filter rule: none
   checked shows everything, checking narrows, all three stay checked as

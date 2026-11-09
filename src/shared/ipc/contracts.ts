@@ -129,10 +129,11 @@ export const RouteSchema = z.object({ route: z.string().min(1) })
  */
 export const MAX_GIF_BYTES = 1024 * 1024 * 1024
 
-/** A GIF the renderer encoded from a video. */
+/** An animated GIF or WebP the renderer encoded from a video. */
 export const CreateGifFromVideoSchema = z.object({
   sourceMediaId: z.string().min(1),
-  bytes: z.instanceof(Uint8Array).refine((bytes) => bytes.length <= MAX_GIF_BYTES)
+  bytes: z.instanceof(Uint8Array).refine((bytes) => bytes.length <= MAX_GIF_BYTES),
+  format: z.enum(['gif', 'webp']).default('gif')
 })
 
 export const DanbooruCredentialsInputSchema = z.object({

@@ -38,7 +38,9 @@ describe('VideoToGifDialog', () => {
 
     expect(screen.getByRole('button', { name: 'Create GIF' })).toBeEnabled()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(screen.getByText('Long GIFs can get very large and slow to make.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Long animations can get very large and slow to make.')
+    ).toBeInTheDocument()
   })
 
   it('opens with the section marked in the player, and picks the clip on its timeline', () => {
@@ -102,6 +104,69 @@ describe('useVideoToGif saving', () => {
 
     expect(createGifFromVideo).not.toHaveBeenCalled()
     expect(result.current.state).toEqual({ kind: 'error', message: 'too-large' })
+  })
+})
+
+describe('VideoToGifDialog format', () => {
+  it('WebP drops the X preset, saves as WebP and is remembered next time', async () => {
+    const createGifFromVideo = vi.fn().mockResolvedValue({ success: true, data: video })
+    Object.defineProperty(window, 'api', {
+      value: { media: { createGifFromVideo } },
+      writable: true,
+      configurable: true
+    })
+    const convert = vi.spyOn(videoToGif, 'convertVideoToGif').mockResolvedValue({
+      bytes: new Uint8Array(4),
+      width: 480,
+      height: 270
+    })
+    const { unmount } = render(
+      <VideoToGifDialog video={video} onClose={vi.fn()} onCreated={vi.fn()} />
+    )
+    loadDuration(40)
+    act(() => screen.getByRole('radio', { name: /X \/ Twitter/ }).click())
+
+    act(() => screen.getByRole('radio', { name: 'WebP' }).click())
+
+    expect(screen.queryByRole('radio', { name: /X \/ Twitter/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Discord/ })).toBeChecked()
+    await act(async () => screen.getByRole('button', { name: 'Create WebP' }).click())
+    expect(convert.mock.lastCall?.[3]).toBe('webp')
+    expect(createGifFromVideo).toHaveBeenCalledWith('v1', expect.any(Uint8Array), 'webp')
+
+    unmount()
+    render(<VideoToGifDialog video={video} onClose={vi.fn()} onCreated={vi.fn()} />)
+    expect(screen.getByRole('radio', { name: 'WebP' })).toBeChecked()
+  })
+})
+
+describe('VideoToGifDialog custom size limit', () => {
+  it('sends the limit picked under Custom and names it in the summary', async () => {
+    Object.defineProperty(window, 'api', {
+      value: {
+        media: { createGifFromVideo: vi.fn().mockResolvedValue({ success: true, data: video }) }
+      },
+      writable: true,
+      configurable: true
+    })
+    const convert = vi.spyOn(videoToGif, 'convertVideoToGif').mockResolvedValue({
+      bytes: new Uint8Array(4),
+      width: 480,
+      height: 270
+    })
+    render(<VideoToGifDialog video={video} onClose={vi.fn()} onCreated={vi.fn()} />)
+    loadDuration(40)
+    act(() => screen.getByRole('radio', { name: 'Custom' }).click())
+
+    act(() => {
+      const select = screen.getByRole('combobox', { name: 'Size limit' }) as HTMLSelectElement
+      select.value = '5'
+      select.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+
+    expect(screen.getByText(/up to 5.0 MB/)).toBeInTheDocument()
+    await act(async () => screen.getByRole('button', { name: /^Create/ }).click())
+    expect(convert.mock.lastCall?.[2].maxBytes).toBe(5 * 1024 * 1024)
   })
 })
 
