@@ -357,12 +357,13 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   share type `gif` internally): ANIM badge, Animated type filter and Disk
   space split. "GIF" stays only where the GIF format itself is meant (Make
   GIF, "GIF from it"). Where: locales `typeGif`, `media.animatedBadge`.
-- **A filter over a few values that can take several stays a native select
-  with the combinations as options** (Type: each type, then each pair as
-  "Image or animated"; all three is All). Same width and keyboard as the
-  other selects in the top row, no custom popover. Stored as a list
+- **A filter over a few values that can take several is a row of checkboxes**
+  (Type: Image / Animated / Video), Explorer column-filter rule: none
+  checked shows everything, checking narrows, all three stay checked as
+  left. A native select listing the pairs ("Image or animated") was tried
+  first and the user found it unintuitive (2026-11-09). Stored as a list
   (`normalizeTypes`), so older single-value saves still load. Where:
-  `TypeFilterOptions.tsx`, `src/shared/query/mediaTypes.ts`.
+  `TypeChecks.tsx`, `src/shared/query/mediaTypes.ts`.
 - **Batch-import tiles show why a file can't be picked**: green "Already
   added" (`is-cataloged`), neutral dashed "Discarded" (`is-discarded`,
   text on surface-2 13.17:1; the grey filter is on the image only so the

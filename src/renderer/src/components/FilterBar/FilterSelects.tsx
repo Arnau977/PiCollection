@@ -1,7 +1,7 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { MediaFilters } from '@shared/models'
-import { typeFilterValue, typesFromFilterValue } from '@shared/query/mediaTypes'
-import { TypeFilterOptions } from './TypeFilterOptions'
+import { TypeChecks } from './TypeChecks'
 
 interface FilterSelectProps {
   filters: MediaFilters
@@ -10,18 +10,18 @@ interface FilterSelectProps {
 
 export function TypeFilter({ filters, onFiltersChange }: FilterSelectProps): JSX.Element {
   const { t } = useTranslation()
+  const labelId = useId()
   return (
-    <label className="filter-field">
-      <span className="filter-label">{t('filters.type')}</span>
-      <select
-        value={typeFilterValue(filters.type)}
-        onChange={(e) =>
-          onFiltersChange({ ...filters, type: typesFromFilterValue(e.target.value) })
-        }
-      >
-        <TypeFilterOptions />
-      </select>
-    </label>
+    <div className="filter-field filter-type">
+      <span className="filter-label" id={labelId}>
+        {t('filters.type')}
+      </span>
+      <TypeChecks
+        types={filters.type}
+        onChange={(type) => onFiltersChange({ ...filters, type })}
+        labelledBy={labelId}
+      />
+    </div>
   )
 }
 

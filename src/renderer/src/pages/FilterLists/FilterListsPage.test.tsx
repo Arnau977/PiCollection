@@ -133,7 +133,7 @@ describe('FilterListsPage', () => {
     expect(create).not.toHaveBeenCalled()
     expect(saveButton()).toHaveAttribute('aria-disabled', 'true')
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Type' }), 'gif')
+    await user.click(screen.getByRole('checkbox', { name: 'Animated' }))
     await user.click(saveButton())
 
     expect(create).toHaveBeenCalledWith({

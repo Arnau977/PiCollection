@@ -4,19 +4,6 @@ import type { MediaType } from '@shared/models'
 export const MEDIA_TYPES: readonly MediaType[] = ['image', 'gif', 'video']
 
 /**
- * The type filter's choices: each type alone, then each pair. All three is
- * the same as no filter, so it isn't a choice of its own.
- */
-export const TYPE_FILTER_CHOICES: readonly MediaType[][] = [
-  ['image'],
-  ['gif'],
-  ['video'],
-  ['image', 'gif'],
-  ['image', 'video'],
-  ['gif', 'video']
-]
-
-/**
  * The type filter in its stored form: known types, deduped, in MEDIA_TYPES
  * order; undefined when it filters nothing (none or all of them). Also reads
  * the single type older saved filters hold.
@@ -27,11 +14,16 @@ export function normalizeTypes(value: unknown): MediaType[] | undefined {
   return types.length === 0 || types.length === MEDIA_TYPES.length ? undefined : types
 }
 
-/** A `<select>` value for a type filter: 'all', or the types joined by commas. */
-export function typeFilterValue(types: MediaType[] | undefined): string {
-  return normalizeTypes(types)?.join(',') ?? 'all'
-}
-
-export function typesFromFilterValue(value: string): MediaType[] | undefined {
-  return value === 'all' ? undefined : normalizeTypes(value.split(','))
+/**
+ * The type filter after checking or unchecking one type. Nothing checked
+ * means every type, like a column filter in Explorer; all three stay checked
+ * as the user left them, so the boxes don't jump.
+ */
+export function toggleType(
+  types: MediaType[] | undefined,
+  type: MediaType,
+  checked: boolean
+): MediaType[] | undefined {
+  const next = MEDIA_TYPES.filter((each) => (each === type ? checked : types?.includes(each)))
+  return next.length > 0 ? next : undefined
 }

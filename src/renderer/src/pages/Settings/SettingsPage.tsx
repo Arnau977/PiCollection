@@ -28,8 +28,7 @@ import { AutoTagsSection } from './AutoTagsSection'
 import { LocalTaggingSection } from './LocalTaggingSection'
 import { DanbooruSection } from './DanbooruSection'
 import { ExtensionBridgeSection } from './ExtensionBridgeSection'
-import { TypeFilterOptions } from '../../components/FilterBar/TypeFilterOptions'
-import { typeFilterValue, typesFromFilterValue } from '@shared/query/mediaTypes'
+import { TypeChecks } from '../../components/FilterBar/TypeChecks'
 import './SettingsPage.css'
 
 /** Loads/saves the optional SauceNAO API key (raises the free anonymous rate limit). */
@@ -238,15 +237,11 @@ export default function SettingsPage(): JSX.Element {
             </SettingsRow>
 
             <SettingsRow title={t('filters.type')}>
-              <select
-                aria-label={t('filters.type')}
-                value={typeFilterValue(defaults.type)}
-                onChange={(e) =>
-                  setDefaults({ ...defaults, type: typesFromFilterValue(e.target.value) })
-                }
-              >
-                <TypeFilterOptions />
-              </select>
+              <TypeChecks
+                types={defaults.type}
+                onChange={(type) => setDefaults({ ...defaults, type })}
+                ariaLabel={t('filters.type')}
+              />
             </SettingsRow>
 
             <SettingsRow title={t('filters.sortBy')}>

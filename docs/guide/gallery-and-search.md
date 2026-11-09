@@ -47,8 +47,8 @@ In the filter panel (the rest under **More filters**):
 - **No artist assigned** / **No character assigned** / **No series
   assigned** (the crossed-circle button in each field) find media still
   missing them.
-- **Type**: image, animated or video, or two of them at once (**Image or animated**,
-  **Image or video**, **Animated or video**). Saved filter lists keep it too.
+- **Type**: checkboxes for **Image**, **Animated** and **Video**. Check one or more to
+  see only those (e.g. Image + Animated leaves videos out); none checked shows them all. Saved filter lists keep it too.
 - **More filters**: SFW / NSFW and AI-generated (all, only, exclude).
 - **Sort by** date, name or size on disk, ascending or descending. Sizes are
   read in the background (the first time, the whole library); a file not

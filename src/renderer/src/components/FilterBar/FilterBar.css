@@ -57,3 +57,18 @@
   color: var(--accent-fg);
 }
 
+
+/* The type filter's checkboxes sit on one line, as tall as the selects
+   beside them (0.5rem padding + text + border), so the row stays aligned. */
+.filter-bar > .filter-type {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.type-checks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: calc(1rem + 0.88rem * 1.2 + 2px);
+}
