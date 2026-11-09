@@ -108,7 +108,7 @@ here.
 ### Volume slider that pops up from the mute button
 - Kind: pattern
 - Use when / avoid when: a player too narrow for an inline volume slider. The slider appears on hover **and** keyboard focus of the volume control (focus-within), stays a real labelled slider, and the mute button keeps Enter/Space for mute. As content shown on hover/focus it must also be hoverable and dismissible (WCAG 1.4.13, above).
-- Takeaway for PiCollection: in the compact pill and below 900px, the volume slider pops up above the mute button, touching it, and Esc hides it.
+- Takeaway for PiCollection: in the compact pill and when the controls row is under 560px, the volume slider pops up above the mute button, touching it, and Esc hides it.
 - Source: Video.js volume slider - https://videojs.org/docs/framework/html/reference/volume-slider ; Video.js v10 popover focus issue - https://github.com/videojs/v10/issues/60 ; Fluid Floe video player interactions - https://fluidproject.atlassian.net/wiki/x/13_x
 - Checked: 2026-10-21
 

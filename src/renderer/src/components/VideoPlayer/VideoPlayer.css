@@ -15,6 +15,10 @@
    more opaque: over a white frame, text stays 8.86:1 (0.72 left the muted
    text at 3.29:1). */
 .video-controls {
+  /* Its width comes from the player, not its content, so the row can ask
+     how much room it has (the volume rule below); the player itself
+     shrink-wraps the video and can't be the container. */
+  container: video-controls / inline-size;
   position: absolute;
   left: var(--space-3);
   right: var(--space-3);
@@ -246,7 +250,10 @@
   bottom: calc(100% + var(--volume-lift) + 1.25rem + 3 * var(--space-1));
 }
 
-@media (max-width: 900px) {
+/* Too narrow a row for an inline slider (a portrait or square video in a
+   normal window clipped the full-screen button at 490px): it pops up instead.
+   The row needs about 530px with the slider inline. */
+@container video-controls (max-width: 560px) {
   .video-player .video-volume {
     position: absolute;
     bottom: calc(100% + var(--volume-lift));
