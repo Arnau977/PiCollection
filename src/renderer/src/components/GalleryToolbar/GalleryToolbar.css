@@ -69,3 +69,20 @@
     width: 100%;
   }
 }
+
+/* Narrow windows: keep the toolbar on one row. "Per page" stays the select's
+   name for screen readers; its value already reads as a page size. */
+@media (max-width: 900px) {
+  .gallery-toolbar {
+    gap: var(--space-3);
+  }
+
+  .gallery-page-size-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}

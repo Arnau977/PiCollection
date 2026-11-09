@@ -52,8 +52,8 @@ describe('sanitizeWindowState', () => {
   it('clamps absurdly small sizes up to a usable minimum', () => {
     const result = sanitizeWindowState({ width: 10, height: 5 }, [primary])
 
-    expect(result.width).toBeGreaterThanOrEqual(640)
-    expect(result.height).toBeGreaterThanOrEqual(480)
+    expect(result.width).toBeGreaterThanOrEqual(816)
+    expect(result.height).toBeGreaterThanOrEqual(640)
   })
 
   it('ignores non-numeric sizes', () => {

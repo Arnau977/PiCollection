@@ -186,7 +186,9 @@ export function TagsManager(): JSX.Element {
                   <div className="manage-item-info">
                     <span className="manage-item-name">{tag.name}</span>
                     {tag.aliases && tag.aliases.length > 0 && (
-                      <span className="manage-item-aliases">{tag.aliases.join(' · ')}</span>
+                      <span className="manage-item-aliases" title={tag.aliases.join(' · ')}>
+                        {tag.aliases.join(' · ')}
+                      </span>
                     )}
                   </div>
                   <TagWikiInfo tagName={tag.name} />

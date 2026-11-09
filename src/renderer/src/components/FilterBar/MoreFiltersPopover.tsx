@@ -42,10 +42,11 @@ export function MoreFiltersPopover({
         className="btn"
         aria-haspopup="true"
         aria-expanded={open}
+        title={t('filters.more')}
         onClick={() => setOpen((prev) => !prev)}
       >
         <MoreHorizontal size={16} />
-        {t('filters.more')}
+        <span className="filter-more-label">{t('filters.more')}</span>
         {activeCount > 0 && <span className="more-filters-badge">{activeCount}</span>}
       </button>
 

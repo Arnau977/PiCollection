@@ -295,6 +295,8 @@
 
 .manage-item-info {
   flex: 1;
+  /* Lets a long aliases line end in an ellipsis instead of widening the row. */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;

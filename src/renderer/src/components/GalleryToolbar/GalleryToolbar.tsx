@@ -81,7 +81,7 @@ export function GalleryToolbar({
       </div>
 
       <label className="gallery-page-size">
-        <span>{t('gallery.pageSize.label')}</span>
+        <span className="gallery-page-size-label">{t('gallery.pageSize.label')}</span>
         <select value={pageSize} onChange={(e) => onPageSizeChange(Number(e.target.value))}>
           {PAGE_SIZE_OPTIONS.map((size) => (
             <option key={size} value={size}>
