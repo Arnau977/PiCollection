@@ -140,6 +140,36 @@ describe('VideoToGifDialog format', () => {
   })
 })
 
+describe('VideoToGifDialog custom size limit', () => {
+  it('sends the limit picked under Custom and names it in the summary', async () => {
+    Object.defineProperty(window, 'api', {
+      value: {
+        media: { createGifFromVideo: vi.fn().mockResolvedValue({ success: true, data: video }) }
+      },
+      writable: true,
+      configurable: true
+    })
+    const convert = vi.spyOn(videoToGif, 'convertVideoToGif').mockResolvedValue({
+      bytes: new Uint8Array(4),
+      width: 480,
+      height: 270
+    })
+    render(<VideoToGifDialog video={video} onClose={vi.fn()} onCreated={vi.fn()} />)
+    loadDuration(40)
+    act(() => screen.getByRole('radio', { name: 'Custom' }).click())
+
+    act(() => {
+      const select = screen.getByRole('combobox', { name: 'Size limit' }) as HTMLSelectElement
+      select.value = '5'
+      select.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+
+    expect(screen.getByText(/up to 5.0 MB/)).toBeInTheDocument()
+    await act(async () => screen.getByRole('button', { name: /^Create/ }).click())
+    expect(convert.mock.lastCall?.[2].maxBytes).toBe(5 * 1024 * 1024)
+  })
+})
+
 describe('VideoToGifDialog summary', () => {
   it('shows the clip length once, without repeating the frame count', () => {
     render(

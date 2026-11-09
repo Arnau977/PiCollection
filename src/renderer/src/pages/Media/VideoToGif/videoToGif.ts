@@ -301,7 +301,7 @@ export async function convertVideoToGif(
       })
       const tooBig = settings.maxBytes !== undefined && result.bytes.length > settings.maxBytes
       const nextWidth = settings.maxBytes
-        ? retryWidth(width, result.bytes.length, settings.maxBytes)
+        ? retryWidth(width, result.bytes.length, settings.maxBytes, format)
         : width
       if (!tooBig || nextWidth < MIN_WIDTH) return result
       previousBytes = result.bytes.length

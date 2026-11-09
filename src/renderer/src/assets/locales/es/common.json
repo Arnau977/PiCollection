@@ -718,12 +718,15 @@
     "formatLegend": "Formato",
     "formatHint": {
       "gif": "Se abre en cualquier sitio, hasta 256 colores por fotograma.",
-      "webp": "Todos los colores en un archivo mucho más ligero. Discord lo reproduce; X no lo acepta."
+      "webp": "Todos los colores en un archivo mucho más ligero. Discord y TeamSpeak lo reproducen; X no lo acepta."
     },
     "presetLegend": "Tamaño",
     "presetCustom": "Personalizado",
     "width": "Ancho",
     "fps": "Fotogramas",
+    "sizeLimit": "Límite de tamaño",
+    "noLimit": "Sin límite",
+    "summaryLimit": " · hasta {{size}} MB",
     "summary": "{{width}} px de ancho · {{fps}} fps · {{frames}} fotogramas",
     "summarySource": "Tamaño y fotogramas del vídeo original (hasta {{maxFps}} fps) · colores suavizados · archivo grande",
     "summarySourceWebp": "Tamaño y fotogramas del vídeo original (hasta {{maxFps}} fps) · calidad alta",

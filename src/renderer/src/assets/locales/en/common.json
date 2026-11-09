@@ -717,12 +717,15 @@
     "formatLegend": "Format",
     "formatHint": {
       "gif": "Opens anywhere, up to 256 colors per frame.",
-      "webp": "Every color in a much smaller file. Discord plays it; X doesn't take it."
+      "webp": "Every color in a much smaller file. Discord and TeamSpeak play it; X doesn't take it."
     },
     "presetLegend": "Size",
     "presetCustom": "Custom",
     "width": "Width",
     "fps": "Frame rate",
+    "sizeLimit": "Size limit",
+    "noLimit": "No limit",
+    "summaryLimit": " · up to {{size}} MB",
     "summary": "{{width}} px wide · {{fps}} fps · {{frames}} frames",
     "summarySource": "The video's own size and frame rate (up to {{maxFps}} fps) · smooth colors · large file",
     "summarySourceWebp": "The video's own size and frame rate (up to {{maxFps}} fps) · high quality",

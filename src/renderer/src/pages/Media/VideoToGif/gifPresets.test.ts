@@ -11,10 +11,17 @@ describe('frameDelays', () => {
 })
 
 describe('retryWidth', () => {
-  it('jumps to a width that fits from how far over it went, at least 15% narrower', () => {
-    // 4x the limit: half the width gives a quarter of the pixels, less the margin.
-    expect(retryWidth(720, 40, 10)).toBe(342)
-    // Barely over: still a real step down, not 1 px.
-    expect(retryWidth(720, 10.1, 10)).toBe(612)
+  it('lands under the limit in one retry on the measured clip, for each format', () => {
+    // What the sandbox clip actually gave at 720 px against a 5 MB limit.
+    const gif = retryWidth(720, 30.5, 5, 'gif')
+    const webp = retryWidth(720, 8.3, 5, 'webp')
+    expect(30.5 * (gif / 720) ** 1.6).toBeLessThan(5)
+    expect(8.3 * (webp / 720) ** 1.15).toBeLessThan(5)
+    // Its size follows the width less, so a WebP must go narrower for the same overshoot.
+    expect(retryWidth(720, 20, 10, 'webp')).toBeLessThan(retryWidth(720, 20, 10, 'gif'))
+  })
+
+  it('still steps down at least 15% when barely over', () => {
+    expect(retryWidth(720, 10.1, 10, 'webp')).toBe(612)
   })
 })

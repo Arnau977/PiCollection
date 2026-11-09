@@ -35,7 +35,7 @@ export interface GifSettings {
   webpQuality?: number
 }
 
-const MB = 1024 * 1024
+export const MB = 1024 * 1024
 
 /**
  * Discord's upload limit without Nitro is 10 MB and X/Twitter's for GIFs is
@@ -89,13 +89,26 @@ export const SHRINK_FACTOR = 0.85
 export const MIN_WIDTH = 160
 
 /**
- * The width to retry at after `bytes` came out over `maxBytes`. Size grows
- * with the pixel count, i.e. the width squared, so the width scales by the
- * square root of how far over it went, with a 10% margin - one retry
- * usually fits, where a fixed 15% step took several on a long clip.
+ * How a file's size grows with its width: size ~ width^exponent, measured on
+ * a real 5 s clip at 24 fps. GIF: 30.5 MB at 720 px, 6.6 at 277, 4.9 at 229
+ * (1.6 both steps). WebP: 8.3 MB at 720, 5.9 at 530, 4.8 at 451 (1.1-1.2) -
+ * its compression does better on bigger frames, so its size falls almost in
+ * step with the width.
  */
-export function retryWidth(width: number, bytes: number, maxBytes: number): number {
-  const scale = Math.min(SHRINK_FACTOR, Math.sqrt((maxBytes * 0.9) / bytes))
+export const SIZE_EXPONENT: Record<AnimationFormat, number> = { gif: 1.6, webp: 1.15 }
+
+/**
+ * The width to retry at after `bytes` came out over `maxBytes`, from how far
+ * over it went and how the format's size follows the width, with a 10%
+ * margin - one retry usually fits, where a fixed 15% step took several.
+ */
+export function retryWidth(
+  width: number,
+  bytes: number,
+  maxBytes: number,
+  format: AnimationFormat
+): number {
+  const scale = Math.min(SHRINK_FACTOR, ((maxBytes * 0.9) / bytes) ** (1 / SIZE_EXPONENT[format]))
   return Math.round(width * scale)
 }
 

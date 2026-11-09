@@ -6,6 +6,7 @@ import { MAX_GIF_BYTES } from '@shared/ipc/contracts'
 import {
   LONG_CLIP_SECONDS,
   MAX_GIF_FPS,
+  MB,
   FORMAT_LABEL,
   PRESETS_FOR_FORMAT,
   presetSettings,
@@ -35,6 +36,8 @@ interface VideoToGifDialogProps {
 const FORMATS: AnimationFormat[] = ['gif', 'webp']
 const WIDTH_OPTIONS = [320, 480, 540, 640, 720, 960]
 const FPS_OPTIONS = [10, 12, 15, 20, 24]
+/** Upload limits people meet (TeamSpeak chat 5, Discord 10, X 15, Reddit 20, ...); 0 = none. */
+const LIMIT_OPTIONS_MB = [0, 5, 8, 10, 15, 20, 25, 50, 100]
 
 const round1 = (seconds: number): number => Math.round(seconds * 10) / 10
 
@@ -92,7 +95,11 @@ export function VideoToGifDialog({
           width: settings.width,
           fps: settings.fps,
           frames: Math.max(0, Math.round((clip.end - clip.start) * settings.fps))
-        })
+        }) +
+        // A preset names its limit in its own label; a custom one says it here.
+        (gif.preset === 'custom' && settings.maxBytes
+          ? t('videoGif.summaryLimit', { size: formatMegabytes(settings.maxBytes) })
+          : '')
 
   function presetLabel(id: GifPresetId): string {
     if (id === 'custom') return t('videoGif.presetCustom')
@@ -119,107 +126,129 @@ export function VideoToGifDialog({
           {t('videoGif.title')}
         </h3>
 
-        {/* The clip is picked on the player's own timeline: its two markers
+        {/* Only this part scrolls: the title, progress and actions stay in
+            view at any window size, down to the app's minimum. */}
+        <div className="video-gif-body">
+          {/* The clip is picked on the player's own timeline: its two markers
             are the start and end (drag them, or [ and ] at the current time),
             and playing previews the clip in a loop. */}
-        <div className={busy ? 'video-gif-clip is-busy' : 'video-gif-clip'}>
-          <VideoPlayer
-            src={toMediaUrl(video.route)}
-            muted
-            className="video-gif-player"
-            // Locked while converting: the clip being encoded can't change under it.
-            rangeMode={{ value: clip, onChange: (next) => !busy && gif.setClip(next) }}
-            onDurationChange={onDurationChange}
-          />
-          <p className="video-gif-clip-summary">
-            {/* Just the length: the frame count is in the size summary below. */}
-            {t('videoGif.clipSummary', { seconds: round1(clipSeconds) })}
-          </p>
-          {clipSeconds >= LONG_CLIP_SECONDS && (
-            <p className="video-gif-long-note" role="status">
-              {t('videoGif.longClipNote')}
+          <div className={busy ? 'video-gif-clip is-busy' : 'video-gif-clip'}>
+            <VideoPlayer
+              src={toMediaUrl(video.route)}
+              muted
+              className="video-gif-player"
+              // Locked while converting: the clip being encoded can't change under it.
+              rangeMode={{ value: clip, onChange: (next) => !busy && gif.setClip(next) }}
+              onDurationChange={onDurationChange}
+            />
+            <p className="video-gif-clip-summary">
+              {/* Just the length: the frame count is in the size summary below. */}
+              {t('videoGif.clipSummary', { seconds: round1(clipSeconds) })}
             </p>
-          )}
-          {gif.clipError && (
-            <p className="video-gif-error" role="alert">
-              {t('videoGif.errorOrder')}
-            </p>
-          )}
-        </div>
-
-        <fieldset className="video-gif-presets" disabled={busy}>
-          <legend>{t('videoGif.formatLegend')}</legend>
-          <div className="video-gif-preset-options">
-            {FORMATS.map((format) => (
-              <label
-                key={format}
-                className={gif.format === format ? 'video-gif-preset active' : 'video-gif-preset'}
-              >
-                <input
-                  type="radio"
-                  name="video-gif-format"
-                  value={format}
-                  checked={gif.format === format}
-                  onChange={() => gif.setFormat(format)}
-                />
-                {FORMAT_LABEL[format]}
-              </label>
-            ))}
+            {clipSeconds >= LONG_CLIP_SECONDS && (
+              <p className="video-gif-long-note" role="status">
+                {t('videoGif.longClipNote')}
+              </p>
+            )}
+            {gif.clipError && (
+              <p className="video-gif-error" role="alert">
+                {t('videoGif.errorOrder')}
+              </p>
+            )}
           </div>
-          <p className="video-gif-summary">{t(`videoGif.formatHint.${gif.format}`)}</p>
-        </fieldset>
 
-        <fieldset className="video-gif-presets" disabled={busy}>
-          <legend>{t('videoGif.presetLegend')}</legend>
-          <div className="video-gif-preset-options">
-            {PRESETS_FOR_FORMAT[gif.format].map((id) => (
-              <label
-                key={id}
-                className={gif.preset === id ? 'video-gif-preset active' : 'video-gif-preset'}
-              >
-                <input
-                  type="radio"
-                  name="video-gif-preset"
-                  value={id}
-                  checked={gif.preset === id}
-                  onChange={() => gif.setPreset(id)}
-                />
-                {presetLabel(id)}
-              </label>
-            ))}
-          </div>
-          {gif.preset === 'custom' && (
-            <div className="video-gif-custom">
-              <label>
-                <span>{t('videoGif.width')}</span>
-                <select
-                  value={gif.custom.width}
-                  onChange={(e) => gif.setCustom({ ...gif.custom, width: Number(e.target.value) })}
+          <fieldset className="video-gif-presets" disabled={busy}>
+            <legend>{t('videoGif.formatLegend')}</legend>
+            <div className="video-gif-preset-options">
+              {FORMATS.map((format) => (
+                <label
+                  key={format}
+                  className={gif.format === format ? 'video-gif-preset active' : 'video-gif-preset'}
                 >
-                  {WIDTH_OPTIONS.map((width) => (
-                    <option key={width} value={width}>
-                      {width} px
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span>{t('videoGif.fps')}</span>
-                <select
-                  value={gif.custom.fps}
-                  onChange={(e) => gif.setCustom({ ...gif.custom, fps: Number(e.target.value) })}
-                >
-                  {FPS_OPTIONS.map((fps) => (
-                    <option key={fps} value={fps}>
-                      {fps} fps
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  <input
+                    type="radio"
+                    name="video-gif-format"
+                    value={format}
+                    checked={gif.format === format}
+                    onChange={() => gif.setFormat(format)}
+                  />
+                  {FORMAT_LABEL[format]}
+                </label>
+              ))}
             </div>
-          )}
-          <p className="video-gif-summary">{summary}</p>
-        </fieldset>
+            <p className="video-gif-summary">{t(`videoGif.formatHint.${gif.format}`)}</p>
+          </fieldset>
+
+          <fieldset className="video-gif-presets" disabled={busy}>
+            <legend>{t('videoGif.presetLegend')}</legend>
+            <div className="video-gif-preset-options">
+              {PRESETS_FOR_FORMAT[gif.format].map((id) => (
+                <label
+                  key={id}
+                  className={gif.preset === id ? 'video-gif-preset active' : 'video-gif-preset'}
+                >
+                  <input
+                    type="radio"
+                    name="video-gif-preset"
+                    value={id}
+                    checked={gif.preset === id}
+                    onChange={() => gif.setPreset(id)}
+                  />
+                  {presetLabel(id)}
+                </label>
+              ))}
+            </div>
+            {gif.preset === 'custom' && (
+              <div className="video-gif-custom">
+                <label>
+                  <span>{t('videoGif.width')}</span>
+                  <select
+                    value={gif.custom.width}
+                    onChange={(e) =>
+                      gif.setCustom({ ...gif.custom, width: Number(e.target.value) })
+                    }
+                  >
+                    {WIDTH_OPTIONS.map((width) => (
+                      <option key={width} value={width}>
+                        {width} px
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>{t('videoGif.fps')}</span>
+                  <select
+                    value={gif.custom.fps}
+                    onChange={(e) => gif.setCustom({ ...gif.custom, fps: Number(e.target.value) })}
+                  >
+                    {FPS_OPTIONS.map((fps) => (
+                      <option key={fps} value={fps}>
+                        {fps} fps
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>{t('videoGif.sizeLimit')}</span>
+                  <select
+                    value={Math.round((gif.custom.maxBytes ?? 0) / MB)}
+                    onChange={(e) => {
+                      const mb = Number(e.target.value)
+                      gif.setCustom({ ...gif.custom, maxBytes: mb > 0 ? mb * MB : undefined })
+                    }}
+                  >
+                    {LIMIT_OPTIONS_MB.map((mb) => (
+                      <option key={mb} value={mb}>
+                        {mb === 0 ? t('videoGif.noLimit') : `≤ ${mb} MB`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            )}
+            <p className="video-gif-summary">{summary}</p>
+          </fieldset>
+        </div>
 
         {state.kind === 'encoding' && (
           <div className="video-gif-progress">

@@ -108,7 +108,7 @@ or WebP, entirely on your computer:
    size.
 2. Choose a format: **GIF** opens anywhere but holds 256 colors per frame;
    **WebP** keeps every color in a much smaller file (about a third of the
-   GIF in a test) and Discord plays it, but X doesn't take it, so the X
+   GIF in a test) and Discord and TeamSpeak play it, but X doesn't take it, so the X
    preset is only offered for GIF. The app remembers the format you used last.
    The same clip with the same format and size makes the very same file, so
    making it twice says you already have it.
@@ -118,8 +118,9 @@ or WebP, entirely on your computer:
    own size and every frame (up to 50 fps, the fastest a GIF plays) and
    smooths colors with dithering, so the file is large - use it to rebuild a
    GIF that a site saved as MP4 (the original GIF can't be recovered exactly,
-   but this gets as close as possible); **Custom** lets you set the width and
-   frame rate.
+   but this gets as close as possible); **Custom** lets you set the width, the
+   frame rate and an optional size limit (≤ 5 MB for a TeamSpeak chat, for
+   example), re-encoding smaller until it fits like the presets.
 4. **Create GIF** / **Create WebP**. Progress is shown, and **Stop** cancels it.
 5. It's saved next to the video as "<video> (GIF).gif" or "<video> (WebP).webp" and added to your library with the
    video's artist, tags, characters, series and rating. The two list each
