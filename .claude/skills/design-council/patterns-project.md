@@ -448,8 +448,10 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   buttons. Where: `VideoPlayer/videoFrame.ts`, `MediaFileActions.tsx`.
 
 - **The compact player's More menu is grouped**: a "Speed" header over the
-  rate radio group, a separator, then the actions with their icons. Below
-  900px or compact, the volume slider pops up above the mute button on
+  rate radio group, a separator, then the actions with their icons. When the
+  controls row is under 560px (a container query on `.video-controls`; the
+  player shrink-wraps the video, so it can't be the container) or compact,
+  the volume slider pops up above the mute button on
   hover/focus (touching it, Esc hides it) instead of disappearing.
   Where: `VideoControls.tsx`, `VideoPlayer.css`.
 

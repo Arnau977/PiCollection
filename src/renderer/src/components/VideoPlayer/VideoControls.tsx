@@ -289,8 +289,8 @@ export function VideoControls({
           </>
         )}
         {/* Hovering the volume control shows its level, like the timeline shows
-            the time under the pointer. Where the pill is narrow (compact, or
-            below 900px) the slider pops up above the button on hover or
+            the time under the pointer. Where the pill is narrow (compact, or a
+            row under 560px) the slider pops up above the button on hover or
             keyboard focus instead of sitting in the row (CSS). */}
         <span
           className="video-volume-group"

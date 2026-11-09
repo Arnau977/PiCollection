@@ -35,7 +35,7 @@ of a video, press **Loop section** at the start and again at the end (or
 timeline can be dragged. Press it once more (or `Shift+L`) to clear it. In the edit form's
 smaller preview, speed, **Loop section** and **Copy frame** are under the
 **More** (⋯) button, and the volume slider pops up when you point at (or tab
-to) the volume button - as it does in the full player below 900 px wide.
+to) the volume button - as it does in the full player when the video is shown narrow (a portrait or square video).
 
 ## Finding a tag
 
