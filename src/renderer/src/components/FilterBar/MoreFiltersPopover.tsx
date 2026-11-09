@@ -46,7 +46,7 @@ export function MoreFiltersPopover({
         onClick={() => setOpen((prev) => !prev)}
       >
         <MoreHorizontal size={16} />
-        <span className="filter-more-label">{t('filters.more')}</span>
+        <span className="btn-label-collapse">{t('filters.more')}</span>
         {activeCount > 0 && <span className="more-filters-badge">{activeCount}</span>}
       </button>
 

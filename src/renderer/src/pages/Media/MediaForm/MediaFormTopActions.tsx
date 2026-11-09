@@ -115,7 +115,9 @@ export function MediaFormTopActions({
         {...hint(queueInfo ? t('importQueue.close') : t('manage.cancel'), SHORTCUTS.leaveEdit)}
       >
         <ArrowLeft size={16} />
-        {queueInfo ? t('importQueue.close') : t('manage.cancel')}
+        <span className="btn-label-collapse">
+          {queueInfo ? t('importQueue.close') : t('manage.cancel')}
+        </span>
       </button>
 
       <div className="media-form-top-actions-right">
@@ -199,12 +201,15 @@ export function MediaFormTopActions({
               className="btn btn-danger"
               onClick={onDelete}
               disabled={saving || deleting}
+              title={t('media.delete')}
             >
               <Trash2 size={16} />
-              <StableLabel
-                current={deleting ? t('media.deleting') : t('media.delete')}
-                labels={[t('media.delete'), t('media.deleting')]}
-              />
+              <span className="btn-label-collapse">
+                <StableLabel
+                  current={deleting ? t('media.deleting') : t('media.delete')}
+                  labels={[t('media.delete'), t('media.deleting')]}
+                />
+              </span>
             </button>
           </>
         )}

@@ -77,7 +77,8 @@
    three, so the grid keeps its height - the toggle and search on the first,
    type, sort and More filters on the second. The field titles hide but still
    name their controls for screen readers (the label element, or the type
-   group's aria-labelledby), and More filters keeps its name as a tooltip. */
+   group's aria-labelledby), and More filters collapses to its icon
+   (btn-label-collapse) with its name as a tooltip. */
 @media (max-width: 900px) {
   .filter-bar {
     position: relative;
@@ -101,14 +102,5 @@
   .filter-bar > .filter-field:not(.filter-type, .filter-sort-direction, .filter-more, .filter-panel-toggle) {
     flex: 0 1 9rem;
     min-width: 7rem;
-  }
-
-  .filter-more-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
   }
 }

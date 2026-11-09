@@ -211,7 +211,10 @@ Entry format: **Pattern** - when to use / when not - where (file) - origin.
   titles become visually hidden (still naming their control), and secondary
   button labels collapse to icon + tooltip, so the gallery's filters take two
   rows and its toolbar one. Wider than 900px nothing changes. Where:
-  `FilterBar.css`, `GalleryToolbar.css`.
+  `FilterBar.css`, `GalleryToolbar.css`. Secondary buttons collapse with
+  `<span className="btn-label-collapse">` plus a `title` (back/cancel,
+  Create animation, Delete on the media page and form); Edit/Save keep their
+  words. Where: `main.css`.
 - **Finding within a media's tags filters the chips, it doesn't just
   highlight them** (Ctrl+F or a magnifier by the Tags title): a highlight
   among dozens of same-colored chips still has to be scanned. The bar says
@@ -544,3 +547,8 @@ of them.
   slider popped up right over the timeline row of the compact pill, so the
   two bars read as one. Lift it clear of the whole bar and bridge the gap
   for the pointer. Where: `VideoPlayer.css` (`--volume-lift`).
+- **A bare <span> inside a button loses its bold.** `base.css` resets
+  every element to `font-weight: normal`, so a label wrapped in a span
+  (StableLabel, btn-label-collapse) rendered regular weight next to bold
+  siblings; Delete and Save looked lighter for months. Give such wrappers
+  `font-weight: inherit`. Where: `StableLabel.css`, `main.css`.
