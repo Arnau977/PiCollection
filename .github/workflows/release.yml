@@ -65,10 +65,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # The previous version's own release PR ("X.Y.Z - ...", squash-merged
-          # after its tag) falls inside the range; it's just a version bump.
+          # The previous version's own release PR, squash-merged after its tag,
+          # falls inside the range; it's just a version bump. Its title is the
+          # bare version ("1.10.8") or, in older ones, "X.Y.Z - summary".
           NOTES=$(gh release view "${{ github.ref_name }}" --repo "${{ github.repository }}" --json body -q .body \
-            | grep -vE '^\* [0-9]+\.[0-9]+\.[0-9]+ - ')
+            | grep -vE '^\* [0-9]+\.[0-9]+\.[0-9]+( - .*)? by @')
           { printf '## Highlights\n\n_Fill in 2-3 bullet points of user-facing changes before publishing._\n\n'; echo "$NOTES"; } > notes.md
           gh release edit "${{ github.ref_name }}" --repo "${{ github.repository }}" --notes-file notes.md
 
