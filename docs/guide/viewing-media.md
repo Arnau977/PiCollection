@@ -113,7 +113,8 @@ or WebP, entirely on your computer:
    The same clip with the same format and size makes the very same file, so
    making it twice says you already have it.
 3. Choose a size: **Discord (≤ 10 MB)** or **X / Twitter (≤ 15 MB)** re-encode
-   smaller until the file fits; **Gallery (best quality)** keeps the video's
+   smaller until the file fits (a WebP for Discord starts at 720 px and 24 fps,
+   a GIF at 480 px and 15 fps, since the WebP is so much lighter); **Gallery (best quality)** keeps the video's
    own size and every frame (up to 50 fps, the fastest a GIF plays) and
    smooths colors with dithering, so the file is large - use it to rebuild a
    GIF that a site saved as MP4 (the original GIF can't be recovered exactly,

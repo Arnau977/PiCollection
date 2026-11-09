@@ -45,7 +45,25 @@ const MB = 1024 * 1024
 export const GIF_PRESETS: Record<Exclude<GifPresetId, 'custom'>, GifSettings> = {
   discord: { width: 480, fps: 15, maxBytes: 10 * MB },
   x: { width: 540, fps: 15, maxBytes: 15 * MB },
-  gallery: { width: 'source', fps: 'source', dither: true, webpQuality: 0.95 }
+  gallery: { width: 'source', fps: 'source', dither: true }
+}
+
+/**
+ * A WebP of the same clip weighs about a third of the GIF (3.3 vs 9.9 MB in
+ * a test at 480 px, 15 fps), so under the same limit it starts bigger and
+ * smoother; a clip that still doesn't fit is shrunk like a GIF.
+ */
+export const WEBP_PRESETS: Record<Exclude<GifPresetId, 'custom' | 'x'>, GifSettings> = {
+  discord: { width: 720, fps: 24, maxBytes: 10 * MB },
+  gallery: { width: 'source', fps: 'source', webpQuality: 0.95 }
+}
+
+/** What a preset means in a format; X only takes GIFs, so it's always the GIF one. */
+export function presetSettings(
+  format: AnimationFormat,
+  id: Exclude<GifPresetId, 'custom'>
+): GifSettings {
+  return format === 'webp' && id !== 'x' ? WEBP_PRESETS[id] : GIF_PRESETS[id]
 }
 
 /** Starting values of the custom size, before the user picks their own. */
@@ -66,9 +84,20 @@ export const DEFAULT_CLIP_SECONDS = 5
  */
 export const MAX_GIF_FPS = 50
 
-/** Each retry to fit under `maxBytes` shrinks the width by this factor. */
+/** Each retry to fit under `maxBytes` shrinks the width by at least this factor. */
 export const SHRINK_FACTOR = 0.85
 export const MIN_WIDTH = 160
+
+/**
+ * The width to retry at after `bytes` came out over `maxBytes`. Size grows
+ * with the pixel count, i.e. the width squared, so the width scales by the
+ * square root of how far over it went, with a 10% margin - one retry
+ * usually fits, where a fixed 15% step took several on a long clip.
+ */
+export function retryWidth(width: number, bytes: number, maxBytes: number): number {
+  const scale = Math.min(SHRINK_FACTOR, Math.sqrt((maxBytes * 0.9) / bytes))
+  return Math.round(width * scale)
+}
 
 export function formatMegabytes(bytes: number): string {
   return (bytes / MB).toFixed(1)

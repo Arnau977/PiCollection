@@ -4,11 +4,11 @@ import type { MediaModel } from '@shared/models'
 import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { MAX_GIF_BYTES } from '@shared/ipc/contracts'
 import {
-  GIF_PRESETS,
   LONG_CLIP_SECONDS,
   MAX_GIF_FPS,
   FORMAT_LABEL,
   PRESETS_FOR_FORMAT,
+  presetSettings,
   formatMegabytes,
   type AnimationFormat,
   type GifPresetId,
@@ -96,7 +96,7 @@ export function VideoToGifDialog({
 
   function presetLabel(id: GifPresetId): string {
     if (id === 'custom') return t('videoGif.presetCustom')
-    const preset = GIF_PRESETS[id]
+    const preset = presetSettings(gif.format, id)
     return preset.maxBytes
       ? t(`videoGif.preset.${id}`, { size: formatMegabytes(preset.maxBytes) })
       : t(`videoGif.preset.${id}`)

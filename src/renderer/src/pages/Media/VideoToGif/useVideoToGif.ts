@@ -4,9 +4,9 @@ import { toMediaUrl } from '@shared/utils/mediaUrl'
 import { MAX_GIF_BYTES } from '@shared/ipc/contracts'
 import {
   DEFAULT_CUSTOM_SETTINGS,
-  GIF_PRESETS,
   DEFAULT_CLIP_SECONDS,
   PRESETS_FOR_FORMAT,
+  presetSettings,
   type AnimationFormat,
   type GifPresetId,
   type GifSettings
@@ -103,7 +103,7 @@ export function useVideoToGif({
     }
   }
 
-  const settings = preset === 'custom' ? custom : GIF_PRESETS[preset]
+  const settings = preset === 'custom' ? custom : presetSettings(format, preset)
   // No length cap: long clips only get a note in the dialog.
   const clipError = clip.end <= clip.start ? 'order' : null
   const busy = state.kind === 'encoding' || state.kind === 'saving'

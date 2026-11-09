@@ -1,9 +1,9 @@
 import {
   MAX_GIF_FPS,
   MIN_WIDTH,
-  SHRINK_FACTOR,
   WEBP_QUALITY,
   frameDelays,
+  retryWidth,
   type AnimationFormat,
   type GifSettings
 } from './gifPresets'
@@ -300,7 +300,9 @@ export async function convertVideoToGif(
         signal
       })
       const tooBig = settings.maxBytes !== undefined && result.bytes.length > settings.maxBytes
-      const nextWidth = Math.round(width * SHRINK_FACTOR)
+      const nextWidth = settings.maxBytes
+        ? retryWidth(width, result.bytes.length, settings.maxBytes)
+        : width
       if (!tooBig || nextWidth < MIN_WIDTH) return result
       previousBytes = result.bytes.length
       width = nextWidth
