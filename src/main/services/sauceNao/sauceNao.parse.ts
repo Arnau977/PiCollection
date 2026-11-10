@@ -4,51 +4,77 @@ import { cleanEntityName, splitBooruCharacterList, splitBooruList } from '@share
 
 export const MIN_SIMILARITY = 60
 
-/** Lenient schema over SauceNAO's JSON: every field optional, unknown keys ignored. */
-export const SauceNaoResponseSchema = z.object({
-  header: z
-    .object({
-      status: z.number().optional(),
-      message: z.string().optional(),
-      short_remaining: z.number().optional(),
-      long_remaining: z.number().optional()
+/**
+ * A field SauceNAO may leave out or send as `null` (e.g. `author_name` on
+ * indexes with no author): both read as `undefined` downstream.
+ */
+const opt = <T extends z.ZodType>(
+  schema: T
+): z.ZodOptional<
+  z.ZodPipe<
+    z.ZodOptional<z.ZodNullable<T>>,
+    z.ZodTransform<z.output<T> | undefined, z.output<T> | null | undefined>
+  >
+> =>
+  schema
+    .nullish()
+    .transform((value) => value ?? undefined)
+    .optional()
+
+const SauceNaoResultSchema = z.object({
+  header: opt(
+    z.object({
+      similarity: opt(z.union([z.string(), z.number()])),
+      index_id: opt(z.number()),
+      index_name: opt(z.string()),
+      // SauceNAO's own small copy of the matched picture.
+      thumbnail: opt(z.string())
     })
-    .optional(),
-  results: z
-    .array(
-      z.object({
-        header: z
-          .object({
-            similarity: z.union([z.string(), z.number()]).optional(),
-            index_id: z.number().optional(),
-            index_name: z.string().optional(),
-            // SauceNAO's own small copy of the matched picture.
-            thumbnail: z.string().optional()
-          })
-          .optional(),
-        data: z
-          .object({
-            ext_urls: z.array(z.string()).optional(),
-            title: z.string().optional(),
-            eng_name: z.string().optional(),
-            jp_name: z.string().optional(),
-            characters: z.string().optional(),
-            material: z.string().optional(),
-            // Some indexes return an array here instead of a comma-joined string.
-            creator: z.union([z.string(), z.array(z.string())]).optional(),
-            member_name: z.string().optional(),
-            author_name: z.string().optional(),
-            source: z.string().optional(),
-            // Pixiv index: identifies the artist's profile, distinct from
-            // `ext_urls` (which points at the specific artwork).
-            member_id: z.union([z.string(), z.number()]).optional(),
-            // Twitter/X index.
-            twitter_user_handle: z.string().optional()
-          })
-          .optional()
+  ),
+  data: opt(
+    z.object({
+      ext_urls: opt(z.array(z.string())),
+      title: opt(z.string()),
+      eng_name: opt(z.string()),
+      jp_name: opt(z.string()),
+      characters: opt(z.string()),
+      material: opt(z.string()),
+      // Some indexes return an array here instead of a comma-joined string.
+      creator: opt(z.union([z.string(), z.array(z.string())])),
+      member_name: opt(z.string()),
+      author_name: opt(z.string()),
+      source: opt(z.string()),
+      // Pixiv index: identifies the artist's profile, distinct from
+      // `ext_urls` (which points at the specific artwork).
+      member_id: opt(z.union([z.string(), z.number()])),
+      // Twitter/X index.
+      twitter_user_handle: opt(z.string())
+    })
+  )
+})
+
+/**
+ * Lenient schema over SauceNAO's JSON: every field optional or null, unknown
+ * keys ignored. Each result is checked on its own and one that still doesn't
+ * fit is dropped, so a single odd result never fails the whole lookup.
+ */
+export const SauceNaoResponseSchema = z.object({
+  header: opt(
+    z.object({
+      status: opt(z.number()),
+      message: opt(z.string()),
+      short_remaining: opt(z.number()),
+      long_remaining: opt(z.number())
+    })
+  ),
+  results: opt(
+    z.array(z.unknown()).transform((results) =>
+      results.flatMap((result) => {
+        const parsed = SauceNaoResultSchema.safeParse(result)
+        return parsed.success ? [parsed.data] : []
       })
     )
-    .optional()
+  )
 })
 
 export type SauceNaoResponse = z.infer<typeof SauceNaoResponseSchema>

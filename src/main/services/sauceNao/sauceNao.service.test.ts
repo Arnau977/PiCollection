@@ -225,6 +225,29 @@ describe('lookupSauceNao', () => {
     )
   })
 
+  it('reads null fields as absent and drops only a result that still does not fit', async () => {
+    // Shape seen in real responses: author_name/jp_name/title null on some indexes.
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({
+        header: { status: 0, short_remaining: 3, long_remaining: 99 },
+        results: [
+          { header: { similarity: '95.1' }, data: { ext_urls: 'not-an-array' } },
+          {
+            header: { similarity: '92.4', index_name: 'Index #9: Danbooru - x.jpg' },
+            data: { characters: 'pyra (xenoblade)', title: null, jp_name: null, author_name: null }
+          },
+          { header: { similarity: '70.0' }, data: { author_name: null, jp_name: null } }
+        ]
+      })
+    )
+
+    const { match } = await lookupSauceNao('/pic.png')
+
+    expect(match).toMatchObject({ similarity: 92.4, characters: [{ name: 'pyra (xenoblade)' }] })
+    expect(match?.title).toBeUndefined()
+    expect(logError).not.toHaveBeenCalled()
+  })
+
   it('resolves with a null match (not an error) when nothing is above the threshold', async () => {
     vi.mocked(fetch).mockResolvedValue(jsonResponse({ header: {}, results: [] }))
 
