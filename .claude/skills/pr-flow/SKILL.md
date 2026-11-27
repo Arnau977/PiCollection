@@ -14,9 +14,9 @@ git switch -c <type>/<short-name>        # feat/, fix/, docs/, tooling/, release
 
 ## Before committing
 
-1. `bash .claude/skills/verify/verify.sh` (the **verify** skill).
-2. The **docs-sync** skill: update the docs the change affects, in the same PR.
-3. Renderer UI changes: the **design-council** skill has already been run.
+1. `bash .claude/verify.sh` (the **aurum977:verify** skill).
+2. The **aurum977:docs-sync** skill (map in `.claude/docs-map.md`): update the docs the change affects, in the same PR.
+3. Renderer UI changes: the **aurum977:design-council** skill has already been run.
 4. The branch has no PR yet, or only an open one:
    `gh pr list --head <branch> --state all`. A squash-merged branch must
    never get new commits; start a new branch from master instead.

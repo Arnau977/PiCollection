@@ -2,9 +2,61 @@
 
 Decisions already made in PiCollection, with where they live. Reuse these
 before inventing anything. Everything here comes from this codebase and its
-history; ideas from outside go in `patterns-external.md`.
+history; ideas from outside go in the shared `patterns-external.md` of the
+`aurum977:design-council` skill (claude-skills repo).
 
 Entry format: **Pattern** - when to use / when not - where (file) - origin.
+
+## Project context (for the design council)
+
+- **Platform:** Electron desktop file/collection manager. Prefer
+  desktop-native sources: Microsoft Fluent 2 / Windows app design, Apple HIG,
+  Nielsen Norman Group; Material Design only for comparison.
+- **Platform judge (20%)** = "desktop app structure": what is native for an
+  Electron file/collection manager versus a transplanted web pattern.
+- **Visual language:** category colors `--color-artist` / `--color-series` /
+  `--color-character` / `--color-tag`, and the "Archive Cabinet" `--accent`.
+  Tokens live in `src/renderer/src/assets/base.css`.
+- **Narrow breakpoint:** 900px.
+- **Renderer rules on top of the shared ones:**
+  - Bound the page to the viewport with its own inner scroll region; don't
+    use `position: sticky` (see "Layout" below).
+  - Batch writes go through one sequential IPC call, not N concurrent ones.
+- The council table is reused as the PR's `### Design council` section
+  (see the `pr-flow` skill).
+
+## Contrast facts
+
+Check with the `aurum977:contrast-check` skill; it reads `base.css` on its
+own. The standard pairs to re-run after any change to `base.css`:
+
+```
+text:background text:surface text-muted:background text-muted:surface
+text-muted:surface-hover text-faint:surface accent-fg:background accent-fg:surface
+accent-fg:surface-hover accent-text:accent accent-text:accent-hover
+field-text-color:field-background danger:surface success:surface info:surface
+```
+
+Known facts (re-verify with the script if `base.css` changes):
+
+- `--accent` fails as text/icon color (~2.6-2.8:1). Use it as a button
+  background with `--accent-text`, and use `--accent-fg` for accent-colored
+  text/icons.
+- `--accent-fg` passes on `background`/`surface`, but **not** on
+  `surface-hover` or `surface-2` (~4.2-4.4:1). On those, switch hover text to
+  `--color-text` instead of keeping it accent-colored.
+- `--color-text-faint` passes as small text since the 2026-11 audit (4.70:1 on
+  `surface-hover`, the worst surface). It stays the quietest text tone.
+- `--focus-ring-color` is `--accent-fg` (4.22:1 at worst); `--accent` is under
+  3:1 on every surface, so it can't be the only sign of a state.
+- A field's border carries meaning, so it's `--field-border` (3.48:1 on
+  `surface`), opaque because a translucent one blends with the dark field.
+  Decorative borders keep `--border-color`.
+- If the real background under a translucent one is not the page background
+  (e.g. `accent-soft` on a sidebar), pass that pair explicitly.
+
+State the ratio of every pair checked in the PR's design-council notes
+(accessibility judge), e.g. "`accent-fg` on `surface` 4.72:1".
 
 ## Layout
 
