@@ -28,7 +28,7 @@ gh pr list --state open            # anything that should ship first?
 
 ```bash
 git switch master && git pull --ff-only
-bash .claude/skills/verify/verify.sh      # ask the user to quit the app for a fully green run
+bash .claude/verify.sh                    # ask the user to quit the app for a fully green run
 git switch -c release/X.Y.Z
 npm version X.Y.Z --no-git-tag-version
 git commit -am "X.Y.Z - <short theme>"   # body: the PRs it covers; attribution lines from the session

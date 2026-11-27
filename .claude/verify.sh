@@ -1,10 +1,34 @@
 #!/usr/bin/env bash
 # One-call verification for PiCollection: typecheck, lint of changed files,
 # tests, and the Electron rebuild - printing only what needs attention.
+# The aurum977:verify skill runs this file instead of its generic script.
 #
-#   bash .claude/skills/verify/verify.sh            # full suite
-#   bash .claude/skills/verify/verify.sh --changed  # only tests affected by changes vs master
-#   bash .claude/skills/verify/verify.sh --no-tests # typecheck + lint only
+#   bash .claude/verify.sh            # full suite - before a PR or release
+#   bash .claude/verify.sh --changed  # only tests affected by changes vs master - while iterating
+#   bash .claude/verify.sh --no-tests # typecheck + lint only
+#
+# Exit code 0 means clean. Project notes:
+# - Lint only runs on .ts/.tsx files changed against master (plus uncommitted
+#   and new ones), with --no-fix, filtering prettier's "Delete ␍" (this Windows
+#   checkout's autocrlf noise). NEVER run the bare `npm run lint`: it rewrites
+#   line endings across the whole repo. Warnings on lines you didn't touch are
+#   pre-existing; fix only yours.
+# - better-sqlite3 ABI: rebuilt for Node before the tests and ALWAYS rebuilt
+#   back for Electron at the end, even if tests fail, so the app runs without
+#   the NODE_MODULE_VERSION "Database error". If you run `npx vitest` by hand
+#   afterwards, run `npm run rebuild` before handing off.
+# - Vitest errors thrown outside a test (typically a `window.api` mock missing
+#   a method the code now calls) fail CI with no FAIL line; they're reported
+#   separately. When adding an API method, grep every *.test.ts AND *.test.tsx
+#   that mocks that namespace.
+# - Failed tests: the full run is saved to the "full log" path printed. Read it
+#   before calling a failure flaky: the next run overwrites it.
+# - Known environmental failure: the 2 extensionBridge.server.test.ts cases
+#   fail with EADDRINUSE 127.0.0.1:8934 whenever the PiCollection app is open
+#   (they bind the bridge's real port); labeled "known" when PiCollection.exe
+#   is running. For a fully green run (a release), ask the user to quit the app
+#   from the tray (the window X only hides it in background mode).
+# Report the counts printed and anything left failing with the reason.
 set -u
 cd "$(git rev-parse --show-toplevel)" || exit 2
 mode="${1:-full}"

@@ -16,11 +16,11 @@ validation at the IPC boundary, Vitest + Testing Library for tests. See
 ```bash
 npm install          # also builds better-sqlite3 for Electron's ABI (postinstall)
 npm run dev           # electron-vite dev, hot reload; db at userData/picollection.dev.sqlite
-npm test              # full vitest suite (prefer the verify skill)
+npm test              # full vitest suite (prefer the aurum977:verify skill)
 npm run test:watch    # watch mode
 npx vitest run <path>                       # single file
 npx vitest run <path> -t "<test name>"      # single test
-npm run lint           # eslint --fix, repo-wide - avoid on this checkout (see verify skill)
+npm run lint           # eslint --fix, repo-wide - avoid on this checkout (see .claude/verify.sh)
 npm run typecheck       # tsc, node config + web config
 npm run build            # typecheck + electron-vite build
 npm run build:win|mac|linux   # + electron-builder installer
@@ -29,23 +29,29 @@ npm run migrate:create <name>   # scaffold a migration
 npm run migrate:up / migrate:down   # apply/roll back against .data/picollection.dev.sqlite
 ```
 
-**Verifying a change:** use the `verify` skill
-(`bash .claude/skills/verify/verify.sh`). It handles the better-sqlite3 ABI
-flip between Node (tests) and Electron (app), lints only the changed files
-without this checkout's CRLF noise (never run the bare `npm run lint`), and
-recognizes the known port-8934 test failures while the app is open. For
-commits/PRs and releases, the `pr-flow`, `docs-sync` and `cut-release` skills
+**Verifying a change:** use the `aurum977:verify` skill, which runs this
+repo's `.claude/verify.sh` (`bash .claude/verify.sh`). It handles the
+better-sqlite3 ABI flip between Node (tests) and Electron (app), lints only
+the changed files without this checkout's CRLF noise (never run the bare
+`npm run lint`), and recognizes the known port-8934 test failures while the
+app is open. For commits/PRs and releases, the `pr-flow`,
+`aurum977:docs-sync` (map in `.claude/docs-map.md`) and `cut-release` skills
 hold the conventions.
+
+The `aurum977:*` skills come from the `aurum977` plugin (private repo
+`Arnau977/claude-skills`), declared in `.claude/settings.json`; everything
+specific to this repo lives here in `.claude/`.
 
 ## UI/UX & performance
 
 Any renderer UI/UX work (a new or redesigned screen, a moved button, layout,
 styles, colors, empty/loading/error states) **must** go through the
-`design-council` skill before deciding the approach: the four-judge council
-(UI 30% / UX 30% / accessibility 20% / desktop structure 20%) plus the
-repo's layout rules (no scrolling to reach critical controls, no duplicated
-info, reuse existing patterns). Every color pair is checked with the
-`contrast-check` skill.
+`aurum977:design-council` skill before deciding the approach: the four-judge
+council (UI 30% / UX 30% / accessibility 20% / desktop structure 20%) plus
+the repo's layout rules (no scrolling to reach critical controls, no
+duplicated info, reuse existing patterns). This repo's patterns, context and
+contrast facts are in `.claude/design/patterns-project.md`. Every color pair
+is checked with the `aurum977:contrast-check` skill.
 
 ## Changes made from other projects
 
